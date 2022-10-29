@@ -53,7 +53,7 @@ public class MainPage : Page
         if (PlatformHelpers.IsElevated())
             App.ShowMessage("XIVLauncher is running as administrator/root user.\nThis can cause various issues, including but not limited to addons failing to launch and hotkey applications failing to respond.\n\nPlease take care to avoid running XIVLauncher with elevated privileges", "XIVLauncher");
 
-        // Troubleshooting.LogTroubleshooting();
+        Troubleshooting.LogTroubleshooting();
     }
 
     public AccountSwitcher AccountSwitcher { get; private set; }
