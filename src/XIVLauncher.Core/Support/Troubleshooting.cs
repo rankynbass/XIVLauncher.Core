@@ -46,7 +46,7 @@ namespace XIVLauncher.Core.Support
                 Log.Error("Could not print exception");
             }
         }
-
+/*
         /// <summary>
         /// Log troubleshooting information in a parseable format to Serilog.
         /// </summary>
@@ -62,7 +62,7 @@ namespace XIVLauncher.Core.Support
                 Log.Error(ex, "Could not print troubleshooting");
             }
         }
-
+*/
         internal static string GetTroubleshootingJson()
         {
             
