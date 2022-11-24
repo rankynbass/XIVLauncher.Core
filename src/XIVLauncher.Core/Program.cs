@@ -107,6 +107,7 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
+        Config.DxvkVersion ??= "1.10.1";
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -185,6 +186,7 @@ class Program
         };
         DalamudUpdater.Run();
 
+        Dxvk.Version = Config.DxvkVersion;
         CreateCompatToolsInstance();
 
         Log.Debug("Creating Veldrid devices...");
