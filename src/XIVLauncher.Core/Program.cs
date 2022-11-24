@@ -107,7 +107,6 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
-        Config.DxvkVersion ??= "1.10.1";
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -186,7 +185,6 @@ class Program
         };
         DalamudUpdater.Run();
 
-        Dxvk.Version = Config.DxvkVersion;
         CreateCompatToolsInstance();
 
         Log.Debug("Creating Veldrid devices...");
@@ -295,6 +293,7 @@ class Program
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
+        Dxvk.Version = Config.DxvkVersion;
     }
 
     public static void ShowWindow()
