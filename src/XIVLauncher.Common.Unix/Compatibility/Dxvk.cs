@@ -8,41 +8,24 @@ namespace XIVLauncher.Common.Unix.Compatibility;
 
 public static class Dxvk
 {
-    private static string DXVK_DOWNLOAD = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz";
-    private static string DXVK_NAME = "dxvk-async-1.10.1";
-    private static string DXVK_VERSION = "1.10.1";
-    private static DxvkVersion version = Dxvk.DxvkVersion.v1_10_1;
-    
-    public static DxvkVersion Version
-    {
-        get { return version; }
-        set
-        {
-            switch (value)
-            {
-                case DxvkVersion.v2_0:
-                    DXVK_VERSION = "2.0";
-                    break;
-                case DxvkVersion.v1_10_3:
-                    DXVK_VERSION = "1.10.3";
-                    break;
-                case DxvkVersion.v1_10_2:
-                    DXVK_VERSION = "1.10.2";
-                    break;
-                default:
-                    value = DxvkVersion.v1_10_1;
-                    DXVK_VERSION = "1.10.1";
-                    break;
-            }
-            version = value;
-            DXVK_NAME = $"dxvk-async-{DXVK_VERSION}";
-            DXVK_DOWNLOAD = $"https://github.com/Sporif/dxvk-async/releases/download/{DXVK_VERSION}/{DXVK_NAME}.tar.gz";
-        }
-    }
+    private static string DownloadUrl = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz";
+    private static string FileName = "dxvk-async-1.10.1";
+    private static string Release = "1.10.1";
+    public static DxvkVersion Version { get; set; } = Dxvk.DxvkVersion.v1_10_1;
 
     public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory)
     {
-        var dxvkPath = Path.Combine(installDirectory.FullName, DXVK_NAME, "x64");
+        Release = Version switch
+        {
+            Dxvk.DxvkVersion.v1_10_1 => "1.10.1",
+            Dxvk.DxvkVersion.v1_10_2 => "1.10.2",
+            Dxvk.DxvkVersion.v1_10_3 => "1.10.3",
+            Dxvk.DxvkVersion.v2_0 => "2.0",
+        };
+        FileName = $"dxvk-async-{Release}";
+        DownloadUrl = $"https://github.com/Sporif/dxvk-async/releases/download/{Release}/{FileName}.tar.gz";
+
+        var dxvkPath = Path.Combine(installDirectory.FullName, FileName, "x64");
 
         if (!Directory.Exists(dxvkPath))
         {
@@ -64,7 +47,7 @@ public static class Dxvk
         using var client = new HttpClient();
         var tempPath = Path.GetTempFileName();
 
-        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(DXVK_DOWNLOAD));
+        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(DownloadUrl));
         PlatformHelpers.Untar(tempPath, installDirectory.FullName);
 
         File.Delete(tempPath);

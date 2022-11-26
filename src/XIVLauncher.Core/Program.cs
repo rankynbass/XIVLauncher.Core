@@ -121,10 +121,26 @@ class Program
 
     private static void Main(string[] args)
     {
-        storage = new Storage(APP_NAME);
+        bool badxlpath = false;
+        var badxlpathex = new Exception();
+        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
+        try 
+        {
+            storage = new Storage(APP_NAME, useAltPath);
+        }
+        catch (Exception e)
+        {
+            storage = new Storage(APP_NAME);
+            badxlpath = true;
+            badxlpathex = e;
+        }
         SetupLogging(args);
         LoadConfig(storage);
-
+        if (badxlpath)
+        {
+            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        }
+        
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
@@ -180,7 +196,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher-RB {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -276,6 +292,7 @@ class Program
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
+        Dxvk.Version = Config.DxvkVersion;
     }
 
     public static void ShowWindow()

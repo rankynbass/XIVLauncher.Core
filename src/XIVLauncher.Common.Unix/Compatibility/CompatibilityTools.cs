@@ -156,6 +156,12 @@ public class CompatibilityTools
         psi.UseShellExecute = false;
         psi.WorkingDirectory = workingDirectory;
 
+        // Use WineD3D instead of DXVK if XL_FORCE_WINED3D is set.
+        if (UnixEnvironmentSettings.IsWineD3D) {
+            wineD3D = true;
+        }
+
+
         var wineEnviromentVariables = new Dictionary<string, string>();
         wineEnviromentVariables.Add("WINEPREFIX", Settings.Prefix.FullName);
         wineEnviromentVariables.Add("WINEDLLOVERRIDES", $"mscoree=n;d3d9,d3d11,d3d10core,dxgi={(wineD3D ? "b" : "n")}");
