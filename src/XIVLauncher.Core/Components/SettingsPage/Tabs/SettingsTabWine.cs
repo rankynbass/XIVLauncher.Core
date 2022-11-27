@@ -36,8 +36,8 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b),
             new SettingsEntry<DxvkVersion>("DXVK Version", "Choose which version of DXVK to use.", () => Program.Config.DxvkVersion, type => Program.Config.DxvkVersion = type),
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b),
             new SettingsEntry<bool>("Enable ESync", "Enable eventfd-based synchronization.", () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
             new SettingsEntry<bool>("Enable FSync", "Enable fast user mutex (futex2).", () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
             {
@@ -92,6 +92,8 @@ public class SettingsTabWine : SettingsTab
         {
             Program.CompatibilityTools.RunInPrefix("explorer");
         }
+
+        ImGui.SameLine();
 
         if (ImGui.Button("Kill all wine processes"))
         {
