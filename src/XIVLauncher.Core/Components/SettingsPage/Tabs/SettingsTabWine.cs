@@ -51,7 +51,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<Dxvk.DxvkHudType>("DXVK Overlay", "Configure how much of the DXVK overlay is to be shown.", () => Program.Config.DxvkHudType, type => Program.Config.DxvkHudType = type),
+            new SettingsEntry<Dxvk.DxvkHudType>("DXVK Overlay", "DXVK Hud (available) or MangoHud (only works if installed)", () => Program.Config.DxvkHudType, type => Program.Config.DxvkHudType = type),
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };
     }
