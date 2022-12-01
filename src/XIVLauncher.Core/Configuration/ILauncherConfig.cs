@@ -66,7 +66,7 @@ public interface ILauncherConfig
 
     public bool? GameModeEnabled { get; set; }
 
-    public DxvkVersion DxvkVersion { get; set; }
+    public Dxvk.DxvkVersion DxvkVersion { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
 
