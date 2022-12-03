@@ -70,6 +70,8 @@ public interface ILauncherConfig
 
     public bool? DxvkAsyncEnabled { get; set; }
 
+    public int? DxvkFrameRate {get; set; }
+
     public bool? ESyncEnabled { get; set; }
 
     public bool? FSyncEnabled { get; set; }
