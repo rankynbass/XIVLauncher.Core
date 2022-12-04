@@ -111,6 +111,9 @@ class Program
         Config.DxvkFrameRate ??= 0;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
+        Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
+        string homedir = Environment.GetEnvironmentVariable("HOME");
+        Config.DxvkMangoCustom ??= homedir + "/.config/MangoHud/wine-ffxiv_dx11.conf";
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
@@ -276,7 +279,7 @@ class Program
         var winePrefix = storage.GetFolder("wineprefix");
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var dxvkSettings = new DxvkSettings(Config.DxvkHudType,Config.DxvkAsyncEnabled, Config.DxvkFrameRate, Config.DxvkVersion);
+        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, Config.DxvkHudCustom, Config.DxvkMangoCustom, Config.DxvkAsyncEnabled, Config.DxvkFrameRate, Config.DxvkVersion);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder);
     }
 

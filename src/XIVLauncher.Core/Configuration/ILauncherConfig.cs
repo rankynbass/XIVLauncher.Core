@@ -78,6 +78,10 @@ public interface ILauncherConfig
 
     public Dxvk.DxvkHudType DxvkHudType { get; set; }
 
+    public string? DxvkHudCustom { get; set; }
+
+    public string? DxvkMangoCustom { get; set; }
+
     public string? WineDebugVars { get; set; }
 
     #endregion
