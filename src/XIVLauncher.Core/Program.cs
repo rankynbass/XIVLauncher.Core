@@ -112,8 +112,7 @@ class Program
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
         Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
-        string homedir = Environment.GetEnvironmentVariable("HOME");
-        Config.DxvkMangoCustom ??= homedir + "/.config/MangoHud/wine-ffxiv_dx11.conf";
+        Config.DxvkMangoCustom ??= Environment.GetEnvironmentVariable("HOME") + "/.config/MangoHud/MangoHud.conf";
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
