@@ -181,9 +181,17 @@ class Program
         var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
 #endif
 
+#if UNOFFICIAL
+        string titlebar = "XIVLauncher Unofficial";
+#elif TESTING
+        string titlebar = "XIVLauncher Testing";
+#else
+        string titlebar = "XIVLauncher";
+#endif
+
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"{titlebar} {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
