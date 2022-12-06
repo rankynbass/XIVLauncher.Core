@@ -182,16 +182,16 @@ class Program
 #endif
 
 #if UNOFFICIAL
-        string titlebar = "XIVLauncher Unofficial";
+        string suffix = " Unofficial";
 #elif TESTING
-        string titlebar = "XIVLauncher Testing";
+        string suffix = " *TEST BUILD*";
 #else
-        string titlebar = "XIVLauncher";
+        string suffix = "";
 #endif
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"{titlebar} {version}"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}{suffix}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
