@@ -27,13 +27,25 @@ public class SettingsTabDXVK : SettingsTab
                     return null;
                 }
             },
-            new SettingsEntry<string>("DXVK Hud Custom String", "Set a custom string for the built in DXVK Hud.", () => Program.Config.DxvkHudCustom, s => Program.Config.DxvkHudCustom = s)
+            new SettingsEntry<string>("DXVK Hud Custom String", "Set a custom string for the built in DXVK Hud. Warning: If it's invalid, the game may hang.", () => Program.Config.DxvkHudCustom, s => Program.Config.DxvkHudCustom = s)
             {
-                CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.Custom
+                CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.Custom,
+                CheckWarning = s =>
+                {
+                    if(!DxvkSettings.CheckDxvkHudString(s))
+                        return "That's not a valid hud string";
+                    return null;
+                },
             },
             new SettingsEntry<string>("MangoHud Custom Path", "Set a custom path for MangoHud config file.", () => Program.Config.DxvkMangoCustom, s => Program.Config.DxvkMangoCustom = s)
             {
-                CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.MangoHudCustom
+                CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.MangoHudCustom,
+                CheckWarning = s =>
+                {
+                    if(!DxvkSettings.CheckMangoHudPath(s))
+                        return "That's not a valid file.";
+                    return null;
+                },
             },
             new NumericSettingsEntry("Frame Rate Limit", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 to leave unset.", () => Program.Config.DxvkFrameRate ?? 0, i => Program.Config.DxvkFrameRate = i, 0, 1000),
         };
