@@ -107,6 +107,7 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
+        Config.WineD3DEnabled ??= true;
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRate ??= 0;
         Config.ESyncEnabled ??= true;
@@ -286,7 +287,7 @@ class Program
         var winePrefix = storage.GetFolder("wineprefix");
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, Config.DxvkHudCustom, Config.DxvkMangoCustom, Config.DxvkAsyncEnabled, Config.DxvkFrameRate, Config.DxvkVersion, storage.Root);
+        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, !Config.WineD3DEnabled ?? true, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder);
     }
 
