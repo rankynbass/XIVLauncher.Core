@@ -107,9 +107,12 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
+        Config.DxvkFrameRate ??= 0;
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
+        Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
+        Config.DxvkMangoCustom ??= Path.Combine(Environment.GetEnvironmentVariable("HOME"),".config","MangoHud","MangoHud.conf");
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
@@ -195,9 +198,17 @@ class Program
         var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
 #endif
 
+#if UNOFFICIAL
+        string suffix = " RB-Unofficial";
+#elif TESTING
+        string suffix = " *TEST BUILD*";
+#else
+        string suffix = "";
+#endif
+
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher-RB {version} RB-Unofficial"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}{suffix}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -292,8 +303,8 @@ class Program
         var winePrefix = storage.GetFolder("wineprefix");
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
-        Dxvk.Version = Config.DxvkVersion;
+        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, Config.DxvkHudCustom, Config.DxvkMangoCustom, Config.DxvkAsyncEnabled, Config.DxvkFrameRate, Config.DxvkVersion, storage.Root);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder);
     }
 
     public static void ShowWindow()
