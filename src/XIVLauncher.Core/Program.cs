@@ -107,7 +107,7 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
-        Config.WineD3DEnabled ??= true;
+        Config.WineD3DEnabled ??= false;
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRate ??= 0;
         Config.ESyncEnabled ??= true;
