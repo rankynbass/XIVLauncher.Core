@@ -1,3 +1,4 @@
+using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
@@ -42,7 +43,7 @@ public class SettingsTabDXVK : SettingsTab
                 CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.MangoHudCustom,
                 CheckWarning = s =>
                 {
-                    if(!DxvkSettings.CheckMangoHudPath(s))
+                    if(!File.Exists(s))
                         return "That's not a valid file.";
                     return null;
                 },
