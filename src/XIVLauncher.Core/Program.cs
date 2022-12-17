@@ -97,6 +97,7 @@ class Program
         Config.IsEncryptArgs ??= true;
         Config.IsFt ??= false;
         Config.IsOtpServer ??= false;
+        Config.DisableSteamIntegration ??= false;
 
         Config.PatchPath ??= storage.GetFolder("patch");
         Config.PatchAcquisitionMethod ??= AcquisitionMethod.Aria;
@@ -145,15 +146,18 @@ class Program
                     throw new PlatformNotSupportedException();
             }
 
-            try
+            if (!(Config.DisableSteamIntegration ?? false))
             {
-                var appId = Config.IsFt == true ? STEAM_APP_ID_FT : STEAM_APP_ID;
-                Steam.Initialize(appId);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Couldn't init Steam with game AppIds, trying FT");
-                Steam.Initialize(STEAM_APP_ID_FT);
+                try
+                {
+                    var appId = Config.IsFt == true ? STEAM_APP_ID_FT : STEAM_APP_ID;
+                    Steam.Initialize(appId);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Couldn't init Steam with game AppIds, trying FT");
+                    Steam.Initialize(STEAM_APP_ID_FT);
+                }
             }
         }
         catch (Exception ex)
