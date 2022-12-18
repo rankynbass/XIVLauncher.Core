@@ -113,6 +113,26 @@ public class MainPage : Page
 
         // if (Program.UsesFallbackSteamAppId && this.loginFrame.IsSteam)
         //     throw new Exception("Doesn't own Steam AppId on this account.");
+        if (!Program.Config.IsIgnoringSteam ?? true)
+        {
+            try
+            {
+                var appId = Program.Config.IsFt == true ? Program.STEAM_APP_ID_FT : Program.STEAM_APP_ID;
+                Program.Steam.Initialize(appId);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Couldn't init Steam with game AppIds, trying FT");
+                try
+                {
+                    Program.Steam.Initialize(Program.STEAM_APP_ID_FT);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Steam couldn't load");
+                }
+            }
+        }
 
         Task.Run(async () =>
         {
