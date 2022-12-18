@@ -48,9 +48,6 @@ public class SettingsTabDXVK : SettingsTab
                 },
             },
             new NumericSettingsEntry("Frame Rate Limit", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 to leave unset.", () => Program.Config.DxvkFrameRate ?? 0, i => Program.Config.DxvkFrameRate = i, 0, 1000),
-            new SettingsEntry<bool>("Use WineD3D (Disable DXVK)",
-                                    "Don't check this unless you know what you're doing.\nIf you check this, XIVLauncher will try to use WineD3D instead of DXVK, and nothing in this tab will work.\nCustom wine versions may not work (especially proton-based wine). This will also break GShade.",
-                                    () => Program.Config.WineD3DEnabled ?? false, b => Program.Config.WineD3DEnabled = b),
         };
     }
 
