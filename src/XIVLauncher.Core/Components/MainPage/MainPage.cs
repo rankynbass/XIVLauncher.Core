@@ -695,7 +695,7 @@ public class MainPage : Page
             { 
                 if (App.Settings.WineBinaryPath == null)
                     throw new Exception("Custom wine binary path wasn't set.");
-                if (!File.Exists(App.Settings.WineBinaryPath + "/wine64"))
+                if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")))
                     throw new Exception("Custom wine binary path is invalid: no wine64 in path.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
                 if (!Directory.Exists(App.Settings.WineBinaryPath))

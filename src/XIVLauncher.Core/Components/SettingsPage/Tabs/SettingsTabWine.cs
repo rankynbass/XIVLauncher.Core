@@ -49,7 +49,7 @@ public class SettingsTabWine : SettingsTab
                     return null;
                 }
             },
-
+            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };
     }
@@ -90,8 +90,6 @@ public class SettingsTabWine : SettingsTab
         {
             Program.CompatibilityTools.RunInPrefix("explorer");
         }
-
-        ImGui.SameLine();
 
         if (ImGui.Button("Kill all wine processes"))
         {
