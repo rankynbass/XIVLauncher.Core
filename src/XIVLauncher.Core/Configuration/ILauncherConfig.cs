@@ -88,6 +88,18 @@ public interface ILauncherConfig
 
     public string? WineDebugVars { get; set; }
 
+    public string HelperApp1 { get; set; }
+    public string HelperApp2 { get; set; }
+    public string HelperApp3 { get; set; }
+    public string HelperApp4 { get; set; }
+    public string HelperApp5 { get; set; }
+
+    public bool HelperApp1Enabled { get; set; }
+    public bool HelperApp2Enabled { get; set; }
+    public bool HelperApp3Enabled { get; set; }
+    public bool HelperApp4Enabled { get; set; }
+    public bool HelperApp5Enabled { get; set; }
+
     #endregion
 
     #region Dalamud

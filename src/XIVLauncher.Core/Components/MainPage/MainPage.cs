@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.IO;
+using System.Diagnostics;
 using ImGuiNET;
 using System.Numerics;
 using CheapLoc;
@@ -158,6 +159,17 @@ public class MainPage : Page
             IsLoggingIn = true;
 
             App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
+
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix( Program.Config.HelperApp1 , Path.GetDirectoryName(Program.Config.HelperApp1) );
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5);
 
             var result = await Login(loginFrame.Username, loginFrame.Password, loginFrame.IsOtp, loginFrame.IsSteam, false, action).ConfigureAwait(false);
 
