@@ -161,7 +161,7 @@ public class MainPage : Page
             App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
 
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
-                Program.CompatibilityTools.RunInPrefix( Program.Config.HelperApp1 , Path.GetDirectoryName(Program.Config.HelperApp1) );
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
                 Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
