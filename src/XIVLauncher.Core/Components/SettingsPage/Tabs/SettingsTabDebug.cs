@@ -1,5 +1,8 @@
 using System.Collections;
 using ImGuiNET;
+using XIVLauncher.Common.Unix.Compatibility;
+using XIVLauncher.Common.Util;
+using XIVLauncher.Core.Support;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -15,6 +18,12 @@ public class SettingsTabDebug : SettingsTab
 
         if (Program.IsSteamDeckGamingMode)
             ImGui.Text("Is Steam Deck");
+
+        if (ImGui.Button("Generate Troubleshooting Pack"))
+        {
+            PackGenerator.SavePack(Program.storage);
+            PlatformHelpers.OpenBrowser(Program.storage.GetFolder("logs").FullName);
+        }
 
         ImGui.Separator();
 

@@ -13,7 +13,7 @@ public class SettingsPage : Page
         new SettingsTabWine(),
         new SettingsTabDXVK(),
         new SettingsTabDalamud(),
-        new SettingsTabAutoStart(),
+        // new SettingsTabAutoStart(),
         new SettingsTabAbout(),
         new SettingsTabDebug(),
     };
