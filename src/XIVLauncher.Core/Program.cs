@@ -52,6 +52,10 @@ class Program
     public static bool IsSteamDeckHardware => Directory.Exists("/home/deck");
     public static bool IsSteamDeckGamingMode => Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck();
 
+    public const float DEFAULT_FONT_SIZE = 22f;
+
+    public static float FontMultiplier;
+
     private const string APP_NAME = "xlcore";
 
     private static uint invalidationFrames = 0;
@@ -91,7 +95,7 @@ class Program
         Config.IsAutologin ??= false;
         Config.CompletedFts ??= false;
         Config.DoVersionCheck ??= true;
-        Config.FontPxSize ??= 22.0f;
+        Config.FontPxSize ??= DEFAULT_FONT_SIZE;
 
         Config.IsDx11 ??= true;
         Config.IsEncryptArgs ??= true;
@@ -118,6 +122,7 @@ class Program
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
+        FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
     }
 
     public const uint STEAM_APP_ID = 39210;

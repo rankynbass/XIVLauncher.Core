@@ -81,7 +81,7 @@ public class LoginFrame : Component
     private Vector2 GetSize()
     {
         var vp = ImGuiHelpers.ViewportSize;
-        return new Vector2(-1, vp.Y - 128f);
+        return new Vector2(-1, vp.Y - Math.Max(112f * Program.FontMultiplier, 128f));
     }
 
     public override void Draw()
@@ -155,7 +155,7 @@ public class LoginFrame : Component
 
             ImGui.PushFont(FontManager.IconFont);
 
-            var extraButtonSize = new Vector2(45) * ImGuiHelpers.GlobalScale;
+            var extraButtonSize = new Vector2(45 * Program.FontMultiplier) * ImGuiHelpers.GlobalScale;
 
             if (ImGui.Button(FontAwesomeIcon.CaretDown.ToIconString(), extraButtonSize))
             {
