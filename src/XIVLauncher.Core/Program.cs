@@ -225,7 +225,7 @@ class Program
 
         var needUpdate = false;
 
-#if FLATPAK
+/* #if FLATPAK
         if (Config.DoVersionCheck ?? false)
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
@@ -233,7 +233,7 @@ class Program
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
         }   
-#endif
+#endif */
 
         launcherApp = new LauncherApp(storage, needUpdate);
 
