@@ -159,6 +159,17 @@ public class MainPage : Page
 
             App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
 
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, "", null, false, false, Program.Config.HelperApp1WineD3D);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, "", null, false, false, Program.Config.HelperApp2WineD3D);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, "", null, false, false, Program.Config.HelperApp3WineD3D);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, "", null, false, false, Program.Config.HelperApp4WineD3D);
+            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, "", null, false, false, Program.Config.HelperApp5WineD3D);
+
             var result = await Login(loginFrame.Username, loginFrame.Password, loginFrame.IsOtp, loginFrame.IsSteam, false, action).ConfigureAwait(false);
 
             if (result)
