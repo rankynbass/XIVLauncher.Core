@@ -12,6 +12,7 @@ public class SettingsPage : Page
         new SettingsTabPatching(),
         new SettingsTabWine(),
         new SettingsTabDXVK(),
+        new SettingsTabAppLauncher(),
         new SettingsTabDalamud(),
         new SettingsTabAutoStart(),
         new SettingsTabAbout(),
