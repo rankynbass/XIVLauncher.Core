@@ -101,6 +101,13 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunInPrefix("explorer");
         }
 
+        ImGui.SameLine();
+
+        if (ImGui.Button("Open Wine explorer (use WineD3D)"))
+        {
+            Program.CompatibilityTools.RunInPrefix("explorer", "", null, false, false, true);
+        }
+
         if (ImGui.Button("Kill all wine processes"))
         {
             Program.CompatibilityTools.Kill();
