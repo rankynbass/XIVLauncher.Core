@@ -383,19 +383,19 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
+        storage.GetFolder("protonprefix").Delete(true);
+        storage.GetFolder("protonprefix");
     }
 
     public static void ClearPlugins(bool tsbutton = false)
     {
         storage.GetFolder("dalamud").Delete(true);
         storage.GetFolder("dalamudAssets").Delete(true);
-        storage.GetFolder("installedPlugins").Delete(true);
         storage.GetFolder("runtime").Delete(true);
         if (storage.GetFile("dalamudUI.ini").Exists) storage.GetFile("dalamudUI.ini").Delete();
         if (storage.GetFile("dalamudConfig.json").Exists) storage.GetFile("dalamudConfig.json").Delete();
         storage.GetFolder("dalamud");
         storage.GetFolder("dalamudAssets");
-        storage.GetFolder("installedPlugins");
         storage.GetFolder("runtime");
         if (tsbutton)
         {
@@ -430,7 +430,6 @@ class Program
 
     public static void ClearAll(bool tsbutton = false)
     {
-        ClearSettings(tsbutton);
         ClearPrefix();
         ClearPlugins(tsbutton);
         ClearTools(tsbutton);
