@@ -95,10 +95,13 @@ public class SettingsTabWine : SettingsTab
     {
         base.Draw();
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (!Program.CompatibilityTools.IsToolDownloaded || Program.CompatibilityTools.useProton)
         {
             ImGui.BeginDisabled();
-            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+            if (Program.CompatibilityTools.useProton)
+                ImGui.Text("These options do not work properly with Proton yet.");
+            else
+                ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
 
             ImGui.Dummy(new Vector2(10));
         }
