@@ -181,6 +181,8 @@ class Program
 
         Loc.SetupWithFallbacks();
 
+        uint appId = STEAM_APP_ID_FT;
+        uint altId = STEAM_APP_ID;
         try
         {
             switch (Environment.OSVersion.Platform)
@@ -196,10 +198,38 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
+
+            if (!Config.IsIgnoringSteam.Value)
+            {
+                if (!Config.IsFt.Value)
+                {
+                    appId = STEAM_APP_ID;
+                    altId = STEAM_APP_ID_FT;
+                }
+                try
+                {
+                    Steam.Initialize(appId);
+                    Log.Information($"Trying to load Steam AppID {appId}... Okay");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Trying to load Steam AppID {appId}... Failed. Falling back to AppID {altId}.");
+                    Steam.Initialize(altId);
+                    Log.Information($"Trying to load Steam AppID {altId}... Okay");
+                }
+            }
+            else
+            {
+                Log.Information("Steam integration disabled. If you have a Steam service account, you might not be able to log in.");
+            }
+        }
+        catch (PlatformNotSupportedException ex)
+        {
+            Log.Error(ex, "Steam integration is not currently supported on this platform.");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Steam: Couldn't find any version of FFXIV");
+            Log.Error(ex, $"Could not load Steam AppID {appId} or {altId}.");
         }
 
         DalamudLoadInfo = new DalamudOverlayInfoProxy();
