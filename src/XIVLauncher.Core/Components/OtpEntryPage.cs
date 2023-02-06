@@ -114,8 +114,6 @@ public class OtpEntryPage : Page
 
             ImGui.SameLine();
 
-            ImGui.SameLine();
-
             if (ImGui.Button("Cancel", buttonSize))
             {
                 this.Cancelled = true;

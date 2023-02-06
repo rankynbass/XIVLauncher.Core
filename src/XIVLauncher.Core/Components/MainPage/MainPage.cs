@@ -760,7 +760,6 @@ public class MainPage : Page
             if (isFailed)
                 return null;
 
-
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
                 Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, "", null, false, false, Program.Config.HelperApp1WineD3D);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
