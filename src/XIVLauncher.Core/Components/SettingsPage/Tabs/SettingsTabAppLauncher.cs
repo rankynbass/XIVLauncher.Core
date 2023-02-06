@@ -102,7 +102,7 @@ public class SettingsTabAppLauncher : SettingsTab
 
     public override bool IsUnixExclusive => true;
 
-    public override string Title => "App Launcher";
+    public override string Title => "Auto-Start";
 
 public override void Draw()
     {

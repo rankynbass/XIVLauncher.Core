@@ -20,7 +20,10 @@ public class SettingsTabWine : SettingsTab
                     CheckValidity = x =>
                     {
                         if (x == WineStartupType.Proton && !ProtonManager.IsValid())
-                            return "No proton version found! Check launcher.ini and make sure that SteamPath points your Steam root\nUsually this is /home/username/.steam/root or /home/username/.local/share/Steam";
+                        {
+                            var userHome = System.Environment.GetEnvironmentVariable("HOME") ?? "/home/username";
+                            return $"No proton version found! Check launcher.ini and make sure that SteamPath points your Steam root\nUsually this is {userHome}/.steam/root or {userHome}/.local/share/Steam";
+                        }
                         return null;
                     }
                 },
@@ -68,8 +71,14 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckWarning = b =>
                 {
-                    if(startupTypeSetting.Value == WineStartupType.Unoffical7_35 || startupTypeSetting.Value == WineStartupType.Custom)
-                        return "Dalamud may not be compatible with this installation type and WineD3D.";
+                    if(startupTypeSetting.Value != WineStartupType.Managed && startupTypeSetting.Value != WineStartupType.Official7_10 && startupTypeSetting.Value != WineStartupType.Proton)
+                        return "Dalamud and WineD3D have only been tested with the Managed Wine install. Other options may or may not work.";
+                    return null;
+                },
+                CheckValidity = b =>
+                {
+                    if(startupTypeSetting.Value == WineStartupType.Proton && b)
+                        return "WineD3D does not currently work with Proton.";
                     return null;
                 },
             },

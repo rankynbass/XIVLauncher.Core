@@ -128,7 +128,7 @@ class Program
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
-        Config.SteamPath ??= Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root");
+        Config.SteamPath = string.IsNullOrEmpty(Config.SteamPath) ? Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root") : Config.SteamPath;
         Config.ProtonVersion ??= "Proton 7.0";
         Config.WineDebugVars ??= "-all";
         FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
