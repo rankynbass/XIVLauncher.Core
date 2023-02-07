@@ -95,10 +95,10 @@ public class SettingsTabWine : SettingsTab
     {
         base.Draw();
 
-        if (!Program.CompatibilityTools.IsToolDownloaded || Program.CompatibilityTools.useProton)
+        if (!Program.CompatibilityTools.IsToolDownloaded || startupTypeSetting.Value == WineStartupType.Proton)
         {
             ImGui.BeginDisabled();
-            if (Program.CompatibilityTools.useProton)
+            if (startupTypeSetting.Value == WineStartupType.Proton)
                 ImGui.Text("These options do not work properly with Proton yet.");
             else
                 ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
@@ -137,7 +137,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (!Program.CompatibilityTools.IsToolDownloaded || startupTypeSetting.Value == WineStartupType.Proton)
         {
             ImGui.EndDisabled();
         }
