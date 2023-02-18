@@ -128,6 +128,8 @@ class Program
     public const uint STEAM_APP_ID = 39210;
     public const uint STEAM_APP_ID_FT = 312060;
 
+    public static string SteamAppId = "312060";
+
     private static void Main(string[] args)
     {
         mainargs = args;
@@ -182,12 +184,14 @@ class Program
                 {
                     Steam.Initialize(appId);
                     Log.Information($"Trying to load Steam AppID {appId}... Okay");
+                    SteamAppId = appId.ToString();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Trying to load Steam AppID {appId}... Failed. Falling back to AppID {altId}.");
                     Steam.Initialize(altId);
                     Log.Information($"Trying to load Steam AppID {altId}... Okay");
+                    SteamAppId = altId.ToString();
                 }
             }
             else
@@ -319,7 +323,7 @@ class Program
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
         var protonPrefix = storage.GetFolder("protonprefix");
-        var protonSettings = new ProtonSettings(Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName);
+        var protonSettings = new ProtonSettings(Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, appId: SteamAppId);
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, protonSettings, Config.WineDebugVars, wineLogFile, winePrefix, protonPrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
