@@ -81,9 +81,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckWarning = b =>
                 {
-                    if(startupTypeSetting.Value != WineStartupType.Managed && startupTypeSetting.Value != WineStartupType.Official7_10 && startupTypeSetting.Value != WineStartupType.Proton)
-                        return "Dalamud and WineD3D have only been tested with the Managed Wine install. Other options may or may not work.";
-                    return null;
+                    return "Dalamud and WineD3D have only been tested with the Official & TKG Patched wine installs. Other options may or may not work.";
                 },
                 CheckValidity = b =>
                 {
