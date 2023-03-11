@@ -130,12 +130,16 @@ class Program
         Config.WineBinaryPath ??= "/usr/bin";
         Config.SteamPath = string.IsNullOrEmpty(Config.SteamPath) ? Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root") : Config.SteamPath;
         Config.ProtonVersion ??= "Proton 7.0";
+        Config.UseSoldier ??= true;
+        Config.UseReaper ??= false;
         Config.WineDebugVars ??= "-all";
         FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
     }
 
     public const uint STEAM_APP_ID = 39210;
     public const uint STEAM_APP_ID_FT = 312060;
+
+    public static string SteamAppId = "312060";
 
     private static void Main(string[] args)
     {
@@ -190,11 +194,9 @@ class Program
                 case PlatformID.Win32NT:
                     Steam = new WindowsSteam();
                     break;
-
                 case PlatformID.Unix:
                     Steam = new UnixSteam();
                     break;
-
                 default:
                     throw new PlatformNotSupportedException();
             }
@@ -210,12 +212,14 @@ class Program
                 {
                     Steam.Initialize(appId);
                     Log.Information($"Trying to load Steam AppID {appId}... Okay");
+                    SteamAppId = appId.ToString();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Trying to load Steam AppID {appId}... Failed. Falling back to AppID {altId}.");
                     Steam.Initialize(altId);
                     Log.Information($"Trying to load Steam AppID {altId}... Okay");
+                    SteamAppId = altId.ToString();
                 }
             }
             else
@@ -355,10 +359,11 @@ class Program
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
         var protonPrefix = storage.GetFolder("protonprefix");
-        var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.WineDebugVars, wineLogFile, winePrefix, protonPrefix, Config.ESyncEnabled, Config.FSyncEnabled);
+        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, Config.UseSoldier.Value, Config.UseReaper.Value);
+        var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, !Config.WineD3DEnabled ?? true, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, protonSettings, Config.GameModeEnabled, toolsFolder);
     }
 
     public static void ShowWindow()

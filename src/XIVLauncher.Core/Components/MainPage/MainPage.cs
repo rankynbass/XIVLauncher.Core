@@ -741,16 +741,15 @@ public class MainPage : Page
                 return null;
 
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, "", null, false, false, Program.Config.HelperApp1WineD3D);
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, "", null, false, false, Program.Config.HelperApp2WineD3D);
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, "", null, false, false, Program.Config.HelperApp3WineD3D);
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, "", null, false, false, Program.Config.HelperApp4WineD3D);
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, wineD3D: Program.Config.HelperApp4WineD3D);
             if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, "", null, false, false, Program.Config.HelperApp5WineD3D);
-
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, wineD3D: Program.Config.HelperApp5WineD3D);
 
             App.StartLoading("Starting game...", "Have fun!");
 
@@ -793,8 +792,22 @@ public class MainPage : Page
             App.Settings.IsEncryptArgs.GetValueOrDefault(true),
             App.Settings.DpiAwareness.GetValueOrDefault(DpiAwareness.Unaware));
 
+            // Now launch the helper apps. This needs to be here to work with Steam soldier
+            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
+            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D);
+            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
+            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D);
+            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
+            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D);
+            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
+            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, wineD3D: Program.Config.HelperApp4WineD3D);
+            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
+            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, wineD3D: Program.Config.HelperApp5WineD3D);
+
+
+
         var protonProcess = launchedProcess;
-        if (Program.CompatibilityTools.useProton)
+        if (Program.CompatibilityTools.UseProton)
         {
             Log.Information("Launching Proton runner. Proton's built-in wine will be launched as a child process.");
             var gameName = (App.Settings.IsDx11 ?? true) ? "ffxiv_dx11.exe" : "ffxiv.exe";
@@ -840,6 +853,8 @@ public class MainPage : Page
 
         Log.Information("Waiting for game to exit");
 
+        // Auto-launch apps need to go here when using proton. Can't inject Dalamud properly otherwise.
+
         await Task.Run(() => launchedProcess!.WaitForExit()).ConfigureAwait(false);
 
         Log.Information("Game has exited");
@@ -858,7 +873,7 @@ public class MainPage : Page
         {
             Log.Error(ex, "Could not shut down Steam");
         }
-        if (Program.CompatibilityTools.useProton)
+        if (Program.CompatibilityTools.UseProton)
             return protonProcess!;
         return launchedProcess!;
     }

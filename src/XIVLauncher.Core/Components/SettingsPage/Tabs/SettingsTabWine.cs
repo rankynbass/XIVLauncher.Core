@@ -38,6 +38,16 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
             },
+#if !FLATPAK
+            new SettingsEntry<bool>("Use Steam Soldier Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", () => Program.Config.UseSoldier ?? true, b => Program.Config.UseSoldier = b)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
+            },
+#endif
+            new SettingsEntry<bool>("Use Reaper", "Use Steam's reaper process to launch the game.", () => Program.Config.UseReaper ?? false, b => Program.Config.UseReaper = b)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
+            },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
@@ -71,9 +81,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckWarning = b =>
                 {
-                    if(startupTypeSetting.Value != WineStartupType.Managed && startupTypeSetting.Value != WineStartupType.Official7_10 && startupTypeSetting.Value != WineStartupType.Proton)
-                        return "Dalamud and WineD3D have only been tested with the Managed Wine install. Other options may or may not work.";
-                    return null;
+                    return "Dalamud and WineD3D have only been tested with the Official & TKG Patched wine installs. Other options may or may not work.";
                 },
                 CheckValidity = b =>
                 {
@@ -122,7 +130,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
         {
-            Program.CompatibilityTools.RunInPrefix("explorer");
+            Program.CompatibilityTools.RunInPrefix("explorer", wineD3D: true, inject: true);
         }
 
         ImGui.SameLine();
