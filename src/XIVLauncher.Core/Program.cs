@@ -141,7 +141,7 @@ class Program
 
     public static string SteamAppId = "312060";
 
-    public static bool SteamCompatTool;
+    public static bool IsSteamCompatTool;
 
     private static void Main(string[] args)
     {
@@ -149,7 +149,7 @@ class Program
         storage = new Storage(APP_NAME);
         
         // Steam Compat tool lauches this with waitforexitandrun|run /path/to/steam/ffxiv/install/boot/ffxivboot.exe -issteam
-        SteamCompatTool = (mainargs[0] == "waitforexitandrun" || mainargs[0] == "run");
+        IsSteamCompatTool = (mainargs[0] == "waitforexitandrun" || mainargs[0] == "run");
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -190,7 +190,7 @@ class Program
                     throw new PlatformNotSupportedException();
             }
 
-            if (!Config.IsIgnoringSteam.Value && !SteamCompatTool)
+            if (!Config.IsIgnoringSteam.Value && !IsSteamCompatTool)
             {
                 if (!Config.IsFt.Value)
                 {
@@ -213,7 +213,7 @@ class Program
             }
             else
             {
-                string steamInfo = (SteamCompatTool) ? "Using XIVLauncher as Steam Compatibility Tool." : "Steam integration disabled. If you have a Steam service account, you might not be able to log in.";
+                string steamInfo = (IsSteamCompatTool) ? "Using XIVLauncher as Steam Compatibility Tool." : "Steam integration disabled. If you have a Steam service account, you might not be able to log in.";
                 Log.Information(steamInfo);
             }
         }

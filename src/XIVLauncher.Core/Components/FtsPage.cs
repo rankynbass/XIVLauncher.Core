@@ -33,11 +33,12 @@ public class FtsPage : Page
             return;
         }
 
-        if (Program.IsSteamDeckHardware && (Program.Steam == null || !Program.Steam.IsValid))
-        {
-            App.State = LauncherApp.LauncherState.Fts;
-            this.isSteamDeckAppIdError = true;
-        }
+        // if (Program.IsSteamDeckHardware && (Program.Steam == null || !Program.Steam.IsValid))
+        // {
+        //     if (App.IsSteamCompatTool) return;
+        //     App.State = LauncherApp.LauncherState.Fts;
+        //     this.isSteamDeckAppIdError = true;
+        // }
     }
 
     private void FinishFts(bool save)

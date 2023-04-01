@@ -107,6 +107,7 @@ public class LauncherApp : Component
     };
 
     public ILauncherConfig Settings => Program.Config;
+    public bool IsSteamCompatTool => Program.IsSteamCompatTool;
     public Launcher Launcher { get; private set; }
     public ISteam? Steam => Program.Steam;
     public Storage Storage { get; private set; }

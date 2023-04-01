@@ -8,27 +8,33 @@ public class DictionarySettingsEntry : SettingsEntry<string>
 {
     public Dictionary<string, string> Pairs;
 
-    public DictionarySettingsEntry(string name, string description, Dictionary<string, string> pairs, Func<string> load, Action<string> save)
+    public string DefaultValue;
+
+    public bool ShowDescription;
+
+    public DictionarySettingsEntry(string name, string description, Dictionary<string, string> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
         : base(name, description, load, save)
     { 
         this.Pairs = pairs;
+        this.DefaultValue = defaultValue;
+        this.ShowDescription = showDesc;
     }
 
 
     public override void Draw()
     {
         var nativeValue = this.Value;
-        string idx = (string)(this.InternalValue ?? "Proton 7.0");
+        string idx = (string)(this.InternalValue ?? DefaultValue);
 
         ImGuiHelpers.TextWrapped(this.Name);
 
         Dictionary<string, string>.KeyCollection keys = Pairs.Keys;
 
-        if (ImGui.BeginCombo($"###{Id.ToString()}", idx + (string.IsNullOrEmpty(Pairs[idx]) ? "" : " - " + Pairs[idx])))
+        if (ImGui.BeginCombo($"###{Id.ToString()}", idx + (ShowDescription ? " - " + Pairs[idx] : "")))
         {
             foreach ( string key in keys )
             {
-                if (ImGui.Selectable(key + ": " + Pairs[key], idx == key))
+                if (ImGui.Selectable(key + (string.IsNullOrEmpty(Pairs[key]) ? "" : " - " + Pairs[key]), idx == key))
                 {
                     this.InternalValue = key;
                 }
@@ -37,7 +43,7 @@ public class DictionarySettingsEntry : SettingsEntry<string>
         }
 
         ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
-        ImGuiHelpers.TextWrapped(this.Description);
+        if (!string.IsNullOrEmpty(this.Description)) ImGuiHelpers.TextWrapped(this.Description);
         ImGui.PopStyleColor();
 
         if (this.CheckValidity != null)
