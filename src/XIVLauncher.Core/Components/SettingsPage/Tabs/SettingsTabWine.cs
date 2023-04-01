@@ -39,16 +39,11 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
             },
 #if !FLATPAK
-            new SettingsEntry<bool>("Use Steam Soldier Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", () => Program.Config.UseSoldier ?? true, b => Program.Config.UseSoldier = b)
+            new DictionarySettingsEntry("Use Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s)
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
             },
 #endif
-            new SettingsEntry<bool>("Use Reaper", "Use Steam's reaper process to launch the game.", () => Program.Config.UseReaper ?? false, b => Program.Config.UseReaper = b)
-            {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
-            },
-
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),

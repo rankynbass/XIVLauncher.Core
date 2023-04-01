@@ -70,9 +70,7 @@ public interface ILauncherConfig
 
     public string? ProtonVersion { get; set; }
 
-    public bool? UseSoldier { get; set; }
-
-    public bool? UseReaper { get; set; }
+    public string? SteamRuntime { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 

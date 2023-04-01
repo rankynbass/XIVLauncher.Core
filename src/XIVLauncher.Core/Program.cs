@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.IO;
 using CheapLoc;
 using Config.Net;
@@ -59,6 +60,11 @@ class Program
 
     private const string APP_NAME = "xlcore";
 
+    // Steam Compatibility Tool vars
+    public static string SteamCompatPath => System.Environment.GetEnvironmentVariable("STEAM_COMPAT_INSTALL_PATH") ?? "";
+
+    public static string SteamPrefix => System.Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH") ?? "";
+
     private static string[] mainargs;
 
     private static uint invalidationFrames = 0;
@@ -91,7 +97,10 @@ class Program
             Config.AcceptLanguage = ApiHelpers.GenerateAcceptLanguage();
         }
 
-        Config.GamePath ??= storage.GetFolder("ffxiv");
+        if (!string.IsNullOrEmpty(SteamCompatPath))
+            Config.GamePath = new DirectoryInfo(SteamCompatPath);
+        else
+            Config.GamePath ??= storage.GetFolder("ffxiv");
         Config.GameConfigPath ??= storage.GetFolder("ffxivConfig");
         Config.ClientLanguage ??= ClientLanguage.English;
         Config.DpiAwareness ??= DpiAwareness.Unaware;
@@ -123,8 +132,7 @@ class Program
         Config.WineBinaryPath ??= "/usr/bin";
         Config.SteamPath = string.IsNullOrEmpty(Config.SteamPath) ? Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root") : Config.SteamPath;
         Config.ProtonVersion ??= "Proton 7.0";
-        Config.UseSoldier ??= true;
-        Config.UseReaper ??= false;
+        Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
         Config.WineDebugVars ??= "-all";
     }
 
@@ -133,10 +141,15 @@ class Program
 
     public static string SteamAppId = "312060";
 
+    public static bool SteamCompatTool;
+
     private static void Main(string[] args)
     {
         mainargs = args;
         storage = new Storage(APP_NAME);
+        
+        // Steam Compat tool lauches this with waitforexitandrun|run /path/to/steam/ffxiv/install/boot/ffxivboot.exe -issteam
+        SteamCompatTool = (mainargs[0] == "waitforexitandrun" || mainargs[0] == "run");
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -155,6 +168,7 @@ class Program
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
         Config.ProtonVersion = ProtonManager.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : ProtonManager.GetDefaultVersion();
+        Config.SteamRuntime = ProtonManager.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : ProtonManager.GetDefaultRuntime();
 
         Secrets = GetSecretProvider(storage);
 
@@ -176,7 +190,7 @@ class Program
                     throw new PlatformNotSupportedException();
             }
 
-            if (!Config.IsIgnoringSteam.Value)
+            if (!Config.IsIgnoringSteam.Value && !SteamCompatTool)
             {
                 if (!Config.IsFt.Value)
                 {
@@ -199,7 +213,8 @@ class Program
             }
             else
             {
-                Log.Information("Steam integration disabled. If you have a Steam service account, you might not be able to log in.");
+                string steamInfo = (SteamCompatTool) ? "Using XIVLauncher as Steam Compatibility Tool." : "Steam integration disabled. If you have a Steam service account, you might not be able to log in.";
+                Log.Information(steamInfo);
             }
         }
         catch (PlatformNotSupportedException ex)
@@ -326,7 +341,7 @@ class Program
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
         var protonPrefix = storage.GetFolder("protonprefix");
-        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, Config.UseSoldier.Value, Config.UseReaper.Value);
+        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetVersionPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, ProtonManager.GetRuntimePath(Config.SteamRuntime));
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, protonSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
@@ -389,8 +404,23 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
-        storage.GetFolder("protonprefix").Delete(true);
-        storage.GetFolder("protonprefix");
+        try {
+            if (!string.IsNullOrEmpty(SteamPrefix))
+            {
+                Directory.Delete(SteamPrefix, true);
+                Directory.CreateDirectory(SteamPrefix);
+            }
+            else
+            {
+                storage.GetFolder("protonprefix").Delete(true);
+                storage.GetFolder("protonprefix");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Something went wrong");
+            Log.Error(SteamPrefix);
+        }
     }
 
     public static void ClearPlugins(bool tsbutton = false)

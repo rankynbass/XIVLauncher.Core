@@ -9,10 +9,20 @@ namespace XIVLauncher.Core;
 public static class ProtonManager
 {
     public static Dictionary<string, string> Versions { get; private set; }
+    public static Dictionary<string, string> Runtimes { get; private set; }
 
     public static void GetVersions(string steamRoot)
     {
+        List<DirectoryInfo> steamLibraries = new List<DirectoryInfo>();
+        string steamlibs = System.Environment.GetEnvironmentVariable("STEAM_COMPAT_LIBRARY_PATHS");
+        if (!string.IsNullOrEmpty(steamlibs))
+        {
+            foreach (string steamlib in steamlibs.Split(':'))
+                if (Directory.Exists(steamlib)) steamLibraries.Add(new DirectoryInfo(steamlib));
+        }
+
         Versions = new Dictionary<string, string>();
+        Runtimes = new Dictionary<string, string>();
         var commonDir = new DirectoryInfo(Path.Combine(steamRoot, "steamapps","common"));
         var compatDir = new DirectoryInfo(Path.Combine(steamRoot, "compatibilitytools.d"));
         var steamRootExists = true;
@@ -24,6 +34,8 @@ public static class ProtonManager
                 Log.Information($"Steam Root is {steamRoot}");
                 Log.Verbose($"Steam Common Directory is {commonDir.FullName}");
                 Log.Verbose($"Steam Compatibility Tools Directory is {compatDir.FullName}");
+                foreach (var steamlib in steamLibraries)
+                    Log.Verbose($"Another Steam Library at {steamlib.FullName}");
             }
             else
             {
@@ -41,30 +53,78 @@ public static class ProtonManager
             try
             {
 
-                var commonDirs = commonDir.GetDirectories("Proton*");
+                var commonDirs = commonDir.GetDirectories("*Proton*");
                 foreach (var dir in commonDirs)
                     if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions.Add(dir.Name, dir.FullName);
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error(ex, $"Couldn't find any Proton versions in {commonDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
+                Log.Verbose($"Couldn't find any Proton versions in {commonDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
             }
-            try {
+            try
+            {
+                var commonDirs2 = commonDir.GetDirectories("SteamLinuxRuntime_*");
+                foreach (var dir in commonDirs2)
+                    if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes.Add(dir.Name, dir.FullName);
+                    else Log.Verbose($"Couldn't find runtime at {dir.FullName}.");
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Log.Verbose($"Couldn't find any container Runtimes in {commonDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
+            }
+            try
+            {
                 var compatDirs = compatDir.GetDirectories("*Proton*");
                 foreach (var dir in compatDirs)
                     if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions.Add(dir.Name, dir.FullName);
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error(ex, $"Couldn't find any Proton versions in {compatDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
+                Log.Verbose($"Couldn't find any Proton versions {compatDir}.");
+            }
+            try
+            {
+
+                var compatDirs2 = compatDir.GetDirectories("SteamLinuxRuntime_*");
+                foreach (var dir in compatDirs2)
+                    if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes.Add(dir.Name, dir.FullName);
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Log.Verbose($"Couldn't find any container Runtimes in {compatDir}.");
+            }
+            foreach (var steamlib in steamLibraries)
+            {
+                try
+                {
+                    var compatDirs = steamlib.GetDirectories("*Proton*");
+                    foreach (var dir in compatDirs)
+                        if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions.Add(dir.Name, dir.FullName);
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    Log.Verbose($"Couldn't find any Proton versions {steamlib}.");
+                }
+                try
+                {
+
+                    var compatDirs2 = steamlib.GetDirectories("SteamLinuxRuntime_*");
+                    foreach (var dir in compatDirs2)
+                        if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes.Add(dir.Name, dir.FullName);
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    Log.Verbose($"Couldn't find any container Runtimes in {compatDir}.");
+                }
             }
         }
 
         if (Versions.Count == 0)
             Versions.Add("DISABLED", "No valid Proton verions found. Bad SteamPath or Steam not installed.");
+        Runtimes.Add("Disabled", "");
     }
 
-    public static string GetPath(string name)
+    public static string GetVersionPath(string name)
     {
         if (Versions.ContainsKey(name))
             return Versions[name];
@@ -82,8 +142,31 @@ public static class ProtonManager
         return (Versions.ContainsKey(name)) ? true : false;
     }
 
+    public static string GetRuntimePath(string name)
+    {
+        if (Runtimes.ContainsKey(name))
+        {
+            Log.Verbose($"Runtime found: {name} - {Runtimes[name]}");
+            return Runtimes[name];
+        }
+        Log.Verbose($"Runtime not found, using default: {GetDefaultRuntime()} - {Runtimes[GetDefaultRuntime()]}");
+        return Runtimes[GetDefaultRuntime()];
+    }
+
+    public static string GetDefaultRuntime()
+    {
+        if (RuntimeExists("SteamLinuxRuntime_soldier")) return "SteamLinuxRuntime_soldier";
+        return "Disabled";
+    }
+
+    public static bool RuntimeExists(string name)
+    {
+        return (Runtimes.ContainsKey(name)) ? true : false;
+    }
+
     public static bool IsValid()
     {
         return Versions.ContainsKey("DISABLED") ? false : true;
     }
+
 }

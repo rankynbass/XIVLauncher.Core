@@ -24,7 +24,7 @@ public class DictionarySettingsEntry : SettingsEntry<string>
 
         Dictionary<string, string>.KeyCollection keys = Pairs.Keys;
 
-        if (ImGui.BeginCombo($"###{Id.ToString()}", idx + ": " + Pairs[idx]))
+        if (ImGui.BeginCombo($"###{Id.ToString()}", idx + (string.IsNullOrEmpty(Pairs[idx]) ? "" : " - " + Pairs[idx])))
         {
             foreach ( string key in keys )
             {
