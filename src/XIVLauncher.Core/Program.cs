@@ -428,11 +428,13 @@ class Program
         storage.GetFolder("dalamud").Delete(true);
         storage.GetFolder("dalamudAssets").Delete(true);
         storage.GetFolder("runtime").Delete(true);
+        storage.GetFolder("installedPlugins").Delete(true);
         if (storage.GetFile("dalamudUI.ini").Exists) storage.GetFile("dalamudUI.ini").Delete();
         if (storage.GetFile("dalamudConfig.json").Exists) storage.GetFile("dalamudConfig.json").Delete();
         storage.GetFolder("dalamud");
         storage.GetFolder("dalamudAssets");
         storage.GetFolder("runtime");
+        storage.GetFolder("installedPlugins");
         if (tsbutton)
         {
             DalamudLoadInfo = new DalamudOverlayInfoProxy();
