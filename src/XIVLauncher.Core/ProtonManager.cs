@@ -84,7 +84,6 @@ public static class ProtonManager
             }
             try
             {
-
                 var compatDirs2 = compatDir.GetDirectories("SteamLinuxRuntime_*");
                 foreach (var dir in compatDirs2)
                     if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes.Add(dir.Name, dir.FullName);
@@ -107,7 +106,6 @@ public static class ProtonManager
                 }
                 try
                 {
-
                     var compatDirs2 = steamlib.GetDirectories("SteamLinuxRuntime_*");
                     foreach (var dir in compatDirs2)
                         if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes.Add(dir.Name, dir.FullName);
@@ -121,6 +119,7 @@ public static class ProtonManager
 
         if (Versions.Count == 0)
             Versions.Add("DISABLED", "No valid Proton verions found. Bad SteamPath or Steam not installed.");
+        if (Program.IsSteamCompatTool) Runtimes = new Dictionary<string, string>();    
         Runtimes.Add("Disabled", "");
     }
 

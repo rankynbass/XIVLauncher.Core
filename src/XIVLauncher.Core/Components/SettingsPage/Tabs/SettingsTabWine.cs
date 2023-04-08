@@ -41,14 +41,15 @@ public class SettingsTabWine : SettingsTab
 #if !FLATPAK
             new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
             {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
+                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton && !Program.IsSteamCompatTool,
             },
 #endif
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
-                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !Program.IsSteamCompatTool,
                 CheckValidity = b =>
                 {
+                    if (Program.IsSteamCompatTool) return null;
                     if (b == true && (!File.Exists("/usr/lib/libgamemodeauto.so.0") && !File.Exists("/app/lib/libgamemodeauto.so.0")))
                         return "GameMode not detected.";
 

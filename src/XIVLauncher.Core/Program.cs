@@ -168,7 +168,7 @@ class Program
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
         Config.ProtonVersion = ProtonManager.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : ProtonManager.GetDefaultVersion();
-        Config.SteamRuntime = ProtonManager.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : ProtonManager.GetDefaultRuntime();
+        Config.SteamRuntime = (IsSteamCompatTool) ? "Disabled" : (ProtonManager.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : ProtonManager.GetDefaultRuntime());
 
         Secrets = GetSecretProvider(storage);
 
