@@ -114,6 +114,10 @@ public interface ILauncherConfig
     public bool HelperApp4WineD3D { get; set; }
     public bool HelperApp5WineD3D { get; set; }
 
+    public bool? FixLDP { get; set; }
+
+    public bool? FixIM { get; set; }
+
     #endregion
 
     #region Dalamud

@@ -134,6 +134,9 @@ class Program
         Config.UseReaper ??= false;
         Config.WineDebugVars ??= "-all";
         FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
+
+        Config.FixLDP ??= false;
+        Config.FixIM ??= false;
     }
 
     public const uint STEAM_APP_ID = 39210;
