@@ -267,7 +267,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}{suffix}"),
+            new WindowCreateInfo(50, 50, (int)(1280*FontMultiplier), (int)(800*FontMultiplier), WindowState.Normal, $"XIVLauncher {version}{suffix}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
