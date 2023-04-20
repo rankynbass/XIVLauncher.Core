@@ -130,8 +130,7 @@ class Program
         Config.WineBinaryPath ??= "/usr/bin";
         Config.SteamPath = string.IsNullOrEmpty(Config.SteamPath) ? Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root") : Config.SteamPath;
         Config.ProtonVersion ??= "Proton 7.0";
-        Config.UseSoldier ??= true;
-        Config.UseReaper ??= false;
+        Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
         Config.WineDebugVars ??= "-all";
         FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
 
@@ -178,6 +177,8 @@ class Program
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
         Config.ProtonVersion = ProtonManager.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : ProtonManager.GetDefaultVersion();
+        Config.SteamRuntime = ProtonManager.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : ProtonManager.GetDefaultRuntime();
+
 
         if (badxlpath)
         {
@@ -362,7 +363,7 @@ class Program
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
         var protonPrefix = storage.GetFolder("protonprefix");
-        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, Config.UseSoldier.Value, Config.UseReaper.Value);
+        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetVersionPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, ProtonManager.GetRuntimePath(Config.SteamRuntime));
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, !Config.WineD3DEnabled ?? true, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);

@@ -34,27 +34,22 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Custom
             },
-            new DictionarySettingsEntry("Proton Version", "", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s)
+            new DictionarySettingsEntry("Proton Version", "", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, ProtonManager.GetDefaultVersion())
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
             },
 #if !FLATPAK
-            new SettingsEntry<bool>("Use Steam Soldier Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", () => Program.Config.UseSoldier ?? true, b => Program.Config.UseSoldier = b)
+            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
             },
 #endif
-            new SettingsEntry<bool>("Use Reaper", "Use Steam's reaper process to launch the game.", () => Program.Config.UseReaper ?? false, b => Program.Config.UseReaper = b)
-            {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
-            },
-
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
                 CheckValidity = b =>
                 {
-                    if (b == true && (!File.Exists("/usr/lib/libgamemodeauto.so.0") && !File.Exists("/app/lib/libgamemodeauto.so.0")))
+                    if (b == true && (!File.Exists("/usr/lib/libgamemodeauto.so.0") && !File.Exists("/usr/lib64/libgamemodeauto.so.0")&& !File.Exists("/app/lib/libgamemodeauto.so.0")))
                         return "GameMode not detected.";
 
                     return null;
