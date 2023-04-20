@@ -70,9 +70,7 @@ public interface ILauncherConfig
 
     public string? ProtonVersion { get; set; }
 
-    public bool? UseSoldier { get; set; }
-
-    public bool? UseReaper { get; set; }
+    public string? SteamRuntime { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 
@@ -113,6 +111,10 @@ public interface ILauncherConfig
     public bool HelperApp3WineD3D { get; set; }
     public bool HelperApp4WineD3D { get; set; }
     public bool HelperApp5WineD3D { get; set; }
+
+    public bool? FixLDP { get; set; }
+
+    public bool? FixIM { get; set; }
 
     #endregion
 
