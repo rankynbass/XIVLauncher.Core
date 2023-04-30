@@ -138,8 +138,8 @@ class Program
         Config.FixIM ??= false;
     }
 
-    public const uint STEAM_APP_ID = 39210;
-    public const uint STEAM_APP_ID_FT = 312060;
+    public const uint STEAM_APP_ID = 39210; // FFXIV Retail Steam AppId
+    public const uint STEAM_APP_ID_FT = 312060; // FFXIV Free Trial Steam AppId
 
     private static void Main(string[] args)
     {
