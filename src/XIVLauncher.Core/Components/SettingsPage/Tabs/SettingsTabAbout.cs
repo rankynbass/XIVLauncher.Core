@@ -27,6 +27,8 @@ public class SettingsTabAbout : SettingsTab
         ImGui.Text($"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
         ImGui.Text("By goaaats");
 
+        ImGui.Separator();
+
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             AppUtil.OpenBrowser("https://github.com/goaaats");
 
@@ -47,10 +49,12 @@ public class SettingsTabAbout : SettingsTab
             PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"));
         }
 
-        ImGui.Dummy(new Vector2(20));
+        if (ImGui.Button("Generate Troubleshooting Pack"))
+        {
+            PackGenerator.SavePack(Program.storage);
+            PlatformHelpers.OpenBrowser(Program.storage.GetFolder("logs").FullName);
+        }
 
-        ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
-            
         base.Draw();
     }
 }
