@@ -70,21 +70,6 @@ public class SettingsTabWine : SettingsTab
             },
 
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
-            new SettingsEntry<bool>("Use WineD3D (Disable DXVK)",
-                                    "Don't check this unless you know what you're doing.\nIf you check this, XIVLauncher will try to use WineD3D instead of DXVK, and nothing in the DXVK tab will work.\nCustom wine versions may not work (especially proton-based wine). This will also break GShade.",
-                                    () => Program.Config.WineD3DEnabled ?? false, b => Program.Config.WineD3DEnabled = b)
-            {
-                CheckWarning = b =>
-                {
-                    return "Dalamud and WineD3D have only been tested with the Official & TKG Patched wine installs. Other options may or may not work.";
-                },
-                CheckValidity = b =>
-                {
-                    if(startupTypeSetting.Value == WineStartupType.Proton && b)
-                        return "WineD3D does not currently work with Proton.";
-                    return null;
-                },
-            },
         };
     }
 

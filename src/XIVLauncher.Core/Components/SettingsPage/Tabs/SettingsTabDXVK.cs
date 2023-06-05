@@ -15,25 +15,46 @@ public class SettingsTabDXVK : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            dxvkVersion = new SettingsEntry<Dxvk.DxvkVersion>("DXVK Version", "Choose which version of DXVK to use.", () => Program.Config.DxvkVersion, type => Program.Config.DxvkVersion = type),
+            dxvkVersion = new SettingsEntry<Dxvk.DxvkVersion>("DXVK Version", "Choose which version of DXVK to use.", () => Program.Config.DxvkVersion, type => Program.Config.DxvkVersion = type)
+            {
+
+                CheckWarning = type =>
+                {
+                        if (new [] {Dxvk.DxvkVersion.v2_1, Dxvk.DxvkVersion.v2_2}.Contains(type))
+                            return "May not work with pre-8.0 or non-proton wine builds. AMD users may need to use env variable RADV_PERFTEST=gpl";
+                        return null;
+                },
+            },
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => dxvkVersion.Value != Dxvk.DxvkVersion.v2_1,
+                CheckVisibility = () => (new [] {Dxvk.DxvkVersion.v1_10_3, Dxvk.DxvkVersion.v2_0}.Contains(dxvkVersion.Value)),
+                CheckWarning = b =>
+                {
+                    if (!b && dxvkVersion.Value == Dxvk.DxvkVersion.v2_0)
+                        return "AMD users may need to use env variable RADV_PERFTEST=gpl";
+                    return null;
+                },
             },
             dxvkHudSetting = new SettingsEntry<Dxvk.DxvkHudType>("DXVK Overlay", "DXVK Hud is included. MangoHud must be installed separately.\nFlatpak XIVLauncher needs flatpak MangoHud.", () => Program.Config.DxvkHudType, type => Program.Config.DxvkHudType = type)
             {
+                CheckVisibility = () => dxvkVersion.Value != Dxvk.DxvkVersion.Disabled,
                 CheckValidity = type =>
                 {
                     if ((type == Dxvk.DxvkHudType.MangoHud || type == Dxvk.DxvkHudType.MangoHudCustom || type == Dxvk.DxvkHudType.MangoHudFull)
                         && (!File.Exists("/usr/lib/mangohud/libMangoHud.so") && !File.Exists("/usr/lib64/mangohud/libMangoHud.so") && !File.Exists("/usr/lib/extensions/vulkan/MangoHud/lib/x86_64-linux-gnu/libMangoHud.so")))
                         return "MangoHud not detected.";
-
                     return null;
-                }
+                },
+                CheckWarning = type =>
+                {
+                    if (dxvkVersion.Value == Dxvk.DxvkVersion.DisabledVK && new [] {Dxvk.DxvkHudType.None, Dxvk.DxvkHudType.Fps, Dxvk.DxvkHudType.Custom, Dxvk.DxvkHudType.Full}.Contains(type))
+                        return "The WineD3D Vulkan renderer does not work with DXVK Hud.";
+                    return null;
+                },
             },
             new SettingsEntry<string>("DXVK Hud Custom String", "Set a custom string for the built in DXVK Hud. Warning: If it's invalid, the game may hang.", () => Program.Config.DxvkHudCustom, s => Program.Config.DxvkHudCustom = s)
             {
-                CheckVisibility = () => dxvkHudSetting.Value == Dxvk.DxvkHudType.Custom,
+                CheckVisibility = () => (dxvkHudSetting.Value == Dxvk.DxvkHudType.Custom && dxvkVersion.Value != Dxvk.DxvkVersion.Disabled),
                 CheckWarning = s =>
                 {
                     if(!DxvkSettings.CheckDxvkHudString(s))
@@ -51,7 +72,10 @@ public class SettingsTabDXVK : SettingsTab
                     return null;
                 },
             },
-            new NumericSettingsEntry("Frame Rate Limit", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 to leave unset.", () => Program.Config.DxvkFrameRate ?? 0, i => Program.Config.DxvkFrameRate = i, 0, 1000),
+            new NumericSettingsEntry("Frame Rate Limit", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 to leave unset.", () => Program.Config.DxvkFrameRate ?? 0, i => Program.Config.DxvkFrameRate = i, 0, 1000)
+            {
+                CheckVisibility = () => !(new [] {Dxvk.DxvkVersion.Disabled, Dxvk.DxvkVersion.DisabledVK}.Contains(dxvkVersion.Value))
+            },
         };
     }
 

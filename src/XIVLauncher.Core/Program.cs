@@ -366,7 +366,7 @@ class Program
         var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetVersionPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, ProtonManager.GetRuntimePath(Config.SteamRuntime));
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, !Config.WineD3DEnabled ?? true, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);
+        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, protonSettings, Config.GameModeEnabled, toolsFolder);
     }
 
