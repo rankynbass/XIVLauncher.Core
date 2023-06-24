@@ -72,7 +72,7 @@ public static class DxvkManager
         var env = new Dictionary<string, string>
         {
             { "DXVK_LOG_PATH", Path.Combine(rootfolder, "logs") },
-            { "DXVK_CONFIG_FILE", (isProton) ? Path.Combine(rootfolder, "protonprefix") : Path.Combine(dxvkfolder, "dxvk.conf") },
+            { "DXVK_CONFIG_FILE", (isProton) ? Path.Combine(rootfolder, "protonprefix", "dxvk.conf") : Path.Combine(dxvkfolder, "dxvk.conf") },
         };
         if (framerate != 0)
             env.Add("DXVK_FRAME_RATE", framerate.ToString());

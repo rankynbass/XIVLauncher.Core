@@ -42,12 +42,12 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
             },
-            new DictionarySettingsEntry("Proton Version", "", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, ProtonManager.GetDefaultVersion())
+            new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, ProtonManager.GetDefaultVersion())
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
             },
 #if !FLATPAK
-            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
+            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it. Slow to launch.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
             },

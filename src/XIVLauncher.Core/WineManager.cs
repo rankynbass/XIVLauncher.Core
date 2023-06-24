@@ -91,7 +91,7 @@ public static class WineManager
         {
             var ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
             if (!ldPreload.Contains("libgamemodeauto.so.0"))
-                ldPreload = (ldPreload.Equals("")) ? "libgamemodeaudo.so" : ldPreload + ":libgamemodeauto.so.0";
+                ldPreload = (ldPreload.Equals("")) ? "libgamemodeauto.so.0" : ldPreload + ":libgamemodeauto.so.0";
             env.Add("LD_PRELOAD", ldPreload);
         }
         if (!string.IsNullOrEmpty(Program.Config.WineDebugVars))
@@ -109,20 +109,20 @@ public static class WineManager
         var runCmd = proton;
         var runArgs = "";
         var minRunCmd = "";
-
+#if !FLATPAK
         if (Program.Config.SteamRuntime != "Disabled")
         {
             runCmd = Path.Combine(ProtonManager.GetRuntimePath(Program.Config.SteamRuntime), "_v2-entry-point");
             runArgs = "--verb=waitforexitandrun -- \"" + proton + "\"";
             minRunCmd = proton;
         }
-
+#endif
         var env = new Dictionary<string, string>();
         if (Program.Config.GameModeEnabled ?? false)
         {
             var ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
             if (!ldPreload.Contains("libgamemodeauto.so.0"))
-                ldPreload = (ldPreload.Equals("")) ? "libgamemodeaudo.so" : ldPreload + ":libgamemodeauto.so.0";
+                ldPreload = (ldPreload.Equals("")) ? "libgamemodeauto.so.0" : ldPreload + ":libgamemodeauto.so.0";
             env.Add("LD_PRELOAD", ldPreload);
         }
         if (!string.IsNullOrEmpty(Program.Config.WineDebugVars))
@@ -133,6 +133,7 @@ public static class WineManager
         var compatMounts = Environment.GetEnvironmentVariable("STEAM_COMPAT_MOUNTS") ?? "";
         var protonCompatMounts = Program.Config.GamePath + ":" + Program.Config.GameConfigPath;
 
+#if !FLATPAK
         // Extra Steam compatibility mounts for discord ipc bridge
         var discordIPCPaths = "";
         if (Program.Config.SteamRuntime != "Disabled")
@@ -141,6 +142,7 @@ public static class WineManager
             for (int i = 0; i < 10; i++)
                 discordIPCPaths += $"{runPath}/discord-ipc-{i}:{runPath}/app/com.discordapp.Discord/discord-ipc-{i}:{runPath}/snap.discord-cananry/discord-ipc-{i}:";
         }
+#endif
         compatMounts = discordIPCPaths + protonCompatMounts + (compatMounts.Equals("") ? "" : ":" + compatMounts);
         env.Add("STEAM_COMPAT_MOUNTS", compatMounts);
         env.Add("WINEPREFIX", Path.Combine(xlcore, "protonprefix", "pfx"));

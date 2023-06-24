@@ -342,7 +342,7 @@ class Program
         protonPrefix.CreateSubdirectory("pfx");
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var wine = WineManager.GetSettings();
-        var dxvk = DxvkManager.GetSettings();
+        var dxvk = DxvkManager.GetSettings(wine.IsProton);
         var wineoverrides = "msquic,mscoree=n,b;";
         wineoverrides += (wine.IsProton) ? "d3d12," : ""; 
         var wineenv = new Dictionary<string, string>();
