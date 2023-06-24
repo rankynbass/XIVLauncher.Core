@@ -416,6 +416,7 @@ class Program
         storage.GetFolder("wineprefix");
         storage.GetFolder("protonprefix").Delete(true);
         storage.GetFolder("protonprefix");
+        Directory.CreateDirectory(storage.Root.FullName, "protonprefix", "pfx");
     }
 
     public static void ClearPlugins(bool tsbutton = false)

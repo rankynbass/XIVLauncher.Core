@@ -25,7 +25,7 @@ public class SettingsTabTroubleshooting : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
+        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix and protonprefix folders");
         if (ImGui.Button("Clear Prefix"))
         {
             Program.ClearPrefix();
