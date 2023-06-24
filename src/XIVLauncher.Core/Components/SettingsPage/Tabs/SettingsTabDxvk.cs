@@ -91,6 +91,15 @@ public class SettingsTabDxvk : SettingsTab
 
     public override string Title => "DXVK";
 
+    public override void Draw()
+    {
+        ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
+        ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D. This probably won't work.");
+        ImGui.Separator();
+        
+        base.Draw();
+    }
+
     public override void Save()
     {
         base.Save();

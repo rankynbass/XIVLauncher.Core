@@ -127,6 +127,19 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
+        if (string.IsNullOrEmpty(Config.SteamPath))
+        {
+            var home = System.Environment.GetEnvironmentVariable("HOME");
+            var xdg_data = System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(home, ".local", "share");
+            if (Directory.Exists(Path.Combine(xdg_data, "Steam")))
+                Config.SteamPath = Path.Combine(xdg_data, "Steam");
+            else if (Directory.Exists(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam")))
+                Config.SteamPath = Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam");
+            else
+                Config.SteamPath = Path.Combine(home, ".steam", "root");
+        }
+        Config.ProtonVersion ??= "Proton 7.0";
+        Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
         Config.WineDebugVars ??= "-all";
 
         Config.FixLDP ??= false;
@@ -156,6 +169,7 @@ class Program
         
         SetupLogging(mainargs);
         LoadConfig(storage);
+        ProtonManager.GetVersions(Config.SteamPath);
 
         Secrets = GetSecretProvider(storage);
 
@@ -324,20 +338,23 @@ class Program
     {
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
+        var protonPrefix = storage.GetFolder("protonprefix");
+        protonPrefix.CreateSubdirectory("pfx");
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var wine = WineManager.Initialize();
-        var dxvk = DxvkManager.Initialize();
-        var wineoverride = "msquic,mscoree=n,b;";
+        var wine = WineManager.GetSettings();
+        var dxvk = DxvkManager.GetSettings();
+        var wineoverrides = "msquic,mscoree=n,b;";
+        wineoverrides += (wine.IsProton) ? "d3d12," : ""; 
         var wineenv = new Dictionary<string, string>();
         if (dxvk.IsDxvk)
         {
-            wineoverride += "d3d9,d3d11,d3d10core,dxgi=n,b";
+            wineoverrides += "d3d9,d3d11,d3d10core,dxgi=n,b";
         }
         else
         {
-            wineoverride += "d3d9,d3d11,d3d10core,dxgi=b";
+            wineoverrides += "d3d9,d3d11,d3d10core,dxgi=b";
         }
-        CompatibilityTools = new CompatibilityTools(wine, dxvk, wineenv, wineoverride, winePrefix, toolsFolder, wineLogFile);
+        CompatibilityTools = new CompatibilityTools(wine, dxvk, wineenv, wineoverrides, (wine.IsProton ? protonPrefix : winePrefix), toolsFolder, wineLogFile);
     }
 
     public static void ShowWindow()
@@ -397,6 +414,8 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
+        storage.GetFolder("protonprefix").Delete(true);
+        storage.GetFolder("protonprefix");
     }
 
     public static void ClearPlugins(bool tsbutton = false)

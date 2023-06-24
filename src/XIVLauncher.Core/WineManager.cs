@@ -15,6 +15,9 @@ public enum WineType
     [SettingsDescription("Managed by XIVLauncher", "Choose a patched version of wine made specifically for XIVLauncher")]
     Managed,
 
+    [SettingsDescription("Proton", "Choose a Proton version that is already installed in Steam. Does not support flatpak Steam.")]
+    Proton,
+
     [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
     Custom,
 }
@@ -38,25 +41,34 @@ public static class WineManager
     private const string DISTRO = "ubuntu";
 #endif
 
-    public static WineRunner Initialize()
+    private static string xlcore => Program.storage.Root.FullName;
+
+    public static WineRunner GetSettings()
     {
-        var winepath = "";
-        var wineargs = "";
-        var folder = "";
-        var url = "";
-        var version = Program.Config.WineVersion ?? WineVersion.Wine8_5;
+
         switch (Program.Config.WineType ?? WineType.Managed)
         {
             case WineType.Custom:
-                winepath = Program.Config.WineBinaryPath ?? "/usr/bin";
-                break;
-
+                return GetWine(Program.Config.WineBinaryPath ?? "/usr/bin");
+            
             case WineType.Managed:
-                break;
+                return GetWine();
+
+            case WineType.Proton:
+                return GetProton();
 
             default:
                 throw new ArgumentOutOfRangeException("Bad value for WineType");
         }
+
+    }
+
+    private static WineRunner GetWine(string runCmd = "")
+    {
+        var runArgs = "";
+        var folder = "";
+        var url = "";
+        var version = Program.Config.WineVersion ?? WineVersion.Wine8_5;
 
         switch (version)
         {
@@ -86,9 +98,60 @@ public static class WineManager
             env.Add("WINEDEBUG", Program.Config.WineDebugVars);
         if (Program.Config.ESyncEnabled ?? true) env.Add("WINEESYNC", "1");
         if (Program.Config.FSyncEnabled ?? false) env.Add("WINEFSYNC", "1");
-        env.Add("WINEPREFIX", Path.Combine(Program.storage.Root.FullName, "wineprefix"));
+        env.Add("WINEPREFIX", Path.Combine(xlcore, "wineprefix"));
         
-        return new WineRunner(winepath, wineargs, folder, url, Program.storage.Root.FullName, env);
+        return new WineRunner(runCmd, runArgs, folder, url, xlcore, env);
+    }
+
+    private static WineRunner GetProton()
+    {
+        var proton = Path.Combine(ProtonManager.GetVersionPath(Program.Config.ProtonVersion), "proton");
+        var runCmd = proton;
+        var runArgs = "";
+        var minRunCmd = "";
+
+        if (Program.Config.SteamRuntime != "Disabled")
+        {
+            runCmd = Path.Combine(ProtonManager.GetRuntimePath(Program.Config.SteamRuntime), "_v2-entry-point");
+            runArgs = "--verb=waitforexitandrun -- \"" + proton + "\"";
+            minRunCmd = proton;
+        }
+
+        var env = new Dictionary<string, string>();
+        if (Program.Config.GameModeEnabled ?? false)
+        {
+            var ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
+            if (!ldPreload.Contains("libgamemodeauto.so.0"))
+                ldPreload = (ldPreload.Equals("")) ? "libgamemodeaudo.so" : ldPreload + ":libgamemodeauto.so.0";
+            env.Add("LD_PRELOAD", ldPreload);
+        }
+        if (!string.IsNullOrEmpty(Program.Config.WineDebugVars))
+            env.Add("WINEDEBUG", Program.Config.WineDebugVars);
+        env.Add("STEAM_COMPAT_DATA_PATH", Path.Combine(xlcore, "protonprefix"));
+        env.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Program.Config.SteamPath);
+
+        var compatMounts = Environment.GetEnvironmentVariable("STEAM_COMPAT_MOUNTS") ?? "";
+        var protonCompatMounts = Program.Config.GamePath + ":" + Program.Config.GameConfigPath;
+
+        // Extra Steam compatibility mounts for discord ipc bridge
+        var discordIPCPaths = "";
+        if (Program.Config.SteamRuntime != "Disabled")
+        {
+            string runPath = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
+            for (int i = 0; i < 10; i++)
+                discordIPCPaths += $"{runPath}/discord-ipc-{i}:{runPath}/app/com.discordapp.Discord/discord-ipc-{i}:{runPath}/snap.discord-cananry/discord-ipc-{i}:";
+        }
+        compatMounts = discordIPCPaths + protonCompatMounts + (compatMounts.Equals("") ? "" : ":" + compatMounts);
+        env.Add("STEAM_COMPAT_MOUNTS", compatMounts);
+        env.Add("WINEPREFIX", Path.Combine(xlcore, "protonprefix", "pfx"));
+        if (!Program.Config.FSyncEnabled.Value)
+        {
+            if (!Program.Config.ESyncEnabled.Value)
+                env.Add("PROTON_NO_ESYNC", "1");
+            env.Add("PROTON_NO_FSYNC", "1");
+        }
+
+        return new WineRunner(runCmd, runArgs, "", "", xlcore, env, isProton: true, minRunCmd: minRunCmd);
     }
 }
 

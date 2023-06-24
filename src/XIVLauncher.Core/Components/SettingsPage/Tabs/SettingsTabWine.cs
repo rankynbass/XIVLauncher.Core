@@ -15,8 +15,18 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             startupTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x),
-
+                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
+            {
+                CheckValidity = x =>
+                {
+                    if (x == WineType.Proton && !ProtonManager.IsValid())
+                    {
+                        var userHome = System.Environment.GetEnvironmentVariable("HOME") ?? "/home/username";
+                        return $"No proton version found! Check launcher.ini and make sure that SteamPath points your Steam root\nUsually this is {userHome}/.steam/root or {userHome}/.local/share/Steam";
+                    }
+                    return null;
+                }
+            },
             new SettingsEntry<WineVersion>("Wine Version", "Choose a patched wine version.", () => Program.Config.WineVersion ?? WineVersion.Wine8_5, x => Program.Config.WineVersion = x)
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Managed
@@ -28,7 +38,20 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Custom
             },
-
+            new SettingsEntry<string>("Steam Path", "Set the location of your steam folder (requires restart)", () => Program.Config.SteamPath, s => Program.Config.SteamPath = s)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
+            },
+            new DictionarySettingsEntry("Proton Version", "", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, ProtonManager.GetDefaultVersion())
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
+            },
+#if !FLATPAK
+            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineType.Proton,
+            },
+#endif
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),

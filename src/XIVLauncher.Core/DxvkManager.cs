@@ -60,7 +60,7 @@ public static class DxvkManager
     private const string ALLOWED_WORDS = "^(?:devinfo|fps|frametimes|submissions|drawcalls|pipelines|descriptors|memory|gpuload|version|api|cs|compiler|samplers|scale=(?:[0-9])*(?:.(?:[0-9])+)?)$";
 
 
-    public static DxvkRunner Initialize()
+    public static DxvkRunner GetSettings(bool isProton)
     {
         var isDxvk = true;
         var folder = "";
@@ -72,7 +72,7 @@ public static class DxvkManager
         var env = new Dictionary<string, string>
         {
             { "DXVK_LOG_PATH", Path.Combine(rootfolder, "logs") },
-            { "DXVK_CONFIG_FILE", Path.Combine(dxvkfolder, "dxvk.conf") },
+            { "DXVK_CONFIG_FILE", (isProton) ? Path.Combine(rootfolder, "protonprefix") : Path.Combine(dxvkfolder, "dxvk.conf") },
         };
         if (framerate != 0)
             env.Add("DXVK_FRAME_RATE", framerate.ToString());
@@ -115,7 +115,7 @@ public static class DxvkManager
         {
             var dxvkCachePath = new DirectoryInfo(Path.Combine(dxvkfolder, "cache"));
             if (!dxvkCachePath.Exists) dxvkCachePath.Create();
-            env.Add("DXVK_STATE_CACHE_PATH", Path.Combine(dxvkCachePath.FullName, folder));
+            if (isProton) env.Add("DXVK_STATE_CACHE_PATH", Path.Combine(dxvkCachePath.FullName, folder));
         }
 
         var hudType = Program.Config.DxvkHudType;
