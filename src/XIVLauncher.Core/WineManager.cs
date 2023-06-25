@@ -33,6 +33,8 @@ public enum WineVersion
 
 public static class WineManager
 {
+    private static string xlcore => Program.storage.Root.FullName;
+
     public static WineRunner GetSettings()
     {
 
