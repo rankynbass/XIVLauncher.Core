@@ -101,14 +101,14 @@ public static class WineManager
         var runCmd = proton;
         var runArgs = "";
         var minRunCmd = "";
-#if !FLATPAK
-        if (Program.Config.SteamRuntime != "Disabled")
+
+        if (Program.Config.SteamRuntime != "Disabled" && !Program.IsFlatpak)
         {
             runCmd = Path.Combine(ProtonManager.GetRuntimePath(Program.Config.SteamRuntime), "_v2-entry-point");
             runArgs = "--verb=waitforexitandrun -- \"" + proton + "\"";
             minRunCmd = proton;
         }
-#endif
+
         var env = new Dictionary<string, string>();
         if (Program.Config.GameModeEnabled ?? false)
         {
@@ -125,16 +125,14 @@ public static class WineManager
         var compatMounts = Environment.GetEnvironmentVariable("STEAM_COMPAT_MOUNTS") ?? "";
         var protonCompatMounts = Program.Config.GamePath + ":" + Program.Config.GameConfigPath;
 
-#if !FLATPAK
         // Extra Steam compatibility mounts for discord ipc bridge
         var discordIPCPaths = "";
-        if (Program.Config.SteamRuntime != "Disabled")
+        if (Program.Config.SteamRuntime != "Disabled" && !Program.IsFlatpak)
         {
             string runPath = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
             for (int i = 0; i < 10; i++)
                 discordIPCPaths += $"{runPath}/discord-ipc-{i}:{runPath}/app/com.discordapp.Discord/discord-ipc-{i}:{runPath}/snap.discord-cananry/discord-ipc-{i}:";
         }
-#endif
         compatMounts = discordIPCPaths + protonCompatMounts + (compatMounts.Equals("") ? "" : ":" + compatMounts);
         env.Add("STEAM_COMPAT_MOUNTS", compatMounts);
         env.Add("WINEPREFIX", Path.Combine(xlcore, "protonprefix", "pfx"));

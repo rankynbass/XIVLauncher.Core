@@ -46,6 +46,7 @@ class Program
     private static bool showImGuiDemoWindow = true;
     public static string Distro { get; private set; }
     private static string DistroLong;
+    public static bool IsFlatpak { get; private set; }
     private static LauncherApp launcherApp;
     public static Storage storage;
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
@@ -417,6 +418,7 @@ class Program
             var name = "";
             var pretty = "";
             var distro = "";
+            var flatpak = false;
             foreach (var line in osRelease)
             {
                 var keyValue = line.Split("=", 2);
@@ -436,11 +438,17 @@ class Program
                     if (keyValue[1].Contains("debian"))
                         distro = "ubuntu";
                 }
-                if (keyValue[0] == "ID" && keyValue[1].Contains("tumbleweed"))
-                    distro = "fedora";
+                if (keyValue[0] == "ID")
+                {   
+                    if (keyValue[1].Contains("tumbleweed"))
+                        distro = "fedora";
+                    if (keyValue[1] == "org.freedesktop.platform")
+                        flatpak = true;
+                }
             }
             Distro = (distro == "") ? "ubuntu" : distro;
             DistroLong = pretty == "" ? (name == "" ? "Unknown distribution" : name) : pretty;
+            IsFlatpak = flatpak;
         }
         catch
         {
