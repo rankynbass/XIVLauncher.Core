@@ -269,15 +269,13 @@ class Program
 
         var needUpdate = false;
 
-#if FLATPAK
-        if (Config.DoVersionCheck ?? false)
+        if (Config.DoVersionCheck ?? false && IsFlatpak)
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
         }   
-#endif
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
