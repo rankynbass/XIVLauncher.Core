@@ -44,9 +44,7 @@ class Program
 
     private static readonly Vector3 clearColor = new(0.1f, 0.1f, 0.1f);
     private static bool showImGuiDemoWindow = true;
-    public static string Distro { get; private set; }
-    private static string DistroLong;
-    public static bool IsFlatpak { get; private set; }
+
     private static LauncherApp launcherApp;
     public static Storage storage;
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
@@ -77,7 +75,7 @@ class Program
 
         Log.Information("========================================================");
         Log.Information("Starting a session(v{Version} - {Hash})", AppUtil.GetAssemblyVersion(), AppUtil.GetGitHash());
-        Log.Information("Running on {DistroName}, wine distro set to {Distro}", DistroLong, Distro);
+        Log.Information("Running on {DistroName}, wine package set to {DistroPackage}", Distro.Name, Distro.Package.ToString());   
     }
 
     private static void LoadConfig(Storage storage)
@@ -169,8 +167,8 @@ class Program
             if (CoreEnvironmentSettings.ClearTools) ClearTools();
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
-
-        GetDistro();        
+        
+        Distro.GetInfo();
         SetupLogging(mainargs);
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
@@ -269,13 +267,13 @@ class Program
 
         var needUpdate = false;
 
-        if (Config.DoVersionCheck ?? false && IsFlatpak)
+        if (Config.DoVersionCheck ?? false && Distro.IsFlatpak)
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
-        }   
+        }
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
@@ -343,8 +341,8 @@ class Program
         var protonPrefix = storage.GetFolder("protonprefix");
         protonPrefix.CreateSubdirectory("pfx");
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var wine = WineManager.GetSettings();
-        var dxvk = DxvkManager.GetSettings(wine.IsProton);
+        var wine = WineManager.Initialize();
+        var dxvk = DxvkManager.Initialize(wine.IsProton);
         var wineoverrides = "msquic,mscoree=n,b;";
         wineoverrides += (wine.IsProton) ? "d3d12," : ""; 
         var wineenv = new Dictionary<string, string>();
@@ -399,60 +397,6 @@ class Program
 
             default:
                 throw new ArgumentException($"Invalid secret provider: {envVar}");
-        }
-    }
-
-    private static void GetDistro()
-    {
-        try
-        {
-            if (!File.Exists("/etc/os-release"))
-            {
-                Distro = "ubuntu";
-                DistroLong = "Unknown distribution";
-                return;
-            }
-            var osRelease = File.ReadAllLines("/etc/os-release");
-            var name = "";
-            var pretty = "";
-            var distro = "";
-            var flatpak = false;
-            foreach (var line in osRelease)
-            {
-                var keyValue = line.Split("=", 2);
-                if (keyValue.Length == 1) continue;
-                if (keyValue[0] == "NAME")
-                    name = keyValue[1];
-                if (keyValue[0] == "PRETTY_NAME")
-                    pretty = keyValue[1];
-                if (keyValue[0] == "ID_LIKE")
-                {
-                    if (keyValue[1].Contains("arch"))
-                        distro = "arch";
-                    if (keyValue[1].Contains("fedora"))
-                        distro = "fedora";
-                    if (keyValue[1].Contains("ubuntu"))
-                        distro = "ubuntu";
-                    if (keyValue[1].Contains("debian"))
-                        distro = "ubuntu";
-                }
-                if (keyValue[0] == "ID")
-                {   
-                    if (keyValue[1].Contains("tumbleweed"))
-                        distro = "fedora";
-                    if (keyValue[1] == "org.freedesktop.platform")
-                        flatpak = true;
-                }
-            }
-            Distro = (distro == "") ? "ubuntu" : distro;
-            DistroLong = pretty == "" ? (name == "" ? "Unknown distribution" : name) : pretty;
-            IsFlatpak = flatpak;
-        }
-        catch
-        {
-            // If there's any kind of error opening the file or even finding it, just go with default.
-            Distro = "ubuntu";
-            DistroLong = "Unknown distribution";
         }
     }
 

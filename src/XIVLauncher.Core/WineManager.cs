@@ -35,7 +35,7 @@ public static class WineManager
 {
     private static string xlcore => Program.storage.Root.FullName;
 
-    public static WineRunner GetSettings()
+    public static WineRunner Initialize()
     {
 
         switch (Program.Config.WineType ?? WineType.Managed)
@@ -66,12 +66,12 @@ public static class WineManager
         {
             case WineVersion.Wine8_5:
                 folder = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
-                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{Program.Distro}-8.5.r4.g4211bac7.tar.xz";
+                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{Distro.Package.ToString()}-8.5.r4.g4211bac7.tar.xz";
                 break;
 
             case WineVersion.Wine7_10:
                 folder = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
-                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{Program.Distro}-7.10.r3.g560db77d.tar.xz";
+                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{Distro.Package.ToString()}-7.10.r3.g560db77d.tar.xz";
                 break;
 
             default:
@@ -102,7 +102,7 @@ public static class WineManager
         var runArgs = "";
         var minRunCmd = "";
 
-        if (Program.Config.SteamRuntime != "Disabled" && !Program.IsFlatpak)
+        if (Program.Config.SteamRuntime != "Disabled" && !Distro.IsFlatpak)
         {
             runCmd = Path.Combine(ProtonManager.GetRuntimePath(Program.Config.SteamRuntime), "_v2-entry-point");
             runArgs = "--verb=waitforexitandrun -- \"" + proton + "\"";
@@ -127,7 +127,7 @@ public static class WineManager
 
         // Extra Steam compatibility mounts for discord ipc bridge
         var discordIPCPaths = "";
-        if (Program.Config.SteamRuntime != "Disabled" && !Program.IsFlatpak)
+        if (Program.Config.SteamRuntime != "Disabled" && !Distro.IsFlatpak)
         {
             string runPath = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
             for (int i = 0; i < 10; i++)
@@ -144,13 +144,6 @@ public static class WineManager
         }
 
         return new WineRunner(runCmd, runArgs, "", "", xlcore, env, isProton: true, minRunCmd: minRunCmd);
-    }
-
-    private static string GetDistro()
-    {
-        if (File.Exists("/etc/arch-release")) return "arch";
-        if (File.Exists("/etc/fedora-release")) return "fedora";
-        return "ubuntu";
     }
 }
 

@@ -60,7 +60,7 @@ public static class DxvkManager
     private const string ALLOWED_WORDS = "^(?:devinfo|fps|frametimes|submissions|drawcalls|pipelines|descriptors|memory|gpuload|version|api|cs|compiler|samplers|scale=(?:[0-9])*(?:.(?:[0-9])+)?)$";
 
 
-    public static DxvkRunner GetSettings(bool isProton)
+    public static DxvkRunner Initialize(bool isProton)
     {
         var isDxvk = true;
         var folder = "";
