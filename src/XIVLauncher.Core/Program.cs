@@ -22,6 +22,7 @@ using XIVLauncher.Core.Accounts.Secrets.Providers;
 using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core;
 
@@ -118,7 +119,8 @@ class Program
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
-        Config.SetWin7 ??= true;
+        Config.DxvkHudType ??= DxvkHudType.None;
+        Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
@@ -182,11 +184,13 @@ class Program
 
                 case PlatformID.Unix:
                     Steam = new UnixSteam();
+                    Distro.Initialize();
+                    Log.Information("Running on {DistroName}. {wineInfo}", Distro.Name, (Distro.Platform == Platform.Linux) ? $"Using {Distro.Package} for managed wine downloads." : string.Empty);
                     break;
 
                 default:
                     throw new PlatformNotSupportedException();
-            }
+            }  
             if (!Config.IsIgnoringSteam ?? true)
             {
                 try
@@ -246,15 +250,13 @@ class Program
 
         var needUpdate = false;
 
-#if FLATPAK
-        if (Config.DoVersionCheck ?? false)
+        if (Config.DoVersionCheck ?? false && Distro.IsFlatpak)
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
-        }   
-#endif
+        }
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
@@ -319,11 +321,10 @@ class Program
     {
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
-        var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
-        Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "beta"));
-        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
+        var wine = WineManager.GetSettings();
+        var dxvk = DxvkManager.GetSettings();
+        CompatibilityTools = new CompatibilityTools(wine, dxvk, winePrefix, toolsFolder, wineLogFile, Distro.IsFlatpak);
     }
 
     public static void ShowWindow()
@@ -411,7 +412,7 @@ class Program
     public static void ClearTools(bool tsbutton = false)
     {
         storage.GetFolder("compatibilitytool").Delete(true);
-        storage.GetFolder("compatibilitytool/beta");
+        storage.GetFolder("compatibilitytool/wine");
         storage.GetFolder("compatibilitytool/dxvk");
         if (tsbutton) CreateCompatToolsInstance();
     }

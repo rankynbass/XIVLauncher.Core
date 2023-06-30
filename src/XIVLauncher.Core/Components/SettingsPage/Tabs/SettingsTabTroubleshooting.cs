@@ -15,7 +15,10 @@ public class SettingsTabTroubleshooting : SettingsTab
         new SettingsEntry<bool>("Hack: Disable gameoverlayrenderer.so", "Fixes some stuttering issues after 40+ minutes, but may affect steam overlay and input.", () => Program.Config.FixLDP ?? false, x => Program.Config.FixLDP = x),
         new SettingsEntry<bool>("Hack: XMODIFIERS=\"@im=null\"", "Fixes some mouse-related issues, some stuttering issues", () => Program.Config.FixIM ?? false, x => Program.Config.FixIM = x),
     };
+
     public override string Title => "Troubleshooting";
+
+    public override bool IsUnixExclusive => true;    
 
     private SettingsPage parentPage;
 
@@ -24,12 +27,6 @@ public class SettingsTabTroubleshooting : SettingsTab
         base.Draw();
 
         ImGui.Separator();
-
-        ImGui.Text("\nReset settings to default.");
-        if (ImGui.Button("Clear Settings"))
-        {
-            Program.ClearSettings(true);
-        }        
 
         ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
         if (ImGui.Button("Clear Prefix"))
@@ -54,6 +51,12 @@ public class SettingsTabTroubleshooting : SettingsTab
         {
             Program.ClearLogs(true);
         }
+
+        ImGui.Text("\nReset settings to default.");
+        if (ImGui.Button("Clear Settings"))
+        {
+            Program.ClearSettings(true);
+        }     
 
         ImGui.Text("\nDo all of the above.");
         if (ImGui.Button("Clear Everything"))

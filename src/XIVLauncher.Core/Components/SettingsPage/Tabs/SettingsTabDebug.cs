@@ -1,5 +1,7 @@
 using System.Collections;
 using ImGuiNET;
+using XIVLauncher.Common;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -21,9 +23,8 @@ public class SettingsTabDebug : SettingsTab
         if (Program.IsSteamDeckGamingMode)
             ImGui.Text("Steam Deck Gaming Mode Detected");
 
-#if FLATPAK
-            ImGui.Text("Running as a Flatpak");
-#endif
+        if (Environment.OSVersion.Platform == PlatformID.Unix)
+            ImGui.Text((Distro.IsFlatpak) ? "Running as a Flatpak" : $"Running natively on {Distro.Name}");
 
         ImGui.Spacing();
 
