@@ -41,7 +41,7 @@ public static class Distro
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
         {
-            Platform = Platform.Mac;  // Don't have an option for this atm.
+            Platform = Platform.Mac;  // Don't have an option for this atm. Setting this so it doesn't show as Linux.
             Name = "FreeBSD";
             Package = DistroPackage.none;
             return;            
@@ -54,7 +54,6 @@ public static class Distro
             {
                 Package = DistroPackage.ubuntu;
                 Name = "Unknown Linux distribution";
-                IsFlatpak = false;
                 return;
             }
             var osRelease = File.ReadAllLines("/etc/os-release");
@@ -88,14 +87,12 @@ public static class Distro
 
             Package = distro;
             Name = pretty == "" ? (name == "" ? "Unknown Linux distribution" : name) : pretty;
-            IsFlatpak = flatpak;
         }
         catch
         {
             // If there's any kind of error opening the file or even finding it, just go with default.
             Package = DistroPackage.ubuntu;
             Name = "Unknown Linux distribution";
-            IsFlatpak = false;
         }
     }    
 }
