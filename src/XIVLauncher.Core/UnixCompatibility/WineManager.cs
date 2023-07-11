@@ -7,6 +7,7 @@ using System.Linq;
 using Serilog;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Unix.Compatibility;
+using XIVLauncher.Core;
 
 namespace XIVLauncher.Core;
 
@@ -24,18 +25,18 @@ public enum WineType
 
 public enum WineVersion
 {
-    [SettingsDescription("Wine-xiv 8.5", "A patched version of Wine-staging 8.5. The current default.")]
-    Wine8_5,
-
     [SettingsDescription("Wine-xiv 7.10", "A legacy patched version of Wine, based on 7.10. A previous default")]
     Wine7_10,
+
+    [SettingsDescription("Wine-xiv 8.5", "A patched version of Wine-staging 8.5. The current default.")]
+    Wine8_5,
 }
 
 public static class WineManager
 {
     private static string xlcore => Program.storage.Root.FullName;
 
-    public static WineRunner Initialize()
+    public static WineSettings GetSettings()
     {
 
         switch (Program.Config.WineType ?? WineType.Managed)
@@ -55,23 +56,24 @@ public static class WineManager
 
     }
 
-    private static WineRunner GetWine(string runCmd = "")
+    private static WineSettings GetWine(string runCmd = "")
     {
-        var runArgs = "";
+        var winepath = runCmd;
         var folder = "";
         var url = "";
-        var version = Program.Config.WineVersion ?? WineVersion.Wine8_5;
+        var version = Program.Config.WineVersion ?? WineVersion.Wine7_10;
+        var package = Distro.Package.ToString();
 
         switch (version)
         {
             case WineVersion.Wine8_5:
                 folder = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
-                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{Distro.Package.ToString()}-8.5.r4.g4211bac7.tar.xz";
+                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{package}-8.5.r4.g4211bac7.tar.xz";
                 break;
 
             case WineVersion.Wine7_10:
                 folder = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
-                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{Distro.Package.ToString()}-7.10.r3.g560db77d.tar.xz";
+                url = $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{package}-7.10.r3.g560db77d.tar.xz";
                 break;
 
             default:
@@ -80,22 +82,17 @@ public static class WineManager
 
         var env = new Dictionary<string, string>();
         if (Program.Config.GameModeEnabled ?? false)
-        {
-            var ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
-            if (!ldPreload.Contains("libgamemodeauto.so.0"))
-                ldPreload = (ldPreload.Equals("")) ? "libgamemodeauto.so.0" : ldPreload + ":libgamemodeauto.so.0";
-            env.Add("LD_PRELOAD", ldPreload);
-        }
+            env.Add("LD_PRELOAD", "libgamemodeauto.so.0");
         if (!string.IsNullOrEmpty(Program.Config.WineDebugVars))
             env.Add("WINEDEBUG", Program.Config.WineDebugVars);
         if (Program.Config.ESyncEnabled ?? true) env.Add("WINEESYNC", "1");
         if (Program.Config.FSyncEnabled ?? false) env.Add("WINEFSYNC", "1");
-        env.Add("WINEPREFIX", Path.Combine(xlcore, "wineprefix"));
+        env.Add("WINEPREFIX", Path.Combine(Program.storage.Root.FullName, "wineprefix"));
         
-        return new WineRunner(runCmd, runArgs, folder, url, xlcore, env);
+        return new WineSettings(winepath, "", folder, url, Program.storage.Root.FullName, env);
     }
 
-    private static WineRunner GetProton()
+    private static WineSettings GetProton()
     {
         var proton = Path.Combine(ProtonManager.GetVersionPath(Program.Config.ProtonVersion), "proton");
         var runCmd = proton;
@@ -143,7 +140,7 @@ public static class WineManager
             env.Add("PROTON_NO_FSYNC", "1");
         }
 
-        return new WineRunner(runCmd, runArgs, "", "", xlcore, env, isProton: true, minRunCmd: minRunCmd);
+        return new WineSettings(runCmd, runArgs, "", "", xlcore, env, isProton: true, minRunCmd: minRunCmd);
     }
 }
 

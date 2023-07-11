@@ -1,76 +1,132 @@
 using System.Numerics;
 using System.IO;
 using System.Collections.Generic;
+using XIVLauncher.Common;
+using System.Runtime.InteropServices;
 
 namespace XIVLauncher.Core;
 
-public enum WinePackage
+public enum DistroPackage
 {
     ubuntu,
 
     fedora,
 
     arch,
+
+    none,
 }
 
 public static class Distro
 {
-    public static WinePackage Package { get; private set; }
+    public static DistroPackage Package { get; private set; }
 
     public static string Name { get; private set; }
 
     public static bool IsFlatpak { get; private set; }
 
-    public static void GetInfo()
+    public static Platform Platform { get; private set; }
+
+    public static void Initialize()
     {
+        var os = System.Environment.OSVersion;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Package = DistroPackage.none;
+            Name = os.VersionString;
+            IsFlatpak = false;
+            Platform = Platform.Win32;
+            return;
+        }
+
+        // There's no wine releases for MacOS or FreeBSD, and I'm not sure this will even compile on either
+        // platform, but here's some code just in case. Can modify this as needed if it's useful in the future.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Platform = Platform.Mac;
+            Name = os.VersionString;
+            IsFlatpak = false;
+            Package = DistroPackage.none;
+            return;
+        }
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+        {
+            Platform = Platform.Mac;  // Don't have an option for this atm.
+            Name = os.VersionString;
+            IsFlatpak = false;
+            Package = DistroPackage.none;
+            return;            
+        }
+
+        Platform = Platform.Linux;
         try
         {
             if (!File.Exists("/etc/os-release"))
             {
-                Package = WinePackage.ubuntu;
+                Package = DistroPackage.ubuntu;
                 Name = "Unknown distribution";
                 IsFlatpak = false;
                 return;
             }
             var osRelease = File.ReadAllLines("/etc/os-release");
-            var distro = WinePackage.ubuntu;
-            var flatpak = false;
-            var OSInfo = new Dictionary<string, string>();
+            var osInfo = new Dictionary<string, string>();
             foreach (var line in osRelease)
             {
                 var keyValue = line.Split('=', 2);
                 if (keyValue.Length == 1)
-                    OSInfo.Add(keyValue[0], "");
+                    osInfo.Add(keyValue[0], "");
                 else
-                    OSInfo.Add(keyValue[0], keyValue[1]);
+                    osInfo.Add(keyValue[0], keyValue[1]);
             }
 
-            var name = (OSInfo.ContainsKey("NAME") ? OSInfo["NAME"] : "").Trim('"');
-            var pretty = (OSInfo.ContainsKey("PRETTY_NAME") ? OSInfo["PRETTY_NAME"] : "").Trim('"');
-            var idLike = OSInfo.ContainsKey("ID_LIKE") ? OSInfo["ID_LIKE"] : "";
-            if (idLike.Contains("arch"))
-                distro = WinePackage.arch;
-            else if (idLike.Contains("fedora"))
-                distro = WinePackage.fedora;
-            else
-                distro = WinePackage.ubuntu;
-
-            var id = OSInfo.ContainsKey("ID") ? OSInfo["ID"] : "";
-            if (id.Contains("tumbleweed") || id.Contains("fedora"))
-                distro = WinePackage.fedora;
-            if (id == "org.freedesktop.platform")
-                flatpak = true;
-
-            Package = distro;
+            var name = (osInfo.ContainsKey("NAME") ? osInfo["NAME"] : "").Trim('"');
+            var pretty = (osInfo.ContainsKey("PRETTY_NAME") ? osInfo["PRETTY_NAME"] : "").Trim('"');
             Name = pretty == "" ? (name == "" ? "Unknown distribution" : name) : pretty;
-            IsFlatpak = flatpak;
+
+            if (CheckFlatpak(osInfo))
+            {
+                IsFlatpak = true;
+                Package = DistroPackage.ubuntu;
+                return;
+            }
+
+            Package = CheckDistro(osInfo);
+            IsFlatpak = false;
+            return;
         }
         catch
         {
             // If there's any kind of error opening the file or even finding it, just go with default.
-            Package = WinePackage.ubuntu;
+            Package = DistroPackage.ubuntu;
             Name = "Unknown distribution";
             IsFlatpak = false;
         }
-    }    
+    }
+
+    private static bool CheckFlatpak(Dictionary<string, string> osInfo)
+    {
+        if (osInfo.ContainsKey("ID"))
+            if (osInfo["ID"] == "org.freedesktop.platform")
+                return true;
+        return false;
+    }
+
+    private static DistroPackage CheckDistro(Dictionary<string, string> osInfo)
+    {
+        foreach (var kvp in osInfo)
+        {
+            if (kvp.Value.ToLower().Contains("fedora"))
+                return DistroPackage.fedora;
+            if (kvp.Value.ToLower().Contains("tumbleweed"))
+                return DistroPackage.fedora;
+            if (kvp.Value.ToLower().Contains("ubuntu"))
+                return DistroPackage.ubuntu;
+            if (kvp.Value.ToLower().Contains("debian"))
+                return DistroPackage.ubuntu;
+            if (kvp.Value.ToLower().Contains("arch"))
+                return DistroPackage.arch;
+        }
+        return DistroPackage.ubuntu;
+    }
 }

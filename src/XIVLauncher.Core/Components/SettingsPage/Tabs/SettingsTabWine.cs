@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Util;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -115,6 +116,26 @@ public class SettingsTabWine : SettingsTab
         if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
         {
             Program.CompatibilityTools.RunInPrefix("explorer");
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Open Wine explorer (use WineD3D"))
+        {
+            Program.CompatibilityTools.RunInPrefix("explorer", wineD3D: true);
+
+        }
+
+        if (ImGui.Button("Set Wine to Windows 7"))
+        {
+            Program.CompatibilityTools.RunInPrefix($"winecfg /v win7", redirectOutput: true, writeLog: true);
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Set Wine to Windows 10"))
+        {
+            Program.CompatibilityTools.RunInPrefix($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
         if (ImGui.Button("Kill all wine processes"))

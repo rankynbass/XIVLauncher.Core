@@ -22,6 +22,7 @@ using XIVLauncher.Core.Accounts.Secrets.Providers;
 using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core;
 
@@ -75,7 +76,6 @@ class Program
 
         Log.Information("========================================================");
         Log.Information("Starting a session(v{Version} - {Hash})", AppUtil.GetAssemblyVersion(), AppUtil.GetGitHash());
-        Log.Information("Running on {DistroName}, wine package set to {DistroPackage}", Distro.Name, Distro.Package.ToString());   
     }
 
     private static void LoadConfig(Storage storage)
@@ -123,10 +123,10 @@ class Program
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
         Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
-        Config.DxvkMangoCustom ??= Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
-        Config.SetWin7 ??= true;
+        Config.MangoHudCustom ??= Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
 
         Config.WineType ??= WineType.Managed;
+        Config.WineVersion ??= WineVersion.Wine7_10;
         Config.WineBinaryPath ??= "/usr/bin";
         if (string.IsNullOrEmpty(Config.SteamPath))
         {
@@ -168,7 +168,6 @@ class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
         
-        Distro.GetInfo();
         SetupLogging(mainargs);
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
@@ -208,6 +207,8 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
+            Distro.Initialize();
+            Log.Information("Running on {DistroName}. {wineInfo}", Distro.Name, (Distro.Platform == Platform.Linux) ? $"Using {Distro.Package} package for managed wine downloads." : string.Empty);   
             if (!Config.IsIgnoringSteam ?? true)
             {
                 try
@@ -341,20 +342,9 @@ class Program
         var protonPrefix = storage.GetFolder("protonprefix");
         protonPrefix.CreateSubdirectory("pfx");
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var wine = WineManager.Initialize();
-        var dxvk = DxvkManager.Initialize(wine.IsProton);
-        var wineoverrides = "msquic,mscoree=n,b;";
-        wineoverrides += (wine.IsProton) ? "d3d12," : ""; 
-        var wineenv = new Dictionary<string, string>();
-        if (dxvk.IsDxvk)
-        {
-            wineoverrides += "d3d9,d3d11,d3d10core,dxgi=n,b";
-        }
-        else
-        {
-            wineoverrides += "d3d9,d3d11,d3d10core,dxgi=b";
-        }
-        CompatibilityTools = new CompatibilityTools(wine, dxvk, wineenv, wineoverrides, (wine.IsProton ? protonPrefix : winePrefix), toolsFolder, wineLogFile);
+        var wine = WineManager.GetSettings();
+        var dxvk = DxvkManager.GetSettings(Program.Config.WineType == WineType.Proton);
+        CompatibilityTools = new CompatibilityTools(wine, dxvk, (wine.IsProton ? protonPrefix : winePrefix), toolsFolder, wineLogFile, Distro.IsFlatpak);
     }
 
     public static void ShowWindow()
@@ -445,7 +435,7 @@ class Program
     public static void ClearTools(bool tsbutton = false)
     {
         storage.GetFolder("compatibilitytool").Delete(true);
-        storage.GetFolder("compatibilitytool/beta");
+        storage.GetFolder("compatibilitytool/wine");
         storage.GetFolder("compatibilitytool/dxvk");
         if (tsbutton) CreateCompatToolsInstance();
     }
