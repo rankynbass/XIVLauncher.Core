@@ -27,16 +27,6 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-            wineD3DUseVk = new SettingsEntry<bool>("Use WineD3D Vulkan renderer", "Use Vulkan instead of OpenGL for WineD3D. Unstable. May cause system to lock up.", () => Program.Config.WineD3DUseVK ?? false, b => Program.Config.WineD3DUseVK = b)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.Disabled,
-                CheckWarning = b =>
-                {
-                    if (b)
-                        return "WARNING! This is very experimental, and may cause your system to crash or hang. If you still want to use it, disable Dalamud.";
-                    return null;
-                },
-            },
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
                 CheckVisibility = () => (new [] {DxvkVersion.v1_10_3, DxvkVersion.v2_0}.Contains(dxvkVersionSetting.Value)),
@@ -71,7 +61,7 @@ public class SettingsTabDxvk : SettingsTab
             },
             new SettingsEntry<string>("MangoHud Custom Path", "Set a custom path for MangoHud config file.", () => Program.Config.MangoHudCustom, s => Program.Config.MangoHudCustom = s)
             {
-                CheckVisibility = () => dxvkHudSetting.Value == HudType.MangoHudCustom  && !(dxvkVersionSetting.Value == DxvkVersion.Disabled && !wineD3DUseVk.Value),
+                CheckVisibility = () => dxvkHudSetting.Value == HudType.MangoHudCustom  && dxvkVersionSetting.Value != DxvkVersion.Disabled,
                 CheckWarning = s =>
                 {
                     if(!File.Exists(s))

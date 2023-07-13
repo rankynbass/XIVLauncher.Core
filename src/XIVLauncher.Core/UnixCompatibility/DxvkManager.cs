@@ -74,7 +74,6 @@ public static class DxvkManager
 
             case DxvkVersion.Disabled:
                 env.Add("PROTON_USE_WINED3D", "1");
-                env.Add("MANGHUD_DLSYM", "1");
                 isDxvk = false;
                 break;
 

@@ -69,8 +69,6 @@ public interface ILauncherConfig
 
     public DxvkVersion? DxvkVersion { get; set; }
 
-    public bool? WineD3DUseVK { get; set; }
-
     public string? WineBinaryPath { get; set; }
 
     public string? SteamPath { get; set; }
@@ -100,8 +98,6 @@ public interface ILauncherConfig
     public bool? FixLDP { get; set; }
 
     public bool? FixIM { get; set; }
-
-    public bool? SetWin7 { get; set; }
 
     #endregion
 
