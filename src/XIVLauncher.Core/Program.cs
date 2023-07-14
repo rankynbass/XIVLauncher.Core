@@ -159,7 +159,6 @@ class Program
     private static void Main(string[] args)
     {
         mainargs = args;
-        storage = new Storage(APP_NAME);
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -174,9 +173,27 @@ class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
         
-        SetupLogging(mainargs);
+        bool badxlpath = false;
+        var badxlpathex = new Exception();
+        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
+        try 
+        {
+            storage = new Storage(APP_NAME, useAltPath);
+        }
+        catch (Exception e)
+        {
+            storage = new Storage(APP_NAME);
+            badxlpath = true;
+            badxlpathex = e;
+        }
+        SetupLogging(args);
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
+
+        if (badxlpath)
+        {
+            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        }
 
         Secrets = GetSecretProvider(storage);
 
