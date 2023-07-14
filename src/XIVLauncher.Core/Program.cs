@@ -150,7 +150,7 @@ class Program
         Config.FixIM ??= false;
 
         Config.FontPxSize ??= DEFAULT_FONT_SIZE;
-        FontMultiplier = Config.FontPxSize / DEFAULT_FONT_SIZE;
+        FontMultiplier = Config.FontPxSize.Value / DEFAULT_FONT_SIZE;
     }
 
     public const uint STEAM_APP_ID = 39210;
