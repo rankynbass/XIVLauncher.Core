@@ -62,7 +62,7 @@ public class NewsFrame : Component
     {
         var vp = ImGuiHelpers.ViewportSize;
         var calculatedSize = vp.X >= 1280 ? vp.X * 0.7f : vp.X * 0.5f;
-        return new Vector2(calculatedSize, vp.Y - 128f);
+        return new Vector2(calculatedSize, vp.Y - Math.Max(112f * Program.FontMultiplier, 128f));
     }
 
     public override void Draw()

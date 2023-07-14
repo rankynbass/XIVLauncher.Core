@@ -58,6 +58,10 @@ class Program
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck();
 
+    public const float DEFAULT_FONT_SIZE = 22f;
+
+    public static float FontMultiplier;
+
     private const string APP_NAME = "xlcore";
 
     private static string[] mainargs;
@@ -144,6 +148,9 @@ class Program
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
+
+        Config.FontPxSize ??= DEFAULT_FONT_SIZE;
+        FontMultiplier = Config.FontPxSize / DEFAULT_FONT_SIZE;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -243,9 +250,17 @@ class Program
         var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
 #endif
 
+#if UNOFFICIAL
+        string suffix = " RB-Unofficial";
+#elif TESTING
+        string suffix = " *TEST BUILD*";
+#else
+        string suffix = "";
+#endif
+
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"),
+            new WindowCreateInfo(50, 50, (int)(1280 * FontMultiplier), (int)(800 * FontMultiplier), WindowState.Normal, $"XIVLauncher {version}{suffix}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
