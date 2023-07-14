@@ -67,6 +67,10 @@ public interface ILauncherConfig
 
     public WineVersion? WineVersion { get; set; }
 
+    public RBWineVersion? RBWineVersion { get; set; }
+
+    public RBProtonVersion? RBProtonVersion { get; set; }
+
     public DxvkVersion? DxvkVersion { get; set; }
 
     public string? WineBinaryPath { get; set; }
@@ -80,6 +84,8 @@ public interface ILauncherConfig
     public bool? GameModeEnabled { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
+
+    public bool? DxvkGPLAsyncCacheEnabled { get; set; }
 
     public bool? ESyncEnabled { get; set; }
 

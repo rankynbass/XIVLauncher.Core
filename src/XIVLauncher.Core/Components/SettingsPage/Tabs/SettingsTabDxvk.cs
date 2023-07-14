@@ -27,15 +27,10 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b),
+            new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
             {
-                CheckVisibility = () => (new [] {DxvkVersion.v1_10_3, DxvkVersion.v2_0}.Contains(dxvkVersionSetting.Value)),
-                CheckWarning = b =>
-                {
-                    if (!b && dxvkVersionSetting.Value == DxvkVersion.v2_0)
-                        return "AMD users may need to use env variable RADV_PERFTEST=gpl";
-                    return null;
-                },
+                CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.v2_2,
             },
             dxvkHudSetting = new SettingsEntry<HudType>("DXVK Overlay", "DXVK Hud is included with Dxvk. It doesn't work if Dxvk is disabled.\nMangoHud must be installed separately. Flatpak XIVLauncher needs flatpak MangoHud.", () => Program.Config.HudType, type => Program.Config.HudType = type)
             {

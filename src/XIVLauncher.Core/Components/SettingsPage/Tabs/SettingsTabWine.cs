@@ -32,6 +32,16 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineType.Managed
             },
+
+            new SettingsEntry<RBWineVersion>("Wine Version", "Choose an XIV-patched version of Wine-tkg", () => Program.Config.RBWineVersion ?? RBWineVersion.Wine8_12, x => Program.Config.RBWineVersion = x)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineType.RB_Wine
+            },
+
+            new SettingsEntry<RBProtonVersion>("Wine Version", "Choose an XIV-patched version of Wine-GE.", () => Program.Config.RBProtonVersion ?? RBProtonVersion.Proton8_10, x => Program.Config.RBProtonVersion = x)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == WineType.RB_Proton
+            },
             
             new SettingsEntry<string>("Wine Binary Path",
                 "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
@@ -142,9 +152,21 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
+        ImGui.SameLine();
+
         if (!Program.CompatibilityTools.IsToolDownloaded)
         {
             ImGui.EndDisabled();
+        }
+
+        if (new [] {WineType.Managed, WineType.RB_Wine, WineType.RB_Wine}.Contains(startupTypeSetting.Value))
+        {
+
+            if (ImGui.Button("Download now!"))
+            {
+                this.Save();
+                Program.CompatibilityTools.EnsureTool(Program.storage.GetFolder("temp"));
+            }
         }
     }
 

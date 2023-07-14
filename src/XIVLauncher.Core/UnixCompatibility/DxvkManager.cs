@@ -19,11 +19,11 @@ public enum DxvkVersion
     [SettingsDescription("2.0", "Newer version of DXVK. Last version with Async patch")]
     v2_0,
 
-    [SettingsDescription("2.1 (No Async)", "Newer version of DXVK, using graphics pipeline library. No Async patch.")]
+    [SettingsDescription("2.1", "Newer version of DXVK, using graphics pipeline library.")]
     v2_1,
 
-        [SettingsDescription("2.2 (No Async)", "Newest version of DXVK, using graphics pipeline library. No Async patch.")]
-    v2_2,     
+    [SettingsDescription("2.2", "Newest version of DXVK, using graphics pipeline library.")]
+    v2_2,
 
     [SettingsDescription("Disabled", "Disable Dxvk, use WineD3D with OpenGL instead.")]
     Disabled,
@@ -39,6 +39,7 @@ public static class DxvkManager
         var rootfolder = Program.storage.Root.FullName;
         var dxvkfolder = Path.Combine(rootfolder, "compatibilitytool", "dxvk");
         var async = (Program.Config.DxvkAsyncEnabled ?? true) ? "1" : "0";
+        var gplcache = (Program.Config.DxvkGPLAsyncCacheEnabled ?? false) ? "1" : "0";
         var framerate = Program.Config.DxvkFrameRate ?? 0;
         var env = new Dictionary<string, string>
         {
@@ -62,13 +63,16 @@ public static class DxvkManager
                 break;
 
             case DxvkVersion.v2_1:
-                folder = "dxvk-2.1";
-                url = "https://github.com/doitsujin/dxvk/releases/download/v2.1/dxvk-2.1.tar.gz";
+                folder = "dxvk-gplasync-v2.1-4";
+                url = "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.1-4.tar.gz";
+                env.Add("DXVK_ASYNC", async);
                 break;
 
             case DxvkVersion.v2_2:
-                folder = "dxvk-2.2";
-                url = "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz";
+                folder = "dxvk-gplasync-v2.2-4";
+                url = "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.2-4.tar.gz";
+                env.Add("DXVK_ASYNC", async);
+                env.Add("DXVK_GPLASYNCCACHE", gplcache);
                 break;
             
 

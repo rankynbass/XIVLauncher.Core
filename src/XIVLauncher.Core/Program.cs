@@ -122,6 +122,7 @@ class Program
         Config.GameModeEnabled ??= false;
         Config.DxvkVersion ??= DxvkVersion.v1_10_3;
         Config.DxvkAsyncEnabled ??= true;
+        Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRate ??= 0;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -130,6 +131,8 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         Config.WineVersion ??= WineVersion.Wine7_10;
+        Config.RBWineVersion ??= RBWineVersion.Wine8_12;
+        Config.RBProtonVersion ??= RBProtonVersion.Proton8_10;
         Config.WineBinaryPath ??= "/usr/bin";
         if (string.IsNullOrEmpty(Config.SteamPath))
         {
