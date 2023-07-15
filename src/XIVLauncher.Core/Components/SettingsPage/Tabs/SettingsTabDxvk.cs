@@ -27,7 +27,10 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b),
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
+            {   
+                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled,
+            },
             new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.v2_2,
