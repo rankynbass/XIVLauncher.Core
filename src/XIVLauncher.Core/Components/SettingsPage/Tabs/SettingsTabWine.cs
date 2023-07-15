@@ -159,7 +159,7 @@ public class SettingsTabWine : SettingsTab
             ImGui.EndDisabled();
         }
 
-        if (new [] {WineType.Managed, WineType.RB_Wine, WineType.RB_Wine}.Contains(startupTypeSetting.Value))
+        if (new [] {WineType.Managed, WineType.RB_Wine, WineType.RB_Proton}.Contains(startupTypeSetting.Value))
         {
 
             if (ImGui.Button("Download now!"))
