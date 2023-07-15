@@ -203,6 +203,11 @@ class Program
         LoadConfig(storage);
         ProtonManager.GetVersions(Config.SteamPath);
 
+        if (badxlpath)
+        {
+            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        }
+
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
