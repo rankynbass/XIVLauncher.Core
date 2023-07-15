@@ -152,6 +152,16 @@ class Program
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
 
+        Config.HelperApp1Enabled ??= false;
+        Config.HelperApp1 ??= string.Empty;
+        Config.HelperApp1WineD3D ??= false;
+        Config.HelperApp2Enabled ??= false;
+        Config.HelperApp2 ??= string.Empty;
+        Config.HelperApp2WineD3D ??= false;
+        Config.HelperApp3Enabled ??= false;
+        Config.HelperApp3 ??= string.Empty;
+        Config.HelperApp3WineD3D ??= false;
+
         Config.FontPxSize ??= DEFAULT_FONT_SIZE;
         FontMultiplier = Config.FontPxSize.Value / DEFAULT_FONT_SIZE;
     }

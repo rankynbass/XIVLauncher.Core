@@ -105,6 +105,23 @@ public interface ILauncherConfig
 
     public bool? FixIM { get; set; }
 
+    public string? HelperApp1 { get; set; }
+
+    public string? HelperApp2 { get; set; }
+
+    public string? HelperApp3 { get; set; }
+
+    public bool? HelperApp1Enabled { get; set; }
+
+    public bool? HelperApp2Enabled { get; set; }
+
+    public bool? HelperApp3Enabled { get; set; }
+
+    public bool? HelperApp1WineD3D { get; set; }
+
+    public bool? HelperApp2WineD3D { get; set; }
+
+    public bool? HelperApp3WineD3D { get; set; }
     #endregion
 
     #region Dalamud
