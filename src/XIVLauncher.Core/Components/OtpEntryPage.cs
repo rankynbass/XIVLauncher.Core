@@ -77,9 +77,9 @@ public class OtpEntryPage : Page
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f);
+        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f * Program.FontMultiplier);
 
-        var childSize = new Vector2(300, 200);
+        var childSize = new Vector2(300 * Program.FontMultiplier, 200 * Program.FontMultiplier);
         var vpSize = ImGuiHelpers.ViewportSize;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X / 2 - childSize.X / 2, vpSize.Y / 2 - childSize.Y / 2), ImGuiCond.Always);
@@ -87,12 +87,12 @@ public class OtpEntryPage : Page
 
         if (ImGui.BeginChild("###otp", childSize, true, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Dummy(new Vector2(40));
+            ImGui.Dummy(new Vector2(40 * Program.FontMultiplier));
 
             // center text in window
             ImGuiHelpers.CenteredText("Please enter your OTP");
 
-            const int INPUT_WIDTH = 150;
+            int INPUT_WIDTH = (int)(150 * Program.FontMultiplier);
             ImGui.SetNextItemWidth(INPUT_WIDTH);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
@@ -104,7 +104,7 @@ public class OtpEntryPage : Page
 
             var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
 
-            var buttonSize = new Vector2(INPUT_WIDTH/2-4, 30);
+            var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4 * Program.FontMultiplier, 30 * Program.FontMultiplier);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             if (ImGui.Button("OK", buttonSize) || doEnter)

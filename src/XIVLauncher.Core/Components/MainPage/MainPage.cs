@@ -19,6 +19,7 @@ using XIVLauncher.Common.Util;
 using XIVLauncher.Core.Accounts;
 using XIVLauncher.Common.Game.Exceptions;
 using XIVLauncher.Core.Support;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Components.MainPage;
 
@@ -738,15 +739,15 @@ public class MainPage : Page
         }
         else if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
-            if (App.Settings.WineStartupType == WineStartupType.Custom)
+            if (App.Settings.WineType == WineType.Custom)
             {
                 if (App.Settings.WineBinaryPath == null)
                     throw new Exception("Custom wine binary path wasn't set.");
                 else if (!Directory.Exists(App.Settings.WineBinaryPath))
                     throw new Exception("Custom wine binary path is invalid: no such directory.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
-                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath,"wine64")))
-                    throw new Exception("Custom wine binary path is invalid: no wine64 found at that location.\n" +
+                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")) && !File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine")))
+                    throw new Exception("Custom wine binary path is invalid: no wine or wine64 found at that location.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 
@@ -761,7 +762,7 @@ public class MainPage : Page
                 await Program.CompatibilityTools.EnsureTool(tempPath).ConfigureAwait(false);
                 Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}");
 
-                var gameFixApply = new GameFixApply(App.Settings.GamePath, App.Settings.GameConfigPath, Program.CompatibilityTools.Settings.Prefix, tempPath);
+                var gameFixApply = new GameFixApply(App.Settings.GamePath, App.Settings.GameConfigPath, Program.CompatibilityTools.Prefix, tempPath);
                 gameFixApply.UpdateProgress += (text, hasProgress, progress) =>
                 {
                     App.LoadingPage.Line1 = "Applying game-specific fixes...";
@@ -788,6 +789,13 @@ public class MainPage : Page
 
             if (isFailed)
                 return null;
+
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D.Value);
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D.Value);
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D.Value);
 
             App.StartLoading("Starting game...", "Have fun!");
 

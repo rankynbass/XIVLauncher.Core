@@ -47,7 +47,7 @@ public class AccountSwitcher : Component
 
                 var textLength = ImGui.CalcTextSize(name).X;
 
-                if (ImGui.Button(name + $"###{account.Id}", new Vector2(textLength + 15, 40)))
+                if (ImGui.Button(name + $"###{account.Id}", new Vector2((textLength + 15) * Program.FontMultiplier, 40 * Program.FontMultiplier)))
                 {
                     this.AccountChanged?.Invoke(this, account);
                 }

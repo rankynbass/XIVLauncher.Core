@@ -3,6 +3,7 @@ using XIVLauncher.Common.Addon;
 using XIVLauncher.Common.Dalamud;
 using XIVLauncher.Common.Game.Patch.Acquisition;
 using XIVLauncher.Common.Unix.Compatibility;
+using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Configuration;
 
@@ -62,19 +63,41 @@ public interface ILauncherConfig
 
     #region Linux
 
-    public WineStartupType? WineStartupType { get; set; }
+    public WineType? WineType { get; set; }
+
+    public WineVersion? WineVersion { get; set; }
+
+    public RBWineVersion? RBWineVersion { get; set; }
+
+    public RBProtonVersion? RBProtonVersion { get; set; }
+
+    public DxvkVersion? DxvkVersion { get; set; }
 
     public string? WineBinaryPath { get; set; }
+
+    public string? SteamPath { get; set; }
+
+    public string? ProtonVersion { get; set; }
+
+    public string? SteamRuntime { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
 
+    public bool? DxvkGPLAsyncCacheEnabled { get; set; }
+
     public bool? ESyncEnabled { get; set; }
 
     public bool? FSyncEnabled { get; set; }
 
-    public Dxvk.DxvkHudType DxvkHudType { get; set; }
+    public HudType HudType { get; set; }
+
+    public string? DxvkHudCustom { get; set; }
+
+    public string? MangoHudCustom { get; set; }
+
+    public int? DxvkFrameRate { get; set; }
 
     public string? WineDebugVars { get; set; }
 
@@ -82,8 +105,23 @@ public interface ILauncherConfig
 
     public bool? FixIM { get; set; }
 
-    public bool? SetWin7 { get; set; }
+    public string? HelperApp1 { get; set; }
 
+    public string? HelperApp2 { get; set; }
+
+    public string? HelperApp3 { get; set; }
+
+    public bool? HelperApp1Enabled { get; set; }
+
+    public bool? HelperApp2Enabled { get; set; }
+
+    public bool? HelperApp3Enabled { get; set; }
+
+    public bool? HelperApp1WineD3D { get; set; }
+
+    public bool? HelperApp2WineD3D { get; set; }
+
+    public bool? HelperApp3WineD3D { get; set; }
     #endregion
 
     #region Dalamud

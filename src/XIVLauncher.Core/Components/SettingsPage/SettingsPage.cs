@@ -11,6 +11,7 @@ public class SettingsPage : Page
         new SettingsTabGame(),
         new SettingsTabPatching(),
         new SettingsTabWine(),
+        new SettingsTabDxvk(),
         new SettingsTabDalamud(),
         new SettingsTabAutoStart(),
         new SettingsTabAbout(),
@@ -108,7 +109,7 @@ public class SettingsPage : Page
             }
         }
 
-        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - new Vector2(60));
+        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - new Vector2(60f * Program.FontMultiplier));
 
         if (ImGui.BeginChild("###settingsFinishButton"))
         {
@@ -120,13 +121,13 @@ public class SettingsPage : Page
             {
                 ImGui.BeginDisabled();
                 ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), new Vector2(40));
+                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), new Vector2(40f * Program.FontMultiplier));
                 ImGui.PopStyleColor();
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), new Vector2(40)))
+                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), new Vector2(40f * Program.FontMultiplier)))
                 {
                     foreach (var settingsTab in this.tabs)
                     {
