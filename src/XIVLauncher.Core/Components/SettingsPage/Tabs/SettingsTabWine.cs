@@ -23,16 +23,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Custom
             },
-            new DictionarySettingsEntry("Proton Version", "", ProtonManager.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, ProtonManager.GetDefaultVersion())
-            {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
-            },
-#if !FLATPAK
-            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it.", ProtonManager.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, ProtonManager.GetDefaultRuntime())
-            {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Proton,
-            },
-#endif
+
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
@@ -45,6 +36,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b),
             new SettingsEntry<bool>("Enable ESync", "Enable eventfd-based synchronization.", () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
             new SettingsEntry<bool>("Enable FSync", "Enable fast user mutex (futex2).", () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
             {
@@ -75,13 +67,10 @@ public class SettingsTabWine : SettingsTab
     {
         base.Draw();
 
-        if (!Program.CompatibilityTools.IsToolDownloaded || startupTypeSetting.Value == WineStartupType.Proton)
+        if (!Program.CompatibilityTools.IsToolDownloaded)
         {
             ImGui.BeginDisabled();
-            if (startupTypeSetting.Value == WineStartupType.Proton)
-                ImGui.Text("These options do not work properly with Proton yet.");
-            else
-                ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
 
             ImGui.Dummy(new Vector2(10));
         }
@@ -102,14 +91,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
         {
-            Program.CompatibilityTools.RunInPrefix("explorer", wineD3D: true, inject: true);
-        }
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Open Wine explorer (use WineD3D)"))
-        {
-            Program.CompatibilityTools.RunInPrefix("explorer", "", null, false, false, true);
+            Program.CompatibilityTools.RunInPrefix("explorer");
         }
 
         if (ImGui.Button("Kill all wine processes"))
@@ -117,7 +99,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
-        if (!Program.CompatibilityTools.IsToolDownloaded || startupTypeSetting.Value == WineStartupType.Proton)
+        if (!Program.CompatibilityTools.IsToolDownloaded)
         {
             ImGui.EndDisabled();
         }

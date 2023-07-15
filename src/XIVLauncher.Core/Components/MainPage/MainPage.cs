@@ -739,14 +739,14 @@ public class MainPage : Page
         else if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
             if (App.Settings.WineStartupType == WineStartupType.Custom)
-            { 
+            {
                 if (App.Settings.WineBinaryPath == null)
                     throw new Exception("Custom wine binary path wasn't set.");
-                if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")))
-                    throw new Exception("Custom wine binary path is invalid: no wine64 in path.\n" +
-                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
-                if (!Directory.Exists(App.Settings.WineBinaryPath))
+                else if (!Directory.Exists(App.Settings.WineBinaryPath))
                     throw new Exception("Custom wine binary path is invalid: no such directory.\n" +
+                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
+                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath,"wine64")))
+                    throw new Exception("Custom wine binary path is invalid: no wine64 found at that location.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 
@@ -789,17 +789,6 @@ public class MainPage : Page
             if (isFailed)
                 return null;
 
-            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D);
-            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D);
-            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D);
-            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, wineD3D: Program.Config.HelperApp4WineD3D);
-            if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, wineD3D: Program.Config.HelperApp5WineD3D);
-
             App.StartLoading("Starting game...", "Have fun!");
 
             runner = new UnixGameRunner(Program.CompatibilityTools, dalamudLauncher, dalamudOk);
@@ -841,29 +830,6 @@ public class MainPage : Page
             App.Settings.IsEncryptArgs.GetValueOrDefault(true),
             App.Settings.DpiAwareness.GetValueOrDefault(DpiAwareness.Unaware));
 
-            // Now launch the helper apps. This needs to be here to work with Steam soldier
-            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
-            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D);
-            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
-            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D);
-            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
-            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D);
-            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp4))
-            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp4, wineD3D: Program.Config.HelperApp4WineD3D);
-            // if (Program.Config.HelperApp1Enabled && !string.IsNullOrWhiteSpace(Program.Config.HelperApp5))
-            //     Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp5, wineD3D: Program.Config.HelperApp5WineD3D);
-
-
-
-        var protonProcess = launchedProcess;
-        if (Program.CompatibilityTools.UseProton)
-        {
-            Log.Information("Launching Proton runner. Proton's built-in wine will be launched as a child process.");
-            var gameName = (App.Settings.IsDx11 ?? true) ? "ffxiv_dx11.exe" : "ffxiv.exe";
-            var unixPid = Program.CompatibilityTools.GetUnixProcessIdByName(gameName);
-            launchedProcess = Process.GetProcessById(unixPid);
-        }
-
         if (launchedProcess == null)
         {
             Log.Information("GameProcess was null...");
@@ -895,18 +861,15 @@ public class MainPage : Page
 
             IsLoggingIn = false;
 
-            Log.Error(ex, "Addons failed for some reason.");
             addonMgr.StopAddons();
             throw;
         }
 
-        Log.Information("Waiting for game to exit");
-
-        // Auto-launch apps need to go here when using proton. Can't inject Dalamud properly otherwise.
+        Log.Debug("Waiting for game to exit");
 
         await Task.Run(() => launchedProcess!.WaitForExit()).ConfigureAwait(false);
 
-        Log.Information("Game has exited");
+        Log.Verbose("Game has exited");
 
         if (addonMgr.IsRunning)
             addonMgr.StopAddons();
@@ -922,8 +885,7 @@ public class MainPage : Page
         {
             Log.Error(ex, "Could not shut down Steam");
         }
-        if (Program.CompatibilityTools.UseProton)
-            return protonProcess!;
+
         return launchedProcess!;
     }
 

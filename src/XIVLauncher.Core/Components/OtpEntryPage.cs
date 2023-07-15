@@ -104,7 +104,7 @@ public class OtpEntryPage : Page
 
             var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
 
-            var buttonSize = new Vector2(INPUT_WIDTH/2 - 4, 30);
+            var buttonSize = new Vector2(INPUT_WIDTH/2-4, 30);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             if (ImGui.Button("OK", buttonSize) || doEnter)

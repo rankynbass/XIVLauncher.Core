@@ -1,8 +1,5 @@
 using System.Collections;
 using ImGuiNET;
-using XIVLauncher.Common.Unix.Compatibility;
-using XIVLauncher.Common.Util;
-using XIVLauncher.Core.Support;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 

@@ -28,7 +28,7 @@ public class SettingsTabGame : SettingsTab
             CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
         },
 
-        new SettingsEntry<bool>("Use DirectX11", "", () => Program.Config.IsDx11 ?? true, x => Program.Config.IsDx11 = x)
+        new SettingsEntry<bool>("Use DirectX11", "Use the modern DirectX11 version of the game.", () => Program.Config.IsDx11 ?? true, x => Program.Config.IsDx11 = x)
         {
             CheckWarning = x => !x ? "DirectX 9 is no longer supported by the game or Dalamud. Things may not work." : null
         },

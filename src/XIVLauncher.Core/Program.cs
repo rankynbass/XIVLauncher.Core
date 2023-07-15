@@ -57,10 +57,6 @@ class Program
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck();
 
-    public const float DEFAULT_FONT_SIZE = 22f;
-
-    public static float FontMultiplier;
-
     private const string APP_NAME = "xlcore";
 
     private static string[] mainargs;
@@ -102,7 +98,7 @@ class Program
         Config.IsAutologin ??= false;
         Config.CompletedFts ??= false;
         Config.DoVersionCheck ??= true;
-        Config.FontPxSize ??= DEFAULT_FONT_SIZE;
+        Config.FontPxSize ??= 22.0f;
 
         Config.IsDx11 ??= true;
         Config.IsEncryptArgs ??= true;
@@ -119,7 +115,6 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
-        Config.DxvkFrameRate ??= 0;
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -127,9 +122,6 @@ class Program
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
-        Config.SteamPath = string.IsNullOrEmpty(Config.SteamPath) ? Path.Combine(System.Environment.GetEnvironmentVariable("HOME"), ".steam", "root") : Config.SteamPath;
-        Config.ProtonVersion ??= "Proton 7.0";
-        Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
         Config.WineDebugVars ??= "-all";
 
         Config.FixLDP ??= false;
@@ -139,24 +131,10 @@ class Program
     public const uint STEAM_APP_ID = 39210;
     public const uint STEAM_APP_ID_FT = 312060;
 
-    public static string SteamAppId = "312060";
-
     private static void Main(string[] args)
     {
         mainargs = args;
-        bool badxlpath = false;
-        var badxlpathex = new Exception();
-        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
-        try 
-        {
-            storage = new Storage(APP_NAME, useAltPath);
-        }
-        catch (Exception e)
-        {
-            storage = new Storage(APP_NAME);
-            badxlpath = true;
-            badxlpathex = e;
-        }
+        storage = new Storage(APP_NAME);
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -173,15 +151,6 @@ class Program
         
         SetupLogging(mainargs);
         LoadConfig(storage);
-        ProtonManager.GetVersions(Config.SteamPath);
-        Config.ProtonVersion = ProtonManager.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : ProtonManager.GetDefaultVersion();
-        Config.SteamRuntime = ProtonManager.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : ProtonManager.GetDefaultRuntime();
-
-
-        if (badxlpath)
-        {
-            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
-        }
 
         Secrets = GetSecretProvider(storage);
 
@@ -210,9 +179,11 @@ class Program
                 case PlatformID.Win32NT:
                     Steam = new WindowsSteam();
                     break;
+
                 case PlatformID.Unix:
                     Steam = new UnixSteam();
                     break;
+
                 default:
                     throw new PlatformNotSupportedException();
             }
@@ -221,21 +192,13 @@ class Program
                 try
                 {
                     Steam.Initialize(appId);
-                    Log.Information($"Trying to load Steam AppID {appId}... Okay");
-                    SteamAppId = appId.ToString();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"Couldn't init Steam with AppId={appId} ({appName}), trying AppId={altId} ({altName})");
                     Steam.Initialize(altId);
-                    Log.Information($"Trying to load Steam AppID {altId}... Okay");
-                    SteamAppId = altId.ToString();
                 }
             }
-        }
-        catch (PlatformNotSupportedException ex)
-        {
-            Log.Error(ex, "Steam integration is not currently supported on this platform.");
         }
         catch (Exception ex)
         {
@@ -259,17 +222,9 @@ class Program
         var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
 #endif
 
-#if UNOFFICIAL
-        string suffix = " RB-Unofficial";
-#elif TESTING
-        string suffix = " *TEST BUILD*";
-#else
-        string suffix = "";
-#endif
-
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280*FontMultiplier), (int)(800*FontMultiplier), WindowState.Normal, $"XIVLauncher {version}{suffix}"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -291,7 +246,7 @@ class Program
 
         var needUpdate = false;
 
-/* #if FLATPAK
+#if FLATPAK
         if (Config.DoVersionCheck ?? false)
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
@@ -299,7 +254,7 @@ class Program
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
         }   
-#endif */
+#endif
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
@@ -364,8 +319,6 @@ class Program
     {
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
-        var protonPrefix = storage.GetFolder("protonprefix");
-        var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetVersionPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, ProtonManager.GetRuntimePath(Config.SteamRuntime));
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
@@ -430,19 +383,19 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
-        storage.GetFolder("protonprefix").Delete(true);
-        storage.GetFolder("protonprefix");
     }
 
     public static void ClearPlugins(bool tsbutton = false)
     {
         storage.GetFolder("dalamud").Delete(true);
         storage.GetFolder("dalamudAssets").Delete(true);
+        storage.GetFolder("installedPlugins").Delete(true);
         storage.GetFolder("runtime").Delete(true);
         if (storage.GetFile("dalamudUI.ini").Exists) storage.GetFile("dalamudUI.ini").Delete();
         if (storage.GetFile("dalamudConfig.json").Exists) storage.GetFile("dalamudConfig.json").Delete();
         storage.GetFolder("dalamud");
         storage.GetFolder("dalamudAssets");
+        storage.GetFolder("installedPlugins");
         storage.GetFolder("runtime");
         if (tsbutton)
         {
@@ -477,6 +430,7 @@ class Program
 
     public static void ClearAll(bool tsbutton = false)
     {
+        ClearSettings(tsbutton);
         ClearPrefix();
         ClearPlugins(tsbutton);
         ClearTools(tsbutton);

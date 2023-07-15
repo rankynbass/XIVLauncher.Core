@@ -31,13 +31,13 @@ public class SettingsTabTroubleshooting : SettingsTab
             Program.ClearSettings(true);
         }        
 
-        ImGui.Text("\nClear the Wine and Proton prefixes - delete the ~/.xlcore/wineprefix and protonprefix folders.");
+        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
         if (ImGui.Button("Clear Prefix"))
         {
             Program.ClearPrefix();
         }
 
-        ImGui.Text("\nClear the managed Wine install and DXVK.");
+        ImGui.Text("\nClear the managed Wine install and DXVK");
         if (ImGui.Button("Clear Wine & DXVK"))
         {
             Program.ClearTools(true);
@@ -55,13 +55,13 @@ public class SettingsTabTroubleshooting : SettingsTab
             Program.ClearLogs(true);
         }
 
-        ImGui.Text("\nClear the logs, the prefixes, Dalamud plugins, and the compatibility tools. Leave the settings.");
+        ImGui.Text("\nDo all of the above.");
         if (ImGui.Button("Clear Everything"))
         {
             Program.ClearAll(true);
         }
 
-        ImGui.Text("\nGenerate a troubleshooting pack to upload to the official Discord channel.");
+        ImGui.Text("\nGenerate a troubleshooting pack to upload to the official Discord channel");
         if (ImGui.Button("Generate tspack"))
         {
             PackGenerator.SavePack(Program.storage);
