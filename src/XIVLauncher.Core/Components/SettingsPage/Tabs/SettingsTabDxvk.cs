@@ -11,7 +11,7 @@ namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 public class SettingsTabDxvk : SettingsTab
 {
     private SettingsEntry<DxvkVersion> dxvkVersionSetting;
-    private SettingsEntry<bool> wineD3DUseVk;
+
     private SettingsEntry<HudType> dxvkHudSetting;
 
     public SettingsTabDxvk()
@@ -34,7 +34,7 @@ public class SettingsTabDxvk : SettingsTab
             },
             dxvkHudSetting = new SettingsEntry<HudType>("DXVK Overlay", "DXVK Hud is included with Dxvk. It doesn't work if Dxvk is disabled.\nMangoHud must be installed separately. Flatpak XIVLauncher needs flatpak MangoHud.", () => Program.Config.HudType, type => Program.Config.HudType = type)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled || wineD3DUseVk.Value,
+                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled,
                 CheckValidity = type =>
                 {
                     if ((type == HudType.MangoHud || type == HudType.MangoHudCustom || type == HudType.MangoHudFull)
