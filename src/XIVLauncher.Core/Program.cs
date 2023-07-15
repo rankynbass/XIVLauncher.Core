@@ -123,8 +123,7 @@ class Program
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
-        Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
-        Config.DxvkMangoCustom ??= Path.Combine(Environment.GetEnvironmentVariable("HOME"),".config","MangoHud","MangoHud.conf");
+        Config.SetWin7 ??= true;
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineBinaryPath ??= "/usr/bin";
@@ -132,7 +131,6 @@ class Program
         Config.ProtonVersion ??= "Proton 7.0";
         Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
         Config.WineDebugVars ??= "-all";
-        FontMultiplier = (Config.FontPxSize ?? DEFAULT_FONT_SIZE) / DEFAULT_FONT_SIZE;
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
@@ -189,8 +187,22 @@ class Program
 
         Loc.SetupWithFallbacks();
 
-        uint appId = STEAM_APP_ID_FT;
-        uint altId = STEAM_APP_ID;
+        uint appId, altId;
+        string appName, altName;
+        if (Config.IsFt.Value)
+        {
+            appId = STEAM_APP_ID_FT;
+            altId = STEAM_APP_ID;
+            appName = "FFXIV Free Trial";
+            altName = "FFXIV Retail";
+        }
+        else
+        {
+            appId = STEAM_APP_ID;
+            altId = STEAM_APP_ID_FT;
+            appName = "FFXIV Retail";
+            altName = "FFXIV Free Trial";
+        }
         try
         {
             switch (Environment.OSVersion.Platform)
@@ -204,14 +216,8 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
-
-            if (!Config.IsIgnoringSteam.Value)
+            if (!Config.IsIgnoringSteam ?? true)
             {
-                if (!Config.IsFt.Value)
-                {
-                    appId = STEAM_APP_ID;
-                    altId = STEAM_APP_ID_FT;
-                }
                 try
                 {
                     Steam.Initialize(appId);
@@ -220,15 +226,11 @@ class Program
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"Trying to load Steam AppID {appId}... Failed. Falling back to AppID {altId}.");
+                    Log.Error(ex, $"Couldn't init Steam with AppId={appId} ({appName}), trying AppId={altId} ({altName})");
                     Steam.Initialize(altId);
                     Log.Information($"Trying to load Steam AppID {altId}... Okay");
                     SteamAppId = altId.ToString();
                 }
-            }
-            else
-            {
-                Log.Information("Steam integration disabled. If you have a Steam service account, you might not be able to log in.");
             }
         }
         catch (PlatformNotSupportedException ex)
@@ -237,7 +239,7 @@ class Program
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Could not load Steam AppID {appId} or {altId}.");
+            Log.Error(ex, "Steam couldn't load");
         }
 
         DalamudLoadInfo = new DalamudOverlayInfoProxy();
@@ -366,8 +368,9 @@ class Program
         var protonSettings = new ProtonSettings(protonPrefix, Config.SteamPath, ProtonManager.GetVersionPath(Config.ProtonVersion), Config.GamePath.FullName, Config.GameConfigPath.FullName, SteamAppId, ProtonManager.GetRuntimePath(Config.SteamRuntime));
         var wineSettings = new WineSettings(Config.WineStartupType, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled, Config.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var dxvkSettings = new DxvkSettings(Config.DxvkHudType, storage.Root, Config.DxvkVersion, Config.DxvkHudCustom, new FileInfo(Config.DxvkMangoCustom), Config.DxvkAsyncEnabled ?? true, Config.DxvkFrameRate ?? 0);
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, protonSettings, Config.GameModeEnabled, toolsFolder);
+        Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
+        Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "beta"));
+        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkHudType, Config.GameModeEnabled, Config.DxvkAsyncEnabled, toolsFolder);
     }
 
     public static void ShowWindow()

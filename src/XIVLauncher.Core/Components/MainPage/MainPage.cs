@@ -43,6 +43,7 @@ public class MainPage : Page
 
         this.loginFrame.OnLogin += this.ProcessLogin;
         this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
+        this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
 
         this.Padding = new Vector2(32f, 32f);
 
@@ -75,8 +76,8 @@ public class MainPage : Page
 
         ImGui.SameLine();
 
-        this.AccountSwitcher.Draw();
         this.loginFrame.Draw();
+        this.AccountSwitcher.Draw();
 
         this.actionButtons.Draw();
     }
@@ -373,7 +374,7 @@ public class MainPage : Page
 
             try
             {
-                using var process = await StartGameAndAddon(loginResult, isSteam, action == LoginAction.GameNoDalamud, false).ConfigureAwait(false);
+                using var process = await StartGameAndAddon(loginResult, isSteam, action == LoginAction.GameNoDalamud, action == LoginAction.GameNoThirdparty).ConfigureAwait(false);
 
                 if (process is null)
                     throw new Exception("Could not obtain Process Handle");
@@ -621,9 +622,10 @@ public class MainPage : Page
 
         Troubleshooting.LogTroubleshooting();
 
-        var dalamudLauncher = new DalamudLauncher(dalamudRunner, Program.DalamudUpdater, App.Settings.DalamudLoadMethod.GetValueOrDefault(DalamudLoadMethod.DllInject),
-            App.Settings.GamePath, App.Storage.Root, App.Settings.ClientLanguage ?? ClientLanguage.English, App.Settings.DalamudLoadDelay, false, false, noThird,
-            Troubleshooting.GetTroubleshootingJson());
+        var dalamudLauncher = new DalamudLauncher(dalamudRunner, Program.DalamudUpdater,
+            App.Settings.DalamudLoadMethod.GetValueOrDefault(DalamudLoadMethod.DllInject), App.Settings.GamePath,
+            App.Storage.Root, App.Storage.GetFolder("logs"), App.Settings.ClientLanguage ?? ClientLanguage.English,
+            App.Settings.DalamudLoadDelay, false, false, noThird, Troubleshooting.GetTroubleshootingJson());
 
         try
         {
@@ -754,8 +756,10 @@ public class MainPage : Page
             var _ = Task.Run(async () =>
             {
                 var tempPath = App.Storage.GetFolder("temp");
+                var winver = (App.Settings.SetWin7 ?? true) ? "win7" : "win10";
 
                 await Program.CompatibilityTools.EnsureTool(tempPath).ConfigureAwait(false);
+                Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}");
 
                 var gameFixApply = new GameFixApply(App.Settings.GamePath, App.Settings.GameConfigPath, Program.CompatibilityTools.Settings.Prefix, tempPath);
                 gameFixApply.UpdateProgress += (text, hasProgress, progress) =>
