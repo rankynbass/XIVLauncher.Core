@@ -173,19 +173,6 @@ class Program
     {
         mainargs = args;
 
-        if (CoreEnvironmentSettings.ClearAll)
-        {
-            ClearAll();
-        }
-        else
-        {
-            if (CoreEnvironmentSettings.ClearSettings) ClearSettings();
-            if (CoreEnvironmentSettings.ClearPrefix) ClearPrefix();
-            if (CoreEnvironmentSettings.ClearPlugins) ClearPlugins();
-            if (CoreEnvironmentSettings.ClearTools) ClearTools();
-            if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
-        }
-        
         bool badxlpath = false;
         var badxlpathex = new Exception();
         string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
@@ -206,6 +193,20 @@ class Program
         if (badxlpath)
         {
             Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        }
+
+        // This all depends on this.storage being loaded, so it needs to be below the storage setup block.
+        if (CoreEnvironmentSettings.ClearAll)
+        {
+            ClearAll();
+        }
+        else
+        {
+            if (CoreEnvironmentSettings.ClearSettings) ClearSettings();
+            if (CoreEnvironmentSettings.ClearPrefix) ClearPrefix();
+            if (CoreEnvironmentSettings.ClearPlugins) ClearPlugins();
+            if (CoreEnvironmentSettings.ClearTools) ClearTools();
+            if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
 
         Secrets = GetSecretProvider(storage);
