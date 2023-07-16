@@ -27,13 +27,23 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
+            new SettingsEntry<string>("Custom Dxvk Path", "", () => Program.Config.DxvkCustomPath ?? "", s => Program.Config.DxvkCustomPath = s)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.Custom,
+                CheckValidity = s =>
+                {
+                    if (!Directory.Exists(s))
+                        return "That is not a valid directory";
+                    return null;
+                }
+            },
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {   
                 CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled,
             },
             new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.v2_2,
+                CheckVisibility = () => (dxvkVersionSetting.Value == DxvkVersion.v2_2 || dxvkVersionSetting.Value == DxvkVersion.Custom),
             },
             dxvkHudSetting = new SettingsEntry<HudType>("DXVK Overlay", "DXVK Hud is included with Dxvk. It doesn't work if Dxvk is disabled.\nMangoHud must be installed separately. Flatpak XIVLauncher needs flatpak MangoHud.", () => Program.Config.HudType, type => Program.Config.HudType = type)
             {

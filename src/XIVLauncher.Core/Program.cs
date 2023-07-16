@@ -121,6 +121,7 @@ class Program
 
         Config.GameModeEnabled ??= false;
         Config.DxvkVersion ??= DxvkVersion.v1_10_3;
+        Config.DxvkCustomPath ??= "";
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRate ??= 0;

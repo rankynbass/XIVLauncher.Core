@@ -25,6 +25,9 @@ public enum DxvkVersion
     [SettingsDescription("2.2", "Newest version of DXVK, using graphics pipeline library.")]
     v2_2,
 
+    [SettingsDescription("Custom", "Provide your own DXVK library.")]
+    Custom,
+
     [SettingsDescription("Disabled", "Disable Dxvk, use WineD3D with OpenGL instead.")]
     Disabled,
 }
@@ -74,7 +77,12 @@ public static class DxvkManager
                 env.Add("DXVK_ASYNC", async);
                 env.Add("DXVK_GPLASYNCCACHE", gplcache);
                 break;
-            
+
+            case DxvkVersion.Custom:
+                folder = Program.Config.DxvkCustomPath;
+                env.Add("DXVK_ASYNC", async);
+                env.Add("DXVK_GPLASYNCCACHE", gplcache);
+                break;
 
             case DxvkVersion.Disabled:
                 env.Add("PROTON_USE_WINED3D", "1");

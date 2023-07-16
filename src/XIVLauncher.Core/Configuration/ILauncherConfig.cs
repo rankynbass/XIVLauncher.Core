@@ -75,6 +75,8 @@ public interface ILauncherConfig
 
     public string? WineBinaryPath { get; set; }
 
+    public string? DxvkCustomPath { get; set; }
+
     public string? SteamPath { get; set; }
 
     public string? ProtonVersion { get; set; }
