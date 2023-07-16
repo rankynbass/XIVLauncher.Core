@@ -30,7 +30,7 @@ public class SettingsTabDxvk : SettingsTab
             new SettingsEntry<string>("Custom Dxvk Path", "", () => Program.Config.DxvkCustomPath ?? "", s => Program.Config.DxvkCustomPath = s)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value == DxvkVersion.Custom,
-                CheckValidity = s =>
+                CheckWarning = s =>
                 {
                     if (!Directory.Exists(s))
                         return "That is not a valid directory";
