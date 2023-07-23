@@ -135,6 +135,8 @@ public class SettingsTabWine : SettingsTab
 
         }
 
+        ImGui.Dummy(new Vector2(10));
+
         if (ImGui.Button("Set Wine to Windows 7"))
         {
             Program.CompatibilityTools.RunInPrefix($"winecfg /v win7", redirectOutput: true, writeLog: true);
@@ -147,12 +149,12 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunInPrefix($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
+        ImGui.Dummy(new Vector2(10));
+
         if (ImGui.Button("Kill all wine processes"))
         {
             Program.CompatibilityTools.Kill();
         }
-
-        ImGui.SameLine();
 
         if (!Program.CompatibilityTools.IsToolDownloaded)
         {
@@ -162,12 +164,28 @@ public class SettingsTabWine : SettingsTab
         if (new [] {WineType.Managed, WineType.RB_Wine, WineType.RB_Proton}.Contains(startupTypeSetting.Value))
         {
 
+            ImGui.SameLine();
+
             if (ImGui.Button("Download now!"))
             {
                 this.Save();
                 Program.CompatibilityTools.EnsureTool(Program.storage.GetFolder("temp"));
             }
         }
+
+        ImGui.Dummy(new Vector2(10));
+
+         if (Program.GetReshadeStatus() is not null)
+        {
+            ImGui.Text($"Reshade is {(Program.GetReshadeStatus().Value ? "ENABLED" : "DISABLED")}");
+        
+            if (ImGui.Button("Toggle Reshade"))
+            {
+                Program.ToggleReshade();
+            }
+        }
+        else
+            ImGui.Text($"Reshade is not installed");
     }
 
     public override void Save()

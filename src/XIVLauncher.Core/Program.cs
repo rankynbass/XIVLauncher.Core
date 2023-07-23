@@ -506,4 +506,61 @@ class Program
         ClearTools(tsbutton);
         ClearLogs(true);
     }
+
+    public static bool? GetReshadeStatus()
+    {
+        var gamepath = Path.Combine(Config.GamePath.FullName, "game");
+        var dxgiE = Path.Combine(gamepath, "dxgi.dll");
+        var dxgiD = Path.Combine(gamepath, "dxgi.dll.disabled");
+        var compilerE = Path.Combine(gamepath, "d3dcompiler_47.dll");
+        var compilerD = Path.Combine(gamepath, "d3dcompiler_47.dll.disabled");
+        if (File.Exists(dxgiE) && File.Exists(compilerE))
+            return true;
+        if (File.Exists(dxgiD) && File.Exists(compilerD))
+            return false;
+        if (File.Exists(dxgiE) && File.Exists(compilerD))
+        {
+            File.Move(compilerD, compilerE);
+            return true;
+        }
+        if (File.Exists(dxgiD) && File.Exists(compilerE))
+        {
+            File.Move(compilerE, compilerD);
+            return false;
+        }
+        return null;
+    }
+
+    public static void ToggleReshade()
+    {
+        var gamepath = Path.Combine(Config.GamePath.FullName, "game");
+        var dxgiE = Path.Combine(gamepath, "dxgi.dll");
+        var dxgiD = Path.Combine(gamepath, "dxgi.dll.disabled");
+        var compilerE = Path.Combine(gamepath, "d3dcompiler_47.dll");
+        var compilerD = Path.Combine(gamepath, "d3dcompiler_47.dll.disabled");
+        if (File.Exists(dxgiE))
+        {
+            if (File.Exists(dxgiD))
+                File.Delete(dxgiD);
+            if (File.Exists(compilerD))
+                File.Delete(compilerD);
+
+            File.Move(dxgiE, dxgiD);
+            if (File.Exists(compilerE))
+                File.Move(compilerE, compilerD);
+        }
+        else if (File.Exists(dxgiD))
+        {
+            if (File.Exists(compilerE))
+                File.Delete(compilerE);
+
+            File.Move(dxgiD, dxgiE);
+            if (File.Exists(compilerD))
+                File.Move(compilerD, compilerE);
+        }
+        else
+        {
+            Log.Error("Tried to toggle ReShade, but dxgi.dll or dxgi.dll.disabled not present");
+        }
+    }
 }
