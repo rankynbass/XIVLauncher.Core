@@ -18,7 +18,7 @@ XIVLauncher Core has community packages for various Linux distributions. Please 
 
 | Repo        | Status      |
 | ----------- | ----------- |
-| [**Flathub (official)**](https://flathub.org/apps/details/dev.goats.xivlauncher) | ![Flathub](https://img.shields.io/flathub/v/dev.goats.xivlauncher) |
+| [AUR (RB)](https://aur.archlinux.org/packages/xivlauncher-rb) | ![AUR version](https://img.shields.io/aur/version/xivlauncher-rb) |
 | [AUR](https://aur.archlinux.org/packages/xivlauncher) | ![AUR version](https://img.shields.io/aur/version/xivlauncher) |
 | [AUR (git)](https://aur.archlinux.org/packages/xivlauncher-git) | ![AUR version](https://img.shields.io/aur/version/xivlauncher-git) |
 | [Copr (Fedora+openSuse+EL9)](https://copr.fedorainfracloud.org/coprs/rankyn/xivlauncher/) | ![COPR version](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frankynbass%2FXIVLauncher4rpm%2Fmain%2Fbadge.json)|
