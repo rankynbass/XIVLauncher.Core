@@ -133,6 +133,20 @@ class Program
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
+        if (string.IsNullOrEmpty(Config.SteamPath))
+        {
+            var home = System.Environment.GetEnvironmentVariable("HOME");
+            var xdg_data = System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(home, ".local", "share");
+            if (Directory.Exists(Path.Combine(xdg_data, "Steam")))
+                Config.SteamPath = Path.Combine(xdg_data, "Steam");
+            else if (Directory.Exists(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam")))
+                Config.SteamPath = Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam");
+            else
+                Config.SteamPath = Path.Combine(home, ".steam", "root");
+        }
+        Config.ProtonVersion ??= "Proton 7.0";
+        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_soldier";
+
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
     }
@@ -160,6 +174,7 @@ class Program
         
         SetupLogging(mainargs);
         LoadConfig(storage);
+        Proton.Initialize(Config.SteamPath);
 
         Secrets = GetSecretProvider(storage);
 
@@ -325,7 +340,7 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
     }
@@ -386,7 +401,10 @@ class Program
     public static void ClearPrefix()
     {
         storage.GetFolder("wineprefix").Delete(true);
+        storage.GetFolder("protonprefix").Delete(true);
         storage.GetFolder("wineprefix");
+        storage.GetFolder("protonprefix");
+        storage.GetFolder("protonprefix/pfx");
     }
 
     public static void ClearPlugins(bool tsbutton = false)

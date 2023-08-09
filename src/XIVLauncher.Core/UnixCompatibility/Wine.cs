@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using Serilog;
 using XIVLauncher.Common;
-using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
@@ -23,16 +16,16 @@ public static class Wine
         _ => throw new ArgumentOutOfRangeException(),
     };
 
-    public static string DownloadUrl =>Program.Config.WineVersion switch
+    public static string DownloadUrl => Program.Config.WineVersion switch
     {
-                WineVersion.Wine7_10 => $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz",
-                WineVersion.Wine8_5 => $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz",
-                _ => throw new ArgumentOutOfRangeException(),
+        WineVersion.Wine7_10 => $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz",
+        WineVersion.Wine8_5 => $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz",
+        _ => throw new ArgumentOutOfRangeException(),
     };
 
     public static string DebugVars => Program.Config.WineDebugVars ?? "-all";
 
-    public static FileInfo LogFile => new FileInfo(Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));
+    public static FileInfo LogFile => new (Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));
 
     public static DirectoryInfo Prefix => Program.storage.GetFolder("wineprefix");
 
@@ -40,7 +33,28 @@ public static class Wine
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
-    private static bool OSReleaseIsParsed = false;
+    // Proton additions
+    public static bool IsProton => Program.Config.WineType == WineType.Proton;
+
+    private static string RuntimePath => (IsProton && !OSInfo.IsFlatpak) ? Proton.GetRuntimePath(Program.Config.SteamRuntime) : "";
+
+    private static string ProtonPath => IsProton ? Proton.GetVersionPath(Program.Config.ProtonVersion) : "";
+
+    public static Dictionary<string, string>? ProtonInfo
+    {
+        get {
+            if (!IsProton) return null;
+            return new Dictionary<string, string>
+            {
+                { "SteamPath", Program.Config.SteamPath },
+                { "ProtonPath", ProtonPath },
+                { "RuntimePath", RuntimePath },
+                { "Prefix", Program.storage.GetFolder("protonprefix").FullName },
+                { "GamePath", Program.Config.GamePath.FullName },
+                { "GameConfigPath", Program.Config.GameConfigPath.FullName },
+            };
+        }
+    }
 }
 
 public enum WineType
@@ -50,6 +64,9 @@ public enum WineType
 
     [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
     Custom,
+
+    [SettingsDescription("Proton", "Use Steam's Proton compatibility layer. Requires steam.")]
+    Proton,
 }
 
 public enum WineVersion
