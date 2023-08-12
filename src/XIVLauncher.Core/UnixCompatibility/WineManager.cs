@@ -40,6 +40,9 @@ public enum WineVersion
 
 public enum RBWineVersion
 {
+    [SettingsDescription("v8.13", "Unofficial version of Wine-staging 8.13 with WoW64. No 32-bit libs needed, Wine as Win10 supported.")]
+    Wine8_13,
+
     [SettingsDescription("v8.12", "Unofficial version of Wine-staging 8.12 with WoW64. No 32-bit libs needed, Wine as Win10 supported.")]
     Wine8_12,
 
@@ -55,12 +58,18 @@ public enum RBWineVersion
     [SettingsDescription("v7.22", "Unofficial version of Wine-staging 7.22. Last version of Wine 7. Set windows version to 7.")]
     Wine7_22,
 
-    [SettingsDescription("Proton8-exp-r01", "Patched version of Valve wine experimental with FSR and XIV patches. Wine as Win10 supported.")]
-    Proton8_exp_r02,
+    [SettingsDescription("Proton-exp 8.0.52326", "Patched version of Valve wine experimental with FSR, XIV, Haptic feedback patches. Wine as Win10 supported.")]
+    Proton8_exp_52326,
+
+    [SettingsDescription("Proton 8.0.3c-r2", "Patched version of Valve wine with FSR, XIV, Haptic feedback patches. Wine as Win10 supported.")]
+    Proton8_3c_r2,
 }
 
 public enum RBProtonVersion
 {
+    [SettingsDescription("xiv-Proton8-13", "Unofficial version of Wine-GE Proton8-13 with XIV patches. Includes FSR & Haptic Feedback.")]
+    Proton8_13,
+
     [SettingsDescription("xiv-Proton8-12", "Unofficial version of Wine-GE Proton8-12 with XIV patches. Includes FSR.")]
     Proton8_12,
 
@@ -138,9 +147,19 @@ public static class WineManager
             var version = Program.Config.RBWineVersion ?? RBWineVersion.Wine8_12;
             switch (version)
             {
-                case RBWineVersion.Proton8_exp_r02:
-                    folder = "unofficial-wine-xiv-git-proton8-exp-r02";
-                    url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/proton8-exp-r02/unofficial-wine-xiv-git-proton8-exp-r02.tar.xz";
+                case RBWineVersion.Proton8_exp_52326:
+                    folder = "unofficial-wine-xiv-git-proton-exp-8.0.52326";
+                    url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/proton-exp-8.0.52326/unofficial-wine-xiv-git-proton-exp-8.0.52326.tar.xz";
+                    break;
+
+                case RBWineVersion.Proton8_3c_r2:
+                    folder = "unofficial-wine-xiv-git-proton-8.0.3c-r2";
+                    url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/proton-wine-8.0.3c-r2/unofficial-wine-xiv-git-proton-8.0.3c-r2.tar.xz";
+                    break;
+
+                case RBWineVersion.Wine8_13:
+                    folder = "unofficial-wine-xiv-git-8.13.0";
+                    url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.13.0/unofficial-wine-xiv-git-8.13.0.tar.xz";
                     break;
 
                 case RBWineVersion.Wine8_12:
@@ -178,6 +197,10 @@ public static class WineManager
 
             switch (version)
             {
+                case RBProtonVersion.Proton8_13:
+                    folder = "unofficial-wine-xiv-Proton8-13-x86_64";
+                    url = "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-13/unofficial-wine-xiv-Proton8-13-x86_64.tar.xz";
+                    break;
 
                 case RBProtonVersion.Proton8_12:
                     folder = "unofficial-wine-xiv-Proton8-12-x86_64";
