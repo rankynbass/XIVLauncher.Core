@@ -1,5 +1,6 @@
 using Serilog;
 using XIVLauncher.Common;
+using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
@@ -40,19 +41,12 @@ public static class Wine
 
     private static string ProtonPath => IsProton ? Proton.GetVersionPath(Program.Config.ProtonVersion) : "";
 
-    public static Dictionary<string, string>? ProtonInfo
+    public static ProtonSettings? ProtonInfo
     {
         get {
             if (!IsProton) return null;
-            return new Dictionary<string, string>
-            {
-                { "SteamPath", Program.Config.SteamPath },
-                { "ProtonPath", ProtonPath },
-                { "RuntimePath", RuntimePath },
-                { "Prefix", Program.storage.GetFolder("protonprefix").FullName },
-                { "GamePath", Program.Config.GamePath.FullName },
-                { "GameConfigPath", Program.Config.GameConfigPath.FullName },
-            };
+            return new ProtonSettings(Program.Config.SteamPath, ProtonPath, RuntimePath, Program.storage.GetFolder("protonprefix"),
+                Program.Config.GamePath, Program.Config.GameConfigPath);
         }
     }
 }
