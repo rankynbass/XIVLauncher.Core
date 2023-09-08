@@ -29,12 +29,14 @@ public class ToolSettingsEntry : SettingsEntry<string>
 
         Dictionary<string, ToolInfo>.KeyCollection keys = Pairs.Keys;
 
-        if (ImGui.BeginCombo($"###{Id.ToString()}", Pairs[idx].Name + (ShowDescription && !string.IsNullOrEmpty(Pairs[idx].Description) ? " - " + Pairs[idx].Description : "")))
+        var star = (!string.IsNullOrEmpty(Pairs[idx].DownloadUrl) && !Pairs[idx].IsDownloaded) ? " *DL*" : "";
+
+        if (ImGui.BeginCombo($"###{Id.ToString()}", $"[{Pairs[idx].Label}] {Pairs[idx].Name}" + (ShowDescription && !string.IsNullOrEmpty(Pairs[idx].Description) ? " - " + Pairs[idx].Description : "") + star))
         {
             foreach ( string key in keys )
             {
-                if (ImGui.Selectable($"*{Pairs[key].Label}* {Pairs[key].Name}" + (string.IsNullOrEmpty(Pairs[key].Description) ? "" : Pairs[key].Description)
-                    + (Pairs[key].IsDownloaded ? " [Downloaded]" : ""), idx == key))
+                var downloadable = (!string.IsNullOrEmpty(Pairs[key].DownloadUrl) && !Pairs[key].IsDownloaded) ? " *DL*" : "";
+                if (ImGui.Selectable($"[{Pairs[key].Label}] {Pairs[key].Name}" + (string.IsNullOrEmpty(Pairs[key].Description) ? "" : $" - {Pairs[key].Description}") + downloadable, idx == key))
                 {
                     this.InternalValue = key;
                 }

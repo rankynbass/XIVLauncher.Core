@@ -43,7 +43,6 @@ public static class Wine
 
     public static void Initialize()
     {
-        var wineDirectories = new List<DirectoryInfo>();
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
         if (!toolDirectory.Exists)

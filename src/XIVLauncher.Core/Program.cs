@@ -125,7 +125,8 @@ class Program
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
 
-        Config.DxvkVersion ??= DxvkVersion.v1_10_3;
+        if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
+            Config.DxvkVersion = "dxvk-async-1.10.3";
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
@@ -146,6 +147,7 @@ class Program
         mainargs = args;
         storage = new Storage(APP_NAME);
         Wine.Initialize();
+        Dxvk.Initialize();
 
         if (CoreEnvironmentSettings.ClearAll)
         {

@@ -13,31 +13,11 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
-    public static bool Enabled => Program.Config.DxvkVersion != DxvkVersion.Disabled;
+    public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
 
-    public static string FolderName => Program.Config.DxvkVersion switch
-    {
-        DxvkVersion.Disabled => "",
-        DxvkVersion.v1_10_3 => "dxvk-async-1.10.3",
-        DxvkVersion.v2_0 => "dxvk-async-2.0",
-        DxvkVersion.v2_1 => "dxvk-2.1",
-        DxvkVersion.v2_2 => "dxvk-2.2",
-        DxvkVersion.v2_3 => "dxvk-2.3",
-        DxvkVersion.Custom => "custom",
-        _ => throw new ArgumentOutOfRangeException(),
-    };
+    public static string FolderName => Program.Config.DxvkVersion ?? GetDefaultVersion();
 
-    public static string DownloadUrl => Program.Config.DxvkVersion switch
-    {
-        DxvkVersion.Disabled => "",
-        DxvkVersion.v1_10_3 => "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz",
-        DxvkVersion.v2_0 => "https://github.com/Sporif/dxvk-async/releases/download/2.0/dxvk-async-2.0.tar.gz",
-        DxvkVersion.v2_1 => "https://github.com/doitsujin/dxvk/releases/download/v2.1/dxvk-2.1.tar.gz",
-        DxvkVersion.v2_2 => "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz",
-        DxvkVersion.v2_3 => "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz",
-        DxvkVersion.Custom => "",
-        _ => throw new ArgumentOutOfRangeException(),        
-    };
+    public static string DownloadUrl => GetDownloadUrl(Program.Config.DxvkVersion);
 
     public static int FrameRateLimit => Program.Config.DxvkFrameRateLimit ?? 0;
 
@@ -77,31 +57,64 @@ public static class Dxvk
 
     public static string MANGOHUD_CONFIGFILE => Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
 
+    public static Dictionary<string, ToolInfo> Versions { get; private set; }
+
+    static Dxvk()
+    {
+        Versions = new Dictionary<string, ToolInfo>()
+        {
+            {"dxvk-2.3", new ToolInfo("DXVK 2.3", "Latest version, using Graphics Pipeline Libs. Async no longer needed.", "Current", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz")},
+            {"dxvk-async-1.10.3", new ToolInfo("DXVK 1.10.3", "Legacy version with high compatibility. Includes async patch.", "Legacy", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz")},
+            {"DISABLED", new ToolInfo("Disabled", "Use WineD3D instead of DXVK", "OpenGL")},
+        };
+    }
+
+    public static void Initialize()
+    {
+        var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
+
+        if (!toolDirectory.Exists)
+        {
+            Program.storage.GetFolder("compatibilitytool/dxvk");
+            return;
+        }
+
+        foreach (var dxvkDir in toolDirectory.EnumerateDirectories())
+        {
+            if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
+            {
+                if (Versions.ContainsKey(dxvkDir.Name))
+                {
+                    if (dxvkDir.Name == "DISABLED")
+                        Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
+                    else
+                        Versions[dxvkDir.Name].IsDownloaded = true;
+                    continue;
+                }
+                Versions.Add(dxvkDir.Name, new ToolInfo(dxvkDir.Name, ""));
+            }
+        }
+    }
+
+    private static string GetDownloadUrl(string? name)
+    {
+        name ??= GetDefaultVersion();
+        if (Versions.ContainsKey(name))
+            return Versions[name].DownloadUrl;
+        return Versions[GetDefaultVersion()].DownloadUrl;
+    }
+
+    public static string GetDefaultVersion()
+    {
+        if (Versions.ContainsKey("dxvk-async-1.10.3"))
+            return "dxvk-async-1.10.3";
+        if (Versions.ContainsKey("dxvk-2.3"))
+            return "dxvk-2.3";
+        return Versions.First().Key;
+    }
+
 }
 
-public enum DxvkVersion
-{
-    [SettingsDescription("DXVK 2.3 (Current)", "DXVK 2.3, using GPL. May help in CPU-bound situations. No Async patch.")]
-    v2_3,
-
-    [SettingsDescription("DXVK 1.10.3 (Legacy)", "DXVK 1.10.3. High compatibility with most graphics cards.")]
-    v1_10_3,
-
-    [SettingsDescription("Custom DXVK", "Put a custom DXVK version in ~/.xlcore/compatibilitytool/dxvk/custom")]
-    Custom,
-
-    [SettingsDescription("DXVK 2.2", "A previous version of DXVK, using GPL. Try this if 2.3 causes problems.")]
-    v2_2,
-
-    [SettingsDescription("DXVK 2.1", "A previous version of DXVK, using GPL. Try this if 2.2 & 2.3 cause problems.")]
-    v2_1,
-
-    [SettingsDescription("DXVK 2.0", "DXVK 2.0. Equivalent to 1.10.3 if used with Async. Uses GPL without Async.")]
-    v2_0,
-
-    [SettingsDescription("Disabled", "Disable DXVK, use WineD3D with OpenGL instead.")]
-    Disabled,
-}
 public enum DxvkHud
 {
     [SettingsDescription("None", "Disable DXVK Hud")]

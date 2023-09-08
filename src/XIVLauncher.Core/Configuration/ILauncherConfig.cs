@@ -77,7 +77,7 @@ public interface ILauncherConfig
 
     public bool? FSyncEnabled { get; set; }
 
-    public DxvkVersion? DxvkVersion { get; set; }
+    public string? DxvkVersion { get; set; }
 
     public int? DxvkFrameRateLimit { get; set; }
 
