@@ -120,7 +120,8 @@ class Program
         Config.FSyncEnabled ??= false;
 
         Config.WineType ??= WineType.Managed;
-        Config.WineVersion ??= WineVersion.Wine7_10;
+        if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
+            Config.WineVersion = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
 
@@ -144,6 +145,7 @@ class Program
     {
         mainargs = args;
         storage = new Storage(APP_NAME);
+        Wine.Initialize();
 
         if (CoreEnvironmentSettings.ClearAll)
         {

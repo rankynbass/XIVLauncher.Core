@@ -65,7 +65,7 @@ public interface ILauncherConfig
 
     public WineType? WineType { get; set; }
 
-    public WineVersion? WineVersion { get; set; }
+    public string? WineVersion { get; set; }
 
     public string? WineBinaryPath { get; set; }
 

@@ -11,6 +11,8 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineType> wineTypeSetting;
 
+    private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
+
     public SettingsTabWine()
     {
         Entries = new SettingsEntry[]
@@ -18,7 +20,7 @@ public class SettingsTabWine : SettingsTab
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
                 () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x),
 
-            new SettingsEntry<WineVersion>("Wine Version", "Choose a patched wine version.", () => Program.Config.WineVersion ?? WineVersion.Wine7_10, x => Program.Config.WineVersion = x)
+            new ToolSettingsEntry("Wine Version", "Wine versions in " + toolDirectory, Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion(), true)
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
             },
