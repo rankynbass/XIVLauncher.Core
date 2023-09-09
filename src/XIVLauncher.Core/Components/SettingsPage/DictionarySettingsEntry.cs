@@ -3,15 +3,15 @@ using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
-public class ToolSettingsEntry : SettingsEntry<string>
+public class DictionarySettingsEntry : SettingsEntry<string>
 {
-    public Dictionary<string, ToolInfo> Pairs;
+    public Dictionary<string, string[]> Pairs;
 
     public string DefaultValue;
 
     public bool ShowDescription;
 
-    public ToolSettingsEntry(string name, string description, Dictionary<string, ToolInfo> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
+    public DictionarySettingsEntry(string name, string description, Dictionary<string, string[]> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
         : base(name, description, load, save)
     { 
         this.Pairs = pairs;
@@ -27,16 +27,13 @@ public class ToolSettingsEntry : SettingsEntry<string>
 
         ImGuiHelpers.TextWrapped(this.Name);
 
-        Dictionary<string, ToolInfo>.KeyCollection keys = Pairs.Keys;
+        Dictionary<string, string[]>.KeyCollection keys = Pairs.Keys;
 
-        var star = (!string.IsNullOrEmpty(Pairs[idx].DownloadUrl) && !Pairs[idx].IsDownloaded) ? " *DL*" : "";
-
-        if (ImGui.BeginCombo($"###{Id.ToString()}", $"[{Pairs[idx].Label}] {Pairs[idx].Name}" + (ShowDescription && !string.IsNullOrEmpty(Pairs[idx].Description) ? " - " + Pairs[idx].Description : "") + star))
+        if (ImGui.BeginCombo($"###{Id.ToString()}", $"[{Pairs[idx][2]}] {Pairs[idx][0]}" + (ShowDescription && !string.IsNullOrEmpty(Pairs[idx][1]) ? " - " + Pairs[idx][1] : "") + (string.IsNullOrEmpty(Pairs[idx][4]) ? "" : " " + Pairs[idx][4])))
         {
             foreach ( string key in keys )
             {
-                var downloadable = (!string.IsNullOrEmpty(Pairs[key].DownloadUrl) && !Pairs[key].IsDownloaded) ? " *DL*" : "";
-                if (ImGui.Selectable($"[{Pairs[key].Label}] {Pairs[key].Name}" + (string.IsNullOrEmpty(Pairs[key].Description) ? "" : $" - {Pairs[key].Description}") + downloadable, idx == key))
+                if (ImGui.Selectable($"[{Pairs[key][2]}] {Pairs[key][0]}" + (string.IsNullOrEmpty(Pairs[key][1]) ? "" : $" - {Pairs[key][1]}") + $" {Pairs[key][4]}", idx == key))
                 {
                     this.InternalValue = key;
                 }

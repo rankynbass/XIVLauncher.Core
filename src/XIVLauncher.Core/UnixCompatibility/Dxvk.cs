@@ -57,15 +57,15 @@ public static class Dxvk
 
     public static string MANGOHUD_CONFIGFILE => Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
 
-    public static Dictionary<string, ToolInfo> Versions { get; private set; }
+    public static Dictionary<string, string[]> Versions { get; private set; }
 
     static Dxvk()
     {
-        Versions = new Dictionary<string, ToolInfo>()
+        Versions = new Dictionary<string, string[]>()
         {
-            {"dxvk-2.3", new ToolInfo("DXVK 2.3", "Latest version, using Graphics Pipeline Libs. Async no longer needed.", "Current", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz")},
-            {"dxvk-async-1.10.3", new ToolInfo("DXVK 1.10.3", "Legacy version with high compatibility. Includes async patch.", "Legacy", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz")},
-            {"DISABLED", new ToolInfo("Disabled", "Use WineD3D instead of DXVK", "OpenGL")},
+            { "dxvk-2.3", new [] { "DXVK 2.3", "Latest version, using Graphics Pipeline Libs. Async no longer needed.", "Current", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz", "*DL*" } },
+            { "dxvk-async-1.10.3", new [] { "DXVK 1.10.3", "Legacy version with high compatibility. Includes async patch.", "Legacy", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz", "*DL*" } },
+            { "DISABLED", new [] { "Disabled", "Use WineD3D instead of DXVK", "OpenGL", "", "" } },
         };
     }
 
@@ -88,10 +88,10 @@ public static class Dxvk
                     if (dxvkDir.Name == "DISABLED")
                         Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
                     else
-                        Versions[dxvkDir.Name].IsDownloaded = true;
+                        Versions[dxvkDir.Name][4] = "";
                     continue;
                 }
-                Versions.Add(dxvkDir.Name, new ToolInfo(dxvkDir.Name, ""));
+                Versions.Add(dxvkDir.Name, new [] { dxvkDir.Name, "", "Custom", "", "" });
             }
         }
     }
@@ -100,8 +100,8 @@ public static class Dxvk
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return Versions[name].DownloadUrl;
-        return Versions[GetDefaultVersion()].DownloadUrl;
+            return Versions[name][3];
+        return Versions[GetDefaultVersion()][3];
     }
 
     public static string GetDefaultVersion()

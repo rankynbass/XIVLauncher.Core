@@ -30,14 +30,14 @@ public static class Wine
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
-    public static Dictionary<string, ToolInfo> Versions { get; private set; }
+    public static Dictionary<string, string[]> Versions { get; private set; }
 
     static Wine()
     {
-        Versions = new Dictionary<string, ToolInfo>()
+        Versions = new Dictionary<string, string[]>()
         {
-            { "wine-xiv-staging-fsync-git-7.10.r3.g560db77d", new ToolInfo("Wine-XIV 7.10", "Patched version of Wine Staging 7.10. Default.", "Official", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz")},
-            { "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7", new ToolInfo("Wine-XIV 8.5", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results.", "Official", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz")},
+            { "wine-xiv-staging-fsync-git-7.10.r3.g560db77d",new [] { "Wine-XIV 7.10", "Patched version of Wine Staging 7.10. Default.", "Official", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz", "*DL*" } },
+            { "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7",new [] { "Wine-XIV 8.5", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results.", "Official", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz", "*DL*" } },
         };
     }
 
@@ -58,10 +58,10 @@ public static class Wine
             {
                 if (Versions.ContainsKey(wineDir.Name))
                 {
-                    Versions[wineDir.Name].IsDownloaded = true;
+                    Versions[wineDir.Name][4] = "";
                     continue;
                 }
-                Versions.Add(wineDir.Name, new ToolInfo(wineDir.Name, ""));
+                Versions.Add(wineDir.Name,new [] { wineDir.Name, "", "Custom", "", "" });
             }
         }
     }
@@ -70,8 +70,8 @@ public static class Wine
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return Versions[name].DownloadUrl;
-        return Versions[GetDefaultVersion()].DownloadUrl;
+            return Versions[name][3];
+        return Versions[GetDefaultVersion()][3];
     }
 
     public static string GetDefaultVersion()

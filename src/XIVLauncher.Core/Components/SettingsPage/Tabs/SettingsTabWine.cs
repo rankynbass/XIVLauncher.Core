@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
-using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Core.UnixCompatibility;
 
@@ -20,7 +19,7 @@ public class SettingsTabWine : SettingsTab
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
                 () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x),
 
-            new ToolSettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *DL* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion(), true)
+            new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *DL* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion(), true)
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
             },

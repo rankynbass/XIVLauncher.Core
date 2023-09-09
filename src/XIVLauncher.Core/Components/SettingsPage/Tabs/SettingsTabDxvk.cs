@@ -1,16 +1,13 @@
-using System.IO;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility;
-using XIVLauncher.Common.Util;
 using XIVLauncher.Core.UnixCompatibility;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
 public class SettingsTabDxvk : SettingsTab
 {
-    private ToolSettingsEntry dxvkVersionSetting;
+    private DictionarySettingsEntry dxvkVersionSetting;
     private SettingsEntry<DxvkHud> dxvkHudSetting;
     private SettingsEntry<MangoHud> mangoHudSetting;
 
@@ -20,7 +17,7 @@ public class SettingsTabDxvk : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            dxvkVersionSetting = new ToolSettingsEntry("DXVK Version", $"Choose which version of DXVK to use. Put your custom DXVK in {dxvkPath}\nEntries marked with *DL* will be downloaded when you log in.", Dxvk.Versions, () => Program.Config.DxvkVersion ?? "dxvk-async-1.10.3", s => Program.Config.DxvkVersion = s, Dxvk.GetDefaultVersion(), true)
+            dxvkVersionSetting = new DictionarySettingsEntry("DXVK Version", $"Choose which version of DXVK to use. Put your custom DXVK in {dxvkPath}\nEntries marked with *DL* will be downloaded when you log in.", Dxvk.Versions, () => Program.Config.DxvkVersion ?? "dxvk-async-1.10.3", s => Program.Config.DxvkVersion = s, Dxvk.GetDefaultVersion(), true)
             {
                 CheckWarning = s =>
                 {
