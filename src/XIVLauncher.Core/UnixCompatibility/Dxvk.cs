@@ -57,15 +57,23 @@ public static class Dxvk
 
     public static string MANGOHUD_CONFIGFILE => Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
 
-    public static Dictionary<string, string[]> Versions { get; private set; }
+    public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
     static Dxvk()
     {
-        Versions = new Dictionary<string, string[]>()
+        Versions = new Dictionary<string, Dictionary<string, string>>()
         {
-            { "dxvk-2.3", new [] { "DXVK 2.3", "Latest version, using Graphics Pipeline Libs. Async no longer needed.", "Current", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz", "*DL*" } },
-            { "dxvk-async-1.10.3", new [] { "DXVK 1.10.3", "Legacy version with high compatibility. Includes async patch.", "Legacy", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz", "*DL*" } },
-            { "DISABLED", new [] { "Disabled", "Use WineD3D instead of DXVK", "OpenGL", "", "" } },
+            { "dxvk-2.3", new Dictionary<string, string>()
+                {   {"name", "DXVK 2.3"}, {"desc", "Latest version, using Graphics Pipeline Libs. Async no longer needed."},
+                    {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz"},
+                    {"mark", "*DL*" }   }   },
+            { "dxvk-async-1.10.3", new Dictionary<string, string>()
+                {   {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
+                    {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
+                    {"mark", "*DL*" }   }   },
+            { "DISABLED", new Dictionary<string, string>()
+                {   {"name", "Disabled"}, {"desc", "Use WineD3D instead of DXVK"},
+                    {"label", "OpenGL"}  }   },
         };
     }
 
@@ -88,10 +96,10 @@ public static class Dxvk
                     if (dxvkDir.Name == "DISABLED")
                         Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
                     else
-                        Versions[dxvkDir.Name][4] = "";
+                        Versions[dxvkDir.Name].Remove("mark");
                     continue;
                 }
-                Versions.Add(dxvkDir.Name, new [] { dxvkDir.Name, "", "Custom", "", "" });
+                Versions.Add(dxvkDir.Name, new Dictionary<string, string>() { {"label", "Custom"} });
             }
         }
     }
@@ -100,8 +108,8 @@ public static class Dxvk
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return Versions[name][3];
-        return Versions[GetDefaultVersion()][3];
+            return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+        return Versions[GetDefaultVersion()]["url"];
     }
 
     public static string GetDefaultVersion()

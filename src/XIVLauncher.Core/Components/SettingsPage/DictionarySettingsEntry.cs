@@ -5,13 +5,13 @@ namespace XIVLauncher.Core.Components.SettingsPage;
 
 public class DictionarySettingsEntry : SettingsEntry<string>
 {
-    public Dictionary<string, string[]> Pairs;
+    public Dictionary<string, Dictionary<string, string>> Pairs;
 
     public string DefaultValue;
 
     public bool ShowDescription;
 
-    public DictionarySettingsEntry(string name, string description, Dictionary<string, string[]> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
+    public DictionarySettingsEntry(string name, string description, Dictionary<string, Dictionary<string, string>> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
         : base(name, description, load, save)
     { 
         this.Pairs = pairs;
@@ -27,13 +27,21 @@ public class DictionarySettingsEntry : SettingsEntry<string>
 
         ImGuiHelpers.TextWrapped(this.Name);
 
-        Dictionary<string, string[]>.KeyCollection keys = Pairs.Keys;
+        Dictionary<string, Dictionary<string, string>>.KeyCollection keys = Pairs.Keys;
+        var label = Pairs[idx].ContainsKey("label") ? $"[{Pairs[idx]["label"]}] " : "";
+        var name = Pairs[idx].ContainsKey("name") ? Pairs[idx]["name"] : idx;
+        var desc = ShowDescription && Pairs[idx].ContainsKey("desc") ? $" - {Pairs[idx]["desc"]}" : "";
+        var mark = Pairs[idx].ContainsKey("mark") ? $" {Pairs[idx]["mark"]}" : "";
 
-        if (ImGui.BeginCombo($"###{Id.ToString()}", $"[{Pairs[idx][2]}] {Pairs[idx][0]}" + (ShowDescription && !string.IsNullOrEmpty(Pairs[idx][1]) ? " - " + Pairs[idx][1] : "") + (string.IsNullOrEmpty(Pairs[idx][4]) ? "" : " " + Pairs[idx][4])))
+        if (ImGui.BeginCombo($"###{Id.ToString()}", $"{label}{name}{desc}{mark}"))
         {
             foreach ( string key in keys )
             {
-                if (ImGui.Selectable($"[{Pairs[key][2]}] {Pairs[key][0]}" + (string.IsNullOrEmpty(Pairs[key][1]) ? "" : $" - {Pairs[key][1]}") + $" {Pairs[key][4]}", idx == key))
+                var itemlabel = Pairs[key].ContainsKey("label") ? $"[{Pairs[key]["label"]}] " : "";
+                var itemname = Pairs[key].ContainsKey("name") ? Pairs[key]["name"] : key;
+                var itemdesc = ShowDescription && Pairs[key].ContainsKey("desc") ? $" - {Pairs[key]["desc"]}" : "";
+                var itemmark = Pairs[key].ContainsKey("mark") ? $" {Pairs[key]["mark"]}" : "";
+                if (ImGui.Selectable($"{itemlabel}{itemname}{itemdesc}{itemmark}", idx == key))
                 {
                     this.InternalValue = key;
                 }
