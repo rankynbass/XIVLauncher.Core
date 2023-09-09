@@ -11,12 +11,15 @@ public class DictionarySettingsEntry : SettingsEntry<string>
 
     public bool ShowDescription;
 
-    public DictionarySettingsEntry(string name, string description, Dictionary<string, Dictionary<string, string>> pairs, Func<string> load, Action<string> save, string defaultValue, bool showDesc = false)
+    public bool ShowItemDescription;
+
+    public DictionarySettingsEntry(string name, string description, Dictionary<string, Dictionary<string, string>> pairs, Func<string> load, Action<string?> save, string defaultValue, bool showSelectedDesc = false, bool showItemDesc = true)
         : base(name, description, load, save)
     { 
         this.Pairs = pairs;
         this.DefaultValue = defaultValue;
-        this.ShowDescription = showDesc;
+        this.ShowDescription = showSelectedDesc;
+        this.ShowItemDescription = showItemDesc;
     }
 
 
@@ -39,7 +42,7 @@ public class DictionarySettingsEntry : SettingsEntry<string>
             {
                 var itemlabel = Pairs[key].ContainsKey("label") ? $"[{Pairs[key]["label"]}] " : "";
                 var itemname = Pairs[key].ContainsKey("name") ? Pairs[key]["name"] : key;
-                var itemdesc = ShowDescription && Pairs[key].ContainsKey("desc") ? $" - {Pairs[key]["desc"]}" : "";
+                var itemdesc = ShowItemDescription && Pairs[key].ContainsKey("desc") ? $" - {Pairs[key]["desc"]}" : "";
                 var itemmark = Pairs[key].ContainsKey("mark") ? $" {Pairs[key]["mark"]}" : "";
                 if (ImGui.Selectable($"{itemlabel}{itemname}{itemdesc}{itemmark}", idx == key))
                 {

@@ -72,8 +72,8 @@ public static class Dxvk
                     {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
                     {"mark", "*DL*" }   }   },
             { "DISABLED", new Dictionary<string, string>()
-                {   {"name", "Disabled"}, {"desc", "Use WineD3D instead of DXVK"},
-                    {"label", "OpenGL"}  }   },
+                {   {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
+                    {"label", "Disabled"}  }   },
         };
     }
 
