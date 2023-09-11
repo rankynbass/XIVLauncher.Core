@@ -19,7 +19,7 @@ public class SettingsTabWine : SettingsTab
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
                 () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x),
 
-            new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *DL* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
+            new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
             },

@@ -66,11 +66,11 @@ public static class Dxvk
             { "dxvk-2.3", new Dictionary<string, string>()
                 {   {"name", "DXVK 2.3"}, {"desc", "Latest version, using Graphics Pipeline Libs. Async no longer needed."},
                     {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz"},
-                    {"mark", "*DL*" }   }   },
+                    {"mark", "Download" }   }   },
             { "dxvk-async-1.10.3", new Dictionary<string, string>()
                 {   {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
                     {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
-                    {"mark", "*DL*" }   }   },
+                    {"mark", "Download" }   }   },
             { "DISABLED", new Dictionary<string, string>()
                 {   {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
                     {"label", "Disabled"}  }   },

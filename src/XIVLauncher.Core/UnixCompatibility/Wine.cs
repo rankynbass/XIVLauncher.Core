@@ -39,11 +39,11 @@ public static class Wine
             { "wine-xiv-staging-fsync-git-7.10.r3.g560db77d", new Dictionary<string, string>()
                 {   {"name", "Wine-XIV 7.10"}, {"desc","Patched version of Wine Staging 7.10. Default."},
                     {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz"},
-                    {"mark", "*DL*"}    }   },
+                    {"mark", "Download"}    }   },
             { "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7", new Dictionary<string, string>()
                 {   {"name", "Wine-XIV 8.5"}, {"desc", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results."},
                     {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
-                    {"mark", "*DL*"}    }   },
+                    {"mark", "Download"}    }   },
         };
     }
 

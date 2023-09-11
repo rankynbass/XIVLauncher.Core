@@ -34,7 +34,7 @@ public class DictionarySettingsEntry : SettingsEntry<string>
         var label = Pairs[idx].ContainsKey("label") ? $"[{Pairs[idx]["label"]}] " : "";
         var name = Pairs[idx].ContainsKey("name") ? Pairs[idx]["name"] : idx;
         var desc = ShowDescription && Pairs[idx].ContainsKey("desc") ? $" - {Pairs[idx]["desc"]}" : "";
-        var mark = Pairs[idx].ContainsKey("mark") ? $" {Pairs[idx]["mark"]}" : "";
+        var mark = Pairs[idx].ContainsKey("mark") ? $" *{Pairs[idx]["mark"]}*" : "";
 
         if (ImGui.BeginCombo($"###{Id.ToString()}", $"{label}{name}{desc}{mark}"))
         {
@@ -43,7 +43,7 @@ public class DictionarySettingsEntry : SettingsEntry<string>
                 var itemlabel = Pairs[key].ContainsKey("label") ? $"[{Pairs[key]["label"]}] " : "";
                 var itemname = Pairs[key].ContainsKey("name") ? Pairs[key]["name"] : key;
                 var itemdesc = ShowItemDescription && Pairs[key].ContainsKey("desc") ? $" - {Pairs[key]["desc"]}" : "";
-                var itemmark = Pairs[key].ContainsKey("mark") ? $" {Pairs[key]["mark"]}" : "";
+                var itemmark = Pairs[key].ContainsKey("mark") ? $" *{Pairs[key]["mark"]}*" : "";
                 if (ImGui.Selectable($"{itemlabel}{itemname}{itemdesc}{itemmark}", idx == key))
                 {
                     this.InternalValue = key;
