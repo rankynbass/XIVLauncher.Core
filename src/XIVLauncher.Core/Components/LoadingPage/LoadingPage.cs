@@ -49,20 +49,20 @@ public class LoadingPage : Page
     {
         var vp = ImGuiHelpers.ViewportSize;
 
-        ImGui.SetCursorPosY(vp.Y / 2 - 100);
+        ImGui.SetCursorPosY(vp.Y / 2 - (100 * ImGuiHelpers.GlobalScale));
 
         // center text in window
         ImGuiHelpers.CenteredText(Line1);
 
         if (!string.IsNullOrEmpty(Line2))
         {
-            ImGui.Dummy(new Vector2(2));
+            ImGui.Dummy(new Vector2(2) * ImGuiHelpers.GlobalScale);
             ImGuiHelpers.CenteredText(Line2);
         }
 
         if (!string.IsNullOrEmpty(Line3))
         {
-            ImGui.Dummy(new Vector2(2));
+            ImGui.Dummy(new Vector2(2) * ImGuiHelpers.GlobalScale);
             ImGuiHelpers.CenteredText(Line3);
         }
 
@@ -70,7 +70,7 @@ public class LoadingPage : Page
 
         if (CanCancel || isDrawDisableAutoLogin)
         {
-            ImGui.Dummy(new Vector2(20));
+            ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
         }
 
         if (CanCancel)
@@ -91,7 +91,7 @@ public class LoadingPage : Page
             ImGuiHelpers.CenteredText("Auto login disabled on next start!");
         }
 
-        ImGui.Dummy(new Vector2(20));
+        ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
 
         if (IsIndeterminate)
         {
@@ -102,7 +102,7 @@ public class LoadingPage : Page
         {
             var width = vp.X / 3;
             ImGuiHelpers.CenterCursorFor((int)width);
-            ImGui.ProgressBar(Progress, new Vector2(width, 20), ProgressText);
+            ImGui.ProgressBar(Progress, new Vector2(width, 20 * ImGuiHelpers.GlobalScale), ProgressText);
         }
 
         Program.Invalidate(10);

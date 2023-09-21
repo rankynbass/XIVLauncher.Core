@@ -17,22 +17,22 @@ public class UpdateWarnPage : Page
     {
         ImGui.SetCursorPos(new Vector2(0));
 
-        ImGui.Image(this.updateWarnTexture.ImGuiHandle, new Vector2(1280, 800));
+        ImGui.Image(this.updateWarnTexture.ImGuiHandle, new Vector2(1280, 800) * ImGuiHelpers.GlobalScale);
 
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
 
-        ImGui.SetCursorPos(new Vector2(316, 481));
+        ImGui.SetCursorPos(new Vector2(316, 481) * ImGuiHelpers.GlobalScale);
 
-        if (ImGui.Button("###openGuideButton", new Vector2(649, 101)))
+        if (ImGui.Button("###openGuideButton", new Vector2(649, 101) * ImGuiHelpers.GlobalScale))
         {
             Environment.Exit(0);
         }
 
-        ImGui.SetCursorPos(new Vector2(316, 598));
+        ImGui.SetCursorPos(new Vector2(316, 598) * ImGuiHelpers.GlobalScale);
 
-        if (ImGui.Button("###finishFtsButton", new Vector2(649, 101)))
+        if (ImGui.Button("###finishFtsButton", new Vector2(649, 101) * ImGuiHelpers.GlobalScale))
         {
             App.FinishFromUpdateWarn();
         }

@@ -293,7 +293,7 @@ public class LauncherApp : Component
 
     private void DrawModal()
     {
-        ImGui.SetNextWindowSize(new Vector2(450, 300));
+        ImGui.SetNextWindowSize(new Vector2(450, 300) * ImGuiHelpers.GlobalScale);
 
         if (ImGui.BeginPopupModal(this.modalTitle + "###xl_modal", ref this.isModalDrawing, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar))
         {
@@ -304,10 +304,10 @@ public class LauncherApp : Component
 
             ImGui.EndChild();
 
-            const float BUTTON_WIDTH = 120f;
+            float BUTTON_WIDTH = 120f * ImGuiHelpers.GlobalScale;
             ImGui.SetCursorPosX((ImGui.GetWindowWidth() - BUTTON_WIDTH) / 2);
 
-            if (ImGui.Button("OK", new Vector2(BUTTON_WIDTH, 40)))
+            if (ImGui.Button("OK", new Vector2(BUTTON_WIDTH, 40) * ImGuiHelpers.GlobalScale))
             {
                 ImGui.CloseCurrentPopup();
                 this.isModalDrawing = false;

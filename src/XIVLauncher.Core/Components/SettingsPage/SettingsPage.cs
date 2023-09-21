@@ -84,7 +84,7 @@ public class SettingsPage : Page
                         if (ImGui.BeginChild("SearchResults"))
                         {
                             ImGui.TextColored(ImGuiColors.DalamudGrey, settingsTab.Title);
-                            ImGui.Dummy(new Vector2(5));
+                            ImGui.Dummy(new Vector2(5) * ImGuiHelpers.GlobalScale);
 
                             foreach (SettingsEntry settingsTabEntry in eligible)
                             {
@@ -96,7 +96,7 @@ public class SettingsPage : Page
 
                             ImGui.Separator();
 
-                            ImGui.Dummy(new Vector2(10));
+                            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
                         }
                         ImGui.EndChild();
                     }
@@ -109,11 +109,11 @@ public class SettingsPage : Page
             }
         }
 
-        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - new Vector2(60));
+        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - new Vector2(60) * ImGuiHelpers.GlobalScale);
 
         if (ImGui.BeginChild("###settingsFinishButton"))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f * ImGuiHelpers.GlobalScale);
             ImGui.PushFont(FontManager.IconFont);
 
             var invalid = this.tabs.Any(x => x.Entries.Any(y => !y.IsValid));
@@ -121,13 +121,13 @@ public class SettingsPage : Page
             {
                 ImGui.BeginDisabled();
                 ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), new Vector2(40));
+                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), new Vector2(40) * ImGuiHelpers.GlobalScale);
                 ImGui.PopStyleColor();
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), new Vector2(40)))
+                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), new Vector2(40) * ImGuiHelpers.GlobalScale))
                 {
                     foreach (var settingsTab in this.tabs)
                     {
@@ -145,8 +145,8 @@ public class SettingsPage : Page
         ImGui.PopFont();
 
         var vpSize = ImGuiHelpers.ViewportSize;
-        ImGui.SetCursorPos(new Vector2(vpSize.X - 260, 4));
-        ImGui.SetNextItemWidth(250);
+        ImGui.SetCursorPos(new Vector2(vpSize.X - 260 * ImGuiHelpers.GlobalScale, 4 * ImGuiHelpers.GlobalScale));
+        ImGui.SetNextItemWidth(250 * ImGuiHelpers.GlobalScale);
         ImGui.InputTextWithHint("###searchInput", "Search for settings...", ref this.searchInput, 100);
 
         base.Draw();

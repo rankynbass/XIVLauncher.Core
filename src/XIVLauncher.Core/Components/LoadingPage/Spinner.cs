@@ -11,8 +11,8 @@ public class Spinner : Component
 
     public Spinner(float radius, int thickness, uint color)
     {
-        this.radius = radius;
-        this.thickness = thickness;
+        this.radius = radius * ImGuiHelpers.GlobalScale;
+        this.thickness = (int)((float)thickness * ImGuiHelpers.GlobalScale);
         this.color = color;
     }
 

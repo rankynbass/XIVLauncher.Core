@@ -62,7 +62,7 @@ public class NewsFrame : Component
     {
         var vp = ImGuiHelpers.ViewportSize;
         var calculatedSize = vp.X >= 1280 ? vp.X * 0.7f : vp.X * 0.5f;
-        return new Vector2(calculatedSize, vp.Y - 128f);
+        return new Vector2(calculatedSize, vp.Y - 128f * ImGuiHelpers.GlobalScale);
     }
 
     public override void Draw()
@@ -79,7 +79,7 @@ public class NewsFrame : Component
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
                     AppUtil.OpenBrowser(this.headlines.Banner[this.currentBanner].Link.ToString());
 
-                ImGui.Dummy(new Vector2(15));
+                ImGui.Dummy(new Vector2(15) * ImGuiHelpers.GlobalScale);
 
                 void ShowNewsEntry(News newsEntry)
                 {  

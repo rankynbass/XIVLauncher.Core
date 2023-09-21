@@ -59,13 +59,13 @@ public class LoginFrame : Component
             this.OnLogin?.Invoke(LoginAction.Game);
         }
 
-        this.loginInput = new Input("Username", "Enter your Username", new Vector2(12f, 0f), 128)
+        this.loginInput = new Input("Username", "Enter your Username", new Vector2(12f, 0f) * ImGuiHelpers.GlobalScale, (uint)(128f * ImGuiHelpers.GlobalScale))
         {
             TakeKeyboardFocus = true
         };
         this.loginInput.Enter += TriggerLogin;
 
-        this.passwordInput = new Input("Password", "Enter your password", new Vector2(12f, 0f), 128, flags: ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo);
+        this.passwordInput = new Input("Password", "Enter your password", new Vector2(12f, 0f) * ImGuiHelpers.GlobalScale,  128, flags: ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo);
         this.passwordInput.Enter += TriggerLogin;
 
         this.oneTimePasswordCheckbox = new Checkbox("Use one-time password");
@@ -81,14 +81,14 @@ public class LoginFrame : Component
     private Vector2 GetSize()
     {
         var vp = ImGuiHelpers.ViewportSize;
-        return new Vector2(-1, vp.Y - 128f);
+        return new Vector2(-1 * ImGuiHelpers.GlobalScale, vp.Y - 128f * ImGuiHelpers.GlobalScale);
     }
 
     public override void Draw()
     {
         if (ImGui.BeginChild("###loginFrame", this.GetSize()))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale);
             this.loginInput.Draw();
             this.passwordInput.Draw();
 
