@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=XIVLauncher RB-Patched
-Comment=Custom launcher for the most critically acclaimed MMO with Rankyn Bass's patches.
+Name=XIVLauncher
+Comment=Custom launcher for the most critically acclaimed MMO
 Exec=xivlauncher
 Icon=xivlauncher
 Terminal=false

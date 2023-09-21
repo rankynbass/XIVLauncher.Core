@@ -1,6 +1,5 @@
 using System.Collections;
 using ImGuiNET;
-using XIVLauncher.Core;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -13,7 +12,7 @@ public class SettingsTabDebug : SettingsTab
     {
         ImGui.TextUnformatted("Generic Information");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Operating System: {Distro.Name} - {Environment.OSVersion}");
+        ImGui.TextUnformatted($"Operating System: {Environment.OSVersion}");
         ImGui.TextUnformatted($"Runtime Version: {Environment.Version}"); 
         
         if (Program.IsSteamDeckHardware)
@@ -22,10 +21,9 @@ public class SettingsTabDebug : SettingsTab
         if (Program.IsSteamDeckGamingMode)
             ImGui.Text("Steam Deck Gaming Mode Detected");
 
-        if (Distro.IsFlatpak)
+#if FLATPAK
             ImGui.Text("Running as a Flatpak");
-        else
-            ImGui.Text("Running a native build");
+#endif
 
         ImGui.Spacing();
 

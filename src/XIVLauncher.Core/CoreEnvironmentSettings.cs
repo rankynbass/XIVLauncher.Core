@@ -16,8 +16,6 @@ public static class CoreEnvironmentSettings
     public static bool ClearAll => CheckEnvBool("XL_CLEAR_ALL");
     public static bool? UseSteam => CheckEnvBoolOrNull("XL_USE_STEAM"); // Fix for Steam Deck users who lock themselves out
 
-    public static string Home => System.Environment.GetEnvironmentVariable("HOME");
-
     private static bool CheckEnvBool(string key)
     {
         string val = (System.Environment.GetEnvironmentVariable(key) ?? string.Empty).ToLower();

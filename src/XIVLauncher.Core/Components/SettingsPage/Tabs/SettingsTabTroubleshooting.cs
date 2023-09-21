@@ -25,7 +25,13 @@ public class SettingsTabTroubleshooting : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix and protonprefix folders");
+        ImGui.Text("\nReset settings to default.");
+        if (ImGui.Button("Clear Settings"))
+        {
+            Program.ClearSettings(true);
+        }        
+
+        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
         if (ImGui.Button("Clear Prefix"))
         {
             Program.ClearPrefix();
@@ -48,12 +54,6 @@ public class SettingsTabTroubleshooting : SettingsTab
         {
             Program.ClearLogs(true);
         }
-
-        ImGui.Text("\nReset settings to default.");
-        if (ImGui.Button("Clear Settings"))
-        {
-            Program.ClearSettings(true);
-        }     
 
         ImGui.Text("\nDo all of the above.");
         if (ImGui.Button("Clear Everything"))
