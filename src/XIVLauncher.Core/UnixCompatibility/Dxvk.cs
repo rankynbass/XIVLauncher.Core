@@ -67,10 +67,10 @@ public static class Dxvk
     public static void Initialize()
     {
         // Add default versions.
-        Versions["dxvk-2.3"] = new Dictionary<string, string>()
+        Versions["dxvk-gplasync-v2.3-1"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.3"}, {"desc", "Latest version, using Graphics Pipeline Libs. Async no longer needed."},
-            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3/dxvk-2.3.tar.gz"},
+            {"name", "DXVK 2.3 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3-1.tar.gz"},
             {"mark", "Download" }
         };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()

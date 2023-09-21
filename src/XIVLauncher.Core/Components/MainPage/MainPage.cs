@@ -788,6 +788,13 @@ public class MainPage : Page
             if (isFailed)
                 return null;
 
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D.Value);
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D.Value);
+            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D.Value);
+
             App.StartLoading("Starting game...", "Have fun!");
 
             runner = new UnixGameRunner(Program.CompatibilityTools, dalamudLauncher, dalamudOk);

@@ -128,6 +128,7 @@ class Program
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
             Config.DxvkVersion = "dxvk-async-1.10.3";
         Config.DxvkAsyncEnabled ??= true;
+        Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
         Config.DxvkHudCustom ??= Dxvk.DXVK_HUD;
@@ -151,6 +152,16 @@ class Program
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
+
+        Config.HelperApp1Enabled ??= false;
+        Config.HelperApp1 ??= string.Empty;
+        Config.HelperApp1WineD3D ??= false;
+        Config.HelperApp2Enabled ??= false;
+        Config.HelperApp2 ??= string.Empty;
+        Config.HelperApp2WineD3D ??= false;
+        Config.HelperApp3Enabled ??= false;
+        Config.HelperApp3 ??= string.Empty;
+        Config.HelperApp3WineD3D ??= false;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -159,9 +170,27 @@ class Program
     private static void Main(string[] args)
     {
         mainargs = args;
-        storage = new Storage(APP_NAME);
+
+        bool badxlpath = false;
+        var badxlpathex = new Exception();
+        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
+        try 
+        {
+            storage = new Storage(APP_NAME, useAltPath);
+        }
+        catch (Exception e)
+        {
+            storage = new Storage(APP_NAME);
+            badxlpath = true;
+            badxlpathex = e;
+        }
         Wine.Initialize();
         Dxvk.Initialize();
+
+        if (badxlpath)
+        {
+            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        }
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -175,12 +204,11 @@ class Program
             if (CoreEnvironmentSettings.ClearTools) ClearTools();
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
-        
+
         SetupLogging(mainargs);
         LoadConfig(storage);
         Proton.Initialize(Config.SteamPath);
-
-
+        
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
@@ -253,7 +281,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"),
+            new WindowCreateInfo(50, 50, (int)(1280 * Config.GlobalScale ?? 1.0f), (int)(800 * Config.GlobalScale ?? 1.0f), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
