@@ -30,6 +30,22 @@ public static class Wine
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
+    // Proton additions
+    public static bool IsProton => Program.Config.WineType == WineType.Proton;
+
+    private static string RuntimePath => (IsProton && !OSInfo.IsFlatpak) ? Proton.GetRuntimePath(Program.Config.SteamRuntime) : "";
+
+    private static string ProtonPath => IsProton ? Proton.GetVersionPath(Program.Config.ProtonVersion) : "";
+
+    public static ProtonSettings? ProtonInfo
+    {
+        get {
+            if (!IsProton) return null;
+            return new ProtonSettings(Program.Config.SteamPath, ProtonPath, RuntimePath, Program.storage.GetFolder("protonprefix"),
+                Program.Config.GamePath, Program.Config.GameConfigPath);
+        }
+    }
+
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
     static Wine()
@@ -98,6 +114,9 @@ public enum WineType
 {
     [SettingsDescription("Managed by XIVLauncher", "Choose a patched version of wine made specifically for XIVLauncher")]
     Managed,
+
+    [SettingsDescription("Proton", "Use Steam's Proton compatibility layer. Requires steam.")]
+    Proton,
 
     [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
     Custom,
