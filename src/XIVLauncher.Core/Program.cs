@@ -126,7 +126,7 @@ class Program
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
-            Config.DxvkVersion = "dxvk-async-1.10.3";
+            Config.DxvkVersion = Dxvk.GetDefaultVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;

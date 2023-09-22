@@ -104,16 +104,17 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.BeginDisabled();
-            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once, or use the download button below.");
 
             ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
         }
 
         if (ImGui.Button("Open prefix"))
         {
+            this.Save();
             PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Settings.Prefix.FullName);
         }
 
@@ -121,6 +122,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine configuration"))
         {
+            this.Save();
             Program.CompatibilityTools.RunInPrefix("winecfg");
         }
 
@@ -128,6 +130,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
         {
+            this.Save();
             Program.CompatibilityTools.RunInPrefix("explorer");
         }
 
@@ -135,6 +138,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine explorer (use WineD3D"))
         {
+            this.Save();
             Program.CompatibilityTools.RunInPrefix("explorer", wineD3D: true);
 
         }
@@ -144,6 +148,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Set Wine to Windows 7"))
         {
+            this.Save();
             Program.CompatibilityTools.RunInPrefix($"winecfg /v win7", redirectOutput: true, writeLog: true);
         }
 
@@ -151,6 +156,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Set Wine to Windows 10"))
         {
+            this.Save();
             Program.CompatibilityTools.RunInPrefix($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
@@ -158,13 +164,41 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Kill all wine processes"))
         {
+            this.Save();
             Program.CompatibilityTools.Kill();
         }
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.EndDisabled();
         }
+
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        {
+            ImGui.SameLine();
+
+            if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+            {
+                Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
+                this.Save();
+                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
+                    .ContinueWith(t => Wine.Initialize());
+            }
+        }
+
+        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+
+        if (Program.IsReshadeEnabled() is not null)
+        {
+            ImGui.Text($"Reshade is {(Program.IsReshadeEnabled().Value ? "ENABLED" : "DISABLED")}");
+        
+            if (ImGui.Button("Toggle Reshade"))
+            {
+                Program.ToggleReshade();
+            }
+        }
+        else
+            ImGui.Text($"Reshade is not installed");
     }
 
     public override void Save()

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility;
@@ -107,6 +108,21 @@ public class SettingsTabDxvk : SettingsTab
         ImGui.Separator();
         
         base.Draw();
+
+        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
+        {
+            ImGui.Separator();
+
+            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+
+            if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} now!"))
+            {
+                Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
+                this.Save();
+                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
+                    .ContinueWith(t => Dxvk.Initialize());
+            }
+        }
     }
 
     public override void Save()

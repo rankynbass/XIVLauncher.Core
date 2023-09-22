@@ -106,7 +106,7 @@ public static class Wine
         Versions["unofficial-wine-xiv-git-7.22.0"] = new Dictionary<string, string>()
         {
             {"name", "unofficial-wine-xiv-git-7.22.0"}, {"desc", "Patched version of Wine Staging 7.22. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.0/.tar.xz"},
+            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.0/unofficial-wine-xiv-git-7.22.0.tar.xz"},
             {"mark", "Download"}
         };
 
