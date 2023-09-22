@@ -40,7 +40,6 @@ public class SettingsTabGame : SettingsTab
         new SettingsEntry<bool>("Use XIVLauncher authenticator/OTP macros", "Check this if you want to use the XIVLauncher authenticator app or macros.", () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
         new SettingsEntry<bool>("Ignore Steam", "Check this if you do not want XIVLauncher to communicate with Steam (Requires Restart).", () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x),
         new SettingsEntry<bool>("Use Experimental UID Cache", "Tries to save your login token for the next start. Can result in launching with expired sessions.\nDisable if receiving FFXIV error 1012 or 500X.", () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
-        new NumericSettingsEntry("Global Scale (Needs Restart)","", () => (int)((Program.Config.GlobalScale ?? 1.0f) * 100), i => Program.Config.GlobalScale = (float)i / 100f, 100, 400, 25),
     };
 
     public override string Title => "Game";

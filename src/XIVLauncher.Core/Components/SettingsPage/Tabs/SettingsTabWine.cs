@@ -10,6 +10,8 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineType> wineTypeSetting;
 
+    private DictionarySettingsEntry wineVersionSetting;
+
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
     public SettingsTabWine()
@@ -30,7 +32,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
+            wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
             },

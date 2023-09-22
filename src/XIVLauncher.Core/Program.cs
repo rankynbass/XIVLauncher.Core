@@ -281,7 +281,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280 * Config.GlobalScale ?? 1.0f), (int)(800 * Config.GlobalScale ?? 1.0f), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
+            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -295,11 +295,10 @@ class Program
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f);
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), (Config.FontPxSize ?? 22.0f) * ImGuiHelpers.GlobalScale);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();
-        ImGui.GetIO().FontGlobalScale = Config.GlobalScale ?? 1.0f;
 
         var needUpdate = false;
 
@@ -502,5 +501,62 @@ class Program
         ClearPlugins(tsbutton);
         ClearTools(tsbutton);
         ClearLogs(true);
+    }
+
+    public static bool? IsReshadeEnabled()
+    {
+        var gamepath = Path.Combine(Config.GamePath.FullName, "game");
+        var dxgiE = Path.Combine(gamepath, "dxgi.dll");
+        var dxgiD = Path.Combine(gamepath, "dxgi.dll.disabled");
+        var compilerE = Path.Combine(gamepath, "d3dcompiler_47.dll");
+        var compilerD = Path.Combine(gamepath, "d3dcompiler_47.dll.disabled");
+        if (File.Exists(dxgiE) && File.Exists(compilerE))
+            return true;
+        if (File.Exists(dxgiD) && File.Exists(compilerD))
+            return false;
+        if (File.Exists(dxgiE) && File.Exists(compilerD))
+        {
+            File.Move(compilerD, compilerE);
+            return true;
+        }
+        if (File.Exists(dxgiD) && File.Exists(compilerE))
+        {
+            File.Move(compilerE, compilerD);
+            return false;
+        }
+        return null;
+    }
+
+    public static void ToggleReshade()
+    {
+        var gamepath = Path.Combine(Config.GamePath.FullName, "game");
+        var dxgiE = Path.Combine(gamepath, "dxgi.dll");
+        var dxgiD = Path.Combine(gamepath, "dxgi.dll.disabled");
+        var compilerE = Path.Combine(gamepath, "d3dcompiler_47.dll");
+        var compilerD = Path.Combine(gamepath, "d3dcompiler_47.dll.disabled");
+        if (File.Exists(dxgiE))
+        {
+            if (File.Exists(dxgiD))
+                File.Delete(dxgiD);
+            if (File.Exists(compilerD))
+                File.Delete(compilerD);
+
+            File.Move(dxgiE, dxgiD);
+            if (File.Exists(compilerE))
+                File.Move(compilerE, compilerD);
+        }
+        else if (File.Exists(dxgiD))
+        {
+            if (File.Exists(compilerE))
+                File.Delete(compilerE);
+
+            File.Move(dxgiD, dxgiE);
+            if (File.Exists(compilerD))
+                File.Move(compilerD, compilerE);
+        }
+        else
+        {
+            Log.Error("Tried to toggle ReShade, but dxgi.dll or dxgi.dll.disabled not present");
+        }
     }
 }
