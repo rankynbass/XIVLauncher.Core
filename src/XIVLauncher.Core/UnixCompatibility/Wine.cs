@@ -89,17 +89,10 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-git-proton-8.0.3c"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-git-8.16.0"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-git-proton-8.0.3c"}, {"desc", "Patched version of Proton Wine 8.0.3c. Based on Proton8 Wine."},
-            {"label", "TKG-Proton"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/proton-wine-8.0.3c/unofficial-wine-xiv-git-proton-8.0.3c.tar.xz"},
-            {"mark", "Download"}
-        };
-
-        Versions["unofficial-wine-xiv-git-8.13.0"] = new Dictionary<string, string>()
-        {
-            {"name", "unofficial-wine-xiv-git-8.13.0"}, {"desc", "Patched version of Wine Staging 8.13. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.13.0/unofficial-wine-xiv-git-8.13.0.tar.xz"},
+            {"name", "unofficial-wine-xiv-git-8.16.0"}, {"desc", "Patched version of Wine Staging 8.16. Based on Wine-tkg."},
+            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.16.0/unofficial-wine-xiv-git-8.16.0.tar.xz"},
             {"mark", "Download"}
         };
 
