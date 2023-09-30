@@ -67,9 +67,9 @@ class Program
 
     private static string HOME => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-    public static string LocalStorage => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"))
+    public static string LocalStorage => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("XDG_DATA_HOME"))
         ? Path.Combine(HOME, ".local", "share", "xivlauncher-sct")
-        : Path.Combine(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"), "xlcore-sct");
+        : Path.Combine(Environment.GetEnvironmentVariable("XDG_DATA_HOME"), "xivlauncher-sct");
 
     private const string APP_NAME = "xlcore";
 
@@ -309,13 +309,13 @@ class Program
 
         var needUpdate = false;
 
-        if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
-        {
-            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
+        // if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
+        // {
+        //     var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
-            if (versionCheckResult.Success)
-                needUpdate = versionCheckResult.NeedUpdate;
-        }   
+        //     if (versionCheckResult.Success)
+        //         needUpdate = versionCheckResult.NeedUpdate;
+        // }   
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
