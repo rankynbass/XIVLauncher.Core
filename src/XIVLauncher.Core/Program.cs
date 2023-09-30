@@ -150,8 +150,8 @@ class Program
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
         Config.SteamPath = SteamInstallPath;
-        Config.ProtonVersion ??= Proton.GetDefaultVersion();
-        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : Proton.GetDefaultRuntime();
+        Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
+        Config.SteamRuntime = /*OSInfo.IsFlatpak ? "Disabled" :*/ (Proton.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : Proton.GetDefaultRuntime());
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;

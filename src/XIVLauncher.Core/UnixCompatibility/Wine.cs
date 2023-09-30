@@ -33,7 +33,7 @@ public static class Wine
     // Proton additions
     public static bool IsProton => Program.Config.WineType == WineType.Proton;
 
-    private static string RuntimePath => (IsProton && !OSInfo.IsFlatpak) ? Proton.GetRuntimePath(Program.Config.SteamRuntime) : "";
+    private static string RuntimePath => (IsProton /*&& !OSInfo.IsFlatpak*/) ? Proton.GetRuntimePath(Program.Config.SteamRuntime) : "";
 
     private static string ProtonPath => IsProton ? Proton.GetVersionPath(Program.Config.ProtonVersion) : "";
 

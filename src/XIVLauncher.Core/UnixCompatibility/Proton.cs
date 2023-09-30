@@ -138,8 +138,9 @@ public static class Proton
         return Versions.First().Key;
     }
 
-    public static bool VersionExists(string name)
+    public static bool VersionExists(string? name)
     {
+        if (name is null) return false;
         return Versions.ContainsKey(name);
     }
 
@@ -162,8 +163,9 @@ public static class Proton
         return "Disabled";
     }
 
-    public static bool RuntimeExists(string name)
+    public static bool RuntimeExists(string? name)
     {
+        if (name is null) return false;
         return Runtimes.ContainsKey(name);
     }
 
