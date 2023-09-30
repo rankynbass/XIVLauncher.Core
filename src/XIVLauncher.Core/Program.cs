@@ -68,7 +68,7 @@ class Program
     private static string HOME => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
     public static string LocalStorage => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"))
-        ? Path.Combine(HOME, ".local", "share", "xlcore-sct")
+        ? Path.Combine(HOME, ".local", "share", "xivlauncher-sct")
         : Path.Combine(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"), "xlcore-sct");
 
     private const string APP_NAME = "xlcore";
@@ -105,8 +105,8 @@ class Program
             Config.AcceptLanguage = ApiHelpers.GenerateAcceptLanguage();
         }
 
-        Config.GamePath = new DirectoryInfo(SteamCompatPath);
-        Config.GameConfigPath = storage.GetFolder("ffxivConfig");
+        Config.GamePath ??= new DirectoryInfo(SteamCompatPath);
+        Config.GameConfigPath ??= storage.GetFolder("ffxivConfig");
         Config.ClientLanguage ??= ClientLanguage.English;
         Config.DpiAwareness ??= DpiAwareness.Unaware;
         Config.IsAutologin ??= false;

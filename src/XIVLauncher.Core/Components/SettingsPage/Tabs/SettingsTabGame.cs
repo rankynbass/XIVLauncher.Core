@@ -7,27 +7,27 @@ public class SettingsTabGame : SettingsTab
 {
     public override SettingsEntry[] Entries { get; } =
     {
-        // new SettingsEntry<DirectoryInfo>("Game Path", "Where the game is or will be installed.", () => Program.Config.GamePath, x => Program.Config.GamePath = x)
-        // {
-        //     CheckValidity = x =>
-        //     {
-        //         if (string.IsNullOrWhiteSpace(x?.FullName))
-        //             return "Game path is not set.";
+        new SettingsEntry<DirectoryInfo>("Game Path", "Where the game is or will be installed.", () => Program.Config.GamePath, x => Program.Config.GamePath = x)
+        {
+            CheckValidity = x =>
+            {
+                if (string.IsNullOrWhiteSpace(x?.FullName))
+                    return "Game path is not set.";
 
-        //         if (x.Name == "game" || x.Name == "boot")
-        //             return "Please select the path containing the folders \"game\" and \"boot\", not the folders itself.";
+                if (x.Name == "game" || x.Name == "boot")
+                    return "Please select the path containing the folders \"game\" and \"boot\", not the folders itself.";
 
-        //         return null;
-        //     }
-        // },
+                return null;
+            }
+        },
 
-        // new SettingsEntry<DirectoryInfo>("Game Configuration Path", "Where your user config files will be stored.", () => Program.Config.GameConfigPath, x => Program.Config.GameConfigPath = x)
-        // {
-        //     CheckValidity = x => string.IsNullOrWhiteSpace(x?.FullName) ? "Game Config Path is not set." : null,
+        new SettingsEntry<DirectoryInfo>("Game Configuration Path", "Where your user config files will be stored.", () => Program.Config.GameConfigPath, x => Program.Config.GameConfigPath = x)
+        {
+            CheckValidity = x => string.IsNullOrWhiteSpace(x?.FullName) ? "Game Config Path is not set." : null,
 
-        //     // TODO: We should also support this on Windows
-        //     CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
-        // },
+            // TODO: We should also support this on Windows
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+        },
 
         new SettingsEntry<bool>("Use DirectX11", "Use the modern DirectX11 version of the game.", () => Program.Config.IsDx11 ?? true, x => Program.Config.IsDx11 = x)
         {
@@ -47,11 +47,6 @@ public class SettingsTabGame : SettingsTab
 
     public override void Draw()
     {
-        ImGui.Text($"\nGame Path: {Program.Config.GamePath}");
-        ImGui.Text($"\nGame Config Path: {Program.Config.GameConfigPath}");
-        ImGui.Text("\n");
-        ImGui.Separator();
-
         base.Draw();
     }
 }
