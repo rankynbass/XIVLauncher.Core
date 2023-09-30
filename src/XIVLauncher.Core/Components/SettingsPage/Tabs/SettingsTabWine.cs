@@ -8,9 +8,9 @@ namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
 public class SettingsTabWine : SettingsTab
 {
-    private SettingsEntry<WineType> wineTypeSetting;
+    // private SettingsEntry<WineType> wineTypeSetting;
 
-    private DictionarySettingsEntry wineVersionSetting;
+    // private DictionarySettingsEntry wineVersionSetting;
 
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
@@ -18,45 +18,45 @@ public class SettingsTabWine : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
-            {
-                CheckValidity = x =>
-                {
-                    if (x == WineType.Proton && !Proton.IsValid())
-                    {
-                        var userHome = System.Environment.GetEnvironmentVariable("HOME") ?? "/home/username";
-                        return $"No proton version found! Check launcher.ini and make sure that SteamPath points your Steam root\nUsually this is {userHome}/.steam/root or {userHome}/.local/share/Steam";
-                    }
-                    return null;
-                }
-            },
+            // wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
+            //     () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
+            // {
+            //     CheckValidity = x =>
+            //     {
+            //         if (x == WineType.Proton && !Proton.IsValid())
+            //         {
+            //             var userHome = System.Environment.GetEnvironmentVariable("HOME") ?? "/home/username";
+            //             return $"No proton version found! Check launcher.ini and make sure that SteamPath points your Steam root\nUsually this is {userHome}/.steam/root or {userHome}/.local/share/Steam";
+            //         }
+            //         return null;
+            //     }
+            // },
 
-            wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
-            {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
-            },
+            // wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
+            // {
+            //     CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
+            // },
             
-            new SettingsEntry<string>("Wine Binary Path",
-                "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
-                () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
-            {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Custom
-            },
+            // new SettingsEntry<string>("Wine Binary Path",
+            //     "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
+            //     () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
+            // {
+            //     CheckVisibility = () => wineTypeSetting.Value == WineType.Custom
+            // },
 
-            new SettingsEntry<string>("Steam Path", "Set the location of your steam folder (requires restart)", () => Program.Config.SteamPath, s => Program.Config.SteamPath = s)
-            {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
-            },
+            // new SettingsEntry<string>("Steam Path", "Set the location of your steam folder (requires restart)", () => Program.Config.SteamPath, s => Program.Config.SteamPath = s)
+            // {
+            //     CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+            // },
 
             new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+                // CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
             },
 
             new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it. Slow to launch.", Proton.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, Proton.GetDefaultRuntime())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton && !OSInfo.IsFlatpak,
+                // CheckVisibility = () => wineTypeSetting.Value == WineType.Proton && !OSInfo.IsFlatpak,
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
@@ -92,7 +92,7 @@ public class SettingsTabWine : SettingsTab
 
     public override bool IsUnixExclusive => true;
 
-    public override string Title => "Wine";
+    public override string Title => "Proton";
 
     public override void Draw()
     {
@@ -102,13 +102,13 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
 
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
-        {
-            ImGui.BeginDisabled();
-            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once, or use the download button below.");
+        // if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        // {
+        //     ImGui.BeginDisabled();
+        //     ImGui.Text("Compatibility tool isn't set up. Please start the game at least once, or use the download button below.");
 
-            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
-        }
+        //     ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        // }
 
         if (ImGui.Button("Open prefix"))
         {
@@ -166,23 +166,23 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
-        {
-            ImGui.EndDisabled();
-        }
+        // if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        // {
+        //     ImGui.EndDisabled();
+        // }
 
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
-        {
-            ImGui.SameLine();
+        // if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        // {
+        //     ImGui.SameLine();
 
-            if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
-            {
-                Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
-                this.Save();
-                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
-                    .ContinueWith(t => Wine.Initialize());
-            }
-        }
+        //     if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+        //     {
+        //         Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
+        //         this.Save();
+        //         var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
+        //             .ContinueWith(t => Wine.Initialize());
+        //     }
+        // }
 
         ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
 

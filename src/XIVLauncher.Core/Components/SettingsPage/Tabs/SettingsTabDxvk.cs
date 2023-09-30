@@ -20,24 +20,24 @@ public class SettingsTabDxvk : SettingsTab
         {
             dxvkVersionSetting = new DictionarySettingsEntry("DXVK Version", $"Choose which version of DXVK to use. Put your custom DXVK in {dxvkPath}\nEntries marked with *Download* will be downloaded when you log in.", Dxvk.Versions, () => Program.Config.DxvkVersion ?? "dxvk-async-1.10.3", s => Program.Config.DxvkVersion = s, Dxvk.GetDefaultVersion())
             {
-                CheckWarning = s =>
-                {
-                    if (s is null) return null;
-                    if (s.StartsWith("dxvk-2") || s.StartsWith("dxvk-async-2") || s.StartsWith("dxvk-gplasync-v2"))
-                        return "May not work with older graphics cards. AMD users may need to use env variable RADV_PERFTEST=gpl";
-                    return null;
-                },
+                // CheckWarning = s =>
+                // {
+                //     if (s is null) return null;
+                //     if (s.StartsWith("dxvk-2") || s.StartsWith("dxvk-async-2") || s.StartsWith("dxvk-gplasync-v2"))
+                //         return "May not work with older graphics cards. AMD users may need to use env variable RADV_PERFTEST=gpl";
+                //     return null;
+                // },
             },
 
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch or GPL Async. May not be available on DXVK >= 2.0.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch. For GE-Proton7-44 and earlier.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
 
-            new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2 and later", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync"),
-            },
+            // new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2 and later", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
+            // {
+            //     CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync"),
+            // },
 
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)
             {
@@ -103,9 +103,9 @@ public class SettingsTabDxvk : SettingsTab
 
     public override void Draw()
     {
-        ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
-        ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D. This probably won't work.");
-        ImGui.Separator();
+        // ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
+        // ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D. This probably won't work.");
+        // ImGui.Separator();
         
         base.Draw();
 

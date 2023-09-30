@@ -68,64 +68,62 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-        Versions["unofficial-wine-xiv-Proton8-15-x86_64"] = new Dictionary<string, string>()
-        {
-            {"name", "xiv-Proton8-15"}, {"desc", "Patched version of Wine-GE 8-15. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-15/unofficial-wine-xiv-Proton8-15-x86_64.tar.xz"},
-            {"mark", "Download"}
-        };
+        // Versions["unofficial-wine-xiv-Proton8-15-x86_64"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "xiv-Proton8-15"}, {"desc", "Patched version of Wine-GE 8-15. Based on Proton8 Wine."},
+        //     {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-15/unofficial-wine-xiv-Proton8-15-x86_64.tar.xz"},
+        //     {"mark", "Download"}
+        // };
 
-        Versions["unofficial-wine-xiv-Proton8-12-x86_64"] = new Dictionary<string, string>()
-        {
-            {"name", "xiv-Proton8-12"}, {"desc", "Patched version of Wine-GE 8-12. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-12/unofficial-wine-xiv-Proton8-12-x86_64.tar.xz"},
-            {"mark", "Download"}
-        };
+        // Versions["unofficial-wine-xiv-Proton8-12-x86_64"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "xiv-Proton8-12"}, {"desc", "Patched version of Wine-GE 8-12. Based on Proton8 Wine."},
+        //     {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-12/unofficial-wine-xiv-Proton8-12-x86_64.tar.xz"},
+        //     {"mark", "Download"}
+        // };
 
-        Versions["unofficial-wine-xiv-Proton7-43-x86_64"] = new Dictionary<string, string>()
-        {
-            {"name", "xiv-Proton7-43"}, {"desc", "Patched version of Wine-GE 7-43. Based on Proton7 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton7-43/unofficial-wine-xiv-Proton7-43-x86_64.tar.xz"},
-            {"mark", "Download"}
-        };
+        // Versions["unofficial-wine-xiv-Proton7-43-x86_64"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "xiv-Proton7-43"}, {"desc", "Patched version of Wine-GE 7-43. Based on Proton7 Wine."},
+        //     {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton7-43/unofficial-wine-xiv-Proton7-43-x86_64.tar.xz"},
+        //     {"mark", "Download"}
+        // };
 
-        Versions["unofficial-wine-xiv-git-8.16.0"] = new Dictionary<string, string>()
-        {
-            {"name", "unofficial-wine-xiv-git-8.16.0"}, {"desc", "Patched version of Wine Staging 8.16. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.16.0/unofficial-wine-xiv-git-8.16.0.tar.xz"},
-            {"mark", "Download"}
-        };
+        // Versions["unofficial-wine-xiv-git-8.16.0"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "unofficial-wine-xiv-git-8.16.0"}, {"desc", "Patched version of Wine Staging 8.16. Based on Wine-tkg."},
+        //     {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.16.0/unofficial-wine-xiv-git-8.16.0.tar.xz"},
+        //     {"mark", "Download"}
+        // };
 
-        Versions["unofficial-wine-xiv-git-7.22.0"] = new Dictionary<string, string>()
-        {
-            {"name", "unofficial-wine-xiv-git-7.22.0"}, {"desc", "Patched version of Wine Staging 7.22. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.0/unofficial-wine-xiv-git-7.22.0.tar.xz"},
-            {"mark", "Download"}
-        };
-
-
+        // Versions["unofficial-wine-xiv-git-7.22.0"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "unofficial-wine-xiv-git-7.22.0"}, {"desc", "Patched version of Wine Staging 7.22. Based on Wine-tkg."},
+        //     {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.0/unofficial-wine-xiv-git-7.22.0.tar.xz"},
+        //     {"mark", "Download"}
+        // };
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
         if (!toolDirectory.Exists)
         {
-            Program.storage.GetFolder("compatibilitytool/wine");
+            toolDirectory.Create();
             return;
         }
 
-        foreach (var wineDir in toolDirectory.EnumerateDirectories())
-        {
-            if (File.Exists(Path.Combine(wineDir.FullName, "bin", "wine64")) ||
-                File.Exists(Path.Combine(wineDir.FullName, "bin", "wine")))
-            {
-                if (Versions.ContainsKey(wineDir.Name))
-                {
-                    Versions[wineDir.Name].Remove("mark");
-                    continue;
-                }
-                Versions[wineDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
-            }
-        }
+        // foreach (var wineDir in toolDirectory.EnumerateDirectories())
+        // {
+        //     if (File.Exists(Path.Combine(wineDir.FullName, "bin", "wine64")) ||
+        //         File.Exists(Path.Combine(wineDir.FullName, "bin", "wine")))
+        //     {
+        //         if (Versions.ContainsKey(wineDir.Name))
+        //         {
+        //             Versions[wineDir.Name].Remove("mark");
+        //             continue;
+        //         }
+        //         Versions[wineDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
+        //     }
+        // }
     }
 
     private static string GetDownloadUrl(string? name)

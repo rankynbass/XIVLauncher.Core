@@ -133,8 +133,8 @@ public static class Proton
 
     public static string GetDefaultVersion()
     {
-        if (VersionExists("Proton 7.0")) return "Proton 7.0";
         if (VersionExists("Proton 8.0")) return "Proton 8.0";
+        if (VersionExists("Proton 7.0")) return "Proton 7.0";
         return Versions.First().Key;
     }
 

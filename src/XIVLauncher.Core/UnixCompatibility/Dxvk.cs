@@ -68,21 +68,20 @@ public static class Dxvk
     public static void Initialize()
     {
         // Add default versions.
-        Versions["dxvk-gplasync-v2.3-1"] = new Dictionary<string, string>()
-        {
-            {"name", "DXVK 2.3 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
-            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3-1.tar.gz"},
-            {"mark", "Download" }
-        };
+        // Versions["dxvk-gplasync-v2.3-1"] = new Dictionary<string, string>()
+        // {
+        //     {"name", "DXVK 2.3 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+        //     {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3-1.tar.gz"},
+        //     {"mark", "Download" }
+        // };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
-            {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
-            {"mark", "Download" }
+            {"name", "Use DXVK"}, {"desc", "Use Dxvk (Vulkan) graphics layer. Recommended for most users."},
+            {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
         };
         Versions["DISABLED"] = new Dictionary<string, string>()
         {
-            {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
+            {"name", "Use WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         };
 
@@ -90,25 +89,25 @@ public static class Dxvk
 
         if (!toolDirectory.Exists)
         {
-            Program.storage.GetFolder("compatibilitytool/dxvk");
+            toolDirectory.Create();
             return;
         }
 
-        foreach (var dxvkDir in toolDirectory.EnumerateDirectories())
-        {
-            if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
-            {
-                if (Versions.ContainsKey(dxvkDir.Name))
-                {
-                    if (dxvkDir.Name == "DISABLED")
-                        Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
-                    else
-                        Versions[dxvkDir.Name].Remove("mark");
-                    continue;
-                }
-                Versions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
-            }
-        }
+        // foreach (var dxvkDir in toolDirectory.EnumerateDirectories())
+        // {
+        //     if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
+        //     {
+        //         if (Versions.ContainsKey(dxvkDir.Name))
+        //         {
+        //             if (dxvkDir.Name == "DISABLED")
+        //                 Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
+        //             else
+        //                 Versions[dxvkDir.Name].Remove("mark");
+        //             continue;
+        //         }
+        //         Versions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
+        //     }
+        // }
     }
 
     private static string GetDownloadUrl(string? name)

@@ -58,6 +58,19 @@ class Program
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck();
 
+    // Steam Compatibility Tool vars
+    public static string SteamCompatPath => System.Environment.GetEnvironmentVariable("STEAM_COMPAT_INSTALL_PATH") ?? "";
+
+    public static string SteamPrefix => System.Environment.GetEnvironmentVariable("STEAM_COMPAT_DATA_PATH") ?? "";
+
+    public static string SteamInstallPath => System.Environment.GetEnvironmentVariable("STEAM_COMPAT_CLIENT_INSTALL_PATH") ?? "";
+
+    private static string HOME => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+    public static string LocalStorage => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"))
+        ? Path.Combine(HOME, ".local", "share", "xlcore-sct")
+        : Path.Combine(Environment.GetEnvironmentVariable("XDG_CONFIG_HOME"), "xlcore-sct");
+
     private const string APP_NAME = "xlcore";
 
     private static string[] mainargs;
@@ -75,7 +88,7 @@ class Program
         LogInit.Setup(Path.Combine(storage.GetFolder("logs").FullName, "launcher.log"), args);
 
         Log.Information("========================================================");
-        Log.Information("Starting a session(v{Version} - {Hash})", AppUtil.GetAssemblyVersion(), AppUtil.GetGitHash());
+        Log.Information("Starting a session(XIVLauncher-SCT v{Version} - {Hash})", AppUtil.GetAssemblyVersion(), AppUtil.GetGitHash());
     }
 
     private static void LoadConfig(Storage storage)
@@ -92,8 +105,8 @@ class Program
             Config.AcceptLanguage = ApiHelpers.GenerateAcceptLanguage();
         }
 
-        Config.GamePath ??= storage.GetFolder("ffxiv");
-        Config.GameConfigPath ??= storage.GetFolder("ffxivConfig");
+        Config.GamePath = new DirectoryInfo(SteamCompatPath);
+        Config.GameConfigPath = storage.GetFolder("ffxivConfig");
         Config.ClientLanguage ??= ClientLanguage.English;
         Config.DpiAwareness ??= DpiAwareness.Unaware;
         Config.IsAutologin ??= false;
@@ -119,7 +132,7 @@ class Program
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
 
-        Config.WineType ??= WineType.Managed;
+        Config.WineType = WineType.Proton;
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
             Config.WineVersion = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         Config.WineBinaryPath ??= "/usr/bin";
@@ -136,18 +149,8 @@ class Program
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
-        if (string.IsNullOrEmpty(Config.SteamPath))
-        {
-            var home = System.Environment.GetEnvironmentVariable("HOME");
-            var xdg_data = System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(home, ".local", "share");
-            if (Directory.Exists(Path.Combine(xdg_data, "Steam")))
-                Config.SteamPath = Path.Combine(xdg_data, "Steam");
-            else if (Directory.Exists(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam")))
-                Config.SteamPath = Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam");
-            else
-                Config.SteamPath = Path.Combine(home, ".steam", "root");
-        }
-        Config.ProtonVersion ??= "Proton 7.0";
+        Config.SteamPath = SteamInstallPath;
+        Config.ProtonVersion ??= Proton.GetDefaultVersion();
         Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : Proton.GetDefaultRuntime();
 
         Config.FixLDP ??= false;
@@ -171,26 +174,30 @@ class Program
     {
         mainargs = args;
 
-        bool badxlpath = false;
-        var badxlpathex = new Exception();
-        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
-        try 
-        {
-            storage = new Storage(APP_NAME, useAltPath);
-        }
-        catch (Exception e)
-        {
-            storage = new Storage(APP_NAME);
-            badxlpath = true;
-            badxlpathex = e;
-        }
+        // bool badxlpath = false;
+        // var badxlpathex = new Exception();
+        // string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
+        // try 
+        // {
+        //     storage = new Storage(APP_NAME, useAltPath);
+        // }
+        // catch (Exception e)
+        // {
+        //     storage = new Storage(APP_NAME);
+        //     badxlpath = true;
+        //     badxlpathex = e;
+        // }
+
+        storage = new Storage(APP_NAME, LocalStorage);
+
         Wine.Initialize();
         Dxvk.Initialize();
+        Proton.Initialize(SteamInstallPath);
 
-        if (badxlpath)
-        {
-            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
-        }
+        // if (badxlpath)
+        // {
+        //     Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+        // }
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -207,7 +214,7 @@ class Program
 
         SetupLogging(mainargs);
         LoadConfig(storage);
-        Proton.Initialize(Config.SteamPath);
+        // Proton.Initialize(Config.SteamPath);
         
         Secrets = GetSecretProvider(storage);
 
@@ -281,7 +288,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
+            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher-SCT v{version}: Steam Compatibility Tool"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -371,10 +378,15 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
+        string app1, app2, app3;
+        app1 = string.IsNullOrEmpty(Config.HelperApp1) ? "" : new FileInfo(Config.HelperApp1).DirectoryName ?? "";
+        app2 = string.IsNullOrEmpty(Config.HelperApp2) ? "" : new FileInfo(Config.HelperApp2).DirectoryName ?? "";
+        app3 = string.IsNullOrEmpty(Config.HelperApp3) ? "" : new FileInfo(Config.HelperApp3).DirectoryName ?? "";
+        var extraEnvVars = new Dictionary<string, string>() {{"PRESSURE_VESSEL_FILESYSTEMS_RW", $"{app1}:{app2}:{app3}".Trim(':')}};
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
         var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak, extraEnvVars);
     }
 
     public static void ShowWindow()
@@ -434,8 +446,10 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
-        storage.GetFolder("protonprefix").Delete(true);
-        storage.GetFolder("protonprefix/pfx");
+        Directory.Delete(SteamPrefix, true);
+        Directory.CreateDirectory(SteamPrefix);        
+        // storage.GetFolder("protonprefix").Delete(true);
+        // storage.GetFolder("protonprefix/pfx");
     }
 
     public static void ClearPlugins(bool tsbutton = false)
