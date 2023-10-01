@@ -378,11 +378,12 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        string app1, app2, app3;
+        string app1, app2, app3, mangohud;
         app1 = string.IsNullOrEmpty(Config.HelperApp1) ? "" : new FileInfo(Config.HelperApp1).DirectoryName ?? "";
         app2 = string.IsNullOrEmpty(Config.HelperApp2) ? "" : new FileInfo(Config.HelperApp2).DirectoryName ?? "";
         app3 = string.IsNullOrEmpty(Config.HelperApp3) ? "" : new FileInfo(Config.HelperApp3).DirectoryName ?? "";
-        var extraEnvVars = new Dictionary<string, string>() {{"PRESSURE_VESSEL_FILESYSTEMS_RW", $"{app1}:{app2}:{app3}".Trim(':')}};
+        mangohud = File.Exists(Config.MangoHudCustomFile ?? "") && Config.MangoHud == MangoHud.CustomFile ? new FileInfo(Config.MangoHudCustomFile).FullName : "";
+        var extraEnvVars = new Dictionary<string, string>() {{"PRESSURE_VESSEL_FILESYSTEMS_RW", $"{app1}:{app2}:{app3}:{mangohud}".Trim(':')}};
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
         var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
         var toolsFolder = storage.GetFolder("compatibilitytool");

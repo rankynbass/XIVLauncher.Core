@@ -61,7 +61,7 @@ public class SettingsTabGame : SettingsTab
         base.Draw();
 
         var gamePathIsSame = Program.SteamCompatPath == gamePath.Value.FullName;
-        var gameConfigIsSame = Program.LocalStorage == gameConfigPath.Value.FullName;
+        var gameConfigIsSame = Path.Combine(Program.LocalStorage, "ffxivConfig") == gameConfigPath.Value.FullName;
 
         if (gamePathIsSame && gameConfigIsSame) return;
 
@@ -85,7 +85,7 @@ public class SettingsTabGame : SettingsTab
         {
             if (ImGui.Button("Reset Game Config Path"))
             {
-                Program.Config.GameConfigPath = new DirectoryInfo(Program.LocalStorage);
+                Program.Config.GameConfigPath = new DirectoryInfo(Path.Combine(Program.LocalStorage, "ffxivConfig"));
                 gameConfigPath.Load();
                 this.Save();
             }
