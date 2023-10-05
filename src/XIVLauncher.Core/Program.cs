@@ -147,8 +147,8 @@ class Program
             else
                 Config.SteamPath = Path.Combine(home, ".steam", "root");
         }
-        Config.ProtonVersion ??= "Proton 7.0";
-        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : Proton.GetDefaultRuntime();
+        Config.ProtonVersion ??= "Proton 8.0";
+        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
@@ -208,6 +208,8 @@ class Program
         SetupLogging(mainargs);
         LoadConfig(storage);
         Proton.Initialize(Config.SteamPath);
+        Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
+        Config.SteamRuntime = Proton.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : Proton.GetDefaultRuntime();
         
         Secrets = GetSecretProvider(storage);
 

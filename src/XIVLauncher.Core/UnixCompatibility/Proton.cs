@@ -1,5 +1,6 @@
 using System.IO;
 using Serilog;
+using XIVLauncher.Core;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
@@ -133,13 +134,14 @@ public static class Proton
 
     public static string GetDefaultVersion()
     {
-        if (VersionExists("Proton 7.0")) return "Proton 7.0";
         if (VersionExists("Proton 8.0")) return "Proton 8.0";
+        if (VersionExists("Proton 7.0")) return "Proton 7.0";
         return Versions.First().Key;
     }
 
-    public static bool VersionExists(string name)
+    public static bool VersionExists(string? name)
     {
+        if (string.IsNullOrEmpty(name)) return false;
         return Versions.ContainsKey(name);
     }
 
@@ -162,8 +164,9 @@ public static class Proton
         return "Disabled";
     }
 
-    public static bool RuntimeExists(string name)
+    public static bool RuntimeExists(string? name)
     {
+        if (string.IsNullOrEmpty(name)) return false;
         return Runtimes.ContainsKey(name);
     }
 
