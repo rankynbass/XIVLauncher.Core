@@ -1,3 +1,4 @@
+using System.Numerics;
 using ImGuiNET;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
@@ -66,7 +67,13 @@ public class SettingsTabAutoStart : SettingsTab
 
     public override void Draw()
     {
-        ImGui.Text("Please check back later.");
+        ImGui.Text("Warning! This may cause FFXIV to be listed as running when you close steam.");
+        ImGui.Text("You should be able to simply click the button to stop it, however.");
+        ImGui.Text("May not work if DXVK is disabled (Game will not launch)");
+
+        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Separator();
+        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
 
         base.Draw();
     }

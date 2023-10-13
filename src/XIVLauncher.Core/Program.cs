@@ -118,7 +118,7 @@ class Program
         Config.IsEncryptArgs ??= true;
         Config.IsFt ??= false;
         Config.IsOtpServer ??= false;
-        Config.IsIgnoringSteam = true;
+        Config.IsIgnoringSteam = false;
 
         Config.PatchPath ??= storage.GetFolder("patch");
         Config.PatchAcquisitionMethod ??= AcquisitionMethod.Aria;
