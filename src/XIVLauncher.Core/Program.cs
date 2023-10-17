@@ -309,13 +309,13 @@ class Program
 
         var needUpdate = false;
 
-        // if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
-        // {
-        //     var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
+        if (Config.DoVersionCheck ?? false)
+        {
+            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
-        //     if (versionCheckResult.Success)
-        //         needUpdate = versionCheckResult.NeedUpdate;
-        // }   
+            if (versionCheckResult.Success)
+                needUpdate = versionCheckResult.NeedUpdate;
+        }   
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 

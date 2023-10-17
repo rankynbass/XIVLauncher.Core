@@ -4,7 +4,9 @@ namespace XIVLauncher.Core;
 
 public static class UpdateCheck
 {
-    private const string UPDATE_URL = "https://raw.githubusercontent.com/goatcorp/xlcore-distrib/main/version.txt";
+    private const string UPDATE_URL = "https://raw.githubusercontent.com/rankynbass/XIVLauncher-SCT/main/version.txt";
+
+    public static Version? Update = null;
 
     public static async Task<VersionCheckResult> CheckForUpdate()
     {
@@ -15,6 +17,7 @@ public static class UpdateCheck
 
             var response = await client.GetStringAsync(UPDATE_URL).ConfigureAwait(false);
             var remoteVersion = Version.Parse(response);
+            Update = remoteVersion;
 
             var localVersion = Version.Parse(AppUtil.GetAssemblyVersion());
 

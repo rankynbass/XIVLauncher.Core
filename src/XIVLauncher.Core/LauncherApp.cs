@@ -5,6 +5,7 @@ using Serilog;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Game;
 using XIVLauncher.Common.PlatformAbstractions;
+using XIVLauncher.Common.Util;
 using XIVLauncher.Core.Accounts;
 using XIVLauncher.Core.Components;
 using XIVLauncher.Core.Components.LoadingPage;
@@ -38,6 +39,8 @@ public class LauncherApp : Component
         OtpEntry,
         Fts,
         UpdateWarn,
+        UpdateComplete,
+        UpdateFailed,
         SteamDeckPrompt,
     }
 
@@ -84,6 +87,14 @@ public class LauncherApp : Component
                     this.updateWarnPage.OnShow();
                     break;
 
+                case LauncherState.UpdateComplete:
+                    this.updateCompletePage.OnShow();
+                    break;
+
+                case LauncherState.UpdateFailed:
+                    this.updateFailedPage.OnShow();
+                    break;
+
                 case LauncherState.SteamDeckPrompt:
                     this.steamDeckPromptPage.OnShow();
                     break;
@@ -102,6 +113,8 @@ public class LauncherApp : Component
         LauncherState.OtpEntry => this.otpEntryPage,
         LauncherState.Fts => this.ftsPage,
         LauncherState.UpdateWarn => this.updateWarnPage,
+        LauncherState.UpdateComplete => this.updateCompletePage,
+        LauncherState.UpdateFailed => this.updateFailedPage,
         LauncherState.SteamDeckPrompt => this.steamDeckPromptPage,
         _ => throw new ArgumentOutOfRangeException(nameof(this.state), this.state, null)
     };
@@ -121,6 +134,8 @@ public class LauncherApp : Component
     private readonly OtpEntryPage otpEntryPage;
     private readonly FtsPage ftsPage;
     private readonly UpdateWarnPage updateWarnPage;
+    private readonly UpdateCompletePage updateCompletePage;
+    private readonly UpdateFailedPage updateFailedPage;
     private readonly SteamDeckPromptPage steamDeckPromptPage;
 
     private readonly Background background = new();
@@ -139,6 +154,8 @@ public class LauncherApp : Component
         this.LoadingPage = new LoadingPage(this);
         this.ftsPage = new FtsPage(this);
         this.updateWarnPage = new UpdateWarnPage(this);
+        this.updateCompletePage = new UpdateCompletePage(this);
+        this.updateFailedPage = new UpdateFailedPage(this);
         this.steamDeckPromptPage = new SteamDeckPromptPage(this);
 
         if (needsUpdateWarning)
