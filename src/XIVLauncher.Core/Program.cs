@@ -447,8 +447,12 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
-        Directory.Delete(SteamPrefix, true);
-        Directory.CreateDirectory(SteamPrefix);        
+        var files = Directory.GetFiles(SteamPrefix);
+        foreach (var file in files)
+            File.Delete(file);
+        var dirs = Directory.GetDirectories(SteamPrefix);
+        foreach (var dir in dirs)
+            Directory.Delete(dir, true);     
         // storage.GetFolder("protonprefix").Delete(true);
         // storage.GetFolder("protonprefix/pfx");
     }

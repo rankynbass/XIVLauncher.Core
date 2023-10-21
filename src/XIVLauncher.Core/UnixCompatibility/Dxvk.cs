@@ -82,7 +82,6 @@ public static class Dxvk
         Versions["DISABLED"] = new Dictionary<string, string>()
         {
             {"name", "Use WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
-            {"label", "Disabled"}
         };
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));

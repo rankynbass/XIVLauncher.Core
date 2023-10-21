@@ -59,16 +59,16 @@ public class SettingsTabWine : SettingsTab
             //     CheckVisibility = () => wineTypeSetting.Value == WineType.Proton && !OSInfo.IsFlatpak,
             // },
 
-            new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
-            {
-                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
-                CheckValidity = b =>
-                {
-                    if (b == true && !CoreEnvironmentSettings.GameModeInstalled)
-                        return "GameMode was not detected on your system.";
-                    return null;
-                }
-            },
+            // new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
+            // {
+            //     CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            //     CheckValidity = b =>
+            //     {
+            //         if (b == true && !CoreEnvironmentSettings.GameModeInstalled)
+            //             return "GameMode was not detected on your system.";
+            //         return null;
+            //     }
+            // },
 
             new SettingsEntry<bool>("Enable ESync", "Enable eventfd-based synchronization.", () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
 

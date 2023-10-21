@@ -25,16 +25,10 @@ public class SettingsTabTroubleshooting : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
+        ImGui.Text($"\nClear the Wine Prefix - delete the contents of the {Program.SteamPrefix} folder");
         if (ImGui.Button("Clear Prefix"))
         {
             Program.ClearPrefix();
-        }
-
-        ImGui.Text("\nClear the managed Wine and DXVK installs. Custom versions won't be touched.");
-        if (ImGui.Button("Clear Wine & DXVK"))
-        {
-            Program.ClearTools(true);
         }
 
         ImGui.Text("\nClear all the files and folders related to Dalamud. Your settings will not be touched,\nbut all your plugins will be uninstalled, including custom repos.");
