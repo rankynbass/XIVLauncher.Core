@@ -68,31 +68,31 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-        Versions["unofficial-wine-xiv-Proton8-15-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-Proton8-21-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-15"}, {"desc", "Patched version of Wine-GE 8-15. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-15/unofficial-wine-xiv-Proton8-15-x86_64.tar.xz"},
+            {"name", "xiv-Proton8-21"}, {"desc", "Patched version of Wine-GE 8-21. Based on Proton8 Wine."},
+            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-21/unofficial-wine-xiv-Proton8-21-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
         Versions["unofficial-wine-xiv-Proton8-12-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-12"}, {"desc", "Patched version of Wine-GE 8-12. Based on Proton8 Wine."},
+            {"name", "xiv-Proton8-12"}, {"desc", "Patched version of Wine-GE 8-12. Recommended if you have camera issues."},
             {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-12/unofficial-wine-xiv-Proton8-12-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
         Versions["unofficial-wine-xiv-Proton7-43-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton7-43"}, {"desc", "Patched version of Wine-GE 7-43. Based on Proton7 Wine."},
+            {"name", "xiv-Proton7-43"}, {"desc", "Patched version of Wine-GE 7-43. Use if 8-X versions have issues."},
             {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton7-43/unofficial-wine-xiv-Proton7-43-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-git-8.16.0"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-git-8.18.0"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-git-8.16.0"}, {"desc", "Patched version of Wine Staging 8.16. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.16.0/unofficial-wine-xiv-git-8.16.0.tar.xz"},
+            {"name", "unofficial-wine-xiv-git-8.18.0"}, {"desc", "Patched version of Wine Staging 8.18. Based on Wine-tkg."},
+            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.18.0/unofficial-wine-xiv-git-8.18.0.tar.xz"},
             {"mark", "Download"}
         };
 
