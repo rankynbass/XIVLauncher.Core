@@ -68,10 +68,21 @@ public static class Dxvk
     public static void Initialize()
     {
         // Add default versions.
+        Versions["DISABLED"] = new Dictionary<string, string>()
+        {
+            {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
+            {"label", "Disabled"}
+        };
         Versions["dxvk-gplasync-v2.3-1"] = new Dictionary<string, string>()
         {
             {"name", "DXVK 2.3 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
             {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3-1.tar.gz"},
+            {"mark", "Download" }
+        };
+        Versions["dxvk-gplasync-v2.2-4"] = new Dictionary<string, string>()
+        {
+            {"name", "DXVK 2.2 GPLAsync"}, {"desc", "Dxvk 2.2 with GPL Async. May have better ReShade compatibility."},
+            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.2-4.tar.gz"},
             {"mark", "Download" }
         };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
@@ -79,11 +90,6 @@ public static class Dxvk
             {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
             {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
             {"mark", "Download" }
-        };
-        Versions["DISABLED"] = new Dictionary<string, string>()
-        {
-            {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
-            {"label", "Disabled"}
         };
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
@@ -94,7 +100,7 @@ public static class Dxvk
             return;
         }
 
-        foreach (var dxvkDir in toolDirectory.EnumerateDirectories())
+        foreach (var dxvkDir in toolDirectory.EnumerateDirectories().OrderBy(x => x.Name))
         {
             if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
             {
