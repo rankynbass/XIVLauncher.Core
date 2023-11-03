@@ -91,6 +91,10 @@ public interface ILauncherConfig
 
     public string? MangoHudCustomFile { get; set; }
 
+    public string? Vkd3dVersion { get; set; }
+
+    public DXR? Vkd3dDXR { get; set; }
+
     public string? WineDebugVars { get; set; }
 
     public bool? FixLDP { get; set; }

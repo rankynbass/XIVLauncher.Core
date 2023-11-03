@@ -135,6 +135,10 @@ class Program
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
+        if (!Vkd3d.Versions.ContainsKey(Config.Vkd3dVersion ?? ""))
+            Config.Vkd3dVersion = "vkd3d-proton-2.6";
+        Config.Vkd3dDXR ??= DXR.Enabled;
+
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
     }
@@ -148,6 +152,7 @@ class Program
         storage = new Storage(APP_NAME);
         Wine.Initialize();
         Dxvk.Initialize();
+        Vkd3d.Initialize();
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -328,10 +333,18 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
+        string dxr = Config.Vkd3dDXR switch
+        {
+            DXR.Enabled => "dxr",
+            DXR.Enabled11 => "dxr11",
+            DXR.Disabled => "",
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);  
+        var vkd3dSettings = new Vkd3dSettings(Vkd3d.FolderName, Vkd3d.DownloadUrl, Vkd3d.Enabled, dxr);
         var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, vkd3dSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()

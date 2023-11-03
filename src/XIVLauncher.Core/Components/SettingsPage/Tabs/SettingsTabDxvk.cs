@@ -13,6 +13,8 @@ public class SettingsTabDxvk : SettingsTab
 
     private string dxvkPath = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk");
 
+    private string vkd3dPath = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "vkd3d");
+
     public SettingsTabDxvk()
     {
         Entries = new SettingsEntry[]
@@ -33,6 +35,16 @@ public class SettingsTabDxvk : SettingsTab
             },
 
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
+            },
+
+            new DictionarySettingsEntry("VKD3D Version", $"Choose which version of VKD3D to use. Put your custom VKD3D in {vkd3dPath}\nEntries marked with *Download* will be downloaded when you log in.", Vkd3d.Versions, () => Program.Config.Vkd3dVersion ?? "vkd3d-proton-2.6", s => Program.Config.Vkd3dVersion = s, Vkd3d.GetDefaultVersion())
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
+            },
+
+            new SettingsEntry<DXR>("DXR Ray Tracing", "Enable DXR Ray Tracing. Experimental.", () => Program.Config.Vkd3dDXR ?? DXR.Enabled, x => Program.Config.Vkd3dDXR = x)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
