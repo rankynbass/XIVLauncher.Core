@@ -53,7 +53,7 @@ public static class Vkd3d
             {"label", "Disabled"}
         };
 
-        var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
+        var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "vkd3d"));
 
         if (!toolDirectory.Exists)
         {
@@ -61,19 +61,19 @@ public static class Vkd3d
             return;
         }
 
-        foreach (var dxvkDir in toolDirectory.EnumerateDirectories())
+        foreach (var vkd3dDir in toolDirectory.EnumerateDirectories())
         {
-            if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
+            if (Directory.Exists(Path.Combine(vkd3dDir.FullName, "x64")))
             {
-                if (Versions.ContainsKey(dxvkDir.Name))
+                if (Versions.ContainsKey(vkd3dDir.Name))
                 {
-                    if (dxvkDir.Name == "DISABLED")
-                        Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
+                    if (vkd3dDir.Name == "DISABLED")
+                        Log.Error("Cannot use custom VKD3D with folder name DISABLED. Skipping.");
                     else
-                        Versions[dxvkDir.Name].Remove("mark");
+                        Versions[vkd3dDir.Name].Remove("mark");
                     continue;
                 }
-                Versions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
+                Versions[vkd3dDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
             }
         }
     }
