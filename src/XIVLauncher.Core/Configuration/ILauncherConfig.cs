@@ -93,6 +93,8 @@ public interface ILauncherConfig
 
     public string? MangoHudCustomFile { get; set; }
 
+    public bool? VKD3DEnabled { get; set; }
+
     public string? WineDebugVars { get; set; }
 
     public string? SteamPath { get; set; }

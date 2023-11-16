@@ -92,6 +92,11 @@ public class SettingsTabDxvk : SettingsTab
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
+
+            new SettingsEntry<bool>("Experimental Directx12 Support (vkd3d)", "Enable DX12 support via Proton's vkd3d. Currently does nothing.", () => Program.Config.VKD3DEnabled ?? false, b => Program.Config.VKD3DEnabled = b)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
+            },
         };
     }
 

@@ -54,7 +54,7 @@ public static class Proton
             try
             {
 
-                var commonDirs = commonDir.GetDirectories("*Proton*");
+                var commonDirs = commonDir.GetDirectories("*Proton*").OrderBy(x => x.Name);
                 foreach (var dir in commonDirs)
                     if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
             }
@@ -64,7 +64,7 @@ public static class Proton
             }
             try
             {
-                var commonDirs2 = commonDir.GetDirectories("SteamLinuxRuntime_*");
+                var commonDirs2 = commonDir.GetDirectories("SteamLinuxRuntime_*").OrderBy(x => x.Name);
                 foreach (var dir in commonDirs2)
                     if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
                     else Log.Verbose($"Couldn't find runtime at {dir.FullName}.");
@@ -75,7 +75,7 @@ public static class Proton
             }
             try
             {
-                var compatDirs = compatDir.GetDirectories("*Proton*");
+                var compatDirs = compatDir.GetDirectories("*Proton*").OrderBy(x => x.Name);
                 foreach (var dir in compatDirs)
                     if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
             }
@@ -85,7 +85,7 @@ public static class Proton
             }
             try
             {
-                var compatDirs2 = compatDir.GetDirectories("SteamLinuxRuntime_*");
+                var compatDirs2 = compatDir.GetDirectories("SteamLinuxRuntime_*").OrderBy(x => x.Name);
                 foreach (var dir in compatDirs2)
                     if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
             }
@@ -97,7 +97,7 @@ public static class Proton
             {
                 try
                 {
-                    var compatDirs = steamlib.GetDirectories("*Proton*");
+                    var compatDirs = steamlib.GetDirectories("*Proton*").OrderBy(x => x.Name);
                     foreach (var dir in compatDirs)
                         if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
                 }
@@ -107,7 +107,7 @@ public static class Proton
                 }
                 try
                 {
-                    var compatDirs2 = steamlib.GetDirectories("SteamLinuxRuntime_*");
+                    var compatDirs2 = steamlib.GetDirectories("SteamLinuxRuntime_*").OrderBy(x => x.Name);
                     foreach (var dir in compatDirs2)
                         if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
                 }

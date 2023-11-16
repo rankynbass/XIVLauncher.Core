@@ -59,6 +59,8 @@ public static class Dxvk
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
+    public static bool VKD3DEnabled => Program.Config.VKD3DEnabled ?? false;
+
     static Dxvk()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();

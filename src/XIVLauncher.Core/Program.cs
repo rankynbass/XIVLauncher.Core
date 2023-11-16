@@ -148,6 +148,7 @@ class Program
         Config.MangoHud ??= MangoHud.None;
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
+        Config.VKD3DEnabled ??= false;
 
         Config.SteamPath = SteamInstallPath;
         Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
@@ -384,7 +385,7 @@ class Program
         app3 = string.IsNullOrEmpty(Config.HelperApp3) ? "" : new FileInfo(Config.HelperApp3).DirectoryName ?? "";
         mangohud = File.Exists(Config.MangoHudCustomFile ?? "") && Config.MangoHud == MangoHud.CustomFile ? new FileInfo(Config.MangoHudCustomFile).FullName : "";
         var extraEnvVars = new Dictionary<string, string>() {{"PRESSURE_VESSEL_FILESYSTEMS_RW", $"{app1}:{app2}:{app3}:{mangohud}".Trim(':')}};
-        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
+        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled,  Dxvk.VKD3DEnabled);
         var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak, extraEnvVars);
