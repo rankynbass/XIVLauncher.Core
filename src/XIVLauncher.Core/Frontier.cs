@@ -1,16 +1,6 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-// using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
-using XIVLauncher.Common;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Core;
@@ -68,7 +58,7 @@ internal class Frontier
         client.DefaultRequestHeaders.AddWithoutValidation("X-XL-HaveVersion", AppUtil.GetAssemblyVersion());
         client.DefaultRequestHeaders.AddWithoutValidation("X-XL-HaveAddon", "no");
         client.DefaultRequestHeaders.AddWithoutValidation("X-XL-FirstStart", "no");
-        client.DefaultRequestHeaders.AddWithoutValidation("X-XL-HaveWine", "yes");
+        client.DefaultRequestHeaders.AddWithoutValidation("X-XL-HaveWine", "no");
 
         var response = await client.GetAsync(LEASE_META_URL).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();

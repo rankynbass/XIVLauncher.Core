@@ -259,6 +259,7 @@ class Program
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
         var frontierUrl = Frontier.GetFrontierUrl().GetAwaiter().GetResult();
+        //var frontierUrl = "https://launcher.finalfantasyxiv.com/v650/index.html?rc_lang={0}&time={1}";
 
         launcherApp = new LauncherApp(storage, needUpdate, frontierUrl);
 
