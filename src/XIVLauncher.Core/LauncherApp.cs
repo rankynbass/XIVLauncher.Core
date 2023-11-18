@@ -127,11 +127,6 @@ public class LauncherApp : Component
 
     public LauncherApp(Storage storage, bool needsUpdateWarning, string frontierUrl)
     {
-        if (frontierUrl is null)
-            Log.Error("Did not get frontier URL");
-        else
-            Log.Information($"Frontier URL: {frontierUrl}");
-
         this.Storage = storage;
 
         this.Accounts = new AccountManager(this.Storage.GetFile("accounts.json"));
