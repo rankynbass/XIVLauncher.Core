@@ -258,7 +258,9 @@ class Program
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
-        launcherApp = new LauncherApp(storage, needUpdate);
+        var frontierUrl = Frontier.GetFrontierUrl().GetAwaiter().GetResult();
+
+        launcherApp = new LauncherApp(storage, needUpdate, frontierUrl);
 
         Invalidate(20);
 
