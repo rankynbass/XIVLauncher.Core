@@ -55,8 +55,8 @@ public class SettingsTabTroubleshooting : SettingsTab
             Program.ClearAll(true);
         }
 
-        ImGui.Text("\nOpen the .xlcore folder in your file browser.");
-        if (ImGui.Button("Open .xlcore"))
+        ImGui.Text("\nOpen the xivlauncher-sct settings folder in your file browser.");
+        if (ImGui.Button("Open xivlauncher-sct"))
         {
             PlatformHelpers.OpenBrowser(Program.storage.Root.FullName);
         }

@@ -308,19 +308,7 @@ class Program
 
         StyleModelV1.DalamudStandard.Apply();
 
-        var needUpdate = false;
-
-        if (Config.DoVersionCheck ?? false)
-        {
-            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
-
-            if (versionCheckResult.Success)
-                needUpdate = versionCheckResult.NeedUpdate;
-        }   
-
-        needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
-
-        launcherApp = new LauncherApp(storage, needUpdate);
+        launcherApp = new LauncherApp(storage);
 
         Invalidate(20);
 
