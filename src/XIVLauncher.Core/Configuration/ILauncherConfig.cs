@@ -95,8 +95,6 @@ public interface ILauncherConfig
 
     public string? WineDebugVars { get; set; }
 
-    public string? SteamPath { get; set; }
-
     public string? ProtonVersion { get; set; }
 
     public string? SteamRuntime { get; set; }
