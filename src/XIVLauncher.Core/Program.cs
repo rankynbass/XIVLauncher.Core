@@ -136,17 +136,6 @@ class Program
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
-        if (string.IsNullOrEmpty(Config.SteamPath))
-        {
-            var home = System.Environment.GetEnvironmentVariable("HOME");
-            var xdg_data = System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(home, ".local", "share");
-            if (Directory.Exists(Path.Combine(xdg_data, "Steam")))
-                Config.SteamPath = Path.Combine(xdg_data, "Steam");
-            else if (Directory.Exists(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam")))
-                Config.SteamPath = Path.Combine(home, ".var", "app", "com.valvesoftware.Steam",".local","share","Steam");
-            else
-                Config.SteamPath = Path.Combine(home, ".steam", "root");
-        }
         Config.ProtonVersion ??= "Proton 8.0";
         Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
 
@@ -162,6 +151,8 @@ class Program
         Config.HelperApp3Enabled ??= false;
         Config.HelperApp3 ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
+        Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.XDG_DATA_HOME, "Steam");
+        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -207,7 +198,7 @@ class Program
 
         SetupLogging(mainargs);
         LoadConfig(storage);
-        Proton.Initialize(Config.SteamPath);
+        Proton.Initialize(OSInfo.IsFlatpak && CoreEnvironmentSettings.IsSteamCompatTool ? Config.SteamFlatpakPath : Config.SteamPath);
         Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
         Config.SteamRuntime = Proton.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : Proton.GetDefaultRuntime();
         
@@ -246,7 +237,7 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
-            if (!Config.IsIgnoringSteam ?? true)
+            if (CoreEnvironmentSettings.IsSteamCompatTool || (!Config.IsIgnoringSteam ?? true))
             {
                 try
                 {
