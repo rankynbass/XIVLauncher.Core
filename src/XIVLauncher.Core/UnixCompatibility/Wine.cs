@@ -68,10 +68,10 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-        Versions["unofficial-wine-xiv-Proton8-21-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-Proton8-24-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-21"}, {"desc", "Patched version of Wine-GE 8-21. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-21/unofficial-wine-xiv-Proton8-21-x86_64.tar.xz"},
+            {"name", "xiv-Proton8-24"}, {"desc", "Patched version of Wine-GE 8-24. Based on Proton8 Wine."},
+            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-24/unofficial-wine-xiv-Proton8-24-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
@@ -102,8 +102,6 @@ public static class Wine
             {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.0/unofficial-wine-xiv-git-7.22.0.tar.xz"},
             {"mark", "Download"}
         };
-
-
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 

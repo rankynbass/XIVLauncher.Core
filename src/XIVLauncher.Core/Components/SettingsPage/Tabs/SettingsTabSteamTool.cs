@@ -83,35 +83,33 @@ public class SettingsTabSteamTool : SettingsTab
             ImGui.EndDisabled();
         }
 
-        ImGui.Dummy(new Vector2(10));
-        ImGui.Separator();
-        ImGui.Dummy(new Vector2(10));
+        if (OSInfo.IsFlatpak)
+        {
+            ImGui.Dummy(new Vector2(10));
+            ImGui.Separator();
+            ImGui.Dummy(new Vector2(10));
 
-        ImGui.Text($"Flatpak Steam Tool status: {(steamFlatpakToolExists ? "INSTALLED" : "Not Installed")}");
-#if !FLATPAK
-        ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-        ImGui.Text("You are NOT running flatpak XIVLauncher.Core. You probably shouldn't install to Flatpak Steam. It may cause issues.");
-        ImGui.PopStyleColor();
-#endif
-        ImGui.Dummy(new Vector2(10));
-        if (ImGui.Button($"{(steamFlatpakToolExists ? "Re-i" : "I")}nstall to flatpak Steam"))
-        {
-            this.Save();
-            SteamCompatibilityTool.CreateTool(Program.Config.SteamFlatpakPath);
-        }
-        ImGui.SameLine();
-        if (!steamFlatpakToolExists)
-        {
-            ImGui.BeginDisabled();
-        }
-        if (ImGui.Button("Uninstall from Flatpak Steam"))
-        {
-            this.Save();
-            SteamCompatibilityTool.DeleteTool(Program.Config.SteamFlatpakPath);
-        }
-        if (!steamFlatpakToolExists)
-        {
-            ImGui.EndDisabled();
+            ImGui.Text($"Flatpak Steam Tool status: {(steamFlatpakToolExists ? "INSTALLED" : "Not Installed")}");
+            ImGui.Dummy(new Vector2(10));
+            if (ImGui.Button($"{(steamFlatpakToolExists ? "Re-i" : "I")}nstall to flatpak Steam"))
+            {
+                this.Save();
+                SteamCompatibilityTool.CreateTool(Program.Config.SteamFlatpakPath);
+            }
+            ImGui.SameLine();
+            if (!steamFlatpakToolExists)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (ImGui.Button("Uninstall from Flatpak Steam"))
+            {
+                this.Save();
+                SteamCompatibilityTool.DeleteTool(Program.Config.SteamFlatpakPath);
+            }
+            if (!steamFlatpakToolExists)
+            {
+                ImGui.EndDisabled();
+            }
         }
 
         ImGui.Dummy(new Vector2(10));

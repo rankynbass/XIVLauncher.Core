@@ -89,20 +89,21 @@ public static class SteamCompatibilityTool
             file.CopyTo(Path.Combine(destination.FullName, "XIVLauncher", file.Name), true);
         }
 
-#if FLATPAK
-        var aria2c = new FileInfo("/app/bin/aria2c");
-        var libsecret = new FileInfo("/app/lib/libsecret-1.so.0.0.0");
-
-        if (aria2c.Exists)
-            aria2c.CopyTo(Path.Combine(destination.FullName, "bin", "aria2c"));
-        
-        if (libsecret.Exists)
+        if (OSInfo.IsFlatpak && !CoreEnvironmentSettings.IsSteamCompatTool)
         {
-            var libPath = Path.Combine(destination.FullName, "lib");
-            libsecret.CopyTo(Path.Combine(libPath, "libsecret-1.so.0.0.0"));
-            File.CreateSymbolicLink(Path.Combine(libPath, "libsecret-1.so"), "libsecret-1.so.0.0.0");
+            var aria2c = new FileInfo("/app/bin/aria2c");
+            var libsecret = new FileInfo("/app/lib/libsecret-1.so.0.0.0");
+
+            if (aria2c.Exists)
+                aria2c.CopyTo(Path.Combine(destination.FullName, "bin", "aria2c"));
+            
+            if (libsecret.Exists)
+            {
+                var libPath = Path.Combine(destination.FullName, "lib");
+                libsecret.CopyTo(Path.Combine(libPath, "libsecret-1.so.0.0.0"));
+                File.CreateSymbolicLink(Path.Combine(libPath, "libsecret-1.so"), "libsecret-1.so.0.0.0");
+            }
         }
-#endif
         Log.Verbose($"[SCT] XIVLauncher installed as Steam compatibility tool to folder {destination.FullName}");
     }
 
