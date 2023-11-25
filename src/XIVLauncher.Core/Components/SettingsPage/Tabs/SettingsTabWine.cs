@@ -54,10 +54,11 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
             },
 
-            new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it. Slow to launch.", Proton.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, Proton.GetDefaultRuntime())
-            {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton && !OSInfo.IsFlatpak,
-            },
+            // Steam runtimes stoped working between 1.0.4.7 and 1.0.5.0. I don't know why, I didn't change anything between those patches.
+            // new DictionarySettingsEntry("Steam Container Runtime", "Use Steam's container system. Proton is designed with this in mind, but may run without it. Slow to launch.", Proton.Runtimes, () => Program.Config.SteamRuntime, s => Program.Config.SteamRuntime = s, Proton.GetDefaultRuntime())
+            // {
+            //     CheckVisibility = () => wineTypeSetting.Value == WineType.Proton && !OSInfo.IsFlatpak,
+            // },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
