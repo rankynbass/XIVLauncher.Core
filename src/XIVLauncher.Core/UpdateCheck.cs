@@ -7,7 +7,7 @@ namespace XIVLauncher.Core;
 
 public static class UpdateCheck
 {
-    private const string UPDATE_URL = "https://raw.githubusercontent.com/goatcorp/xlcore-distrib/main/version.txt";
+    private const string UPDATE_URL = "https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/RB-patched/version.txt";
 
     private const string LEASE_META_URL = "https://kamori.goats.dev/Launcher/GetLease";
 
