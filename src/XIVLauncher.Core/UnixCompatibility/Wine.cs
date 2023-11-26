@@ -42,7 +42,7 @@ public static class Wine
         get {
             if (!IsProton) return null;
             return new ProtonSettings(Program.Config.SteamPath, ProtonPath, RuntimePath, Program.storage.GetFolder("protonprefix"),
-                Program.Config.GamePath, Program.Config.GameConfigPath);
+                new List<string>() { Program.Config.GamePath.FullName, Program.Config.GameConfigPath.FullName });
         }
     }
 
