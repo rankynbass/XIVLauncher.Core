@@ -139,8 +139,8 @@ class Program
         Config.ProtonVersion ??= "Proton 8.0";
         // Steam runtimes stoped working between 1.0.4.7 and 1.0.5.0. I don't know why, I didn't change anything between those patches.
         // Disabled for now.
-        // Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
-        Config.SteamRuntime = "Disabled";
+        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
+        // Config.SteamRuntime = "Disabled";
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
