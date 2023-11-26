@@ -41,8 +41,17 @@ public static class Wine
     {
         get {
             if (!IsProton) return null;
+            var compatMounts = new List<string>();
+            compatMounts.Add(Program.Config.GamePath.FullName);
+            compatMounts.Add(Program.Config.GameConfigPath.FullName);
+            if (!string.IsNullOrEmpty(Program.Config.HelperApp1) && Program.Config.HelperApp1Enabled.Value)
+                compatMounts.Add(Program.Config.HelperApp1);
+            if (!string.IsNullOrEmpty(Program.Config.HelperApp2) && Program.Config.HelperApp2Enabled.Value)
+                compatMounts.Add(Program.Config.HelperApp2);
+            if (!string.IsNullOrEmpty(Program.Config.HelperApp3) && Program.Config.HelperApp3Enabled.Value)
+                compatMounts.Add(Program.Config.HelperApp3);
             return new ProtonSettings(Program.Config.SteamPath, ProtonPath, RuntimePath, Program.storage.GetFolder("protonprefix"),
-                Program.Config.GamePath, Program.Config.GameConfigPath);
+                compatMounts);
         }
     }
 
