@@ -98,10 +98,10 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-git-8.18.0"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-git-8.21.0"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-git-8.18.0"}, {"desc", "Patched version of Wine Staging 8.18. Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.18.0/unofficial-wine-xiv-git-8.18.0.tar.xz"},
+            {"name", "unofficial-wine-xiv-git-8.21.0"}, {"desc", "Patched version of Wine Staging 8.21. Based on Wine-tkg."},
+            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21.0/unofficial-wine-xiv-git-8.21.0.tar.xz"},
             {"mark", "Download"}
         };
 
