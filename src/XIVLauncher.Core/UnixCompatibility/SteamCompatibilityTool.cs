@@ -8,6 +8,17 @@ namespace XIVLauncher.Core;
 
 public static class SteamCompatibilityTool
 {
+    public static bool IsSteamInstalled { get; } = false;
+
+    public static bool IsFlatpakSteamInstalled { get; } = false;
+
+    static SteamCompatibilityTool()
+    {
+        var xdg_data_home = (OSInfo.IsFlatpak) ? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share") : CoreEnvironmentSettings.XDG_DATA_HOME;
+        IsSteamInstalled = Directory.Exists(Path.Combine(xdg_data_home, "Steam"));
+        IsFlatpakSteamInstalled = Directory.Exists(Path.Combine(CoreEnvironmentSettings.HOME, ".var/app/com.valvesoftware.Steam"));
+    }
+    
     public static bool CheckTool(string path)
     {
         return Directory.Exists(Path.Combine(path, "xlcore"));

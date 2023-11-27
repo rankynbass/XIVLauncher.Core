@@ -137,13 +137,14 @@ class Program
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
         Config.ProtonVersion ??= "Proton 8.0";
-        // Steam runtimes stoped working between 1.0.4.7 and 1.0.5.0. I don't know why, I didn't change anything between those patches.
-        // Disabled for now.
         Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
-        // Config.SteamRuntime = "Disabled";
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
+
+        var xdg_data_home = (OSInfo.IsFlatpak) ? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share") : CoreEnvironmentSettings.XDG_DATA_HOME;
+        Config.SteamPath ??= Path.Combine(xdg_data_home, "Steam");
+        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
 
         Config.HelperApp1Enabled ??= false;
         Config.HelperApp1 ??= string.Empty;
@@ -154,8 +155,6 @@ class Program
         Config.HelperApp3Enabled ??= false;
         Config.HelperApp3 ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
-        Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.XDG_DATA_HOME, "Steam");
-        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
     }
 
     public const uint STEAM_APP_ID = 39210;
