@@ -234,6 +234,7 @@ class Program
                     break;
 
                 case PlatformID.Unix:
+                    if (CommandLineInstaller()) return;
                     Steam = new UnixSteam();
                     break;
 
@@ -547,5 +548,55 @@ class Program
         {
             Log.Error("Tried to toggle ReShade, but dxgi.dll or dxgi.dll.disabled not present");
         }
+    }
+
+    private static bool CommandLineInstaller()
+    {
+        foreach (var arg in mainargs)
+        {
+            if (arg == "--deck-install")
+            {
+                SteamCompatibilityTool.CreateTool(Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam"));
+                Console.WriteLine($"Installed as Steam compatibility tool to {Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam", "compatibilitytools.d", "xlcore")}");
+                return true;
+            }
+            if (arg.StartsWith("--install="))
+            {
+                var path = arg.Split('=', 2)[1];
+                if (path.StartsWith("~/"))
+                    path = CoreEnvironmentSettings.HOME + path.TrimStart('~');
+                if (Directory.Exists(path) && (path.EndsWith("/Steam") || path.EndsWith("/Steam/")))
+                {
+                    SteamCompatibilityTool.CreateTool(path);
+                    Console.WriteLine($"Installed as Steam compatibility tool to path {Path.Combine(path, "compatibilitytools.d", "xlcore")}");
+                }
+                else
+                    Console.WriteLine($"Invalid path. Path does not exist or is not a Steam folder: {path}");
+                
+                return true;
+            }
+            if (arg == "--deck-remove")
+            {
+                SteamCompatibilityTool.DeleteTool(Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam"));
+                Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam", "compatibilitytools.d")}");
+                return true;
+            }
+            if (arg.StartsWith("--remove="))
+            {
+                var path = arg.Split('=', 2)[1];
+                if (path.StartsWith("~/"))
+                    path = CoreEnvironmentSettings.HOME + path.TrimStart('~');
+                if (Directory.Exists(path) && (path.EndsWith("/Steam") || path.EndsWith("/Steam/")))
+                {
+                    SteamCompatibilityTool.DeleteTool(path);
+                    Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Path.Combine(path, "compatibilitytools.d")}");
+                }
+                else
+                    Console.WriteLine($"Invalid path. Path does not exist or is not a Steam folder: {path}");
+                
+                return true;
+            }
+        }
+        return false;
     }
 }
