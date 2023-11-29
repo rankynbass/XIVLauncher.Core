@@ -65,8 +65,6 @@ class Program
     private static uint invalidationFrames = 0;
     private static Vector2 lastMousePosition;
 
-    private const string FRONTIER_FALLBACK = "https://launcher.finalfantasyxiv.com/v650/index.html?rc_lang={0}&time={1}";
-
     public static void Invalidate(uint frames = 100)
     {
         invalidationFrames = frames;
@@ -260,19 +258,7 @@ class Program
         StyleModelV1.DalamudStandard.Apply();
         ImGui.GetIO().FontGlobalScale = Config.GlobalScale ?? 1.0f;
 
-        var needUpdate = false;
-
-        if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
-        {
-            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
-
-            if (versionCheckResult.Success)
-                needUpdate = versionCheckResult.NeedUpdate;
-        }   
-
-        needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
-
-        launcherApp = new LauncherApp(storage, needUpdate, FRONTIER_FALLBACK);
+        launcherApp = new LauncherApp(storage);
 
         Invalidate(20);
 
