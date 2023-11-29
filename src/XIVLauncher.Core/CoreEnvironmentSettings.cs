@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace XIVLauncher.Core;
 
@@ -19,6 +20,8 @@ public static class CoreEnvironmentSettings
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static string HOME => System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+    static public bool GameModeInstalled { get; }
+
 
     private static bool CheckEnvBool(string key)
     {
@@ -48,5 +51,14 @@ public static class CoreEnvironmentSettings
         var ldpreload = GetCleanEnvironmentVariable("LD_PRELOAD");
         ldpreload = (string.IsNullOrEmpty(xlpreload) ? "" : xlpreload + ":") + (string.IsNullOrEmpty(ldpreload) ? "" : ldpreload);
         Environment.SetEnvironmentVariable("LD_PRELOAD", ldpreload);
+ 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var handle = IntPtr.Zero;
+            GameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
+            NativeLibrary.Free(handle);
+        }
+        else
+            GameModeInstalled = false;
     }
 }
