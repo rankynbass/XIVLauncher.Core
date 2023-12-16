@@ -47,11 +47,6 @@ public static class CoreEnvironmentSettings
 
     static CoreEnvironmentSettings()
     {
-        var xlpreload = Environment.GetEnvironmentVariable("XL_PRELOAD") ?? "";
-        var ldpreload = GetCleanEnvironmentVariable("LD_PRELOAD");
-        ldpreload = (string.IsNullOrEmpty(xlpreload) ? "" : xlpreload + ":") + (string.IsNullOrEmpty(ldpreload) ? "" : ldpreload);
-        Environment.SetEnvironmentVariable("LD_PRELOAD", ldpreload);
- 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             var handle = IntPtr.Zero;
