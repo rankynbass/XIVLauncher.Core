@@ -111,6 +111,12 @@ public interface ILauncherConfig
 
     public string? HelperApp3 { get; set; }
 
+    public string? HelperApp1Args { get; set; }
+
+    public string? HelperApp2Args { get; set; }
+
+    public string? HelperApp3Args { get; set; }
+
     public bool? HelperApp1Enabled { get; set; }
 
     public bool? HelperApp2Enabled { get; set; }

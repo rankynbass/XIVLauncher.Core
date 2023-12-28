@@ -147,12 +147,15 @@ class Program
 
         Config.HelperApp1Enabled ??= false;
         Config.HelperApp1 ??= string.Empty;
+        Config.HelperApp1Args ??= string.Empty;
         Config.HelperApp1WineD3D ??= false;
         Config.HelperApp2Enabled ??= false;
         Config.HelperApp2 ??= string.Empty;
+        Config.HelperApp2Args ??= string.Empty;
         Config.HelperApp2WineD3D ??= false;
         Config.HelperApp3Enabled ??= false;
         Config.HelperApp3 ??= string.Empty;
+        Config.HelperApp3Args ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
     }
 

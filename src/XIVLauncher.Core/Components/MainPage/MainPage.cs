@@ -823,12 +823,12 @@ public class MainPage : Page
             // Get rid of gameoverlayrenderer.so for helper apps. Prevents stuttering.
             System.Environment.SetEnvironmentVariable("LD_PRELOAD", CoreEnvironmentSettings.GetCleanEnvironmentVariable("LD_PRELOAD", "gameoverlayrenderer.so"));
 
-            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp1))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp1, wineD3D: Program.Config.HelperApp1WineD3D.Value);
-            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp2))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp2, wineD3D: Program.Config.HelperApp2WineD3D.Value);
-            if (Program.Config.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(Program.Config.HelperApp3))
-                Program.CompatibilityTools.RunInPrefix(Program.Config.HelperApp3, wineD3D: Program.Config.HelperApp3WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp1 + "\"" + App.Settings.HelperApp1Args, wineD3D: App.Settings.HelperApp1WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp2 + "\"" + App.Settings.HelperApp2Args, wineD3D: App.Settings.HelperApp2WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp3 + "\"" + App.Settings.HelperApp3Args, wineD3D: App.Settings.HelperApp3WineD3D.Value);
 
             App.StartLoading("Starting game...", "Have fun!");
 
