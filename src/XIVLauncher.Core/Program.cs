@@ -141,6 +141,7 @@ class Program
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
+        Config.FixLocale ??= false;
 
         var xdg_data_home = (OSInfo.IsFlatpak) ? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share") : CoreEnvironmentSettings.XDG_DATA_HOME;
         Config.SteamPath ??= Path.Combine(xdg_data_home, "Steam");

@@ -712,6 +712,13 @@ public class MainPage : Page
         if (CoreEnvironmentSettings.IsSteamCompatTool)
             System.Environment.SetEnvironmentVariable("LD_PRELOAD", CoreEnvironmentSettings.GetCleanEnvironmentVariable("XL_PRELOAD"));
 
+        // Hack: Force C.utf8 to fix incorrect unicode paths
+        if (App.Settings.FixLocale.Value && !System.OperatingSystem.IsWindows())
+        {
+            System.Environment.SetEnvironmentVariable("LC_ALL", "C.utf8");
+            System.Environment.SetEnvironmentVariable("LC_CTYPE", "C.utf8");
+        }
+        
         // Hack: Strip out gameoverlayrenderer.so entries from LD_PRELOAD
         if (App.Settings.FixLDP.Value)
         {

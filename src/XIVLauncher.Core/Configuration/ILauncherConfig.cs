@@ -98,6 +98,8 @@ public interface ILauncherConfig
     public string? ProtonVersion { get; set; }
 
     public string? SteamRuntime { get; set; }
+    
+    public bool? FixLocale { get; set; }
 
     public bool? FixLDP { get; set; }
 
