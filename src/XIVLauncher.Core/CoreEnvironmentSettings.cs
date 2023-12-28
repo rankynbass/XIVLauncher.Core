@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace XIVLauncher.Core;
 
@@ -55,5 +57,20 @@ public static class CoreEnvironmentSettings
         }
         else
             GameModeInstalled = false;
+    }
+
+    public static string GetCType()
+    {
+        if (System.OperatingSystem.IsWindows())
+            return "";
+        var psi = new ProcessStartInfo("sh");
+        psi.Arguments = "-c \"locale -a 2>/dev/null | grep -i utf\"";
+        psi.RedirectStandardOutput = true;
+
+        var proc = new Process();
+        proc.StartInfo = psi;
+        proc.Start();
+        var output = proc.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        return Array.Find(output, s => s.ToUpper().StartsWith("C."));
     }
 }
