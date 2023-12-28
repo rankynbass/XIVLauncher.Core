@@ -134,6 +134,11 @@ public static class Dxvk
         return Versions.First().Key;
     }
 
+    public static bool IsValid(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return false;
+        return Versions.ContainsKey(name);
+    }
 }
 
 public enum DxvkHud

@@ -27,7 +27,11 @@ public class DictionarySettingsEntry : SettingsEntry<string>
     {
         var nativeValue = this.Value;
         string idx = (string)(this.InternalValue ?? DefaultValue);
-
+        if (!Pairs.ContainsKey(idx))
+        {
+            idx = DefaultValue;
+            this.InternalValue = DefaultValue;
+        }
         ImGuiHelpers.TextWrapped(this.Name);
 
         Dictionary<string, Dictionary<string, string>>.KeyCollection keys = Pairs.Keys;

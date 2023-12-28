@@ -99,7 +99,7 @@ public interface ILauncherConfig
 
     public string? SteamRuntime { get; set; }
     
-    public bool? FixLocale { get; set; }
+    public string? FixLocale { get; set; }
 
     public bool? FixLDP { get; set; }
 

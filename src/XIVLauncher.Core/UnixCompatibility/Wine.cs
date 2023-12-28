@@ -151,6 +151,12 @@ public static class Wine
             return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
         return Versions.First().Key;
     }
+
+    public static bool IsValid(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return false;
+        return Versions.ContainsKey(name);
+    }
 }
 
 public enum WineType

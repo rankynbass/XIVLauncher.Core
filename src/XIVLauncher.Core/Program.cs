@@ -65,8 +65,6 @@ class Program
     private static uint invalidationFrames = 0;
     private static Vector2 lastMousePosition;
 
-    public static string CType = CoreEnvironmentSettings.GetCType();
-
     public static void Invalidate(uint frames = 100)
     {
         invalidationFrames = frames;
@@ -122,13 +120,11 @@ class Program
         Config.FSyncEnabled ??= false;
 
         Config.WineType ??= WineType.Managed;
-        if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
+        Config.WineVersion = Wine.IsValid(Config.WineVersion) ? Config.WineVersion : Wine.GetDefaultVersion();
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
 
-        if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
-            Config.DxvkVersion = Dxvk.GetDefaultVersion();
+        Config.DxvkVersion = Dxvk.IsValid(Config.DxvkVersion) ? Config.DxvkVersion : Dxvk.GetDefaultVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;
@@ -143,7 +139,7 @@ class Program
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
-        Config.FixLocale ??= false;
+        Config.FixLocale = Locale.IsValid(Config.FixLocale) ? Config.FixLocale : Locale.GetDefaultCode();
 
         var xdg_data_home = (OSInfo.IsFlatpak) ? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share") : CoreEnvironmentSettings.XDG_DATA_HOME;
         Config.SteamPath ??= Path.Combine(xdg_data_home, "Steam");
