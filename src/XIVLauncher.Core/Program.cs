@@ -155,6 +155,9 @@ class Program
         SetupLogging(mainargs);
         LoadConfig(storage);
 
+        // Work around a bug where TZ is set to a linux-specific value
+        System.Environment.SetEnvironmentVariable("TZ", null);
+
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
