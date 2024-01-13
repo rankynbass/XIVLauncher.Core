@@ -77,10 +77,10 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-        Versions["unofficial-wine-xiv-Proton8-24-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-Proton8-25-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-24"}, {"desc", "Patched version of Wine-GE 8-24. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-24/unofficial-wine-xiv-Proton8-24-x86_64.tar.xz"},
+            {"name", "xiv-Proton8-25"}, {"desc", "Patched version of Wine-GE 8-25. Based on Proton8 Wine."},
+            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-25/unofficial-wine-xiv-Proton8-25-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
@@ -97,6 +97,13 @@ public static class Wine
             {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton7-43/unofficial-wine-xiv-Proton7-43-x86_64.tar.xz"},
             {"mark", "Download"}
         };
+
+        Versions["unofficial-wine-xiv-git-9.0-rc5"] = new Dictionary<string, string>()
+        {
+            {"name", "unofficial-wine-xiv-git-9.0-rc5"}, {"desc", "Patched version of Wine Devel 9.0-rc5. Includes working wayland session."},
+            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.0-rc5/unofficial-wine-xiv-git-9.0-rc5.tar.xz"},
+            {"mark", "Download"}
+        };        
 
         Versions["unofficial-wine-xiv-git-8.21.1"] = new Dictionary<string, string>()
         {
