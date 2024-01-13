@@ -30,6 +30,8 @@ public static class Wine
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
+    public static int Dpi => ((Program.Config.DesktopScale ?? 100) > 400 || (Program.Config.DesktopScale ?? 100) < 100 || (Program.Config.DesktopScale ?? 100) % 25 != 0) ? 96 : (96 * (Program.Config.DesktopScale ?? 100)) / 100;
+
     // Proton additions
     public static bool IsProton => Program.Config.WineType == WineType.Proton;
 

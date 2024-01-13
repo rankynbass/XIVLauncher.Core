@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.IO;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using XIVLauncher.Common.Util;
@@ -84,7 +85,11 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
+            new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver", () => Program.Config.DesktopScale ?? 100, i => Program.Config.DesktopScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
+
+            new SettingsEntry<bool>("Enable Wayland", "Requires compatible wine build.If \"Enable Wayland Driver\" button is available below, you MUST press it.\n The UI may freeze for a few seconds, please be patient.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
+
+            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
         };
     }
 
@@ -106,6 +111,25 @@ public class SettingsTabWine : SettingsTab
         {
             ImGui.BeginDisabled();
             ImGui.Text("Compatibility tool isn't set up. Please start the game at least once, or use the download button below.");
+
+            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        }
+
+        if (!File.Exists(Path.Combine(Wine.Prefix.FullName, "wayland_driver")))
+        {
+            if (ImGui.Button("Enable Wayland Driver"))
+            {
+                this.Save();
+                Program.CompatibilityTools.AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Drivers", "Graphics", "x11,wayland");
+                Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {Wine.Dpi} /f").WaitForExit();
+                var startTime = DateTime.UtcNow;
+                while (!File.Exists(Path.Combine(Wine.Prefix.FullName, "system.reg")) && !File.Exists(Path.Combine(Wine.Prefix.FullName, "user.reg")) || !File.Exists(Path.Combine(Wine.Prefix.FullName, "userdef.reg")))
+                {
+                    if (DateTime.UtcNow - startTime > TimeSpan.FromSeconds(10))
+                        break;
+                }
+                File.Create(Path.Combine(Wine.Prefix.FullName, "wayland_driver"));
+            }
 
             ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
         }

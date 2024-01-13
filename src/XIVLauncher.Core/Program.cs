@@ -157,6 +157,11 @@ class Program
         Config.HelperApp3 ??= string.Empty;
         Config.HelperApp3Args ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
+
+        Config.DesktopScale ??= 100;
+        if (Config.DesktopScale % 25 != 0 || Config.DesktopScale < 100 || Config.DesktopScale > 400)
+            Config.DesktopScale = 100;
+        Config.WaylandEnabled ??= false;
     }
 
     public const uint STEAM_APP_ID = 39210;
