@@ -207,6 +207,9 @@ class Program
         Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
         Config.SteamRuntime = Proton.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : Proton.GetDefaultRuntime();
         
+        // Work around a bug where TZ is set to a linux-specific value
+        System.Environment.SetEnvironmentVariable("TZ", null);
+
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
