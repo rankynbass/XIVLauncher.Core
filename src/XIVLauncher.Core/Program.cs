@@ -113,7 +113,7 @@ class Program
         Config.DalamudEnabled ??= true;
         Config.DalamudLoadMethod = !OperatingSystem.IsWindows() ? DalamudLoadMethod.DllInject : DalamudLoadMethod.EntryPoint;
 
-        Config.GlobalScale ??= 1.0f;
+        Config.GlobalScale = (CoreEnvironmentSettings.Scale is null) ? (Config.GlobalScale ?? 1.0f) : CoreEnvironmentSettings.Scale;
 
         Config.GameModeEnabled ??= false;
         Config.ESyncEnabled ??= true;

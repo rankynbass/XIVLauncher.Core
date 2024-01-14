@@ -22,6 +22,7 @@ public static class CoreEnvironmentSettings
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static string HOME => System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+    public static float? Scale => CheckEnvFloat("XL_SCALE");
 
     private static bool CheckEnvBool(string key)
     {
@@ -36,6 +37,21 @@ public static class CoreEnvironmentSettings
         if (val == "1" || val == "true" || val == "yes" || val == "y" || val == "on") return true;
         if (val == "0" || val == "false" || val == "no" || val == "n" || val == "off") return false;
         return null;
+    }
+
+    private static float? CheckEnvFloat(string key)
+    {
+        string strVal = (Environment.GetEnvironmentVariable(key));
+        float? flVal;
+        try
+        {
+            flVal = float.Parse(strVal, CultureInfo.InvariantCulture.NumberFormat);
+        }
+        catch
+        {
+            flVal = null;
+        }
+        return flVal;
     }
 
     public static string GetCleanEnvironmentVariable(string envvar, string badstring = "", string separator = ":")
