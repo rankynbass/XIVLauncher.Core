@@ -72,7 +72,7 @@ public class NewsFrame : Component
     private Vector2 GetSize()
     {
         var vp = ImGuiHelpers.ViewportSize;
-        var calculatedSize = vp.X >= 1280 ? vp.X * 0.7f : vp.X * 0.5f;
+        var calculatedSize = vp.X >= 1280 * ImGuiHelpers.GlobalScale ? vp.X * 0.7f : vp.X * 0.5f;
         return new Vector2(calculatedSize, vp.Y - 128f * ImGuiHelpers.GlobalScale);
     }
 
@@ -80,7 +80,7 @@ public class NewsFrame : Component
     {
         if (ImGui.BeginChild("###newsFrame", this.GetSize()))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale);
 
             if (this.newsLoaded)
             {

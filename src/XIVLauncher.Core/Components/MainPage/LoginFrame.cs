@@ -96,7 +96,7 @@ public class LoginFrame : Component
             this.useSteamServiceCheckbox.Draw();
             this.autoLoginCheckbox.Draw();
 
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
 
             this.loginButton.Draw();
 
@@ -157,7 +157,7 @@ public class LoginFrame : Component
                 ImGui.TextWrapped("Take care! No secrets provider is installed or configured. Passwords can't be saved.");
                 ImGui.PopStyleColor();
 
-                ImGui.Dummy(new Vector2(15));
+                ImGui.Dummy(new Vector2(15) * ImGuiHelpers.GlobalScale);
             }
 
             ImGui.PushFont(FontManager.IconFont);

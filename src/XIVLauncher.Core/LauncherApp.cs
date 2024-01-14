@@ -310,7 +310,7 @@ public class LauncherApp : Component
 
         if (ImGui.BeginPopupModal(this.modalTitle + "###xl_modal", ref this.isModalDrawing, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar))
         {
-            if (ImGui.BeginChild("###xl_modal_scrolling", new Vector2(0, -ImGui.GetTextLineHeightWithSpacing() * 2)))
+            if (ImGui.BeginChild("###xl_modal_scrolling", new Vector2(0, -ImGui.GetTextLineHeightWithSpacing() * 2 * ImGuiHelpers.GlobalScale)))
             {
                 ImGui.TextWrapped(this.modalText);
             }

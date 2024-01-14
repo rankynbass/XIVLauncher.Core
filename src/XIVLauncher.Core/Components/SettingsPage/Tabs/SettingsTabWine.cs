@@ -15,8 +15,12 @@ public class SettingsTabWine : SettingsTab
 
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
+    private Vector2 spacer;
+
     public SettingsTabWine()
     {
+        spacer = new Vector2(10) * ImGuiHelpers.GlobalScale;
+
         Entries = new SettingsEntry[]
         {
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
@@ -105,14 +109,14 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(spacer);
 
         if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.BeginDisabled();
             ImGui.Text("Compatibility tool isn't set up. Please start the game at least once, or use the download button below.");
 
-            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+            ImGui.Dummy(spacer);
         }
 
         if (!File.Exists(Path.Combine(Wine.Prefix.FullName, "wayland_driver")))
@@ -131,7 +135,7 @@ public class SettingsTabWine : SettingsTab
                 File.Create(Path.Combine(Wine.Prefix.FullName, "wayland_driver"));
             }
 
-            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+            ImGui.Dummy(spacer);
         }
 
         if (ImGui.Button("Open prefix"))
@@ -165,7 +169,7 @@ public class SettingsTabWine : SettingsTab
 
         }
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(spacer);
 
 
         if (ImGui.Button("Set Wine to Windows 7"))
@@ -182,7 +186,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunInPrefix($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(spacer);
 
         if (ImGui.Button("Kill all wine processes"))
         {
@@ -208,7 +212,7 @@ public class SettingsTabWine : SettingsTab
             }
         }
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(spacer);
 
         if (Program.IsReshadeEnabled() is not null)
         {

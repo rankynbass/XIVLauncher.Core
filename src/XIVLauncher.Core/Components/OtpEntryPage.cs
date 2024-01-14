@@ -77,7 +77,7 @@ public class OtpEntryPage : Page
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f * ImGuiHelpers.GlobalScale);
+        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f);
 
         var childSize = new Vector2(300, 200) * ImGuiHelpers.GlobalScale;
         var vpSize = ImGuiHelpers.ViewportSize;
@@ -104,7 +104,7 @@ public class OtpEntryPage : Page
 
             var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
 
-            var buttonSize = new Vector2(INPUT_WIDTH/2-4, 30 * ImGuiHelpers.GlobalScale);
+            var buttonSize = new Vector2(INPUT_WIDTH/2 - (4 * ImGuiHelpers.GlobalScale), 30 * ImGuiHelpers.GlobalScale);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             if (ImGui.Button("OK", buttonSize) || doEnter)

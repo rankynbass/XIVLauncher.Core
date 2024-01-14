@@ -30,7 +30,7 @@ public class LoadingPage : Page
     public LoadingPage(LauncherApp app)
         : base(app)
     {
-        this.spinner = new Spinner(SPINNER_RADIUS, 5, ImGui.GetColorU32(ImGuiCol.ButtonActive));
+        this.spinner = new Spinner(SPINNER_RADIUS * ImGuiHelpers.GlobalScale, (int)(5 * ImGuiHelpers.GlobalScale), ImGui.GetColorU32(ImGuiCol.ButtonActive));
         this.cancelButton.Click += () => this.Cancelled?.Invoke();
 
         this.disableAutoLoginButton.Click += () =>
@@ -95,7 +95,7 @@ public class LoadingPage : Page
 
         if (IsIndeterminate)
         {
-            ImGuiHelpers.CenterCursorFor(SPINNER_RADIUS * 2);
+            ImGuiHelpers.CenterCursorFor((int)(SPINNER_RADIUS * 2 * ImGuiHelpers.GlobalScale));
             this.spinner.Draw();
         }
         else

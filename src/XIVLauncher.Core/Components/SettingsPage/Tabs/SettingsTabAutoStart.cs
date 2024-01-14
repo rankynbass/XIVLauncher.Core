@@ -71,7 +71,7 @@ public class SettingsTabAutoStart : SettingsTab
 
     public override void Draw()
     {
-        ImGui.Text("Please check back later.");
+        // ImGui.Text("Please check back later.");
 
         base.Draw();
     }
