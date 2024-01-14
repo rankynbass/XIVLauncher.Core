@@ -133,7 +133,7 @@ public interface ILauncherConfig
 
     public string? SteamFlatpakPath { get; set; }
 
-    public int? DesktopScale { get; set; }
+    public int? WineScale { get; set; }
 
     public bool? WaylandEnabled { get; set; }
 

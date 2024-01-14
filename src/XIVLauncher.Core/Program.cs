@@ -113,7 +113,10 @@ class Program
         Config.DalamudEnabled ??= true;
         Config.DalamudLoadMethod = !OperatingSystem.IsWindows() ? DalamudLoadMethod.DllInject : DalamudLoadMethod.EntryPoint;
 
-        Config.GlobalScale = (CoreEnvironmentSettings.Scale is null) ? (Config.GlobalScale ?? 1.0f) : CoreEnvironmentSettings.Scale;
+        Config.GlobalScale = (CoreEnvironmentSettings.Scale is null) ?
+            (float)(25 * ((int)(100 * (Config.GlobalScale ?? 1.0f)) / 25)) / 100 :
+            (float)(25 * ((int)(100 * (CoreEnvironmentSettings.Scale ?? 1.0f)) / 25)) / 100;
+        Config.GlobalScale = (Config.GlobalScale < 1.0f ) ? 1.0f : (Config.GlobalScale > 4.0f) ? 4.0f : Config.GlobalScale;
 
         Config.GameModeEnabled ??= false;
         Config.ESyncEnabled ??= true;
@@ -158,9 +161,8 @@ class Program
         Config.HelperApp3Args ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
 
-        Config.DesktopScale ??= 100;
-        if (Config.DesktopScale % 25 != 0 || Config.DesktopScale < 100 || Config.DesktopScale > 400)
-            Config.DesktopScale = 100;
+        Config.WineScale = (Config.WineScale is null) ? (int)(Config.GlobalScale * 100) : 25 * (Config.WineScale / 25);
+        Config.WineScale = (Config.WineScale < 100) ? 100 : (Config.WineScale > 400) ? 400 : Config.WineScale;
         Config.WaylandEnabled ??= false;
     }
 

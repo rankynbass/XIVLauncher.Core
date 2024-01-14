@@ -89,9 +89,9 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver", () => Program.Config.DesktopScale ?? 100, i => Program.Config.DesktopScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
-
             new SettingsEntry<bool>("Enable Wayland", "Requires compatible wine build.If \"Enable Wayland Driver\" button is available below, you MUST press it.\n The UI may freeze for a few seconds, please be patient.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
+
+            new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver.\nUse the \"Update Wine Scaling\" button below to change this.", () => Program.Config.WineScale ?? 100, i => Program.Config.WineScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
 
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
         };
@@ -134,9 +134,16 @@ public class SettingsTabWine : SettingsTab
                 }
                 File.Create(Path.Combine(Wine.Prefix.FullName, "wayland_driver"));
             }
-
-            ImGui.Dummy(spacer);
+            ImGui.SameLine();
         }
+
+        if (ImGui.Button("Update Wine Scaling"))
+        {
+            this.Save();
+            Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {Wine.Dpi} /f").WaitForExit();
+        }
+
+        ImGui.Dummy(spacer);
 
         if (ImGui.Button("Open prefix"))
         {
