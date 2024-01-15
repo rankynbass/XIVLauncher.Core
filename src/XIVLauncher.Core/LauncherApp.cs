@@ -318,9 +318,9 @@ public class LauncherApp : Component
             ImGui.EndChild();
 
             float BUTTON_WIDTH = 120f * ImGuiHelpers.GlobalScale;
-            ImGui.SetCursorPosX((ImGui.GetWindowWidth() - BUTTON_WIDTH) / 2);
+            ImGuiHelpers.CenterCursorFor((int)BUTTON_WIDTH);
 
-            if (ImGui.Button("OK", new Vector2(BUTTON_WIDTH, 40) * ImGuiHelpers.GlobalScale))
+            if (ImGui.Button("OK", new Vector2(BUTTON_WIDTH, 40 * ImGuiHelpers.GlobalScale)))
             {
                 ImGui.CloseCurrentPopup();
                 this.isModalDrawing = false;
