@@ -79,10 +79,10 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-        Versions["unofficial-wine-xiv-Proton8-25-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-Proton8-26-x86_64"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-25"}, {"desc", "Patched version of Wine-GE 8-25. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-25/unofficial-wine-xiv-Proton8-25-x86_64.tar.xz"},
+            {"name", "xiv-Proton8-26"}, {"desc", "Patched version of Wine-GE 8-26. Based on Proton8 Wine."},
+            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz"},
             {"mark", "Download"}
         };
 
@@ -100,24 +100,31 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-git-9.0-rc5"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-wayland-9.2"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-git-9.0-rc5"}, {"desc", "Patched version of Wine Devel 9.0-rc5. Includes working wayland session."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.0-rc5/unofficial-wine-xiv-git-9.0-rc5.tar.xz"},
+            {"name", "unofficial-wine-xiv-wayland-9.2"}, {"desc", "Patched version of Wine Devel 9.2. Includes working wayland session and working Ping plugin."},
+            {"label", "Wayland"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.2/unofficial-wine-xiv-wayland-9.2.tar.xz"},
             {"mark", "Download"}
-        };        
+        };
+
+        Versions["unofficial-wine-xiv-staging-9.2"] = new Dictionary<string, string>()
+        {
+            {"name", "unofficial-wine-xiv-staging-9.2"}, {"desc", "Patched version of Wine Staging 9.2. No wayland but working Ping plugin."},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.2/unofficial-wine-xiv-staging-9.2.tar.xz"},
+            {"mark", "Download"}
+        };    
 
         Versions["unofficial-wine-xiv-git-8.21.1"] = new Dictionary<string, string>()
         {
             {"name", "unofficial-wine-xiv-git-8.21.1"}, {"desc", "Patched version of Wine Staging 8.21 (Last 8.X release). Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21.1/unofficial-wine-xiv-git-8.21.1.tar.xz"},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21.1/unofficial-wine-xiv-git-8.21.1.tar.xz"},
             {"mark", "Download"}
         };
 
         Versions["unofficial-wine-xiv-git-7.22.1"] = new Dictionary<string, string>()
         {
             {"name", "unofficial-wine-xiv-git-7.22.1"}, {"desc", "Patched version of Wine Staging 7.22 (Last 7.X release). Based on Wine-tkg."},
-            {"label", "TKG"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.1/unofficial-wine-xiv-git-7.22.1.tar.xz"},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.1/unofficial-wine-xiv-git-7.22.1.tar.xz"},
             {"mark", "Download"}
         };
 
