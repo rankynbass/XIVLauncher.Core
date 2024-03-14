@@ -591,7 +591,7 @@ class Program
 
     private static bool CommandLineInstaller()
     {
-        foreach (var arg in mainargs)
+        foreach (var arg in mainArgs)
         {
             if (arg == "--deck-install")
             {
