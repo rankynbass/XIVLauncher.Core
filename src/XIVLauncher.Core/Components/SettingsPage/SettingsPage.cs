@@ -117,7 +117,7 @@ public class SettingsPage : Page
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f * ImGuiHelpers.GlobalScale);
             ImGui.PushFont(FontManager.IconFont);
 
-            var invalid = this.tabs.Any(x => x.Entries.Any(y => !y.IsValid));
+            var invalid = this.tabs.Any(x => x.Entries.Any(y => y.IsVisible && !y.IsValid));
             if (invalid)
             {
                 ImGui.BeginDisabled();
