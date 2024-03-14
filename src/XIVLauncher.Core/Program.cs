@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using System.IO;
 using CheapLoc;
 using Config.Net;
 using ImGuiNET;
@@ -60,7 +59,7 @@ class Program
 
     private const string APP_NAME = "xlcore";
 
-    private static string[] mainargs;
+    private static string[] mainArgs;
 
     private static uint invalidationFrames = 0;
     private static Vector2 lastMousePosition;
@@ -111,7 +110,7 @@ class Program
         Config.PatchAcquisitionMethod ??= AcquisitionMethod.Aria;
 
         Config.DalamudEnabled ??= true;
-        Config.DalamudLoadMethod = !OperatingSystem.IsWindows() ? DalamudLoadMethod.DllInject : DalamudLoadMethod.EntryPoint;
+        Config.DalamudLoadMethod ??= DalamudLoadMethod.EntryPoint;
 
         Config.GlobalScale = (CoreEnvironmentSettings.Scale is null) ?
             (float)(25 * ((int)(100 * (Config.GlobalScale ?? 1.0f)) / 25)) / 100 :
@@ -169,9 +168,43 @@ class Program
     public const uint STEAM_APP_ID = 39210;
     public const uint STEAM_APP_ID_FT = 312060;
 
+    /// <summary>
+    ///     The name of the Dalamud injector executable file.
+    /// </summary>
+    // TODO: move this somewhere better.
+    public const string DALAMUD_INJECTOR_NAME = "Dalamud.Injector.exe";
+
+    /// <summary>
+    ///     Creates a new instance of the Dalamud updater.
+    /// </summary>
+    /// <remarks>
+    ///     If <see cref="ILauncherConfig.DalamudManualInjectionEnabled"/> is true and there is an injector at <see cref="ILauncherConfig.DalamudManualInjectPath"/> then
+    ///     manual injection will be used instead of a Dalamud branch.
+    /// </remarks>
+    /// <returns>A <see cref="DalamudUpdater"/> instance.</returns>
+    private static DalamudUpdater CreateDalamudUpdater()
+    {
+        if (Config.DalamudManualInjectionEnabled == true &&
+            Directory.Exists(Config.DalamudManualInjectPath) &&
+            Directory.GetFiles(Config.DalamudManualInjectPath).FirstOrDefault(f => f == DALAMUD_INJECTOR_NAME) is not null)
+        {
+            var updater = new DalamudUpdater(new DirectoryInfo(Config.DalamudManualInjectPath), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
+            {
+                Overlay = DalamudLoadInfo,
+            };
+            DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(Config.DalamudManualInjectPath, DALAMUD_INJECTOR_NAME));
+            return updater;
+        }
+
+        return new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
+        {
+            Overlay = DalamudLoadInfo,
+        };
+    }
+
     private static void Main(string[] args)
     {
-        mainargs = args;
+        mainArgs = args;
 
         bool badxlpath = false;
         var badxlpathex = new Exception();
@@ -208,7 +241,7 @@ class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
 
-        SetupLogging(mainargs);
+        SetupLogging(mainArgs);
         LoadConfig(storage);
         Proton.Initialize(OSInfo.IsFlatpak && CoreEnvironmentSettings.IsSteamCompatTool ? Config.SteamFlatpakPath : Config.SteamPath);
         Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
@@ -271,11 +304,9 @@ class Program
             Log.Error(ex, "Steam couldn't load");
         }
 
+        // Manual or auto injection setup.
         DalamudLoadInfo = new DalamudOverlayInfoProxy();
-        DalamudUpdater = new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
-        {
-            Overlay = DalamudLoadInfo
-        };
+        DalamudUpdater = CreateDalamudUpdater();
         DalamudUpdater.Run();
 
         CreateCompatToolsInstance();
@@ -397,17 +428,17 @@ class Program
                 return new FileSecretProvider(storage.GetFile(secretsFilePath));
 
             case "KEYRING":
-            {
-                var keyChain = new KeychainSecretProvider();
-
-                if (!keyChain.IsAvailable)
                 {
-                    Log.Error("An org.freedesktop.secrets provider is not available - no secrets will be stored");
-                    return new DummySecretProvider();
-                }
+                    var keyChain = new KeychainSecretProvider();
 
-                return keyChain;
-            }
+                    if (!keyChain.IsAvailable)
+                    {
+                        Log.Error("An org.freedesktop.secrets provider is not available - no secrets will be stored");
+                        return new DummySecretProvider();
+                    }
+
+                    return keyChain;
+                }
 
             case "NONE":
                 return new DummySecretProvider();
@@ -447,10 +478,7 @@ class Program
         if (tsbutton)
         {
             DalamudLoadInfo = new DalamudOverlayInfoProxy();
-            DalamudUpdater = new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
-            {
-                Overlay = DalamudLoadInfo
-            };
+            DalamudUpdater = CreateDalamudUpdater();
             DalamudUpdater.Run();
         }
     }
@@ -487,14 +515,13 @@ class Program
     {
         storage.GetFolder("logs").Delete(true);
         storage.GetFolder("logs");
-        string[] logfiles = { "dalamud.boot.log", "dalamud.boot.old.log", "dalamud.log", "dalamud.injector.log"};
+        string[] logfiles = { "dalamud.boot.log", "dalamud.boot.old.log", "dalamud.log", "dalamud.injector.log" };
         foreach (string logfile in logfiles)
             if (storage.GetFile(logfile).Exists) storage.GetFile(logfile).Delete();
         if (tsbutton)
-            SetupLogging(mainargs);
-        
-    }
+            SetupLogging(mainArgs);
 
+    }
     public static void ClearAll(bool tsbutton = false)
     {
         ClearSettings(tsbutton);

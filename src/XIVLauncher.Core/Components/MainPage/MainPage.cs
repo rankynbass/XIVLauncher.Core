@@ -237,9 +237,8 @@ public class MainPage : Page
 
     private async Task<Launcher.LoginResult> TryLoginToGame(string username, string password, string otp, bool isSteam, LoginAction action)
     {
-        bool? gateStatus = null;
-
 #if !DEBUG
+        bool? gateStatus = null;
         try
         {
             // TODO: Also apply the login status fix here
@@ -375,6 +374,30 @@ public class MainPage : Page
             return false;
         }
         
+#if !DEBUG
+        bool? gateStatus = null;
+        try
+        {
+            // TODO: Also apply the login status fix here
+            var gate = await App.Launcher.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
+            gateStatus = gate.Status;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not obtain gate status");
+        }
+
+        switch (gateStatus)
+        {
+            case null:
+                App.ShowMessageBlocking("Login servers could not be reached or maintenance is in progress. This might be a problem with your connection.");
+                return false;
+            case false:
+                App.ShowMessageBlocking("Maintenance is in progress.");
+                return false;
+        }
+#endif
+
 #if !DEBUG
         bool? gateStatus = null;
         try
@@ -728,7 +751,7 @@ public class MainPage : Page
         {
             System.Environment.SetEnvironmentVariable("LC_ALL", App.Settings.FixLocale);
         }
-        
+
         // Hack: Strip out gameoverlayrenderer.so entries from LD_PRELOAD
         if (App.Settings.FixLDP.Value)
         {
@@ -750,7 +773,7 @@ public class MainPage : Page
         // If there's only one launch option (no %command%) figure out whether it's args or env variables.
         if (launchOptions.Length == 1)
         {
-            if(launchOptions[0].StartsWith('-'))
+            if (launchOptions[0].StartsWith('-'))
                 gameArgs = launchOptions[0];
             else
                 launchEnv = launchOptions[0];
@@ -789,8 +812,8 @@ public class MainPage : Page
                 else if (!Directory.Exists(App.Settings.WineBinaryPath))
                     throw new Exception("Custom wine binary path is invalid: no such directory.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
-                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")) && !File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine")))
-                    throw new Exception("Custom wine binary path is invalid: no wine or wine64 found at that location.\n" +
+                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")))
+                    throw new Exception("Custom wine binary path is invalid: no wine64 found at that location.\n" +
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 
@@ -1249,11 +1272,11 @@ public class MainPage : Page
                 case PatchVerifier.VerifyState.Done:
                     // TODO: ask the user if they want to login or rerun after repair
                     App.ShowMessageBlocking(verify.NumBrokenFiles switch
-                        {
-                            0 => Loc.Localize("GameRepairSuccess0", "All game files seem to be valid."),
-                            1 => Loc.Localize("GameRepairSuccess1", "XIVLauncher has successfully repaired 1 game file."),
-                            _ => string.Format(Loc.Localize("GameRepairSuccessPlural", "XIVLauncher has successfully repaired {0} game files."), verify.NumBrokenFiles),
-                        });
+                    {
+                        0 => Loc.Localize("GameRepairSuccess0", "All game files seem to be valid."),
+                        1 => Loc.Localize("GameRepairSuccess1", "XIVLauncher has successfully repaired 1 game file."),
+                        _ => string.Format(Loc.Localize("GameRepairSuccessPlural", "XIVLauncher has successfully repaired {0} game files."), verify.NumBrokenFiles),
+                    });
 
                     doVerify = false;
                     break;
