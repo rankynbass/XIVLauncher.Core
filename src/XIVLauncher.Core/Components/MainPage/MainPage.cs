@@ -398,30 +398,6 @@ public class MainPage : Page
         }
 #endif
 
-#if !DEBUG
-        bool? gateStatus = null;
-        try
-        {
-            // TODO: Also apply the login status fix here
-            var gate = await App.Launcher.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
-            gateStatus = gate.Status;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Could not obtain gate status");
-        }
-
-        switch (gateStatus)
-        {
-            case null:
-                App.ShowMessageBlocking("Login servers could not be reached or maintenance is in progress. This might be a problem with your connection.");
-                return false;
-            case false:
-                App.ShowMessageBlocking("Maintenance is in progress.");
-                return false;
-        }
-#endif
-
         Debug.Assert(loginResult.State == Launcher.LoginState.Ok);
 
         while (true)
