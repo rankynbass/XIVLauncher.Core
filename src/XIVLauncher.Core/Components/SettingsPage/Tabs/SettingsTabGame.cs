@@ -38,6 +38,7 @@ public class SettingsTabGame : SettingsTab
             CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
         },
         new SettingsEntry<bool>("Use Experimental UID Cache", "Tries to save your login token for the next start. Can result in launching with expired sessions.\nDisable if receiving FFXIV error 1012 or 500X.", () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
+        new SettingsEntry<bool>("Skip XIVLauncher version check", "Don't check for new versions of XIVLauncher. You won't be notified of new updates.\nResults in faster autologin, but may eventually fail to launch. (Requires restart)", () => !(Program.Config.DoVersionCheck ?? true), b => Program.Config.DoVersionCheck = !b),
     };
 
     public override string Title => "Game";
