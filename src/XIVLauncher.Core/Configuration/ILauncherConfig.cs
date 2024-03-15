@@ -97,6 +97,10 @@ public interface ILauncherConfig
 
     public bool? FixIM { get; set; }
 
+    public string? SteamPath { get; set; }
+
+    public string? SteamFlatpakPath { get; set; }
+
     #endregion
 
     #region Dalamud
