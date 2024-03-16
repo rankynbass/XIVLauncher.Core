@@ -145,7 +145,7 @@ public class LauncherApp : Component
 
         Task.Run(async () =>
         {
-            var versionCheckResult = await UpdateCheck.CheckForUpdate(Program.Config.DoVersionCheck ?? true);
+            var versionCheckResult = await UpdateCheck.CheckForUpdate(Program.Config.DoVersionCheck ?? true).ConfigureAwait(false);
             if (versionCheckResult.Success)
                 if (versionCheckResult.NeedUpdate)
                     this.State = LauncherState.UpdateWarn;
@@ -154,7 +154,7 @@ public class LauncherApp : Component
 
         Task.Run(async () =>
         {
-            var frontierUrl = await UpdateCheck.GetFrontierUrl(Program.Config.DoVersionCheck ?? true);
+            var frontierUrl = await UpdateCheck.GetFrontierUrl(Program.Config.DoVersionCheck ?? true).ConfigureAwait(false);
             this.Launcher = new Launcher(Program.Steam, UniqueIdCache, Program.CommonSettings, frontierUrl);
             this.IsLauncherSetup = true;
             this.mainPage.ReloadNews();

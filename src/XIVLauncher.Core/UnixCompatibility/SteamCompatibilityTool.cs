@@ -9,13 +9,17 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class SteamCompatibilityTool
 {
+    public static string STEAM_PATH => Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
+
+    public static string STEAM_FLATPAK_PATH => Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
+
     public static bool IsSteamInstalled => Directory.Exists(Program.Config.SteamPath);
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
 
-    public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath, "compatibilitytools.d", "xlcore"));
+    public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath ?? STEAM_PATH, "compatibilitytools.d", "xlcore"));
 
-    public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath, "compatibilitytools.d", "xlcore"));
+    public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath ?? STEAM_FLATPAK_PATH, "compatibilitytools.d", "xlcore"));
 
     private static string findXIVLauncherFiles()
     {
@@ -50,7 +54,7 @@ public static class SteamCompatibilityTool
         using (var fs = xlcore.Create())
         {
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("xlcore");
-            resource.CopyTo(fs);
+            resource!.CopyTo(fs);
             fs.Close();
         }
 
@@ -68,21 +72,21 @@ public static class SteamCompatibilityTool
         using (var fs = compatibilitytool_vdf.Create())
         {
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("compatibilitytool.vdf");
-            resource.CopyTo(fs);
+            resource!.CopyTo(fs);
             fs.Close();
         }
 
         using (var fs = toolmanifest_vdf.Create())
         {
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("toolmanifest.vdf");
-            resource.CopyTo(fs);
+            resource!.CopyTo(fs);
             fs.Close();
         }
 
         using (var fs = openssl_fix.Create())
         {
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("openssl_fix.cnf");
-            resource.CopyTo(fs);
+            resource!.CopyTo(fs);
             fs.Close();
         }
 

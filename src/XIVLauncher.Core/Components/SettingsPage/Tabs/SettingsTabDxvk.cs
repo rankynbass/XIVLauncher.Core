@@ -62,7 +62,7 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => mangoHudSetting.Value == MangoHud.CustomString && dxvkVersionSetting.Value != "DISABLED" && Dxvk.MangoHudInstalled,
                 CheckWarning = s =>
                 {
-                    if (s.Contains(' '))
+                    if (s!.Contains(' '))
                         return "No spaces allowed in MangoHud config";
                     return null;
                 }

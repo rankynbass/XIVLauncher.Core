@@ -190,7 +190,7 @@ public class MainPage : Page
             else
                 gameRunner = new UnixGameRunner(Program.CompatibilityTools, null, false);
 
-            App.Launcher.LaunchGame(gameRunner, "0", 1, 2, false, "", App.Settings.GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware);
+            App.Launcher!.LaunchGame(gameRunner, "0", 1, 2, false, "", App.Settings.GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware);
 
             return false;
         }
@@ -229,7 +229,7 @@ public class MainPage : Page
         try
         {
             // TODO: Also apply the login status fix here
-            var gate = await App.Launcher.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
+            var gate = await App.Launcher!.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
             gateStatus = gate.Status;
         }
         catch (Exception ex)
@@ -250,9 +250,9 @@ public class MainPage : Page
             var gamePath = App.Settings.GamePath!;
 
             if (action == LoginAction.Repair)
-                return await App.Launcher.Login(username, password, otp, isSteam, false, gamePath, true, App.Settings.IsFt.GetValueOrDefault(false)).ConfigureAwait(false);
+                return await App.Launcher!.Login(username, password, otp, isSteam, false, gamePath, true, App.Settings.IsFt.GetValueOrDefault(false)).ConfigureAwait(false);
             else
-                return await App.Launcher.Login(username, password, otp, isSteam, enableUidCache, gamePath, false, App.Settings.IsFt.GetValueOrDefault(false)).ConfigureAwait(false);
+                return await App.Launcher!.Login(username, password, otp, isSteam, enableUidCache, gamePath, false, App.Settings.IsFt.GetValueOrDefault(false)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -356,7 +356,7 @@ public class MainPage : Page
         try
         {
             // TODO: Also apply the login status fix here
-            var gate = await App.Launcher.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
+            var gate = await App.Launcher!.GetGateStatus(App.Settings.ClientLanguage ?? ClientLanguage.English).ConfigureAwait(false);
             gateStatus = gate.Status;
         }
         catch (Exception ex)
@@ -759,7 +759,7 @@ public class MainPage : Page
         }
         else if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
-            if (App.Settings.WineType.Value == WineType.Custom)
+            if (App.Settings.WineType == WineType.Custom)
             {
                 if (App.Settings.WineBinaryPath == null)
                     throw new InvalidOperationException("Custom wine binary path wasn't set.");
@@ -837,7 +837,7 @@ public class MainPage : Page
         }
 
         // We won't do any sanity checks here anymore, since that should be handled in StartLogin
-        var launchedProcess = App.Launcher.LaunchGame(runner,
+        var launchedProcess = App.Launcher!.LaunchGame(runner,
             loginResult.UniqueId,
             loginResult.OauthLogin.Region,
             loginResult.OauthLogin.MaxExpansion,
@@ -946,7 +946,7 @@ public class MainPage : Page
 
             try
             {
-                bootPatches = await App.Launcher.CheckBootVersion(App.Settings.GamePath!).ConfigureAwait(false);
+                bootPatches = await App.Launcher!.CheckBootVersion(App.Settings.GamePath!).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

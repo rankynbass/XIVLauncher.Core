@@ -28,7 +28,7 @@ public static class Dxvk
     public static string DxvkHudString => Program.Config.DxvkHud switch
     {
         DxvkHud.None => "",
-        DxvkHud.Custom => Program.Config.DxvkHudCustom,
+        DxvkHud.Custom => Program.Config.DxvkHudCustom ?? DXVK_HUD,
         DxvkHud.Default => "1",
         DxvkHud.Fps => "fps",
         DxvkHud.Full => "full",
@@ -46,8 +46,8 @@ public static class Dxvk
         MangoHud.None => "",
         MangoHud.Default => "",
         MangoHud.Full => "full",
-        MangoHud.CustomString => Program.Config.MangoHudCustomString,
-        MangoHud.CustomFile => Program.Config.MangoHudCustomFile,
+        MangoHud.CustomString => Program.Config.MangoHudCustomString ?? MANGOHUD_CONFIG,
+        MangoHud.CustomFile => Program.Config.MangoHudCustomFile ?? MANGOHUD_CONFIGFILE,
         _ => throw new ArgumentOutOfRangeException(),
     };
 
@@ -55,7 +55,7 @@ public static class Dxvk
 
     public static string MANGOHUD_CONFIG => "ram,vram,resolution,vulkan_driver,engine_version,wine,frame_timing=0";
 
-    public static string MANGOHUD_CONFIGFILE => Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
+    public static string MANGOHUD_CONFIGFILE => Path.Combine(CoreEnvironmentSettings.HOME, ".config", "MangoHud", "MangoHud.conf");
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 

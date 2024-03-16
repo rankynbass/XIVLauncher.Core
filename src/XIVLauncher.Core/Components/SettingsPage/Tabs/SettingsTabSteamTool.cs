@@ -71,7 +71,7 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button($"{(steamToolInstalled ? "Re-i" : "I")}nstall to native Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.CreateTool(Program.Config.SteamPath);
+            SteamCompatibilityTool.CreateTool(Program.Config.SteamPath ?? SteamCompatibilityTool.STEAM_PATH);
             steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
         }
         if (!steamInstalled) ImGui.EndDisabled();
@@ -80,7 +80,7 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button("Uninstall from native Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.DeleteTool(Program.Config.SteamPath);
+            SteamCompatibilityTool.DeleteTool(Program.Config.SteamPath ?? SteamCompatibilityTool.STEAM_PATH);
             steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
         }
         if (!steamToolInstalled) ImGui.EndDisabled();
@@ -101,7 +101,7 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button($"{(steamFlatpakToolInstalled ? "Re-i" : "I")}nstall to flatpak Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.CreateTool(Program.Config.SteamFlatpakPath);
+            SteamCompatibilityTool.CreateTool(Program.Config.SteamFlatpakPath ?? SteamCompatibilityTool.STEAM_FLATPAK_PATH);
             steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
         }
         if (!steamFlatpakInstalled) ImGui.EndDisabled();
@@ -113,7 +113,7 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button("Uninstall from Flatpak Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.DeleteTool(Program.Config.SteamFlatpakPath);
+            SteamCompatibilityTool.DeleteTool(Program.Config.SteamFlatpakPath ?? SteamCompatibilityTool.STEAM_FLATPAK_PATH);
             steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
         }
         if (!steamFlatpakToolInstalled)
