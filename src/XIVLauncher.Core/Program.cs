@@ -64,6 +64,8 @@ class Program
     private static uint invalidationFrames = 0;
     private static Vector2 lastMousePosition;
 
+    private const string FRONTIER_FALLBACK = "https://launcher.finalfantasyxiv.com/v650/index.html?rc_lang={0}&time={1}";
+
     public static void Invalidate(uint frames = 100)
     {
         invalidationFrames = frames;
@@ -318,7 +320,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-patched"),
+            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -337,7 +339,19 @@ class Program
 
         StyleModelV1.DalamudStandard.Apply();
 
-        launcherApp = new LauncherApp(storage);
+        var needUpdate = false;
+
+        if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
+        {
+            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
+
+            if (versionCheckResult.Success)
+                needUpdate = versionCheckResult.NeedUpdate;
+        }   
+
+        needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
+
+        launcherApp = new LauncherApp(storage, needUpdate, FRONTIER_FALLBACK);
 
         Invalidate(20);
 
