@@ -10,7 +10,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 public static class SteamCompatibilityTool
 {
     // This is here to prevent auto-updating with different releases of XLCore. So XIVLauncher-RB will not overwrite official, vice versa. 
-    private const string RELEASE = "Official";
+    private const string RELEASE = "RB-Patched";
     public static bool IsSteamInstalled => Directory.Exists(Program.Config.SteamPath);
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
