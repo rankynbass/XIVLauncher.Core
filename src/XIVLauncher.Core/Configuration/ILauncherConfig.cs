@@ -1,4 +1,4 @@
-﻿using XIVLauncher.Common;
+using XIVLauncher.Common;
 using XIVLauncher.Common.Addon;
 using XIVLauncher.Common.Dalamud;
 using XIVLauncher.Common.Game.Patch.Acquisition;
@@ -134,6 +134,10 @@ public interface ILauncherConfig
     public int? WineScale { get; set; }
 
     public bool? WaylandEnabled { get; set; }
+    
+    public bool? SteamToolInstalled { get; set; }
+
+    public bool? SteamFlatpakToolInstalled { get; set; }
 
     #endregion
 

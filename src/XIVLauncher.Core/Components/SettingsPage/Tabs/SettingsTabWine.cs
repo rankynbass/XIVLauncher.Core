@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.IO;
 using System.Runtime.InteropServices;
+
 using ImGuiNET;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Core.UnixCompatibility;

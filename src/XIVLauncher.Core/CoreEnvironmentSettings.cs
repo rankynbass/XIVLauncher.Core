@@ -8,7 +8,9 @@ namespace XIVLauncher.Core;
 public static class CoreEnvironmentSettings
 {
     public static bool? IsDeck => CheckEnvBoolOrNull("XL_DECK");
+    public static bool IsSteamDeckVar => CheckEnvBool("SteamDeck");
     public static bool? IsDeckGameMode => CheckEnvBoolOrNull("XL_GAMEMODE");
+    public static bool IsSteamGamepadUIVar => CheckEnvBool("SteamGamepadUI");
     public static bool? IsDeckFirstRun => CheckEnvBoolOrNull("XL_FIRSTRUN");
     public static bool IsUpgrade => CheckEnvBool("XL_SHOW_UPGRADE");
     public static bool ClearSettings => CheckEnvBool("XL_CLEAR_SETTINGS");
@@ -57,7 +59,7 @@ public static class CoreEnvironmentSettings
     public static string GetCleanEnvironmentVariable(string envvar, string badstring = "", string separator = ":")
     {
         string dirty = Environment.GetEnvironmentVariable(envvar) ?? "";
-        if (badstring.Equals("")) return dirty;
+        if (badstring.Equals("", StringComparison.Ordinal)) return dirty;
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
     }
 
@@ -73,5 +75,20 @@ public static class CoreEnvironmentSettings
         }
         else
             GameModeInstalled = false;
+    }
+    
+    public static string GetCType()
+    {
+        if (System.OperatingSystem.IsWindows())
+            return "";
+        var psi = new ProcessStartInfo("sh");
+        psi.Arguments = "-c \"locale -a 2>/dev/null | grep -i utf\"";
+        psi.RedirectStandardOutput = true;
+
+        var proc = new Process();
+        proc.StartInfo = psi;
+        proc.Start();
+        var output = proc.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        return Array.Find(output, s => s.ToUpper().StartsWith("C.")) ?? string.Empty;
     }
 }
