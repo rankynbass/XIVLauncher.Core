@@ -86,31 +86,38 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-Proton8-12-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-8-2"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton8-12"}, {"desc", "Patched version of Wine-GE 8-12. Recommended if you have camera issues."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-12/unofficial-wine-xiv-Proton8-12-x86_64.tar.xz"},
+            {"name", "unofficial-wine-xiv-valvebe-8-2"}, {"desc", "Patched Valve Wine 8. A replacement for wine-ge, since it's discontinued."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-8-2/unofficial-wine-xiv-valvebe-8-2.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-Proton7-43-x86_64"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-02-clean"] = new Dictionary<string, string>()
         {
-            {"name", "xiv-Proton7-43"}, {"desc", "Patched version of Wine-GE 7-43. Use if 8-X versions have issues."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton7-43/unofficial-wine-xiv-Proton7-43-x86_64.tar.xz"},
+            {"name", "unofficial-wine-xiv-valvebe-9-02-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-02/unofficial-wine-xiv-valvebe-9-02-clean.tar.xz"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-wayland-9.2"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-02"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-wayland-9.2"}, {"desc", "Patched version of Wine Devel 9.2. Includes working wayland session and working Ping plugin."},
-            {"label", "Wayland"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.2/unofficial-wine-xiv-wayland-9.2.tar.xz"},
+            {"name", "unofficial-wine-xiv-valvebe-9-02"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-02/unofficial-wine-xiv-valvebe-9-02.tar.xz"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-staging-9.2"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-wayland-9.6"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-staging-9.2"}, {"desc", "Patched version of Wine Staging 9.2. No wayland but working Ping plugin."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.2/unofficial-wine-xiv-staging-9.2.tar.xz"},
+            {"name", "unofficial-wine-xiv-wayland-9.6"}, {"desc", "Patched version of Wine Devel 9.6. Includes working wayland session and working Ping plugin."},
+            {"label", "Wayland"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.6/unofficial-wine-xiv-wayland-9.6.tar.zst"},
+            {"mark", "Download"}
+        };
+
+        Versions["unofficial-wine-xiv-staging-9.6"] = new Dictionary<string, string>()
+        {
+            {"name", "unofficial-wine-xiv-staging-9.6"}, {"desc", "Patched version of Wine Staging 9.6. No wayland but working Ping plugin."},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.6/unofficial-wine-xiv-staging-9.6.tar.zst"},
             {"mark", "Download"}
         };    
 
@@ -118,13 +125,6 @@ public static class Wine
         {
             {"name", "unofficial-wine-xiv-git-8.21.1"}, {"desc", "Patched version of Wine Staging 8.21 (Last 8.X release). Based on Wine-tkg."},
             {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21.1/unofficial-wine-xiv-git-8.21.1.tar.xz"},
-            {"mark", "Download"}
-        };
-
-        Versions["unofficial-wine-xiv-git-7.22.1"] = new Dictionary<string, string>()
-        {
-            {"name", "unofficial-wine-xiv-git-7.22.1"}, {"desc", "Patched version of Wine Staging 7.22 (Last 7.X release). Based on Wine-tkg."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v7.22.1/unofficial-wine-xiv-git-7.22.1.tar.xz"},
             {"mark", "Download"}
         };
 

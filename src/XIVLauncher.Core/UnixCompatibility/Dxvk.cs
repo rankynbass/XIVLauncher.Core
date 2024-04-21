@@ -73,10 +73,10 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         };
-        Versions["dxvk-gplasync-v2.3-1"] = new Dictionary<string, string>()
+        Versions["dxvk-gplasync-v2.3.1-1"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.3 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
-            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3-1.tar.gz"},
+            {"name", "DXVK 2.3.1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3.1-1.tar.gz"},
             {"mark", "Download" }
         };
         Versions["dxvk-gplasync-v2.2-4"] = new Dictionary<string, string>()
