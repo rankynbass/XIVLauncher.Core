@@ -271,8 +271,8 @@ class Program
             out window,
             out gd);
 
-        var windowScale = SdlHelpers.GetWindowScale(window).Y;
-        ImGuiHelpers.GlobalScale *= windowScale;
+        var windowScaleVector = SdlHelpers.GetWindowScale(window);
+        var windowScale = windowScaleVector.Y;
 
         window.Resized += () =>
         {
@@ -286,7 +286,7 @@ class Program
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), ImGuiHelpers.GetScaled(Config.FontPxSize ?? 21.0f));
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), ImGuiHelpers.GetScaled(Config.FontPxSize ?? 21.0f), windowScaleVector);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();
