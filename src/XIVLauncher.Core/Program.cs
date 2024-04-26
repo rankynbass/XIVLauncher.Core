@@ -64,7 +64,6 @@ class Program
     private static uint invalidationFrames = 0;
     private static Vector2 lastMousePosition;
 
-    private const string FRONTIER_FALLBACK = "https://launcher.finalfantasyxiv.com/v650/index.html?rc_lang={0}&time={1}";
 
     public static string CType = CoreEnvironmentSettings.GetCType();
 
@@ -104,7 +103,6 @@ class Program
         Config.DoVersionCheck ??= true;
         Config.FontPxSize ??= 22.0f;
 
-        Config.IsDx11 ??= true;
         Config.IsEncryptArgs ??= true;
         Config.IsFt ??= false;
         Config.IsOtpServer ??= false;
@@ -162,18 +160,16 @@ class Program
     /// <returns>A <see cref="DalamudUpdater"/> instance.</returns>
     private static DalamudUpdater CreateDalamudUpdater()
     {
-        if (Config.DalamudManualInjectionEnabled == true &&
-            Directory.Exists(Config.DalamudManualInjectPath) &&
-            Directory.GetFiles(Config.DalamudManualInjectPath).FirstOrDefault(f => f == DALAMUD_INJECTOR_NAME) is not null)
+        if (Config.DalamudManualInjectPath is not null &&
+           Config.DalamudManualInjectPath.Exists &&
+           Config.DalamudManualInjectPath.GetFiles().FirstOrDefault(x => x.Name == DALAMUD_INJECTOR_NAME) is not null)
         {
-            var updater = new DalamudUpdater(new DirectoryInfo(Config.DalamudManualInjectPath), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
+            return new DalamudUpdater(Config.DalamudManualInjectPath, storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
             {
                 Overlay = DalamudLoadInfo,
+                RunnerOverride = new FileInfo(Path.Combine(Config.DalamudManualInjectPath.FullName, DALAMUD_INJECTOR_NAME))
             };
-            DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(Config.DalamudManualInjectPath, DALAMUD_INJECTOR_NAME));
-            return updater;
         }
-
         return new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
         {
             Overlay = DalamudLoadInfo,
@@ -306,7 +302,8 @@ class Program
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
-        launcherApp = new LauncherApp(storage, needUpdate, FRONTIER_FALLBACK);
+        var launcherClientConfig = LauncherClientConfig.Fetch().GetAwaiter().GetResult();
+        launcherApp = new LauncherApp(storage, needUpdate, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
 
         Invalidate(20);
 

@@ -39,8 +39,6 @@ public interface ILauncherConfig
 
     public List<AddonEntry>? Addons { get; set; }
 
-    public bool? IsDx11 { get; set; }
-
     public bool? IsEncryptArgs { get; set; }
 
     public bool? IsFt { get; set; }
@@ -107,7 +105,7 @@ public interface ILauncherConfig
 
     public DalamudLoadMethod? DalamudLoadMethod { get; set; }
     public bool? DalamudManualInjectionEnabled { get; set; }
-    public string? DalamudManualInjectPath { get; set; }
+    public DirectoryInfo? DalamudManualInjectPath { get; set; }
 
     public int DalamudLoadDelay { get; set; }
 
