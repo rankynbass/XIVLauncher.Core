@@ -366,9 +366,10 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        //var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        var wineSettings = new WineSettings(true, "/home/rankyn/.steam/steam/compatibilitytools.d/XIV-Proton8-28", "", "/usr/bin/umu-run", storage.Root, Wine.DebugVars, Wine.LogFile, new DirectoryInfo("/home/rankyn/.xlcore/umu-prefix"), true, true);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()
@@ -428,6 +429,10 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
+        storage.GetFolder("umu-prefix").Delete(true);
+        var umuPrefix = storage.GetFolder("umu-prefix");
+        File.CreateSymbolicLink(Path.Combine(umuPrefix.FullName, "pfx"), umuPrefix.FullName);
+
     }
 
     public static void ClearDalamud(bool tsbutton = false)
