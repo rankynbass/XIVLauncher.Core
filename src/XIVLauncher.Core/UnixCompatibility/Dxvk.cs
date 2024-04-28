@@ -28,7 +28,7 @@ public static class Dxvk
     public static string DxvkHudString => Program.Config.DxvkHud switch
     {
         DxvkHud.None => "",
-        DxvkHud.Custom => Program.Config.DxvkHudCustom,
+        DxvkHud.Custom => Program.Config.DxvkHudCustom ?? "1",
         DxvkHud.Default => "1",
         DxvkHud.Fps => "fps",
         DxvkHud.Full => "full",
@@ -46,8 +46,8 @@ public static class Dxvk
         MangoHud.None => "",
         MangoHud.Default => "",
         MangoHud.Full => "full",
-        MangoHud.CustomString => Program.Config.MangoHudCustomString,
-        MangoHud.CustomFile => Program.Config.MangoHudCustomFile,
+        MangoHud.CustomString => Program.Config.MangoHudCustomString ?? "",
+        MangoHud.CustomFile => Program.Config.MangoHudCustomFile ?? "",
         _ => throw new ArgumentOutOfRangeException(),
     };
 

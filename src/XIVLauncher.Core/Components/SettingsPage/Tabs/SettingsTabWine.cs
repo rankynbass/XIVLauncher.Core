@@ -10,6 +10,10 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineType> wineTypeSetting;
 
+    private SettingsEntry<bool> umuEnabledSetting;
+
+    private DictionarySettingsEntry wineVersionSetting;
+
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
     public SettingsTabWine()
@@ -17,9 +21,19 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x),
+                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
+            {
+                CheckWarning = x =>
+                {
+                    if (x == WineType.UmuLauncher && !UmuLauncher.IsUmuInstalled)
+                    {
+                        return "Umu-launcher is not installed. You have to install it yourself. See https://github.com/Open-Wine-Components/umu-launcher for more info.";
+                    }
+                    return null;
+                }
+            },
 
-            new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
+            wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
             },
@@ -29,6 +43,22 @@ public class SettingsTabWine : SettingsTab
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Custom
+            },
+
+            new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
+            {
+                CheckVisibility = () => wineTypeSetting.Value == WineType.UmuLauncher,
+                CheckWarning = x =>
+                {
+                    if (wineTypeSetting.Value == WineType.UmuLauncher && (!UmuLauncher.IsUmuInstalled || !umuEnabledSetting.Value))
+                        return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
+                    return null;
+                }
+            },
+
+            umuEnabledSetting = new SettingsEntry<bool>("Use Umu-launcher", "Use Umu-launcher to launch Proton in a container. Don't disable this unless the game refuses to launch.", () => Program.Config.UmuEnabled ?? true, b => Program.Config.UmuEnabled = b)
+            {
+                CheckVisibility = () => wineTypeSetting.Value == WineType.UmuLauncher && UmuLauncher.IsUmuInstalled, 
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
@@ -56,7 +86,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
+            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
         };
     }
 

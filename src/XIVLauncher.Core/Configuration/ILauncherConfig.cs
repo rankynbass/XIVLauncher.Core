@@ -67,6 +67,10 @@ public interface ILauncherConfig
 
     public string? WineBinaryPath { get; set; }
 
+    public string? ProtonVersion { get; set; }
+
+    public bool? UmuEnabled { get; set; }
+
     public bool? GameModeEnabled { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }

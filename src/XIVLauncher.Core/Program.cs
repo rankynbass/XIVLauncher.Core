@@ -122,8 +122,11 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
+            Config.WineVersion = Wine.DEFAULT_WINE;
         Config.WineBinaryPath ??= "/usr/bin";
+        if (!Proton.VersionExists(Config.ProtonVersion))
+            Config.ProtonVersion = Wine.DEFAULT_PROTON;
+        Config.UmuEnabled ??= true;
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
@@ -320,7 +323,16 @@ class Program
             var overlayNeedsPresent = false;
 
             if (Steam != null && Steam.IsValid)
-                overlayNeedsPresent = Steam.BOverlayNeedsPresent;
+            {
+                try
+                {
+                    overlayNeedsPresent = Steam.BOverlayNeedsPresent;
+                }
+                catch (NullReferenceException ex)
+                {
+                    Log.Error(ex, "Could not get Steam.BOverlayNeedsPresent. This probably doesn't matter.");
+                }
+            }
 
             if (!snapshot.KeyEvents.Any() && !snapshot.MouseEvents.Any() && !snapshot.KeyCharPresses.Any() && invalidationFrames == 0 && lastMousePosition == snapshot.MousePosition
                 && !overlayNeedsPresent)
@@ -363,10 +375,10 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        //var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
-        var wineSettings = new WineSettings(true, "/home/rankyn/.steam/steam/compatibilitytools.d/XIV-Proton8-28", "", "/usr/bin/umu-run", storage.Root, Wine.DebugVars, Wine.LogFile, new DirectoryInfo("/home/rankyn/.xlcore/umu-prefix"), true, true);
+        var wineSettings = new WineSettings(Wine.IsProton, Wine.FolderName, Wine.DownloadUrl, Wine.UmuPath, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        var steamFolder = new DirectoryInfo(Proton.STEAM);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()

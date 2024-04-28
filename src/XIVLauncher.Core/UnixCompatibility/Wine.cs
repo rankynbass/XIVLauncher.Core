@@ -12,13 +12,29 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public static bool IsManagedWine => Program.Config.WineType == WineType.Managed;
+    public const string DEFAULT_WINE = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
-    public static string CustomWinePath => Program.Config.WineBinaryPath ?? "/usr/bin";
+    public const string DEFAULT_PROTON = "GE-Proton8-9";
 
-    public static string FolderName => Program.Config.WineVersion ?? GetDefaultVersion();
+    public static bool IsProton => Program.Config.WineType == WineType.UmuLauncher;
 
-    public static string DownloadUrl => GetDownloadUrl(Program.Config.WineVersion);
+    public static string FolderName => Program.Config.WineType switch
+    {
+        WineType.Managed => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine", Program.Config.WineVersion ?? GetDefaultVersion()),
+        WineType.Custom => Program.Config.WineBinaryPath ?? "/usr/bin",
+        WineType.UmuLauncher => Proton.GetVersionPath(Program.Config.ProtonVersion ?? DEFAULT_PROTON),
+        _ => throw new ArgumentOutOfRangeException(),
+    };
+
+    public static string UmuPath => IsProton ? ((Program.Config.UmuEnabled ?? true) ? UmuLauncher.UmuPath : "") : "";
+
+    public static string DownloadUrl => Program.Config.WineType switch
+    {
+        WineType.Managed => Wine.GetDownloadUrl(Program.Config.WineVersion),
+        WineType.UmuLauncher => Proton.GetDownloadUrl(Program.Config.ProtonVersion),
+        WineType.Custom => "",
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
     public static string DebugVars => Program.Config.WineDebugVars ?? "-all";
 
@@ -86,10 +102,10 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
-        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))
-            return "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
             return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
+        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))
+            return "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         return Versions.First().Key;
     }
 }
@@ -98,6 +114,9 @@ public enum WineType
 {
     [SettingsDescription("Managed by XIVLauncher", "Choose a patched version of wine made specifically for XIVLauncher")]
     Managed,
+
+    [SettingsDescription("Umu-launcher with Proton", "Use Valve's proton with the umu-launcher. Must already have umu-launcher installed.")]
+    UmuLauncher,
 
     [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
     Custom,
