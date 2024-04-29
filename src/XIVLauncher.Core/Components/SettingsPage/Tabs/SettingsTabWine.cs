@@ -23,14 +23,14 @@ public class SettingsTabWine : SettingsTab
             wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
                 () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
             {
-                CheckWarning = x =>
-                {
-                    if (x == WineType.UmuLauncher && !UmuLauncher.IsUmuInstalled)
-                    {
-                        return "Umu-launcher is not installed. You have to install it yourself. See https://github.com/Open-Wine-Components/umu-launcher for more info.";
-                    }
-                    return null;
-                }
+                // CheckWarning = x =>
+                // {
+                //     if (x == WineType.Proton && !)
+                //     {
+                //         return "Umu-launcher is not installed. You have to install it yourself. See https://github.com/Open-Wine-Components/umu-launcher for more info.";
+                //     }
+                //     return null;
+                // }
             },
 
             wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
@@ -47,18 +47,24 @@ public class SettingsTabWine : SettingsTab
 
             new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.UmuLauncher,
-                CheckWarning = x =>
-                {
-                    if (wineTypeSetting.Value == WineType.UmuLauncher && (!UmuLauncher.IsUmuInstalled || !umuEnabledSetting.Value))
-                        return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
-                    return null;
-                }
+                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+                // CheckWarning = x =>
+                // {
+                //     if (wineTypeSetting.Value == WineType.Proton)
+                //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
+                //     return null;
+                // }
             },
 
-            umuEnabledSetting = new SettingsEntry<bool>("Use Umu-launcher", "Use Umu-launcher to launch Proton in a container. Don't disable this unless the game refuses to launch.", () => Program.Config.UmuEnabled ?? true, b => Program.Config.UmuEnabled = b)
+            new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.UmuLauncher && UmuLauncher.IsUmuInstalled, 
+                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+                // CheckWarning = x =>
+                // {
+                //     if (wineTypeSetting.Value == WineType.Proton)
+                //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
+                //     return null;
+                // }
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)

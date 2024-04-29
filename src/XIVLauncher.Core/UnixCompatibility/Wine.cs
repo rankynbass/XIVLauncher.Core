@@ -12,49 +12,13 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public const string DEFAULT_WINE = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
-
-    public const string DEFAULT_PROTON = "GE-Proton8-9";
-
-    public static bool IsProton => Program.Config.WineType == WineType.UmuLauncher;
-
-    public static string FolderName => Program.Config.WineType switch
-    {
-        WineType.Managed => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine", Program.Config.WineVersion ?? GetDefaultVersion()),
-        WineType.Custom => Program.Config.WineBinaryPath ?? "/usr/bin",
-        WineType.UmuLauncher => Proton.GetVersionPath(Program.Config.ProtonVersion ?? DEFAULT_PROTON),
-        _ => throw new ArgumentOutOfRangeException(),
-    };
-
-    public static string UmuPath => IsProton ? ((Program.Config.UmuEnabled ?? true) ? UmuLauncher.UmuPath : "") : "";
-
-    public static string DownloadUrl => Program.Config.WineType switch
-    {
-        WineType.Managed => Wine.GetDownloadUrl(Program.Config.WineVersion),
-        WineType.UmuLauncher => Proton.GetDownloadUrl(Program.Config.ProtonVersion),
-        WineType.Custom => "",
-        _ => throw new ArgumentOutOfRangeException(),
-    };
-
-    public static string DebugVars => Program.Config.WineDebugVars ?? "-all";
-
-    public static FileInfo LogFile => new FileInfo(Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));
-
-    public static DirectoryInfo Prefix => Program.storage.GetFolder("wineprefix");
-
-    public static bool ESyncEnabled => Program.Config.ESyncEnabled ?? true;
-
-    public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
-
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
-
-    static Wine()
-    {
-        Versions = new Dictionary<string, Dictionary<string, string>>();
-    }
 
     public static void Initialize()
     {
+
+        Versions = new Dictionary<string, Dictionary<string, string>>();
+
         // Add default versions.
         Versions["wine-xiv-staging-fsync-git-7.10.r3.g560db77d"] = new Dictionary<string, string>()
         {
@@ -92,7 +56,7 @@ public static class Wine
         }
     }
 
-    private static string GetDownloadUrl(string? name)
+    public static string GetDownloadUrl(string? name)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
@@ -108,16 +72,4 @@ public static class Wine
             return "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         return Versions.First().Key;
     }
-}
-
-public enum WineType
-{
-    [SettingsDescription("Managed by XIVLauncher", "Choose a patched version of wine made specifically for XIVLauncher")]
-    Managed,
-
-    [SettingsDescription("Umu-launcher with Proton", "Use Valve's proton with the umu-launcher. Must already have umu-launcher installed.")]
-    UmuLauncher,
-
-    [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
-    Custom,
 }

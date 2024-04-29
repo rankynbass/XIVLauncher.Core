@@ -122,11 +122,12 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = Wine.DEFAULT_WINE;
+            Config.WineVersion = ToolBuilder.DEFAULT_WINE;
         Config.WineBinaryPath ??= "/usr/bin";
         if (!Proton.VersionExists(Config.ProtonVersion))
-            Config.ProtonVersion = Wine.DEFAULT_PROTON;
-        Config.UmuEnabled ??= true;
+            Config.ProtonVersion = ToolBuilder.DEFAULT_PROTON;
+        if (!Runtime.VersionExists(Config.RuntimeVersion))
+            Config.RuntimeVersion = ToolBuilder.DEFAULT_RUNTIME;
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
@@ -183,7 +184,7 @@ class Program
     {
         mainArgs = args;
         storage = new Storage(APP_NAME);
-        Wine.Initialize();
+        ToolBuilder.Initialize();
         Dxvk.Initialize();
 
         if (CoreEnvironmentSettings.ClearAll)
@@ -375,9 +376,10 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(Wine.IsProton, Wine.FolderName, Wine.DownloadUrl, Wine.UmuPath, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        //var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
+        var wineSettings = new WineSettings(true, "/home/rankyn/.steam/steam/compatibilitytools.d/GE-Proton8-9", "", "", "", ToolBuilder.DebugVars, ToolBuilder.LogFile, new DirectoryInfo("/home/rankyn/.xlcore/protonprefix"), false, false);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var steamFolder = new DirectoryInfo(Proton.STEAM);
+        var steamFolder = new DirectoryInfo(ToolBuilder.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
     }
 
@@ -438,8 +440,8 @@ class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
-        storage.GetFolder("umu-prefix").Delete(true);
-        var umuPrefix = storage.GetFolder("umu-prefix");
+        storage.GetFolder("protonprefix").Delete(true);
+        var umuPrefix = storage.GetFolder("protonprefix");
         File.CreateSymbolicLink(Path.Combine(umuPrefix.FullName, "pfx"), umuPrefix.FullName);
 
     }

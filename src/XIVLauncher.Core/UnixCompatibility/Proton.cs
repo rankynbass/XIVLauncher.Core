@@ -13,44 +13,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 public static class Proton
 {
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
-
-    private static string HOME => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-
-    public static string STEAM => Path.Combine(HOME, ".local", "share", "Steam");
-
-    private static DirectoryInfo commonDir;
-
-    private static DirectoryInfo compatDir;
     
-    public static bool IsSteamInstalled { get; private set; }
-
-    static Proton()
-    {
-        commonDir = new DirectoryInfo(Path.Combine(STEAM, "steamapps", "common"));
-        compatDir = new DirectoryInfo(Path.Combine(STEAM, "compatibilitytools.d"));
-        try
-        {
-            if (Directory.Exists(STEAM))
-            {
-                Log.Verbose($"Steam Root is {STEAM}");
-                Log.Verbose($"Steam Common Directory is {commonDir.FullName}");
-                Log.Verbose($"Steam Compatibility Tools Directory is {compatDir.FullName}");
-                IsSteamInstalled = true;
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"Steam Root directory \"{STEAM}\" does not exist or is not a directory.");
-            }
-        }
-        catch (DirectoryNotFoundException ex)
-        {
-            Log.Error(ex, "No Steam directory found.");
-            IsSteamInstalled = false;
-        }
-
-        Initialize();
-    }
-
     public static void Initialize()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
@@ -59,28 +22,28 @@ public static class Proton
         {
             {"name", "UMU-Proton 9.0 beta 16-2"}, {"desc", "Proton 9 beta with a few patches for UMU."},
             {"label", "Custom"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-beta16-2/UMU-Proton-9.0-beta16-2.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(compatDir.FullName, "UMU-Proton-9.0-beta16-2")}
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "UMU-Proton-9.0-beta16-2")}
         };
 
         Versions["GE-Proton8-9"] = new Dictionary<string, string>()
         {
             {"name", "GE-Proton8-9"}, {"desc", "GloriousEggroll's Proton release 8-9. Last version without mouse warp bug. Fixed in KDE 6."},
             {"label", "Custom"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-9/GE-Proton8-9.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(compatDir.FullName, "GE-Proton8-9")}
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-9")}
         };
 
         Versions["GE-Proton8-32"] = new Dictionary<string, string>()
         {
             {"name", "GE-Proton8-32"}, {"desc", "GloriousEggroll's Proton release 8-32. Has mouse warp bug in some xwayland sessions."},
             {"label", "Custom"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-32/GE-Proton8-32.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(compatDir.FullName, "GE-Proton8-32")}
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-32")}
         };
         
-        if (IsSteamInstalled)
+        if (ToolBuilder.IsSteamInstalled)
         {
             try
             {
-                foreach (var dir in commonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
+                foreach (var dir in ToolBuilder.CommonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
@@ -93,11 +56,11 @@ public static class Proton
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error($"Couldn't find any Proton versions in {commonDir}. No proton or directory does not exist.");
+                Log.Error($"Couldn't find any Proton versions in {ToolBuilder.CommonDir}. No proton or directory does not exist.");
             }
             try
             {
-                foreach (var dir in compatDir.EnumerateDirectories().OrderBy(x => x.Name))
+                foreach (var dir in ToolBuilder.CompatDir.EnumerateDirectories().OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
@@ -116,7 +79,7 @@ public static class Proton
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error($"Couldn't find any Proton versions {compatDir}. No proton or directory does not exist.");
+                Log.Error($"Couldn't find any Proton versions {ToolBuilder.CompatDir}. No proton or directory does not exist.");
             }
         }
     }
@@ -143,10 +106,7 @@ public static class Proton
 
     public static string GetDownloadUrl(string? name)
     {
-        if (!VersionExists(name))
-            return "";
-
+        if (!VersionExists(name)) return "";
         return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
     }
-
 }
