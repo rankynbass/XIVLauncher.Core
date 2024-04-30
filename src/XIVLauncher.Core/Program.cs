@@ -376,8 +376,7 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        //var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
-        var wineSettings = new WineSettings(true, "/home/rankyn/.steam/steam/compatibilitytools.d/GE-Proton8-9", "", "", "", ToolBuilder.DebugVars, ToolBuilder.LogFile, new DirectoryInfo("/home/rankyn/.xlcore/protonprefix"), false, false);
+        var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var steamFolder = new DirectoryInfo(ToolBuilder.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
