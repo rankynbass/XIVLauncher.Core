@@ -440,8 +440,8 @@ class Program
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
         storage.GetFolder("protonprefix").Delete(true);
-        var umuPrefix = storage.GetFolder("protonprefix");
-        File.CreateSymbolicLink(Path.Combine(umuPrefix.FullName, "pfx"), umuPrefix.FullName);
+        var protonprefix = storage.GetFolder("protonprefix");
+        File.CreateSymbolicLink(Path.Combine(protonprefix.FullName, "pfx"), protonprefix.FullName);
 
     }
 

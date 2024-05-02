@@ -56,7 +56,7 @@ public static class ToolBuilder
 
     public static FileInfo LogFile => new FileInfo(Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));
 
-    public static DirectoryInfo Prefix => IsProton ? Program.storage.GetFolder("protonprefix") : Program.storage.GetFolder("wineprefix");
+    public static DirectoryInfo Prefix => IsProton ? new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "protonprefix")) : new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "wineprefix"));
 
     public static bool ESyncEnabled => Program.Config.ESyncEnabled ?? true;
 
