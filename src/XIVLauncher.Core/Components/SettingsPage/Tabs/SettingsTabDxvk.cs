@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility;
@@ -89,6 +90,17 @@ public class SettingsTabDxvk : SettingsTab
     public override bool IsUnixExclusive => true;
 
     public override string Title => "DXVK";
+
+    public override void Draw()
+    {
+        ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
+        ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D.");
+        ImGui.Dummy(new Vector2(10));
+        ImGui.Separator();
+        ImGui.Dummy(new Vector2(5));
+
+        base.Draw();
+    }
 
     public override void Save()
     {

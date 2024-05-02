@@ -140,6 +140,19 @@ class Program
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
 
+        Config.AutoStart1Enabled ??= false;
+        Config.AutoStart1 ??= string.Empty;
+        Config.AutoStart1Args ??= string.Empty;
+        Config.AutoStart1WineD3D ??= false;
+        Config.AutoStart2Enabled ??= false;
+        Config.AutoStart2 ??= string.Empty;
+        Config.AutoStart2Args ??= string.Empty;
+        Config.AutoStart2WineD3D ??= false;
+        Config.AutoStart3Enabled ??= false;
+        Config.AutoStart3 ??= string.Empty;
+        Config.AutoStart3Args ??= string.Empty;
+        Config.AutoStart3WineD3D ??= false;
+
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
         Config.FixLocale ??= false;

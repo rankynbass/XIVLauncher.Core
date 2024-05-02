@@ -127,21 +127,22 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open Wine configuration"))
         {
-            Program.CompatibilityTools.RunInPrefix("winecfg");
+            this.Save();
+            Program.CompatibilityTools.RunExternalProgram("winecfg");
         }
 
         ImGui.SameLine();
 
         if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
         {
-            Program.CompatibilityTools.RunInPrefix("explorer");
+            Program.CompatibilityTools.RunExternalProgram("explorer");
         }
 
         ImGui.SameLine();
 
         if (ImGui.Button("Open Wine explorer (use WineD3D"))
         {
-            Program.CompatibilityTools.RunInPrefix("explorer", wineD3D: true);
+            Program.CompatibilityTools.RunExternalProgram("explorer", wineD3D: true);
 
         }
 
@@ -150,14 +151,14 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Set Wine to Windows 7"))
         {
-            Program.CompatibilityTools.RunInPrefix($"winecfg /v win7", redirectOutput: true, writeLog: true);
+            Program.CompatibilityTools.RunExternalProgram($"winecfg /v win7", redirectOutput: true, writeLog: true);
         }
 
         ImGui.SameLine();
 
         if (ImGui.Button("Set Wine to Windows 10"))
         {
-            Program.CompatibilityTools.RunInPrefix($"winecfg /v win10", redirectOutput: true, writeLog: true);
+            Program.CompatibilityTools.RunExternalProgram($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
         ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);

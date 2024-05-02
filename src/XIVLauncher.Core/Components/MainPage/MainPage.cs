@@ -793,6 +793,14 @@ public class MainPage : Page
             if (isFailed)
                 return null;
 
+
+            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart1))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart1 + "\"" + App.Settings.AutoStart1Args, wineD3D: App.Settings.AutoStart1WineD3D.Value);
+            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart2))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart2 + "\"" + App.Settings.AutoStart2Args, wineD3D: App.Settings.AutoStart2WineD3D.Value);
+            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart3))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart3 + "\"" + App.Settings.AutoStart3Args, wineD3D: App.Settings.AutoStart3WineD3D.Value);
+
             App.StartLoading("Starting game...", "Have fun!");
 
             runner = new UnixGameRunner(Program.CompatibilityTools, dalamudLauncher, dalamudOk);
