@@ -23,6 +23,8 @@ public static class Dxvk
 
     public static bool AsyncEnabled => Program.Config.DxvkAsyncEnabled ?? false;
 
+    public static bool GPLAsyncCacheEnabled => Program.Config.DxvkGPLAsyncCacheEnabled ?? false;
+
     public static bool DxvkHudEnabled => Program.Config.DxvkHud != DxvkHud.None;
 
     public static string DxvkHudString => Program.Config.DxvkHud switch
@@ -73,16 +75,16 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         };
+        Versions["dxvk-2.3.1"] = new Dictionary<string, string>()
+        {
+            {"name", "DXVK 2.3.1"}, {"desc", "Official version 2.3.1 of DXVK."},
+            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3.1/dxvk-2.3.1.tar.gz"},
+            {"mark", "Download"}
+        };
         Versions["dxvk-gplasync-v2.3.1-1"] = new Dictionary<string, string>()
         {
             {"name", "DXVK 2.3.1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
-            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3.1-1.tar.gz"},
-            {"mark", "Download" }
-        };
-        Versions["dxvk-gplasync-v2.2-4"] = new Dictionary<string, string>()
-        {
-            {"name", "DXVK 2.2 GPLAsync"}, {"desc", "Dxvk 2.2 with GPL Async. May have better ReShade compatibility."},
-            {"label", "Current"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.2-4.tar.gz"},
+            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3.1-1.tar.gz"},
             {"mark", "Download" }
         };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
