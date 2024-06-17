@@ -18,25 +18,18 @@ public static class Proton
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
 
-        Versions["UMU-Proton-9.0-beta16-2"] = new Dictionary<string, string>()
+        Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
-            {"name", "UMU-Proton 9.0 beta 16-2"}, {"desc", "Proton 9 beta with a few patches for UMU."},
-            {"label", "Custom"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-beta16-2/UMU-Proton-9.0-beta16-2.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "UMU-Proton-9.0-beta16-2")}
+            {"name", "XIV-Proton8-30"}, {"desc", "Patched version of GE-Proton8-30 with Dualsense and Ping plugin support."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["GE-Proton8-9"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-7"] = new Dictionary<string, string>()
         {
-            {"name", "GE-Proton8-9"}, {"desc", "GloriousEggroll's Proton release 8-9. Last version without mouse warp bug. Fixed in KDE 6."},
-            {"label", "Custom"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-9/GE-Proton8-9.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-9")}
-        };
-
-        Versions["GE-Proton8-32"] = new Dictionary<string, string>()
-        {
-            {"name", "GE-Proton8-32"}, {"desc", "GloriousEggroll's Proton release 8-32. Has mouse warp bug in some xwayland sessions."},
-            {"label", "Custom"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-32/GE-Proton8-32.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-32")}
+            {"name", "XIV-Proton9-7"}, {"desc", "Patched version of GE-Proton9-7 with Dualsense and Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-7/XIV-Proton9-7.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton9-7")}
         };
         
         if (ToolBuilder.IsSteamInstalled)
