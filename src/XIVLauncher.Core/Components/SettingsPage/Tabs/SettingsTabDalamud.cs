@@ -30,10 +30,10 @@ public class SettingsTabDalamud : SettingsTab
                 }
 
                 if (Program.Config.DalamudManualInjectPath is not null &&
-                Program.Config.DalamudManualInjectPath.Exists &&
-                Program.Config.DalamudManualInjectPath.GetFiles().FirstOrDefault(x => x.Name == Program.DALAMUD_INJECTOR_NAME) is not null)
+                    Program.Config.DalamudManualInjectPath.Exists &&
+                    Program.Config.DalamudManualInjectPath.GetFiles().FirstOrDefault(x => x.Name == Program.DALAMUD_INJECTOR_NAME) is not null)
                 {
-                     Program.DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(Program.Config.DalamudManualInjectPath.FullName, Program.DALAMUD_INJECTOR_NAME));
+                    Program.DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(Program.Config.DalamudManualInjectPath.FullName, Program.DALAMUD_INJECTOR_NAME));
                 }
             }),
 

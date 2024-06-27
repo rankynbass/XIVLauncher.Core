@@ -690,10 +690,16 @@ public class MainPage : Page
 
         IGameRunner runner;
 
-        // Set LD_PRELOAD to value of XL_PRELOAD if we're in Steam Compatibility Tool mode.
-        // We ONLY care about XL_PRELOAD if we're in SCT mode. It's a workaround to prevent a text bug with Steam overlay enabled.
+        // Set LD_PRELOAD to value of XL_PRELOAD if we're running as a steam compatibility tool.
+        // This check must be done before the FixLDP check so that it will still work.
         if (CoreEnvironmentSettings.IsSteamCompatTool)
-            System.Environment.SetEnvironmentVariable("LD_PRELOAD", CoreEnvironmentSettings.GetCleanEnvironmentVariable("XL_PRELOAD"));
+        {
+            var ldpreload = System.Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
+            var xlpreload = System.Environment.GetEnvironmentVariable("XL_PRELOAD") ?? "";
+            ldpreload = (ldpreload + ":" + xlpreload).Trim(':');
+            if (!string.IsNullOrEmpty(ldpreload))
+                System.Environment.SetEnvironmentVariable("LD_PRELOAD", ldpreload);
+        }
 
         // Hack: Force LC_ALL to fix incorrect unicode paths
         if (App.Settings.FixLocale != "Disabled")
@@ -964,7 +970,7 @@ public class MainPage : Page
                 return false;
             }
 
-            if (bootPatches == null)
+            if (bootPatches.Length == 0)
                 return true;
 
             return await TryHandlePatchAsync(Repository.Boot, bootPatches, "").ConfigureAwait(false);

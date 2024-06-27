@@ -309,7 +309,7 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
-            if (CoreEnvironmentSettings.IsSteamCompatTool || (!Config.IsIgnoringSteam ?? true))
+            if (Config.IsIgnoringSteam != true || CoreEnvironmentSettings.IsSteamCompatTool)
             {
                 try
                 {

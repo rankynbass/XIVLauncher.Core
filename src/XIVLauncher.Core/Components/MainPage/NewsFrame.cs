@@ -93,7 +93,7 @@ public class NewsFrame : Component
                 ImGui.Dummy(new Vector2(15) * ImGuiHelpers.GlobalScale);
 
                 void ShowNewsEntry(News newsEntry)
-                {  
+                {
                     ImGui.TextUnformatted(newsEntry.Title);
 
                     if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !string.IsNullOrEmpty(newsEntry.Url))
