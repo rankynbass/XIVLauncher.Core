@@ -1070,7 +1070,7 @@ public class MainPage : Page
             finally
             {
                 token.Cancel();
-                statusThread.Join(System.TimeSpan.FromMilliseconds(1000));
+                statusThread.Join(TimeSpan.FromMilliseconds(1000));
             }
 
             return true;
