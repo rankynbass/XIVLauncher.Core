@@ -68,28 +68,22 @@ public static class Dxvk
     public static void Initialize()
     {
         // Add default versions.
+        Versions["DISABLED"] = new Dictionary<string, string>()
+        {
+            {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
+            {"label", "Disabled"}
+        };
         Versions["dxvk-2.3.1"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.3.1"}, {"desc", "Latest version, using Graphics Pipeline Libs. Async no longer needed."},
+            {"name", "DXVK 2.3.1"}, {"desc", "Official version 2.3.1 of DXVK."},
             {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3.1/dxvk-2.3.1.tar.gz"},
-            {"mark", "Download" }
-        };
-        Versions["dxvk-2.2"] = new Dictionary<string, string>()
-        {
-            {"name", "DXVK 2.2"}, {"desc", "Previous version, using Graphics Pipeline Libs. Use this if the game crashes with ReShade Effects Toggler installed."},
-            {"label", "Previous"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz"},
-            {"mark", "Download" }
+            {"mark", "Download"}
         };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
         {
             {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
             {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
             {"mark", "Download" }
-        };
-        Versions["DISABLED"] = new Dictionary<string, string>()
-        {
-            {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
-            {"label", "Disabled"}
         };
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
