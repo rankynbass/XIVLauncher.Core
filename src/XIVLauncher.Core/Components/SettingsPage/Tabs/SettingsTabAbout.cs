@@ -24,7 +24,7 @@ public class SettingsTabAbout : SettingsTab
         ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
 
         ImGui.Text($"XIVLauncher-RB v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
-        ImGui.Text("By goaaats");
+        ImGui.Text("By Rankyn Bass");
 
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             AppUtil.OpenBrowser("https://github.com/goaaats");
