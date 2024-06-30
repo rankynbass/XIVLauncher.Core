@@ -79,6 +79,12 @@ public static class Dxvk
             {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3.1/dxvk-2.3.1.tar.gz"},
             {"mark", "Download"}
         };
+        Versions["dxvk-gplasync-v2.3.1-1"] = new Dictionary<string, string>()
+        {
+            {"name", "DXVK 2.3.1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3.1-1.tar.gz"},
+            {"mark", "Download" }
+        };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
         {
             {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
