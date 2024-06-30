@@ -58,15 +58,15 @@ public class FtsPage : Page
     {
         ImGui.SetCursorPos(new Vector2(0));
 
-        ImGui.Image(this.isSteamDeckAppIdError ? this.steamdeckAppIdErrorTexture.ImGuiHandle : this.steamdeckFtsTexture.ImGuiHandle, new Vector2(1280, 800) * ImGuiHelpers.GlobalScale);
+        ImGui.Image(this.isSteamDeckAppIdError ? this.steamdeckAppIdErrorTexture.ImGuiHandle : this.steamdeckFtsTexture.ImGuiHandle, new Vector2(1280, 800));
 
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
 
-        ImGui.SetCursorPos(new Vector2(316, 481) * ImGuiHelpers.GlobalScale);
+        ImGui.SetCursorPos(new Vector2(316, 481));
 
-        if (ImGui.Button("###openGuideButton", new Vector2(649, 101) * ImGuiHelpers.GlobalScale))
+        if (ImGui.Button("###openGuideButton", new Vector2(649, 101)))
         {
             if (!this.isSteamDeckAppIdError)
             {
@@ -78,9 +78,9 @@ public class FtsPage : Page
             }
         }
 
-        ImGui.SetCursorPos(new Vector2(316, 598) * ImGuiHelpers.GlobalScale);
+        ImGui.SetCursorPos(new Vector2(316, 598));
 
-        if (ImGui.Button("###finishFtsButton", new Vector2(649, 101) * ImGuiHelpers.GlobalScale) && !this.isSteamDeckAppIdError)
+        if (ImGui.Button("###finishFtsButton", new Vector2(649, 101)) && !this.isSteamDeckAppIdError)
         {
             this.FinishFts(true);
         }

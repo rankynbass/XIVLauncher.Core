@@ -78,7 +78,7 @@ public class Input : Component
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12f, 10f) * ImGuiHelpers.GlobalScale);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12f, 10f));
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiColors.BlueShade1);
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiColors.BlueShade2);

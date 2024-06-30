@@ -6,7 +6,7 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 ## Using on Steam Deck
 If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as using the official version, but still not too difficult.
 
-1) You'll want to switch to desktop mode and download the latest flatpak file. From the terminal (Konsole) install with `flatpak install --user xivlauncher-rb-v1.0.8.2.flatpak` (or whatever the latest flatpak file is).
+1) You'll want to switch to desktop mode and download the latest flatpak file. From the terminal (Konsole) install with `flatpak install --user xivlauncher-rb-v1.1.0.2.flatpak` (or whatever the latest flatpak file is).
 2) Run `XL_USE_STEAM=0 flatpak run dev.rankyn.xivlauncher --deck-install`
 3) Restart Steam. This is necessary to get the compatibility tool to register.
 3) In Steam, do the initial install of FFXIV or FFXIV free trial. You do not have to run the official launcher, you just need to have it installed in your steam library.

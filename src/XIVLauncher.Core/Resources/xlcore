@@ -7,21 +7,18 @@ tooldir="$(realpath "$(dirname "$0")")"
 if [ "$1" = "run" ]; then
     if [ ! -f "$tooldir/version" ]; then
         "$tooldir/XIVLauncher/XIVLauncher.Core" -V > "$tooldir/version"
-        echo "RB-Patched" >> "$tooldir/version"
     fi
     sleep 1
     exit 0
 fi
 
-xlcoreDir=$HOME/.xlcore
-logDir=$xlcoreDir/logs
-mkdir -p $xlcoreDir
-mkdir -p $logDir
+xlcoreDir="$HOME/.xlcore"
+mkdir -p "$xlcoreDir"
 
 # If aria2c isn't found, add our local copy to the $PATH
 count=$(find /usr -type f -executable -name "aria2c" 2>/dev/null | wc -l)
-if [ $count -eq 0 ] && [ -e "$tooldir/bin/aria2c" ]; then
-    PATH="$PATH:$tooldir/bin"
+if [ $count -eq 0 ] && [ -e "$tooldir/XIVLauncher/aria2c" ]; then
+    PATH="$PATH:$tooldir/XIVLauncher"
 fi
 
 # Work around a Steam overlay bug. I put some code into XIVLauncher to add the ldpreload variable
@@ -31,18 +28,11 @@ fi
 export XL_PRELOAD="$LD_PRELOAD"
 unset LD_PRELOAD
 
-# If libsecret isn't found, add local copy to $LD_PRELOAD
-count=$(ldconfig -p | grep libsecret-1 | wc -l)
-if [ "$count" -eq 0 ] && [ -e "$tooldir/lib/libsecret-1.so.0.0.0" ]; then
-    export LD_PRELOAD=$tooldir/lib/libsecret-1.so.0:$tooldir/lib/libsecret-1.so.0.0.0:$LD_PRELOAD
-fi
-
 # Steam Deck can be detected by checking SteamDeck=1 and SteamGamepadUI=1 (for gaming mode/big picture)
 # Unsetting SteamDeck will then disable Steam gamepad input, allowing keyboard to enter info on the launcher
 if [ "$SteamDeck" = "1" ] && [ "$SteamGamepadUI" != "1" ]; then
     unset SteamDeck
 fi
 
-export OPENSSL_CONF="$tooldir/openssl_fix.cnf"
 export XL_SCT=1
-"$tooldir/XIVLauncher/XIVLauncher.Core" $@ >> $logDir/steamtool_console.log 2>&1
+"$tooldir/XIVLauncher/XIVLauncher.Core"

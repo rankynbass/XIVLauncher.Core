@@ -10,10 +10,7 @@ public class SettingsTabAbout : SettingsTab
 {
     private readonly TextureWrap logoTexture;
 
-    public override SettingsEntry[] Entries { get; } =
-    {
-        new NumericSettingsEntry("Global Scale Percent 100% - 400% (Needs Restart)","", () => (int)((Program.Config.GlobalScale ?? 1.0f) * 100), i => Program.Config.GlobalScale = (float)i / 100f, 100, 400, 25),
-    };
+    public override SettingsEntry[] Entries => Array.Empty<SettingsEntry>();
 
     public override string Title => "About";
 
@@ -27,33 +24,27 @@ public class SettingsTabAbout : SettingsTab
         ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
 
         ImGui.Text($"XIVLauncher-RB v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
-        ImGui.Text("By goaaats, with patches by Rankyn Bass");
+        ImGui.Text("By goaaats");
 
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             AppUtil.OpenBrowser("https://github.com/goaaats");
 
-        ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(new Vector2(20));
 
         if (ImGui.Button("Open Repository"))
         {
-            AppUtil.OpenBrowser("https://github.com/rankynbass/XIVLauncher.Core/tree/RB-patched");
+            AppUtil.OpenBrowser("https://github.com/rankynbass/XIVLauncher.Core");
         }
 
-        ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
-
-        if (ImGui.Button("Join our Discord"))
+        if (ImGui.Button("Join the XIVLauncher Discord"))
         {
             AppUtil.OpenBrowser("https://discord.gg/3NMcUV5");
         }
-
-        ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
 
         if (ImGui.Button("See Software Licenses"))
         {
             PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"));
         }
-
-        ImGui.Dummy(new Vector2(20) * ImGuiHelpers.GlobalScale);
 
         base.Draw();
     }

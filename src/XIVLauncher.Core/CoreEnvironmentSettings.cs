@@ -1,7 +1,6 @@
-using System;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace XIVLauncher.Core;
 
@@ -24,7 +23,6 @@ public static class CoreEnvironmentSettings
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static string HOME => System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME");
-    public static float? Scale => CheckEnvFloat("XL_SCALE");
 
     private static bool CheckEnvBool(string key)
     {
@@ -41,21 +39,6 @@ public static class CoreEnvironmentSettings
         return null;
     }
 
-    private static float? CheckEnvFloat(string key)
-    {
-        string strVal = (Environment.GetEnvironmentVariable(key));
-        float? flVal;
-        try
-        {
-            flVal = float.Parse(strVal, CultureInfo.InvariantCulture.NumberFormat);
-        }
-        catch
-        {
-            flVal = null;
-        }
-        return flVal;
-    }
-
     public static string GetCleanEnvironmentVariable(string envvar, string badstring = "", string separator = ":")
     {
         string dirty = Environment.GetEnvironmentVariable(envvar) ?? "";
@@ -63,20 +46,6 @@ public static class CoreEnvironmentSettings
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
     }
 
-    static public bool GameModeInstalled { get; }
-
-    static CoreEnvironmentSettings()
-    {  
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            var handle = IntPtr.Zero;
-            GameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
-            NativeLibrary.Free(handle);
-        }
-        else
-            GameModeInstalled = false;
-    }
-    
     public static string GetCType()
     {
         if (System.OperatingSystem.IsWindows())
@@ -90,5 +59,22 @@ public static class CoreEnvironmentSettings
         proc.Start();
         var output = proc.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
         return Array.Find(output, s => s.ToUpper().StartsWith("C.")) ?? string.Empty;
+    }
+    
+    static private bool? gameModeInstalled = null;
+
+    static public bool IsGameModeInstalled()
+    {
+        if (gameModeInstalled is not null)
+            return gameModeInstalled ?? false;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var handle = IntPtr.Zero;
+            gameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
+            NativeLibrary.Free(handle);
+        }
+        else
+            gameModeInstalled = false;
+        return gameModeInstalled ?? false;
     }
 }

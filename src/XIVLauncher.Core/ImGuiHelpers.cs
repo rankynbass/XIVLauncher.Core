@@ -8,9 +8,7 @@ public static class ImGuiHelpers
 {
     public static Vector2 ViewportSize => ImGui.GetIO().DisplaySize;
 
-    // public static float GlobalScale => ImGui.GetIO().FontGlobalScale;
-
-    public static float GlobalScale => Program.Config.GlobalScale ?? 1.0f;
+    public static float GlobalScale => ImGui.GetIO().FontGlobalScale;
 
     public static void TextWrapped(string text)
     {

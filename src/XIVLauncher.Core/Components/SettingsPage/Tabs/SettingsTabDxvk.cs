@@ -28,15 +28,9 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch or GPL Async. May not be available on DXVK >= 2.0.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
+            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch. May not be available on DXVK >= 2.0", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
-            },
-
-            new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the Dxvk Async Cache for 2.2 and later", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync"),
             },
 
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)
@@ -54,7 +48,6 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-
             mangoHudSetting = new SettingsEntry<MangoHud>("MangoHud Overlay", "MangoHud is installed. It is recommended to set Dxvk Overlay to None if using MangoHud.", () => Program.Config.MangoHud ?? MangoHud.None, x => Program.Config.MangoHud = x)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && Dxvk.MangoHudInstalled,
@@ -65,7 +58,6 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 }
             },
-
             new SettingsEntry<string>("MangoHud Custom String", "Set a custom string for MangoHud config.", () => Program.Config.MangoHudCustomString ?? Dxvk.MANGOHUD_CONFIG, s => Program.Config.MangoHudCustomString = s)
             {
                 CheckVisibility = () => mangoHudSetting.Value == MangoHud.CustomString && dxvkVersionSetting.Value != "DISABLED" && Dxvk.MangoHudInstalled,
@@ -76,7 +68,6 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 }
             },
-
             new SettingsEntry<string>("MangoHud Custom Path", "Set a custom path for MangoHud config file.", () => Program.Config.MangoHudCustomFile ?? Dxvk.MANGOHUD_CONFIGFILE, s => Program.Config.MangoHudCustomFile = s)
             {
                 CheckVisibility = () => mangoHudSetting.Value == MangoHud.CustomFile && dxvkVersionSetting.Value != "DISABLED" && Dxvk.MangoHudInstalled,
@@ -87,7 +78,6 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 },
             },
-
             new NumericSettingsEntry("Frame Rate Limit", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 for unlimited.", () => Program.Config.DxvkFrameRateLimit ?? 0, i => Program.Config.DxvkFrameRateLimit = i, 0, 1000)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
@@ -104,23 +94,29 @@ public class SettingsTabDxvk : SettingsTab
     public override void Draw()
     {
         ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
-        ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D. This probably won't work.");
+        ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D.");
+        ImGui.Dummy(new Vector2(10));
         ImGui.Separator();
-        
+        ImGui.Dummy(new Vector2(5));
+
         base.Draw();
 
         if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.Separator();
 
-            ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+            ImGui.Dummy(new Vector2(10));
 
             if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} now!"))
             {
                 Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
                 this.Save();
                 var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
-                    .ContinueWith(t => Dxvk.Initialize());
+                    .ContinueWith(t => 
+                    {
+                        Dxvk.Versions[dxvkVersionSetting.Value].Remove("mark");
+                        Dxvk.Initialize();
+                    });
             }
         }
     }

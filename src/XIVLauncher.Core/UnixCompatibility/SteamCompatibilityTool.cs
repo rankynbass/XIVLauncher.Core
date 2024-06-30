@@ -1,16 +1,18 @@
 using System.Numerics;
 using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Reflection;
 using System.Diagnostics;
 using Serilog;
 using XIVLauncher.Core;
+using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class SteamCompatibilityTool
 {
     // This is here to prevent auto-updating with different releases of XLCore. So XIVLauncher-RB will not overwrite official, vice versa. 
-    private const string RELEASE = "RB-Patched";
     public static bool IsSteamInstalled => Directory.Exists(Program.Config.SteamPath);
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
@@ -18,6 +20,8 @@ public static class SteamCompatibilityTool
     public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath, "compatibilitytools.d", "xlcore"));
 
     public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath, "compatibilitytools.d", "xlcore"));
+
+    private const string ARIA2C_URL = "https://github.com/rankynbass/aria2-static-build/releases/latest/download/aria2-static.tar.gz";
 
     private static string findXIVLauncherFiles()
     {
@@ -32,7 +36,7 @@ public static class SteamCompatibilityTool
             Program.Config.SteamToolInstalled = IsSteamToolInstalled;
     }
 
-    public static void CreateTool(bool isFlatpak)
+    public static async Task CreateTool(bool isFlatpak)
     {
         var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
         var compatfolder = new DirectoryInfo(Path.Combine(path, "compatibilitytools.d"));
@@ -46,7 +50,6 @@ public static class SteamCompatibilityTool
         destination.Create();
         destination.CreateSubdirectory("XIVLauncher");
         destination.CreateSubdirectory("bin");
-        destination.CreateSubdirectory("lib");
 
         var xlcore = new FileInfo(Path.Combine(destination.FullName, "xlcore"));
         var compatibilitytool_vdf = new FileInfo(Path.Combine(destination.FullName, "compatibilitytool.vdf"));
@@ -66,17 +69,10 @@ public static class SteamCompatibilityTool
             resource.CopyTo(fs);
             fs.Close();
         }
-
-        // File.SetUnixFileMode() doesn't exist in .NET 6, so just run chmod
-        var psi = new ProcessStartInfo("/bin/chmod");
-        psi.ArgumentList.Add("+x");
-        psi.ArgumentList.Add(xlcore.FullName);
-        using (Process proc = new Process())
-        {
-            proc.StartInfo = psi;
-            proc.Start();
-            proc.WaitForExit();
-        }
+        var permissions =   UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                            UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                            UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+        File.SetUnixFileMode(xlcore.FullName, permissions);
 
         using (var fs = compatibilitytool_vdf.Create())
         {
@@ -100,7 +96,7 @@ public static class SteamCompatibilityTool
         }
         using (var fs = version.Create())
         {
-            byte[] resource = new System.Text.UTF8Encoding(true).GetBytes(Program.CoreVersion.ToString() + "\n" + RELEASE);
+            byte[] resource = new System.Text.UTF8Encoding(true).GetBytes(Program.CoreVersion.ToString() + "\n" + Program.CoreRelease);
             fs.Write(resource, 0, resource.Length);
             fs.Close();
         }
@@ -112,17 +108,12 @@ public static class SteamCompatibilityTool
             file.CopyTo(Path.Combine(destination.FullName, "XIVLauncher", file.Name), true);
         }
 
-        var aria2c = new FileInfo("/app/bin/aria2c");
-        var libsecret = new FileInfo("/app/lib/libsecret-1.so.0.0.0");
-
-        if (aria2c.Exists)
-            aria2c.CopyTo(Path.Combine(destination.FullName, "bin", "aria2c"));
-        
-        if (libsecret.Exists)
+        using (var client = new HttpClient())
         {
-            var libPath = Path.Combine(destination.FullName, "lib");
-            libsecret.CopyTo(Path.Combine(libPath, "libsecret-1.so.0.0.0"));
-            File.CreateSymbolicLink(Path.Combine(libPath, "libsecret-1.so"), "libsecret-1.so.0.0.0");
+            var tempPath = Path.GetTempFileName();
+            File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(ARIA2C_URL));
+            PlatformHelpers.Untar(tempPath, Path.Combine(destination.FullName, "XIVLauncher"));
+            File.Delete(tempPath);
         }
         
         Log.Verbose($"[SCT] XIVLauncher installed as Steam compatibility tool to folder {destination.FullName}");
@@ -211,9 +202,9 @@ public static class SteamCompatibilityTool
 
         try
         {
-            if (release != RELEASE)
+            if (release != Program.CoreRelease)
             {
-                message = $"Steam {(isFlatpak ? "(flatpak) " : "")}compatibility Tool mismatch! \"{release}\" release is installed, but this is \"{RELEASE}\" release. Not installing update.";
+                message = $"Steam {(isFlatpak ? "(flatpak) " : "")}compatibility Tool mismatch! \"{release}\" release is installed, but this is \"{Program.CoreRelease}\" release. Not installing update.";
                 Log.Warning(message);
                 return message;
             }

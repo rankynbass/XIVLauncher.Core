@@ -50,7 +50,7 @@ public class MainPage : Page
         this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
 
-        this.Padding = new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale;
+        this.Padding = new Vector2(32f, 32f);
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -76,7 +76,7 @@ public class MainPage : Page
     {
         base.Draw();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
         this.newsFrame.Draw();
 
         ImGui.SameLine();
@@ -139,19 +139,6 @@ public class MainPage : Page
 
                 this.Reactivate();
                 return;
-            }
-
-            if (App.Settings.WaylandEnabled ?? false)
-            {
-                if (!File.Exists(Path.Combine(Wine.Prefix.FullName, "wayland_driver")))
-                {
-                    App.ShowMessageBlocking(
-                        "You're trying to use Wayland, but you didn't enable the Wine Wayland Driver. Go into settings to the wine tab, scroll down and press the button \"Enable Wayland Driver\" or uncheck \"Enable Wayland\".",
-                        "Setup Error");
-                    Reactivate();
-                    return;
-                }
-                System.Environment.SetEnvironmentVariable("DISPLAY", null);
             }
 
             IsLoggingIn = true;
@@ -346,7 +333,7 @@ public class MainPage : Page
 
             return false;
         }
-        
+
 #if !DEBUG
         bool? gateStatus = null;
         try
@@ -701,10 +688,11 @@ public class MainPage : Page
                 System.Environment.SetEnvironmentVariable("LD_PRELOAD", ldpreload);
         }
 
-        // Hack: Force LC_ALL to fix incorrect unicode paths
-        if (App.Settings.FixLocale != "Disabled")
+        // Hack: Force C.utf8 to fix incorrect unicode paths
+        if (App.Settings.FixLocale == true && !string.IsNullOrEmpty(Program.CType))
         {
-            System.Environment.SetEnvironmentVariable("LC_ALL", App.Settings.FixLocale);
+            System.Environment.SetEnvironmentVariable("LC_ALL", Program.CType);
+            System.Environment.SetEnvironmentVariable("LC_CTYPE", Program.CType);
         }
 
         // Hack: Strip out gameoverlayrenderer.so entries from LD_PRELOAD
@@ -765,11 +753,12 @@ public class MainPage : Page
                 if (App.Settings.WineBinaryPath == null)
                     throw new InvalidOperationException("Custom wine binary path wasn't set.");
                 else if (!Directory.Exists(App.Settings.WineBinaryPath))
-                    throw new InvalidOperationException("Custom wine binary path is invalid: no such directory.\n" +
-                                                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
-                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")))
-                    throw new InvalidOperationException("Custom wine binary path is invalid: no wine64 found at that location.\n" +
-                                                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
+                    throw new Exception("Custom wine binary path is invalid: no such directory.\n" +
+                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
+                else if (!File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine64")) && !File.Exists(Path.Combine(App.Settings.WineBinaryPath, "wine")) &&
+                        !File.Exists(Path.Combine(App.Settings.WineBinaryPath, "bin", "wine64")) && !File.Exists(Path.Combine(App.Settings.WineBinaryPath, "bin", "wine")))
+                    throw new Exception("Custom wine binary path is invalid: no wine or wine64 found at that location.\n" +
+                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 
             var signal = new ManualResetEvent(false);
@@ -809,8 +798,6 @@ public class MainPage : Page
             if (isFailed)
                 return null!;
 
-            // Get rid of gameoverlayrenderer.so for helper apps. Prevents stuttering.
-            System.Environment.SetEnvironmentVariable("LD_PRELOAD", CoreEnvironmentSettings.GetCleanEnvironmentVariable("LD_PRELOAD", "gameoverlayrenderer.so"));
 
             if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp1))
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp1 + "\"" + App.Settings.HelperApp1Args, wineD3D: App.Settings.HelperApp1WineD3D.Value);

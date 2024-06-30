@@ -1,4 +1,4 @@
-﻿﻿using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using System.IO;
 using ImGuiNET;
@@ -22,11 +22,8 @@ public class SettingsTabSteamTool : SettingsTab
     
     private bool steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
 
-    private Vector2 spacer;
-
     public SettingsTabSteamTool()
     {
-        spacer = new Vector2(10) * ImGuiHelpers.GlobalScale;
         Entries = new SettingsEntry[]
         {
             steamPath = new SettingsEntry<string>("Steam Path (native)", "Path to the native steam install. Only change this if you have Steam installed in a non-default location.",
@@ -34,7 +31,7 @@ public class SettingsTabSteamTool : SettingsTab
             steamFlatpakPath = new SettingsEntry<string>("Steam Path (flatpak)", "Path to the flatpak Steam installation. Only change this if you have your flatpak Steam installed to a non-default location.",
                 () => Program.Config.SteamFlatpakPath ?? Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" ), s => Program.Config.SteamFlatpakPath = s)
             {    
-                CheckVisibility = () => Program.IsSteamDeckHardware != true && SteamCompatibilityTool.IsSteamFlatpakInstalled,
+                CheckVisibility = () => Program.IsSteamDeckHardware != true,
             },
         };
     }
@@ -49,12 +46,13 @@ public class SettingsTabSteamTool : SettingsTab
     {
         if (CoreEnvironmentSettings.IsSteamCompatTool)
         {
-            ImGui.Dummy(spacer);
+            ImGui.Dummy(new Vector2(10));
             ImGui.Text("You are currently running XIVLauncher.Core as a Steam compatibility tool.");
-            ImGui.Dummy(spacer);
-            ImGui.Text("If you are trying to upgrade, you must first update your local install of XIVLauncher.Core. Then launch the local" +
-                        "\nversion, navigate back to this tab, and re-install as a Steam compatibility tool.");
-            ImGui.Text("\nIf you are trying to uninstall, you should likewise launch the native version of XIVLauncher, and click the appropriate" +
+            ImGui.Dummy(new Vector2(10));
+            ImGui.Text("If you are trying to upgrade, you must first update your install of XIVLauncher.Core. Then launch the flatpak or native" +
+                        "\nversion once, and then close it. This should automatically update the steam compatibility tool. Alternately, you" +
+                        "\ncould run \"flatpak run dev.goats.xivlauncher --update-tools\" after updating your native or flatpak install.");
+            ImGui.Text("\nIf you are trying to uninstall, you should likewise launch the flatpak version of XIVLauncher, and click the appropriate" +
                         "\nuninstall button.");
             return;
         }
@@ -63,20 +61,21 @@ public class SettingsTabSteamTool : SettingsTab
         ImGui.Text("in your steam library and open the 'Properties' menu and navigate to the 'Compatibility' tab. Enable 'Force the use of a specific Steam Play compatibility tool'");
         ImGui.Text("and from the dropdown menu select 'XIVLauncher.Core'. If this option does not show up then restart Steam and try again. After finishing these steps,");
         ImGui.Text("XIVLauncher will now be used when launching FINAL FANTASY XIV from steam.");
-        if (Program.IsSteamDeckHardware != true && steamFlatpakInstalled)
+        // Steam deck should never have flatpak steam
+        if (Program.IsSteamDeckHardware != true)
         {
             ImGui.Text("\nIf you wish to install into Flatpak Steam, you must use Flatseal to give XIVLauncher access to Steam's flatpak path. This is commonly found at:");
-            ImGui.Text($"{CoreEnvironmentSettings.HOME}/.var/app/com.valvesoftware.Steam. If you do not give this permission, installation will fail. You will also want to");
-            ImGui.Text($"give Steam permission to {CoreEnvironmentSettings.HOME}/.xlcore, so that you can continue to use your current xlcore folder.");
+            ImGui.Text($"~/.var/app/com.valvesoftware.Steam. If you do not give this permission, the install option will not even appear. You will also need to give Steam");
+            ImGui.Text($"access to ~/.xlcore, so that you can continue to use your current xlcore folder.");
             ImGui.Text("\nDO NOT use native XIVLauncher to install to flatpak Steam. Use flatpak XIVLauncher instead.");
         }
 
-        ImGui.Dummy(spacer);        
+        ImGui.Dummy(new Vector2(10));        
         ImGui.Separator();
-        ImGui.Dummy(spacer);
+        ImGui.Dummy(new Vector2(10));
 
         ImGui.Text($"Steam settings directory: {(steamInstalled ? "PRESENT" : "Not Present")}. Native Steam Tool: {(steamToolInstalled ? "INSTALLED" : "Not Installed")}.");
-        ImGui.Dummy(spacer);
+        ImGui.Dummy(new Vector2(10));
         if (!steamInstalled) ImGui.BeginDisabled();
         if (ImGui.Button($"{(steamToolInstalled ? "Re-i" : "I")}nstall to native Steam"))
         {
@@ -97,12 +96,12 @@ public class SettingsTabSteamTool : SettingsTab
 
         if (!Program.IsSteamDeckHardware && steamFlatpakInstalled)
         {
-            ImGui.Dummy(spacer);
+            ImGui.Dummy(new Vector2(10));
             ImGui.Separator();
-            ImGui.Dummy(spacer);
+            ImGui.Dummy(new Vector2(10));
 
             ImGui.Text($"Flatpak Steam settings directory: PRESENT. Flatpak Steam Tool: {(steamFlatpakToolInstalled ? "INSTALLED" : "Not Installed")}");
-            ImGui.Dummy(spacer);
+            ImGui.Dummy(new Vector2(10));
             if (!steamFlatpakInstalled) ImGui.BeginDisabled();
             if (ImGui.Button($"{(steamFlatpakToolInstalled ? "Re-i" : "I")}nstall to flatpak Steam"))
             {
@@ -128,9 +127,9 @@ public class SettingsTabSteamTool : SettingsTab
             }
         }
 
-        ImGui.Dummy(spacer);
+        ImGui.Dummy(new Vector2(10));
         ImGui.Separator();
-        ImGui.Dummy(spacer);
+        ImGui.Dummy(new Vector2(10));
 
         base.Draw();
     }

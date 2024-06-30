@@ -1,5 +1,5 @@
-using ImGuiNET;
 using System.Numerics;
+using ImGuiNET;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -25,21 +25,29 @@ public class SettingsTabAutoStart : SettingsTab
                 CheckValidity = b =>
                 {
                     // Dirty hack to get a separator line
-                    ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+                    ImGui.Dummy(new Vector2(10));
                     ImGui.Separator();
                     return null;
                 }
             },
 
             new SettingsEntry<bool>("Enable App #2", "", () => Program.Config.HelperApp2Enabled ?? false, b => Program.Config.HelperApp2Enabled = b),
-            new SettingsEntry<string>("App #2", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.HelperApp2 ?? string.Empty, s => Program.Config.HelperApp2 = s),
+            new SettingsEntry<string>("App #2", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.HelperApp2 ?? string.Empty, s => Program.Config.HelperApp2 = s)
+            {
+                CheckWarning = s =>
+                {
+                    if(!File.Exists(s) && !string.IsNullOrWhiteSpace(s))
+                        return "That program doesn't exist.";
+                    return null;
+                },
+            },
             new SettingsEntry<string>("App #2 Arguments", "Any additional arguments for App #2. Environment variables not supported.", () => Program.Config.HelperApp2Args ?? "", s => Program.Config.HelperApp2Args = s),
             new SettingsEntry<bool>("Use WineD3D with App #2","", () => Program.Config.HelperApp2WineD3D ?? false, b => Program.Config.HelperApp2WineD3D = b)
             {
                 CheckValidity = b =>
                 {
                     // Dirty hack to get a separator line
-                    ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+                    ImGui.Dummy(new Vector2(10));
                     ImGui.Separator();
                     return null;
                 }
@@ -62,13 +70,13 @@ public class SettingsTabAutoStart : SettingsTab
 
     public override SettingsEntry[] Entries { get; }
 
-    public override bool IsUnixExclusive => true;
+    // public override bool IsUnixExclusive => true;
 
     public override string Title => "Auto-Start";
 
     public override void Draw()
     {
-        // ImGui.Text("Please check back later.");
+        ImGui.Text("Please check back later.");
 
         base.Draw();
     }

@@ -119,7 +119,7 @@ public class OtpEntryPage : Page
     {
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f);
 
-        var childSize = new Vector2(300, 200) * ImGuiHelpers.GlobalScale;
+        var childSize = new Vector2(300, 200);
         var vpSize = ImGuiHelpers.ViewportSize;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X / 2 - childSize.X / 2, vpSize.Y / 2 - childSize.Y / 2), ImGuiCond.Always);
@@ -127,12 +127,12 @@ public class OtpEntryPage : Page
 
         if (ImGui.BeginChild("###otp", childSize, true, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Dummy(new Vector2(30) * ImGuiHelpers.GlobalScale);
+            ImGui.Dummy(new Vector2(30));
 
             // center text in window
             ImGuiHelpers.CenteredText("Please enter your OTP");
 
-            int INPUT_WIDTH = (int)(150 * ImGuiHelpers.GlobalScale);
+            const int INPUT_WIDTH = 150;
 
             if (this.appearing)
             {
@@ -140,22 +140,34 @@ public class OtpEntryPage : Page
                 this.appearing = false;
             }
 
+            //var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
             otpInput.Width = INPUT_WIDTH;
             otpInput.Draw();
 
-            int buttonW = (int)(INPUT_WIDTH/2 - (4 * ImGuiHelpers.GlobalScale));
-            int buttonH = (int)(30 * ImGuiHelpers.GlobalScale);
+            // var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4, 30);
+            int buttonW = INPUT_WIDTH / 2 - 4;
+            int buttonH = 40;
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             otpOKButton.Width = buttonW;
             otpOKButton.Height = buttonH;
             otpOKButton.Draw();
 
+            // if (ImGui.Button("OK", buttonSize)) // || doEnter)
+            // {
+            //     TryAcceptOtp(this.otpValue);
+            // }
+
             ImGui.SameLine();
 
             otpCancelButton.Width = buttonW;
             otpCancelButton.Height = buttonH;
             otpCancelButton.Draw();
+
+            // if (ImGui.Button("Cancel", buttonSize))
+            // {
+            //     this.Cancelled = true;
+            // }
         }
 
         ImGui.EndChild();

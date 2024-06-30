@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 using CheapLoc;
 
@@ -73,7 +73,9 @@ class Program
 
     public static string CType = CoreEnvironmentSettings.GetCType();
 
-    public static Version CoreVersion = Version.Parse(AppUtil.GetAssemblyVersion());
+    public static Version CoreVersion { get; } = Version.Parse(AppUtil.GetAssemblyVersion());
+
+    public const string CoreRelease = "Official";
 
     public static string CoreHash = AppUtil.GetGitHash() ?? "";
 
@@ -124,42 +126,31 @@ class Program
         Config.DalamudEnabled ??= true;
         Config.DalamudLoadMethod ??= DalamudLoadMethod.EntryPoint;
 
-        Config.GlobalScale = (CoreEnvironmentSettings.Scale is null) ?
-            (float)(25 * ((int)(100 * (Config.GlobalScale ?? 1.0f)) / 25)) / 100 :
-            (float)(25 * ((int)(100 * (CoreEnvironmentSettings.Scale ?? 1.0f)) / 25)) / 100;
-        Config.GlobalScale = (Config.GlobalScale < 1.0f ) ? 1.0f : (Config.GlobalScale > 4.0f) ? 4.0f : Config.GlobalScale;
+        Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
 
         Config.WineType ??= WineType.Managed;
-        Config.WineVersion = Wine.IsValid(Config.WineVersion) ? Config.WineVersion : Wine.GetDefaultVersion();
+        if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
+            Config.WineVersion = ToolBuilder.DEFAULT_WINE;
         Config.WineBinaryPath ??= "/usr/bin";
+        if (!Proton.VersionExists(Config.ProtonVersion))
+            Config.ProtonVersion = ToolBuilder.DEFAULT_PROTON;
+        if (!Runtime.VersionExists(Config.RuntimeVersion))
+            Config.RuntimeVersion = ToolBuilder.DEFAULT_RUNTIME;
         Config.WineDebugVars ??= "-all";
 
-        Config.DxvkVersion = Dxvk.IsValid(Config.DxvkVersion) ? Config.DxvkVersion : Dxvk.GetDefaultVersion();
+        if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
+            Config.DxvkVersion = "dxvk-async-1.10.3";
         Config.DxvkAsyncEnabled ??= true;
-        Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
         Config.DxvkHudCustom ??= Dxvk.DXVK_HUD;
         Config.MangoHud ??= MangoHud.None;
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
-
-        Config.ProtonVersion ??= "Proton 8.0";
-        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : "SteamLinuxRuntime_sniper";
-
-        Config.FixLDP ??= false;
-        Config.FixIM ??= false;
-        Config.FixLocale = Locale.IsValid(Config.FixLocale) ? Config.FixLocale : Locale.GetDefaultCode();
-
-        var xdg_data_home = (OSInfo.IsFlatpak) ? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share") : CoreEnvironmentSettings.XDG_DATA_HOME;
-        Config.SteamPath ??= Path.Combine(xdg_data_home, "Steam");
-        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
-        Config.SteamToolInstalled ??= false;
-        Config.SteamFlatpakToolInstalled ??= false;
 
         Config.HelperApp1Enabled ??= false;
         Config.HelperApp1 ??= string.Empty;
@@ -174,9 +165,14 @@ class Program
         Config.HelperApp3Args ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
 
-        Config.WineScale = (Config.WineScale is null) ? (int)(Config.GlobalScale * 100) : 25 * (Config.WineScale / 25);
-        Config.WineScale = (Config.WineScale < 100) ? 100 : (Config.WineScale > 400) ? 400 : Config.WineScale;
-        Config.WaylandEnabled ??= false;
+        Config.FixLDP ??= false;
+        Config.FixIM ??= false;
+        Config.FixLocale ??= false;
+
+        Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share");
+        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
+        Config.SteamToolInstalled ??= false;
+        Config.SteamFlatpakToolInstalled ??= false;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -216,27 +212,9 @@ class Program
     private static void Main(string[] args)
     {
         mainArgs = args;
-
-        bool badxlpath = false;
-        var badxlpathex = new Exception();
-        string? useAltPath = Environment.GetEnvironmentVariable("XL_PATH");
-        try 
-        {
-            storage = new Storage(APP_NAME, useAltPath);
-        }
-        catch (Exception e)
-        {
-            storage = new Storage(APP_NAME);
-            badxlpath = true;
-            badxlpathex = e;
-        }
-        Wine.Initialize();
+        storage = new Storage(APP_NAME);
+        ToolBuilder.Initialize();
         Dxvk.Initialize();
-
-        if (badxlpath)
-        {
-            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
-        }
 
         if (CoreEnvironmentSettings.ClearAll)
         {
@@ -254,12 +232,6 @@ class Program
 
         SetupLogging(mainArgs);
         LoadConfig(storage);
-        Proton.Initialize(OSInfo.IsFlatpak && CoreEnvironmentSettings.IsSteamCompatTool ? Config.SteamFlatpakPath : Config.SteamPath);
-        Config.ProtonVersion = Proton.VersionExists(Config.ProtonVersion) ? Config.ProtonVersion : Proton.GetDefaultVersion();
-        Config.SteamRuntime = Proton.RuntimeExists(Config.SteamRuntime) ? Config.SteamRuntime : Proton.GetDefaultRuntime();
-        
-        // Work around a bug where TZ is set to a linux-specific value
-        System.Environment.SetEnvironmentVariable("TZ", null);
 
         Secrets = GetSecretProvider(storage);
 
@@ -344,7 +316,7 @@ class Program
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
+            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher-RB {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -358,10 +330,11 @@ class Program
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), (Config.FontPxSize ?? 22.0f) * ImGuiHelpers.GlobalScale);
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();
+        ImGui.GetIO().FontGlobalScale = Config.GlobalScale ?? 1.0f;
 
         var needUpdate = false;
 
@@ -393,7 +366,16 @@ class Program
             var overlayNeedsPresent = false;
 
             if (Steam != null && Steam.IsValid)
-                overlayNeedsPresent = Steam.BOverlayNeedsPresent;
+            {
+                try
+                {
+                    overlayNeedsPresent = Steam.BOverlayNeedsPresent;
+                }
+                catch (NullReferenceException ex)
+                {
+                    Log.Error(ex, "Could not get Steam.BOverlayNeedsPresent. This probably doesn't matter.");
+                }
+            }
 
             if (!snapshot.KeyEvents.Any() && !snapshot.MouseEvents.Any() && !snapshot.KeyCharPresses.Any() && invalidationFrames == 0 && lastMousePosition == snapshot.MousePosition
                 && !overlayNeedsPresent)
@@ -435,10 +417,11 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.GPLAsyncCacheEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
+        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
+        var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
+        var steamFolder = new DirectoryInfo(ToolBuilder.STEAM);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()
@@ -499,7 +482,9 @@ class Program
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
         storage.GetFolder("protonprefix").Delete(true);
-        storage.GetFolder("protonprefix/pfx");
+        var protonprefix = storage.GetFolder("protonprefix");
+        File.CreateSymbolicLink(Path.Combine(protonprefix.FullName, "pfx"), protonprefix.FullName);
+
     }
 
     public static void ClearDalamud(bool tsbutton = false)
@@ -642,6 +627,7 @@ class Program
 
         if (mainArgs.Contains("--info"))
         {
+            Console.WriteLine($"This program: XIVLauncher.Core {CoreVersion.ToString()} - {CoreRelease}");
             Console.WriteLine($"Steam compatibility tool {(SteamCompatibilityTool.IsSteamToolInstalled ? "is installed: " + SteamCompatibilityTool.CheckVersion(isFlatpak: false).Replace(",", " ") : "is not installed.")}");
             Console.WriteLine($"Steam (flatpak) compatibility tool {(SteamCompatibilityTool.IsSteamFlatpakToolInstalled ? "is installed: " + SteamCompatibilityTool.CheckVersion(isFlatpak: true).Replace(",", " ") : "is not installed.")}");
             exit = true;
@@ -693,7 +679,7 @@ class Program
 
         if (mainArgs.Contains("--version"))
         {
-            Console.WriteLine($"XIVLauncher.Core {CoreVersion.ToString()}");
+            Console.WriteLine($"XIVLauncher.Core {CoreVersion.ToString()} - {CoreRelease}");
             Console.WriteLine("Copyright (C) 2024 goatcorp.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.");
             exit = true;
         }
@@ -701,6 +687,7 @@ class Program
         if (mainArgs.Contains("-V"))
         {
             Console.WriteLine(CoreVersion.ToString());
+            Console.WriteLine(CoreRelease);
             exit = true;
         }
 

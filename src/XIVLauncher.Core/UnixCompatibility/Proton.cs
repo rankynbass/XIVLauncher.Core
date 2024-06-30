@@ -1,127 +1,80 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Serilog;
-using XIVLauncher.Core;
+using XIVLauncher.Common;
+using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
-    public static Dictionary<string, Dictionary<string, string>> Runtimes { get; private set; }
-
-    static Proton()
+    
+    public static void Initialize()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
-        Runtimes = new Dictionary<string, Dictionary<string, string>>();
-    }
 
-    public static void Initialize(string steamRoot)
-    {
-        var steamLibraries = new List<DirectoryInfo>();
-        string steamlibs = Environment.GetEnvironmentVariable("STEAM_COMPAT_LIBRARY_PATHS") ?? "";
-        if (!string.IsNullOrEmpty(steamlibs))
+        Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
-            foreach (string steamlib in steamlibs.Split(':'))
-                if (Directory.Exists(steamlib)) steamLibraries.Add(new DirectoryInfo(steamlib));
-        }
+            {"name", "XIV-Proton8-30"}, {"desc", "Patched version of GE-Proton8-30 with Dualsense and Ping plugin support."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton8-30")}
+        };
 
-        var commonDir = new DirectoryInfo(Path.Combine(steamRoot, "steamapps","common"));
-        var compatDir = new DirectoryInfo(Path.Combine(steamRoot, "compatibilitytools.d"));
-        var steamRootExists = true;
-
-        try
+        Versions["XIV-Proton9-7"] = new Dictionary<string, string>()
         {
-            if (Directory.Exists(steamRoot))
-            {
-                Log.Information($"Steam Root is {steamRoot}");
-                Log.Verbose($"Steam Common Directory is {commonDir.FullName}");
-                Log.Verbose($"Steam Compatibility Tools Directory is {compatDir.FullName}");
-                foreach (var steamlib in steamLibraries)
-                    Log.Verbose($"Another Steam Library at {steamlib.FullName}");
-            }
-            else
-            {
-                throw new DirectoryNotFoundException($"Steam Root directory \"{steamRoot}\" does not exist or is not a directory.");
-            }
-        }
-        catch (DirectoryNotFoundException ex)
-        {
-            Log.Error(ex, "No Steam directory found. Proton disabled.");
-            steamRootExists = false;
-        }
+            {"name", "XIV-Proton9-7"}, {"desc", "Patched version of GE-Proton9-7 with Dualsense and Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-7/XIV-Proton9-7.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton9-7")}
+        };
         
-        if (steamRootExists)
+        if (ToolBuilder.IsSteamInstalled)
         {
             try
             {
-
-                var commonDirs = commonDir.GetDirectories("*Proton*");
-                foreach (var dir in commonDirs)
-                    if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
+                foreach (var dir in ToolBuilder.CommonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
+                {
+                    if (File.Exists(Path.Combine(dir.FullName,"proton")))
+                    {
+                        Log.Verbose($"Adding {dir.FullName} to Proton.Versions");
+                        Versions[dir.Name] = new Dictionary<string, string>() { {"name", dir.Name}, {"label", "Valve"}, {"path", dir.FullName} };
+                    }
+                    else
+                        Log.Verbose($"{dir.FullName} is not a proton directory. Skipping...");
+                }
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Verbose(ex, $"Couldn't find any Proton versions in {commonDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
+                Log.Error($"Couldn't find any Proton versions in {ToolBuilder.CommonDir}. No proton or directory does not exist.");
             }
             try
             {
-                var commonDirs2 = commonDir.GetDirectories("SteamLinuxRuntime_*");
-                foreach (var dir in commonDirs2)
-                    if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
-                    else Log.Verbose($"Couldn't find runtime at {dir.FullName}.");
+                foreach (var dir in ToolBuilder.CompatDir.EnumerateDirectories().OrderBy(x => x.Name))
+                {
+                    if (File.Exists(Path.Combine(dir.FullName,"proton")))
+                    {
+                        if (Versions.ContainsKey(dir.Name))
+                        {
+                            Versions[dir.Name].Remove("mark");
+                            Log.Verbose($"{dir.FullName} already exists. Removing download mark.");
+                            continue;
+                        }
+                        Log.Verbose($"Adding {dir.FullName} to Proton.Versions");
+                        Versions[dir.Name] = new Dictionary<string, string>() {  {"name", dir.Name}, {"label", "Custom"}, {"path", dir.FullName} };
+                    }
+                    else
+                        Log.Verbose($"{dir.FullName} is not a proton directory. Skipping...");
+                }
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Verbose(ex, $"Couldn't find any container Runtimes in {commonDir}. Check launcher.ini and make sure that SteamPath points to your local Steam root. This is probably something like /home/deck/.steam/root or /home/deck/.local/share/Steam.");
-            }
-            try
-            {
-                var compatDirs = compatDir.GetDirectories("*Proton*");
-                foreach (var dir in compatDirs)
-                    if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                Log.Verbose(ex, $"Couldn't find any Proton versions {compatDir}.");
-            }
-            try
-            {
-                var compatDirs2 = compatDir.GetDirectories("SteamLinuxRuntime_*");
-                foreach (var dir in compatDirs2)
-                    if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                Log.Verbose(ex, $"Couldn't find any container Runtimes in {compatDir}.");
-            }
-            foreach (var steamlib in steamLibraries)
-            {
-                try
-                {
-                    var compatDirs = steamlib.GetDirectories("*Proton*");
-                    foreach (var dir in compatDirs)
-                        if (File.Exists(Path.Combine(dir.FullName,"proton"))) Versions[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    Log.Verbose(ex, $"Couldn't find any Proton versions {steamlib}.");
-                }
-                try
-                {
-                    var compatDirs2 = steamlib.GetDirectories("SteamLinuxRuntime_*");
-                    foreach (var dir in compatDirs2)
-                        if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point"))) Runtimes[dir.Name] = new Dictionary<string, string>() { {"path", dir.FullName} };
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    Log.Verbose(ex, $"Couldn't find any container Runtimes in {compatDir}.");
-                }
+                Log.Error($"Couldn't find any Proton versions {ToolBuilder.CompatDir}. No proton or directory does not exist.");
             }
         }
-
-        if (Versions.Count == 0)
-            Versions["DISABLED"] = new Dictionary<string, string>() { {"name", "DISABLED - No valid Proton verions found. Bad SteamPath or Steam not installed."}, {"path", ""} };
-        Runtimes["Disabled"] =  new Dictionary<string, string>() { {"name", "DISABLED - Don't use a container runtime"}, {"path", ""} };
     }
 
     public static string GetVersionPath(string? name)
@@ -135,8 +88,7 @@ public static class Proton
     public static string GetDefaultVersion()
     {
         if (VersionExists("Proton 8.0")) return "Proton 8.0";
-        if (VersionExists("Proton 7.0")) return "Proton 7.0";
-        return Versions.First().Key;
+        return "GE-Proton8-9";
     }
 
     public static bool VersionExists(string? name)
@@ -145,34 +97,9 @@ public static class Proton
         return Versions.ContainsKey(name);
     }
 
-    public static string GetRuntimePath(string? name)
+    public static string GetDownloadUrl(string? name)
     {
-        name ??= GetDefaultRuntime();
-        if (Runtimes.ContainsKey(name))
-        {
-            Log.Verbose($"Runtime found: {name} - {Runtimes[name]}");
-            return Runtimes[name]["path"];
-        }
-        Log.Verbose($"Runtime not found, using default: {GetDefaultRuntime()} - {Runtimes[GetDefaultRuntime()]}");
-        return Runtimes[GetDefaultRuntime()]["path"];
+        if (!VersionExists(name)) return "";
+        return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
     }
-
-    public static string GetDefaultRuntime()
-    {
-        if (RuntimeExists("SteamLinuxRuntime_sniper")) return "SteamLinuxRuntime_sniper";
-        if (RuntimeExists("SteamLinuxRuntime_soldier")) return "SteamLinuxRuntime_soldier";
-        return "Disabled";
-    }
-
-    public static bool RuntimeExists(string? name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        return Runtimes.ContainsKey(name);
-    }
-
-    public static bool IsValid()
-    {
-        return !Versions.ContainsKey("DISABLED");
-    }
-
 }

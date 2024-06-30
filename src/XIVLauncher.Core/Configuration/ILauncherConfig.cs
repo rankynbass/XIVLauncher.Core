@@ -67,11 +67,13 @@ public interface ILauncherConfig
 
     public string? WineBinaryPath { get; set; }
 
+    public string? ProtonVersion { get; set; }
+
+    public string? RuntimeVersion { get; set; }
+
     public bool? GameModeEnabled { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
-
-    public bool? DxvkGPLAsyncCacheEnabled { get; set; }
 
     public bool? ESyncEnabled { get; set; }
 
@@ -93,11 +95,7 @@ public interface ILauncherConfig
 
     public string? WineDebugVars { get; set; }
 
-    public string? ProtonVersion { get; set; }
-
-    public string? SteamRuntime { get; set; }
-    
-    public string? FixLocale { get; set; }
+    public bool? FixLocale { get; set; }
 
     public bool? FixLDP { get; set; }
 
@@ -131,10 +129,6 @@ public interface ILauncherConfig
 
     public string? SteamFlatpakPath { get; set; }
 
-    public int? WineScale { get; set; }
-
-    public bool? WaylandEnabled { get; set; }
-    
     public bool? SteamToolInstalled { get; set; }
 
     public bool? SteamFlatpakToolInstalled { get; set; }
