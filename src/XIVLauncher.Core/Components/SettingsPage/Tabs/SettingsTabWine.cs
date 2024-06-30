@@ -13,9 +13,9 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineType> wineTypeSetting;
 
-    private SettingsEntry<bool> umuEnabledSetting;
-
     private DictionarySettingsEntry wineVersionSetting;
+
+    private DictionarySettingsEntry protonVersionSetting;
 
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
@@ -48,7 +48,7 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Custom
             },
 
-            new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
+            protonVersionSetting = new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
                 // CheckWarning = x =>
@@ -113,12 +113,25 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Dummy(new Vector2(10));
 
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        if (wineTypeSetting.Value == WineType.Managed)
         {
-            ImGui.BeginDisabled();
-            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+            if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.BeginDisabled();
+                ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
 
-            ImGui.Dummy(new Vector2(10));
+                ImGui.Dummy(new Vector2(10));
+            }
+        }
+        else if (wineTypeSetting.Value == WineType.Proton)
+        {
+            if (Proton.Versions[protonVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.BeginDisabled();
+                ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+
+                ImGui.Dummy(new Vector2(10));
+            }
         }
 
         if (ImGui.Button("Open prefix"))
@@ -171,25 +184,52 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        if (wineTypeSetting.Value == WineType.Managed)
         {
-            ImGui.EndDisabled();
-        }
-
-        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
-        {
-            ImGui.SameLine();
-
-            if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+            if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
             {
-                Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
-                this.Save();
-                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
-                    .ContinueWith(t => 
-                    {
-                        Wine.Versions[wineVersionSetting.Value].Remove("mark");
-                        Wine.Initialize();
-                    });
+                ImGui.EndDisabled();
+            }
+
+            if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.SameLine();
+
+                if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+                {
+                    Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
+                    this.Save();
+                    Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
+                        .ContinueWith(t => 
+                        {
+                            Wine.Versions[wineVersionSetting.Value].Remove("mark");
+                            Wine.Initialize();
+                        });
+                }
+            }
+        }
+        else if (wineTypeSetting.Value == WineType.Proton)
+        {
+            if (Proton.Versions[protonVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.EndDisabled();
+            }
+
+            if (Proton.Versions[protonVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.SameLine();
+
+                if (ImGui.Button($"{Proton.Versions[protonVersionSetting.Value]["mark"]} now!"))
+                {
+                    Proton.Versions[protonVersionSetting.Value]["mark"] = "Downloading";
+                    this.Save();
+                    Task.Run(async () => await Program.CompatibilityTools.DownloadProton().ConfigureAwait(false))
+                        .ContinueWith(t => 
+                        {
+                            Proton.Versions[protonVersionSetting.Value].Remove("mark");
+                            Proton.Initialize();
+                        });
+                }
             }
         }
 

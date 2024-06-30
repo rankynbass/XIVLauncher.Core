@@ -46,31 +46,31 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-03-clean"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-04-clean"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-03-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-03/unofficial-wine-xiv-valvebe-9-03-clean.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-04-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-04/unofficial-wine-xiv-valvebe-9-04-clean.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-03"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-04"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-03"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-03/unofficial-wine-xiv-valvebe-9-03.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-04"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-04/unofficial-wine-xiv-valvebe-9-04.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-wayland-9.10"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-wayland-9.11"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-wayland-9.10"}, {"desc", "Patched version of Wine Devel 9.10. Includes working wayland session and working Ping plugin."},
-            {"label", "Wayland"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.10/unofficial-wine-xiv-wayland-9.10.tar.zst"},
+            {"name", "unofficial-wine-xiv-wayland-9.11"}, {"desc", "Patched version of Wine Devel 9.11. Includes working wayland session and working Ping plugin."},
+            {"label", "Wayland"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.11/unofficial-wine-xiv-wayland-9.11.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-staging-9.10"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-staging-9.11"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-staging-9.10"}, {"desc", "Patched version of Wine Staging 9.10. No wayland but working Ping plugin."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.10/unofficial-wine-xiv-staging-9.10.tar.zst"},
+            {"name", "unofficial-wine-xiv-staging-9.11"}, {"desc", "Patched version of Wine Staging 9.11. No wayland but working Ping plugin."},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.11/unofficial-wine-xiv-staging-9.11.tar.zst"},
             {"mark", "Download"}
         };    
 
@@ -114,10 +114,10 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
-        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
-            return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
+        if (Versions.ContainsKey("unofficial-wine-xiv-valvebe-8-2"))
+            return "";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))
-            return "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
+            return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
         return Versions.First().Key;
     }
 }

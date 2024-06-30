@@ -80,7 +80,8 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button($"{(steamToolInstalled ? "Re-i" : "I")}nstall to native Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.CreateTool(isFlatpak: false);
+            Task.Run(async() => await SteamCompatibilityTool.CreateTool(isFlatpak: false));
+            
             steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
         }
         if (!steamInstalled) ImGui.EndDisabled();
@@ -118,7 +119,7 @@ public class SettingsTabSteamTool : SettingsTab
             if (ImGui.Button("Uninstall from Flatpak Steam"))
             {
                 this.Save();
-                SteamCompatibilityTool.DeleteTool(isFlatpak: true);
+                Task.Run(async() => await SteamCompatibilityTool.CreateTool(isFlatpak: true));
                 steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
             }
             if (!steamFlatpakToolInstalled)
