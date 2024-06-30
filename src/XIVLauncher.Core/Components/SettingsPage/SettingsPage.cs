@@ -15,6 +15,7 @@ public class SettingsPage : Page
         new SettingsTabWine(),
         new SettingsTabDxvk(),
         new SettingsTabDalamud(),
+        new SettingsTabSteamTool(),
         new SettingsTabAutoStart(),
         new SettingsTabAbout(),
         new SettingsTabDebug(),
