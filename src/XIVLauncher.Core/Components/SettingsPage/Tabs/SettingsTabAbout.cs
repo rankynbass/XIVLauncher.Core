@@ -23,7 +23,7 @@ public class SettingsTabAbout : SettingsTab
     {
         ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
 
-        ImGui.Text($"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
+        ImGui.Text($"XIVLauncher-RB v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
         ImGui.Text("By goaaats");
 
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
@@ -33,10 +33,10 @@ public class SettingsTabAbout : SettingsTab
 
         if (ImGui.Button("Open Repository"))
         {
-            AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core");
+            AppUtil.OpenBrowser("https://github.com/rankynbass/XIVLauncher.Core");
         }
 
-        if (ImGui.Button("Join our Discord"))
+        if (ImGui.Button("Join the XIVLauncher Discord"))
         {
             AppUtil.OpenBrowser("https://discord.gg/3NMcUV5");
         }

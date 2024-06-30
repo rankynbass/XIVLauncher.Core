@@ -100,6 +100,25 @@ public class SettingsTabDxvk : SettingsTab
         ImGui.Dummy(new Vector2(5));
 
         base.Draw();
+
+        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
+        {
+            ImGui.Separator();
+
+            ImGui.Dummy(new Vector2(10));
+
+            if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} now!"))
+            {
+                Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
+                this.Save();
+                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
+                    .ContinueWith(t => 
+                    {
+                        Dxvk.Versions[dxvkVersionSetting.Value].Remove("mark");
+                        Dxvk.Initialize();
+                    });
+            }
+        }
     }
 
     public override void Save()

@@ -111,9 +111,9 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(new Vector2(10));
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.BeginDisabled();
             ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
@@ -149,7 +149,7 @@ public class SettingsTabWine : SettingsTab
 
         }
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(new Vector2(10));
 
 
         if (ImGui.Button("Set Wine to Windows 7"))
@@ -164,17 +164,48 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunExternalProgram($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
-        ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
+        ImGui.Dummy(new Vector2(10));
 
         if (ImGui.Button("Kill all wine processes"))
         {
             Program.CompatibilityTools.Kill();
         }
 
-        if (!Program.CompatibilityTools.IsToolDownloaded)
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.EndDisabled();
         }
+
+        if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
+        {
+            ImGui.SameLine();
+
+            if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+            {
+                Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
+                this.Save();
+                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
+                    .ContinueWith(t => 
+                    {
+                        Wine.Versions[wineVersionSetting.Value].Remove("mark");
+                        Wine.Initialize();
+                    });
+            }
+        }
+
+        ImGui.Dummy(new Vector2(10));
+
+        if (Program.IsReshadeEnabled() is not null)
+        {
+            ImGui.Text($"Reshade is {(Program.IsReshadeEnabled().Value ? "ENABLED" : "DISABLED")}");
+        
+            if (ImGui.Button("Toggle Reshade"))
+            {
+                Program.ToggleReshade();
+            }
+        }
+        else
+            ImGui.Text($"Reshade is not installed");
     }
 
     public override void Save()
