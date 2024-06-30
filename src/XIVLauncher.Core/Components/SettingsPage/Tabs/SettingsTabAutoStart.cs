@@ -9,8 +9,8 @@ public class SettingsTabAutoStart : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            new SettingsEntry<bool>("Enable App #1", "", () => Program.Config.AutoStart1Enabled ?? false, b => Program.Config.AutoStart1Enabled = b),
-            new SettingsEntry<string>("App #1", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.AutoStart1 ?? string.Empty, s => Program.Config.AutoStart1 = s)
+            new SettingsEntry<bool>("Enable App #1", "", () => Program.Config.HelperApp1Enabled ?? false, b => Program.Config.HelperApp1Enabled = b),
+            new SettingsEntry<string>("App #1", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.HelperApp1 ?? string.Empty, s => Program.Config.HelperApp1 = s)
             {
                 CheckWarning = s =>
                 {
@@ -19,8 +19,8 @@ public class SettingsTabAutoStart : SettingsTab
                     return null;
                 },
             },
-            new SettingsEntry<string>("App #1 Arguments", "Any additional arguments for App #1. Environment variables not supported.", () => Program.Config.AutoStart1Args ?? "", s => Program.Config.AutoStart1Args = s),
-            new SettingsEntry<bool>("Use WineD3D with App #1","", () => Program.Config.AutoStart1WineD3D ?? false, b => Program.Config.AutoStart1WineD3D = b)
+            new SettingsEntry<string>("App #1 Arguments", "Any additional arguments for App #1. Environment variables not supported.", () => Program.Config.HelperApp1Args ?? "", s => Program.Config.HelperApp1Args = s),
+            new SettingsEntry<bool>("Use WineD3D with App #1","", () => Program.Config.HelperApp1WineD3D ?? false, b => Program.Config.HelperApp1WineD3D = b)
             {
                 CheckValidity = b =>
                 {
@@ -31,8 +31,8 @@ public class SettingsTabAutoStart : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable App #2", "", () => Program.Config.AutoStart2Enabled ?? false, b => Program.Config.AutoStart2Enabled = b),
-            new SettingsEntry<string>("App #2", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.AutoStart2 ?? string.Empty, s => Program.Config.AutoStart2 = s)
+            new SettingsEntry<bool>("Enable App #2", "", () => Program.Config.HelperApp2Enabled ?? false, b => Program.Config.HelperApp2Enabled = b),
+            new SettingsEntry<string>("App #2", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.HelperApp2 ?? string.Empty, s => Program.Config.HelperApp2 = s)
             {
                 CheckWarning = s =>
                 {
@@ -41,8 +41,8 @@ public class SettingsTabAutoStart : SettingsTab
                     return null;
                 },
             },
-            new SettingsEntry<string>("App #2 Arguments", "Any additional arguments for App #2. Environment variables not supported.", () => Program.Config.AutoStart2Args ?? "", s => Program.Config.AutoStart2Args = s),
-            new SettingsEntry<bool>("Use WineD3D with App #2","", () => Program.Config.AutoStart2WineD3D ?? false, b => Program.Config.AutoStart2WineD3D = b)
+            new SettingsEntry<string>("App #2 Arguments", "Any additional arguments for App #2. Environment variables not supported.", () => Program.Config.HelperApp2Args ?? "", s => Program.Config.HelperApp2Args = s),
+            new SettingsEntry<bool>("Use WineD3D with App #2","", () => Program.Config.HelperApp2WineD3D ?? false, b => Program.Config.HelperApp2WineD3D = b)
             {
                 CheckValidity = b =>
                 {
@@ -53,8 +53,8 @@ public class SettingsTabAutoStart : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable App #3", "", () => Program.Config.AutoStart3Enabled ?? false, b => Program.Config.AutoStart3Enabled = b),
-            new SettingsEntry<string>("App #3", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.AutoStart3 ?? string.Empty, s => Program.Config.AutoStart3 = s)
+            new SettingsEntry<bool>("Enable App #3", "", () => Program.Config.HelperApp3Enabled ?? false, b => Program.Config.HelperApp3Enabled = b),
+            new SettingsEntry<string>("App #3", "Set a path for an exe file that you want launched with FFXIV. Warning: If it's invalid, the game may hang.", () => Program.Config.HelperApp3 ?? string.Empty, s => Program.Config.HelperApp3 = s)
             {
                 CheckWarning = s =>
                 {
@@ -63,8 +63,8 @@ public class SettingsTabAutoStart : SettingsTab
                     return null;
                 },
             },
-            new SettingsEntry<string>("App #3 Arguments", "Any additional arguments for App #3. Environment variables not supported.", () => Program.Config.AutoStart3Args ?? "", s => Program.Config.AutoStart3Args = s),
-            new SettingsEntry<bool>("Use WineD3D with App #3", "", () => Program.Config.AutoStart3WineD3D ?? false, b => Program.Config.AutoStart3WineD3D = b),
+            new SettingsEntry<string>("App #3 Arguments", "Any additional arguments for App #3. Environment variables not supported.", () => Program.Config.HelperApp3Args ?? "", s => Program.Config.HelperApp3Args = s),
+            new SettingsEntry<bool>("Use WineD3D with App #3", "", () => Program.Config.HelperApp3WineD3D ?? false, b => Program.Config.HelperApp3WineD3D = b),
         };
     }
 

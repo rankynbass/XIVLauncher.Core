@@ -677,6 +677,17 @@ public class MainPage : Page
 
         IGameRunner runner;
 
+        // Set LD_PRELOAD to value of XL_PRELOAD if we're running as a steam compatibility tool.
+        // This check must be done before the FixLDP check so that it will still work.
+        if (CoreEnvironmentSettings.IsSteamCompatTool)
+        {
+            var ldpreload = System.Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
+            var xlpreload = System.Environment.GetEnvironmentVariable("XL_PRELOAD") ?? "";
+            ldpreload = (ldpreload + ":" + xlpreload).Trim(':');
+            if (!string.IsNullOrEmpty(ldpreload))
+                System.Environment.SetEnvironmentVariable("LD_PRELOAD", ldpreload);
+        }
+
         // Hack: Force C.utf8 to fix incorrect unicode paths
         if (App.Settings.FixLocale == true && !string.IsNullOrEmpty(Program.CType))
         {
@@ -788,12 +799,12 @@ public class MainPage : Page
                 return null!;
 
 
-            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart1))
-                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart1 + "\"" + App.Settings.AutoStart1Args, wineD3D: App.Settings.AutoStart1WineD3D.Value);
-            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart2))
-                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart2 + "\"" + App.Settings.AutoStart2Args, wineD3D: App.Settings.AutoStart2WineD3D.Value);
-            if (App.Settings.AutoStart1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.AutoStart3))
-                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.AutoStart3 + "\"" + App.Settings.AutoStart3Args, wineD3D: App.Settings.AutoStart3WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp1))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp1 + "\"" + App.Settings.HelperApp1Args, wineD3D: App.Settings.HelperApp1WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp2))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp2 + "\"" + App.Settings.HelperApp2Args, wineD3D: App.Settings.HelperApp2WineD3D.Value);
+            if (App.Settings.HelperApp1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.HelperApp3))
+                Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.HelperApp3 + "\"" + App.Settings.HelperApp3Args, wineD3D: App.Settings.HelperApp3WineD3D.Value);
 
             App.StartLoading("Starting game...", "Have fun!");
 
@@ -946,7 +957,7 @@ public class MainPage : Page
                 return false;
             }
 
-            if (bootPatches == null)
+            if (bootPatches.Length == 0)
                 return true;
 
             return await TryHandlePatchAsync(Repository.Boot, bootPatches, "").ConfigureAwait(false);
@@ -1046,7 +1057,7 @@ public class MainPage : Page
             finally
             {
                 token.Cancel();
-                statusThread.Join(3000);
+                statusThread.Join(TimeSpan.FromMilliseconds(1000));
             }
 
             return true;
@@ -1146,7 +1157,7 @@ public class MainPage : Page
         Log.Information("STARTING REPAIR");
 
         // TODO: bundle the PatchInstaller with xl-core on Windows and run this remotely
-        using var verify = new PatchVerifier(Program.CommonSettings, loginResult, 20, loginResult.OauthLogin.MaxExpansion, false);
+        using var verify = new PatchVerifier(Program.CommonSettings, loginResult, TimeSpan.FromMilliseconds(100), loginResult.OauthLogin.MaxExpansion, false);
 
         for (bool doVerify = true; doVerify;)
         {

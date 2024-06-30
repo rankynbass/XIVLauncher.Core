@@ -101,29 +101,29 @@ public interface ILauncherConfig
 
     public bool? FixIM { get; set; }
 
-    public string? AutoStart1 { get; set; }
+    public string? HelperApp1 { get; set; }
 
-    public string? AutoStart2 { get; set; }
+    public string? HelperApp2 { get; set; }
 
-    public string? AutoStart3 { get; set; }
+    public string? HelperApp3 { get; set; }
 
-    public string? AutoStart1Args { get; set; }
+    public string? HelperApp1Args { get; set; }
 
-    public string? AutoStart2Args { get; set; }
+    public string? HelperApp2Args { get; set; }
 
-    public string? AutoStart3Args { get; set; }
+    public string? HelperApp3Args { get; set; }
 
-    public bool? AutoStart1Enabled { get; set; }
+    public bool? HelperApp1Enabled { get; set; }
 
-    public bool? AutoStart2Enabled { get; set; }
+    public bool? HelperApp2Enabled { get; set; }
 
-    public bool? AutoStart3Enabled { get; set; }
+    public bool? HelperApp3Enabled { get; set; }
 
-    public bool? AutoStart1WineD3D { get; set; }
+    public bool? HelperApp1WineD3D { get; set; }
 
-    public bool? AutoStart2WineD3D { get; set; }
+    public bool? HelperApp2WineD3D { get; set; }
 
-    public bool? AutoStart3WineD3D { get; set; }
+    public bool? HelperApp3WineD3D { get; set; }
 
     #endregion
 
