@@ -18,6 +18,20 @@ public static class Proton
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
 
+        Versions["GE-Proton8-9"] = new Dictionary<string, string>()
+        {
+            {"name", "GE-Proton8-9"}, {"desc", "GloriousEggroll's Proton release 8-9. Last version without mouse warp bug from KDE 5. Fixed in KDE 6."},
+            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-9/GE-Proton8-9.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-9")}
+        };
+
+        Versions["GE-Proton9-9"] = new Dictionary<string, string>()
+        {
+            {"name", "GE-Proton9-9"}, {"desc", "GloriousEggroll's Proton release 9-9. May have mouse warp bug in some xwayland sessions."},
+            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-9/GE-Proton9-9.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton9-9")}
+        };
+
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton8-30"}, {"desc", "Patched version of GE-Proton8-30 with Dualsense and Ping plugin support."},
