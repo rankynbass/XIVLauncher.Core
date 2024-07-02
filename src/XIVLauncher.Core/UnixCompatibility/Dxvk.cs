@@ -59,6 +59,12 @@ public static class Dxvk
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
+    public static string NvapiFolder => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "nvapi");
+
+    public static string NvapiUrl => "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz";
+
+    public static bool NvapiEnabled => Program.Config.NvapiEnabled ?? false;
+
     static Dxvk()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();

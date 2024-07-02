@@ -89,6 +89,8 @@ public interface ILauncherConfig
 
     public string? MangoHudCustomFile { get; set; }
 
+    public bool? NvapiEnabled { get; set; }
+
     public string? WineDebugVars { get; set; }
 
     public bool? FixLocale { get; set; }

@@ -32,6 +32,8 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
 
+            new SettingsEntry<bool>("Enable DXVK-NVAPI", "Enable DXVK-NVAPI, which may allow DLSS to work. Needs DXVK version >= 2.0, and an Nvidia RTX card", () => Program.Config.NvapiEnabled ?? false, b => Program.Config.NvapiEnabled = b),
+
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
