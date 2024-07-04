@@ -17,7 +17,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 
 ## Building & Contributing
 1. Clone this repository with submodules
-2. Make sure you have a recent(.NET 6.0.400+) version of the .NET SDK installed
+2. Make sure you have a recent(.NET 8.0) version of the .NET SDK installed
 2. Run `dotnet build` or `dotnet publish`
 
 Common components that are shared with the Windows version of XIVLauncher are linked as a submodule in the "lib" folder. XIVLauncher Core can run on Windows, but is by far not as polished as the [original Windows version](https://github.com/goatcorp/FFXIVQuickLauncher). Windows users should not use this application unless for troubleshooting purposes or development work.
