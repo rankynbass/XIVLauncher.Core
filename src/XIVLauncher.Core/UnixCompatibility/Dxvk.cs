@@ -59,6 +59,12 @@ public static class Dxvk
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
+    public static string Vkd3dFolder => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "vkd3d", "vkd3d-proton-2.13");
+
+    public static string Vkd3dUrl => "https://github.com/HansKristian-Work/vkd3d-proton/releases/download/v2.13/vkd3d-proton-2.13.tar.zst";
+
+    public static bool Vkd3dEnabled => Program.Config.Vkd3dEnabled ?? false;
+
     public static string NvapiFolder => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "nvapi");
 
     public static string NvapiUrl => "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz";

@@ -140,6 +140,7 @@ class Program
         Config.MangoHud ??= MangoHud.None;
         Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
         Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
+        Config.Vkd3dEnabled ??= false;
         Config.NvapiEnabled ??= false;
 
         Config.FixLDP ??= false;
@@ -369,9 +370,10 @@ class Program
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
         var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        var vkd3dSettings = new Vkd3dSettings(Dxvk.Vkd3dFolder, Dxvk.Vkd3dUrl, storage.Root.FullName, Dxvk.Vkd3dEnabled);
         var nvapiSettings = new NvapiSettings(Dxvk.NvapiFolder, Dxvk.NvapiUrl, storage.Root.FullName, Dxvk.NvapiEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, nvapiSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, vkd3dSettings, nvapiSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()
