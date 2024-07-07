@@ -52,6 +52,8 @@ public static class ToolBuilder
         _ => throw new ArgumentOutOfRangeException(),
     };
 
+    public static string WineDLLOverrides => Program.Config.WineDLLOverrides ?? "";
+
     public static string DebugVars => Program.Config.WineDebugVars ?? "-all";
 
     public static FileInfo LogFile => new FileInfo(Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));

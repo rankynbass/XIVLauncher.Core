@@ -18,11 +18,11 @@ public static class Proton
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
 
-        Versions["GE-Proton8-9"] = new Dictionary<string, string>()
+        Versions["UMU-Proton-9.0-2"] = new Dictionary<string, string>()
         {
-            {"name", "GE-Proton8-9"}, {"desc", "GloriousEggroll's Proton release 8-9. Last version without mouse warp bug from KDE 5. Fixed in KDE 6."},
-            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-9/GE-Proton8-9.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "GE-Proton8-9")}
+            {"name", "UMU-Proton-9.0-2"}, {"desc", "UMU-Proton-9.0-2. This is basically Steam's official Proton 9 release."},
+            {"label", "UMU-Proton"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-2/UMU-Proton-9.0-2.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "UMU-Proton-9.0-2")}
         };
 
         Versions["GE-Proton9-9"] = new Dictionary<string, string>()
@@ -39,11 +39,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-7"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-9"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton9-7"}, {"desc", "Patched version of GE-Proton9-7 with Dualsense and Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-7/XIV-Proton9-7.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton9-7")}
+            {"name", "XIV-Proton9-9"}, {"desc", "Patched version of GE-Proton9-9 with Dualsense and Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-9/XIV-Proton9-9.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CompatDir.FullName, "XIV-Proton9-9")}
         };
         
         if (ToolBuilder.IsSteamInstalled)

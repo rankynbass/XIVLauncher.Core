@@ -95,6 +95,18 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
+            new SettingsEntry<string>("Wine DLL Overrides", "Add extra WINEDLLOVERRIDES. No spaces, semicolon separated. Do not use msquic, mscoree, d3d11, dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
+            {
+                CheckValidity = s =>
+                {
+                    if (String.IsNullOrEmpty(s)) return null;
+                    if (s.Contains(' ')) return "Invalid! No spaces allowed!";
+                    if (s.Contains("d3d11") || s.Contains("dxgi") || s.Contains("mscoree") || s.Contains("msquic")) return "Invalid! msquic, mscoree, d3d11, and/or dxgi alread set.";
+
+                    return null;
+                },
+            },
+
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
         };
     }

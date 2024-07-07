@@ -93,6 +93,8 @@ public interface ILauncherConfig
 
     public string? MangoHudCustomFile { get; set; }
 
+    public string? WineDLLOverrides { get; set; }
+
     public string? WineDebugVars { get; set; }
 
     public bool? FixLocale { get; set; }

@@ -140,6 +140,7 @@ class Program
             Config.ProtonVersion = ToolBuilder.DEFAULT_PROTON;
         if (!Runtime.VersionExists(Config.RuntimeVersion))
             Config.RuntimeVersion = ToolBuilder.DEFAULT_RUNTIME;
+        Config.WineDLLOverrides ??= "";
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
@@ -437,7 +438,7 @@ class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
+        var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.WineDLLOverrides, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var steamFolder = new DirectoryInfo(ToolBuilder.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
