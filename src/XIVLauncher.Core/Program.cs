@@ -134,17 +134,17 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = ToolBuilder.DEFAULT_WINE;
+            Config.WineVersion = Wine.GetDefaultVersion();
         Config.WineBinaryPath ??= "/usr/bin";
         if (!Proton.VersionExists(Config.ProtonVersion))
-            Config.ProtonVersion = ToolBuilder.DEFAULT_PROTON;
+            Config.ProtonVersion = Proton.GetDefaultVersion();
         if (!Runtime.VersionExists(Config.RuntimeVersion))
-            Config.RuntimeVersion = ToolBuilder.DEFAULT_RUNTIME;
+            Config.RuntimeVersion = Runtime.GetDefaultVersion();
         Config.WineDLLOverrides ??= "";
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
-            Config.DxvkVersion = "dxvk-async-1.10.3";
+            Config.DxvkVersion = Dxvk.GetDefaultVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
@@ -228,7 +228,7 @@ class Program
             badxlpathex = e;
         }
 
-        ToolBuilder.Initialize();
+        ToolSetup.Initialize();
         Dxvk.Initialize();
 
         if (badxlpath)
@@ -437,10 +437,10 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
-        var wineSettings = new WineSettings(ToolBuilder.IsProton, ToolBuilder.FolderName, ToolBuilder.WineDownloadUrl, ToolBuilder.RuntimePath, ToolBuilder.RuntimeDownloadUrl, ToolBuilder.WineDLLOverrides, ToolBuilder.DebugVars, ToolBuilder.LogFile, ToolBuilder.Prefix, ToolBuilder.ESyncEnabled, ToolBuilder.FSyncEnabled);
+        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled);
+        var wineSettings = new WineSettings(ToolSetup.IsProton, ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var steamFolder = new DirectoryInfo(ToolBuilder.STEAM);
+        var steamFolder = new DirectoryInfo(ToolSetup.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
     }
 

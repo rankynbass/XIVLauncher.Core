@@ -13,49 +13,13 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
-    public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
-
-    public static string FolderName => Program.Config.DxvkVersion ?? GetDefaultVersion();
-
-    public static string DownloadUrl => GetDownloadUrl(Program.Config.DxvkVersion);
-
-    public static int FrameRateLimit => Program.Config.DxvkFrameRateLimit ?? 0;
-
-    public static bool AsyncEnabled => Program.Config.DxvkAsyncEnabled ?? false;
-
-    public static bool DxvkHudEnabled => Program.Config.DxvkHud != DxvkHud.None;
-
-    public static string DxvkHudString => Program.Config.DxvkHud switch
-    {
-        DxvkHud.None => "",
-        DxvkHud.Custom => Program.Config.DxvkHudCustom ?? "1",
-        DxvkHud.Default => "1",
-        DxvkHud.Fps => "fps",
-        DxvkHud.Full => "full",
-        _ => throw new ArgumentOutOfRangeException(),
-    };
-
     public static bool MangoHudInstalled { get; }
-
-    public static bool MangoHudEnabled => Program.Config.MangoHud != MangoHud.None;
-
-    public static bool MangoHudCustomIsFile => Program.Config.MangoHud == MangoHud.CustomFile;
-
-    public static string MangoHudString => Program.Config.MangoHud switch
-    {
-        MangoHud.None => "",
-        MangoHud.Default => "",
-        MangoHud.Full => "full",
-        MangoHud.CustomString => Program.Config.MangoHudCustomString ?? "",
-        MangoHud.CustomFile => Program.Config.MangoHudCustomFile ?? "",
-        _ => throw new ArgumentOutOfRangeException(),
-    };
 
     public static string DXVK_HUD => "fps,frametimes,gpuload,version";
 
     public static string MANGOHUD_CONFIG => "ram,vram,resolution,vulkan_driver,engine_version,wine,frame_timing=0";
 
-    public static string MANGOHUD_CONFIGFILE => Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
+    public static string MANGOHUD_CONFIGFILE => Path.Combine(CoreEnvironmentSettings.XDG_CONFIG_HOME, "MangoHud", "MangoHud.conf");
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -63,20 +27,17 @@ public static class Dxvk
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
-    }
 
-    public static void Initialize()
-    {
         // Add default versions.
         Versions["DISABLED"] = new Dictionary<string, string>()
         {
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         };
-        Versions["dxvk-2.3.1"] = new Dictionary<string, string>()
+        Versions["dxvk-2.4"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.3.1"}, {"desc", "Official version 2.3.1 of DXVK."},
-            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.3.1/dxvk-2.3.1.tar.gz"},
+            {"name", "DXVK 2.4"}, {"desc", "Official version 2.4 of DXVK."},
+            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz"},
             {"mark", "Download"}
         };
         Versions["dxvk-gplasync-v2.3.1-1"] = new Dictionary<string, string>()
@@ -91,7 +52,10 @@ public static class Dxvk
             {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
             {"mark", "Download" }
         };
+    }
 
+    public static void Initialize()
+    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
 
         if (!toolDirectory.Exists)
@@ -117,7 +81,7 @@ public static class Dxvk
         }
     }
 
-    private static string GetDownloadUrl(string? name)
+    public static string GetDownloadUrl(string? name)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
@@ -129,8 +93,8 @@ public static class Dxvk
     {
         if (Versions.ContainsKey("dxvk-async-1.10.3"))
             return "dxvk-async-1.10.3";
-        if (Versions.ContainsKey("dxvk-2.3"))
-            return "dxvk-2.3";
+        if (Versions.ContainsKey("dxvk-2.3.1"))
+            return "dxvk-2.3.1";
         return Versions.First().Key;
     }
 

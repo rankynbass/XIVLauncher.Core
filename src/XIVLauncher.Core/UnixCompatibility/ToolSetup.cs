@@ -10,14 +10,8 @@ using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
-public static class ToolBuilder
+public static class ToolSetup
 {
-    public const string DEFAULT_WINE = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
-
-    public const string DEFAULT_PROTON = "GE-Proton8-9";
-
-    public const string DEFAULT_RUNTIME = "SteamLinuxRuntime_sniper";
-
     public static string HOME => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
     
     public static string STEAM => IsFlatpak ? Path.Combine(HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam") : Path.Combine(HOME, ".local", "share", "Steam");
@@ -36,7 +30,7 @@ public static class ToolBuilder
     {
         WineType.Managed => Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine", Program.Config.WineVersion ?? Wine.GetDefaultVersion()),
         WineType.Custom => Program.Config.WineBinaryPath ?? "/usr/bin",
-        WineType.Proton => Proton.GetVersionPath(Program.Config.ProtonVersion ?? DEFAULT_PROTON),
+        WineType.Proton => Proton.GetVersionPath(Program.Config.ProtonVersion ?? ""),
         _ => throw new ArgumentOutOfRangeException(),
     };
 
@@ -63,6 +57,43 @@ public static class ToolBuilder
     public static bool ESyncEnabled => Program.Config.ESyncEnabled ?? true;
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
+
+    public static bool DxvkEnabled => Program.Config.DxvkVersion != "DISABLED";
+
+    public static string DxvkFolder => Program.Config.DxvkVersion ?? Dxvk.GetDefaultVersion();
+
+    public static string DxvkDownloadUrl => Dxvk.GetDownloadUrl(Program.Config.DxvkVersion);
+
+    public static int DxvkFrameRate => Program.Config.DxvkFrameRateLimit ?? 0;
+
+    public static bool AsyncEnabled => Program.Config.DxvkAsyncEnabled ?? false;
+
+    public static bool DxvkHudEnabled => Program.Config.DxvkHud != DxvkHud.None;    
+
+    public static string DxvkHudString => Program.Config.DxvkHud switch
+    {
+        DxvkHud.None => "",
+        DxvkHud.Custom => Program.Config.DxvkHudCustom ?? "1",
+        DxvkHud.Default => "1",
+        DxvkHud.Fps => "fps",
+        DxvkHud.Full => "full",
+        _ => throw new ArgumentOutOfRangeException(),
+
+    };
+
+    public static bool MangoHudEnabled => Program.Config.MangoHud != MangoHud.None;
+
+    public static bool MangoHudCustomIsFile => Program.Config.MangoHud == MangoHud.CustomFile;
+
+    public static string MangoHudString => Program.Config.MangoHud switch
+    {
+        MangoHud.None => "",
+        MangoHud.Default => "",
+        MangoHud.Full => "full",
+        MangoHud.CustomString => Program.Config.MangoHudCustomString ?? "",
+        MangoHud.CustomFile => Program.Config.MangoHudCustomFile ?? "",
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
     public static void Initialize(bool isFlatpakSteam = false)
     {
