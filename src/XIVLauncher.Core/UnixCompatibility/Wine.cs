@@ -14,9 +14,8 @@ public static class Wine
 {
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
-    public static void Initialize()
+    static Wine()
     {
-
         Versions = new Dictionary<string, Dictionary<string, string>>();
 
         // Add default versions.
@@ -80,7 +79,10 @@ public static class Wine
             {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21.1/unofficial-wine-xiv-git-8.21.1.tar.xz"},
             {"mark", "Download"}
         };
+    }
 
+    public static void Initialize()
+    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
         if (!toolDirectory.Exists)
@@ -114,9 +116,7 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
-        if (Versions.ContainsKey("unofficial-wine-xiv-valvebe-8-2"))
-            return "";
-        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))
+        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
             return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
         return Versions.First().Key;
     }

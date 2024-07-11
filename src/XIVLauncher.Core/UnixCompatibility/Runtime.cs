@@ -25,13 +25,13 @@ public static class Runtime
         Versions["SteamLinuxRuntime_sniper"] = new Dictionary<string, string>()
         {
             {"name", "Sniper"}, {"desc", "Steam sniper runtime container. For use with Proton 8+."},
-            {"url", SNIPER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CommonDir.FullName, "SteamLinuxRuntime_sniper")}
+            {"url", SNIPER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CommonDir.FullName, "SteamLinuxRuntime_sniper")}
         };
         
         Versions["SteamLinuxRuntime_soldier"] = new Dictionary<string, string>()
         {
             {"name", "Soldier"}, {"desc", "Steam soldier runtime container. May be needed for some Proton 7 versions."},
-            {"url", SOLDIER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolBuilder.CommonDir.FullName, "SteamLinuxRuntime_soldier")}
+            {"url", SOLDIER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CommonDir.FullName, "SteamLinuxRuntime_soldier")}
         };
 
         Versions["DISABLED"] = new Dictionary<string, string>()
@@ -40,11 +40,11 @@ public static class Runtime
             {"path", ""}
         };
 
-        if (ToolBuilder.IsSteamInstalled)
+        if (ToolSetup.IsSteamInstalled)
         {
             try
             {
-                foreach (var dir in ToolBuilder.CommonDir.EnumerateDirectories().OrderBy(x => x.Name))
+                foreach (var dir in ToolSetup.CommonDir.EnumerateDirectories().OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point")))
                     {
@@ -63,7 +63,7 @@ public static class Runtime
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error($"Couldn't find any Steam runtimes in {ToolBuilder.CommonDir}. No runtimes or directory does not exist.");
+                Log.Error($"Couldn't find any Steam runtimes in {ToolSetup.CommonDir}. No runtimes or directory does not exist.");
             }
         }
     }
