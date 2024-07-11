@@ -1,4 +1,10 @@
 # Changelog
+### Wed Jul 10 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.6
+- Permanently fixed a crash that would occur if the user did not have a particular proton version installed with a fresh .ini file.
+- Updated DXVK to 2.4
+- Updated valvebe versions
+
 ### Sun Jul 07 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.5
 - Added WINEDLLOVERRIDES in Wine tab. This is the correct way to set extra overrides.

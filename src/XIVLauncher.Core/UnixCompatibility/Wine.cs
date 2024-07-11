@@ -45,17 +45,17 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-04-clean"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-05"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-04-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-04/unofficial-wine-xiv-valvebe-9-04-clean.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-05"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-05/unofficial-wine-xiv-valvebe-9-05.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-04"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-05-clean"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-04"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-04/unofficial-wine-xiv-valvebe-9-04.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-05-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-05/unofficial-wine-xiv-valvebe-9-05-clean.tar.zst"},
             {"mark", "Download"}
         };
 
