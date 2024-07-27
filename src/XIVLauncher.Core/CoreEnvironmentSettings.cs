@@ -24,7 +24,7 @@ public static class CoreEnvironmentSettings
     public static string HOME => System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     public static string XDG_CONFIG_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME")) ? Path.Combine(HOME, ".config") : System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") ?? "";
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? "";
-    public static int AltAppID => GetAltAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
+    public static uint AltAppID => GetAltAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
 
     private static bool CheckEnvBool(string key)
     {
@@ -48,13 +48,13 @@ public static class CoreEnvironmentSettings
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
     }
 
-    public static int GetAltAppId(string? appid)
+    public static uint GetAltAppId(string? appid)
     {
-        int result;
-        if (int.TryParse(appid, out result))
-            return result;
-        else
-            return -1;
+        uint result;
+        uint.TryParse(appid, out result);
+        
+        // Will return 0 if appid is invalid (or zero).
+        return result;
     }
 
     public static string GetCType()

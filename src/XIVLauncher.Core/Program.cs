@@ -272,9 +272,10 @@ class Program
 
         uint appId, altId;
         string appName, altName;
+        // AppId of 0 is invalid (though still a valid uint)
         if (CoreEnvironmentSettings.AltAppID > 0)
         {
-            appId = (uint)(int)CoreEnvironmentSettings.AltAppID;
+            appId = CoreEnvironmentSettings.AltAppID;
             altId = STEAM_APP_ID_FT;
             appName = $"Override AppId={appId.ToString()}";
             altName = "FFXIV Free Trial";
