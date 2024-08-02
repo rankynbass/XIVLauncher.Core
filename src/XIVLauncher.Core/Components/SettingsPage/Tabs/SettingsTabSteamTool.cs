@@ -46,9 +46,9 @@ public class SettingsTabSteamTool : SettingsTab
     {
         if (CoreEnvironmentSettings.IsSteamCompatTool)
         {
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
             ImGui.Text("You are currently running XIVLauncher.Core as a Steam compatibility tool.");
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
             ImGui.Text("If you are trying to upgrade, you must first update your install of XIVLauncher.Core. Then launch the flatpak or native" +
                         "\nversion once, and then close it. This should automatically update the steam compatibility tool. Alternately, you" +
                         "\ncould run \"flatpak run dev.goats.xivlauncher --update-tools\" after updating your native or flatpak install.");
@@ -70,12 +70,12 @@ public class SettingsTabSteamTool : SettingsTab
             ImGui.Text("\nDO NOT use native XIVLauncher to install to flatpak Steam. Use flatpak XIVLauncher instead.");
         }
 
-        ImGui.Dummy(new Vector2(10));        
+        ImGui.Dummy(SPACER);        
         ImGui.Separator();
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         ImGui.Text($"Steam settings directory: {(steamInstalled ? "PRESENT" : "Not Present")}. Native Steam Tool: {(steamToolInstalled ? "INSTALLED" : "Not Installed")}.");
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
         if (!steamInstalled) ImGui.BeginDisabled();
         if (ImGui.Button($"{(steamToolInstalled ? "Re-i" : "I")}nstall to native Steam"))
         {
@@ -97,12 +97,12 @@ public class SettingsTabSteamTool : SettingsTab
 
         if (!Program.IsSteamDeckHardware && steamFlatpakInstalled)
         {
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
             ImGui.Separator();
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
 
             ImGui.Text($"Flatpak Steam settings directory: PRESENT. Flatpak Steam Tool: {(steamFlatpakToolInstalled ? "INSTALLED" : "Not Installed")}");
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
             if (!steamFlatpakInstalled) ImGui.BeginDisabled();
             if (ImGui.Button($"{(steamFlatpakToolInstalled ? "Re-i" : "I")}nstall to flatpak Steam"))
             {
@@ -128,9 +128,9 @@ public class SettingsTabSteamTool : SettingsTab
             }
         }
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
         ImGui.Separator();
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         base.Draw();
     }

@@ -17,8 +17,6 @@ public class SettingsTabWine : SettingsTab
 
     private DictionarySettingsEntry protonVersionSetting;
 
-    private Vector2 SPACER = ImGuiHelpers.GetScaled(new Vector2(10));
-
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
     public SettingsTabWine()

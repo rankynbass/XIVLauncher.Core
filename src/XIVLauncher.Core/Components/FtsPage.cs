@@ -58,7 +58,7 @@ public class FtsPage : Page
     {
         ImGui.SetCursorPos(new Vector2(0));
 
-        ImGui.Image(this.isSteamDeckAppIdError ? this.steamdeckAppIdErrorTexture.ImGuiHandle : this.steamdeckFtsTexture.ImGuiHandle, new Vector2(1280, 800));
+        ImGui.Image(this.isSteamDeckAppIdError ? this.steamdeckAppIdErrorTexture.ImGuiHandle : this.steamdeckFtsTexture.ImGuiHandle, ImGuiHelpers.GetScaled(new Vector2(1280, 800)));
 
         ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);

@@ -19,6 +19,8 @@ public class Button : Component
 
     public int? Height { get; set; }
 
+    public Vector2? Padding { get; set; }
+
     public Button(string label, bool isEnabled = true, Vector4? color = null, Vector4? hoverColor = null, Vector4? textColor = null)
     {
         Label = label;
@@ -30,7 +32,7 @@ public class Button : Component
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.GetScaled(new Vector2(16f, 16f)));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding ?? ImGuiHelpers.GetScaled(new Vector2(16f, 16f)));
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
         ImGui.PushStyleColor(ImGuiCol.Button, Color);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, HoverColor);

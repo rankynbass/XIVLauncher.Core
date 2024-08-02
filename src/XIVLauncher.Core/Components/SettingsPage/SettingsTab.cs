@@ -10,6 +10,8 @@ public abstract class SettingsTab : Component
 
     public virtual bool IsUnixExclusive => false;
 
+    public Vector2 SPACER => ImGuiHelpers.GetScaled(new Vector2(10));
+
     public abstract string Title { get; }
 
     public override void Draw()

@@ -133,6 +133,7 @@ public class OtpEntryPage : Page
             ImGuiHelpers.CenteredText("Please enter your OTP");
 
             int INPUT_WIDTH = (int)ImGuiHelpers.GetScaled(150);
+            Vector2 BUTTON_PADDING = ImGuiHelpers.GetScaled(new Vector2(8f, 8f));
             ImGui.SetNextItemWidth(INPUT_WIDTH);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
@@ -148,11 +149,12 @@ public class OtpEntryPage : Page
 
             // var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4, 30);
             int buttonW = (int)(INPUT_WIDTH / 2 - ImGuiHelpers.GetScaled(4));
-            int buttonH = (int)ImGuiHelpers.GetScaled(40);
+            //int buttonH = (int)ImGuiHelpers.GetScaled(30);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             otpOKButton.Width = buttonW;
-            otpOKButton.Height = buttonH;
+            otpOKButton.Padding = BUTTON_PADDING;
+            //otpOKButton.Height = buttonH;
             otpOKButton.Draw();
 
             // if (ImGui.Button("OK", buttonSize)) // || doEnter)
@@ -163,7 +165,8 @@ public class OtpEntryPage : Page
             ImGui.SameLine();
 
             otpCancelButton.Width = buttonW;
-            otpCancelButton.Height = buttonH;
+            otpCancelButton.Padding = BUTTON_PADDING;
+            //otpCancelButton.Height = buttonH;
             otpCancelButton.Draw();
 
             // if (ImGui.Button("Cancel", buttonSize))

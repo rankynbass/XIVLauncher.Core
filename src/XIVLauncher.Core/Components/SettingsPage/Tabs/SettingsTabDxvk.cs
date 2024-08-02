@@ -95,9 +95,9 @@ public class SettingsTabDxvk : SettingsTab
     {
         ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
         ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D.");
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
         ImGui.Separator();
-        ImGui.Dummy(new Vector2(5));
+        ImGui.Dummy(SPACER);
 
         base.Draw();
 
@@ -105,7 +105,7 @@ public class SettingsTabDxvk : SettingsTab
         {
             ImGui.Separator();
 
-            ImGui.Dummy(new Vector2(10));
+            ImGui.Dummy(SPACER);
 
             if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} now!"))
             {

@@ -370,10 +370,11 @@ class Program
             bindings.WindowResized(scaledWidth, scaledHeight);
             Invalidate();
         };
+
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), ImGuiHelpers.GetScaled(Config.FontPxSize ?? 21.0f), windowScaleVector);
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, (int)(window.Width * windowScale), (int)(window.Height * windowScale), storage.GetFile("launcherUI.ini"), ImGuiHelpers.GetScaled(Config.FontPxSize ?? 21.0f), windowScaleVector);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();

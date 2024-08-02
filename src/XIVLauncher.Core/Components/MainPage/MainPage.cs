@@ -74,7 +74,7 @@ public class MainPage : Page
 
     public override void Draw()
     {
-        base.Draw();
+        //base.Draw();
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImGuiHelpers.GetScaled(new Vector2(32f, 32f)));
         this.newsFrame.Draw();
