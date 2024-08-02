@@ -30,7 +30,7 @@ public class Button : Component
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(Width is not null ? 0f : 16f, Height is not null ? 0f : 16f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.GetScaled(new Vector2(16f, 16f)));
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
         ImGui.PushStyleColor(ImGuiCol.Button, Color);
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, HoverColor);

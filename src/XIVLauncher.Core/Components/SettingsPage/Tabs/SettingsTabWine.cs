@@ -17,6 +17,8 @@ public class SettingsTabWine : SettingsTab
 
     private DictionarySettingsEntry protonVersionSetting;
 
+    private Vector2 SPACER = ImGuiHelpers.GetScaled(new Vector2(10));
+
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
     public SettingsTabWine()
@@ -127,7 +129,7 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         if (wineTypeSetting.Value == WineType.Managed)
         {
@@ -136,7 +138,7 @@ public class SettingsTabWine : SettingsTab
                 ImGui.BeginDisabled();
                 ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
 
-                ImGui.Dummy(new Vector2(10));
+                ImGui.Dummy(SPACER);
             }
         }
         else if (wineTypeSetting.Value == WineType.Proton)
@@ -146,7 +148,7 @@ public class SettingsTabWine : SettingsTab
                 ImGui.BeginDisabled();
                 ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
 
-                ImGui.Dummy(new Vector2(10));
+                ImGui.Dummy(SPACER);
             }
         }
 
@@ -174,7 +176,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {ToolSetup.Dpi} /f").WaitForExit();
         }
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         if (ImGui.Button("Open prefix"))
         {
@@ -204,7 +206,7 @@ public class SettingsTabWine : SettingsTab
 
         }
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
 
         if (ImGui.Button("Set Wine to Windows 7"))
@@ -219,7 +221,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.RunExternalProgram($"winecfg /v win10", redirectOutput: true, writeLog: true);
         }
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         if (ImGui.Button("Kill all wine processes"))
         {
@@ -275,7 +277,7 @@ public class SettingsTabWine : SettingsTab
             }
         }
 
-        ImGui.Dummy(new Vector2(10));
+        ImGui.Dummy(SPACER);
 
         if (Program.IsReshadeEnabled() is not null)
         {

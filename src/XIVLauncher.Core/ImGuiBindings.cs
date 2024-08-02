@@ -72,9 +72,10 @@ public class ImGuiBindings : IDisposable
     /// <summary>
     /// Constructs a new ImGuiController.
     /// </summary>
-    public ImGuiBindings(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, FileInfo iniPath, float fontPxSize)
+    public ImGuiBindings(GraphicsDevice gd, OutputDescription outputDescription, int width, int height, FileInfo iniPath, float fontPxSize, Vector2 sdlScaleFactor)
     {
         this.gd = gd;
+        scaleFactor = sdlScaleFactor;
         windowWidth = width;
         windowHeight = height;
 

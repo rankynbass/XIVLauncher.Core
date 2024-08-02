@@ -119,7 +119,7 @@ public class OtpEntryPage : Page
     {
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 7f);
 
-        var childSize = new Vector2(300, 200);
+        var childSize = ImGuiHelpers.GetScaled(new Vector2(300, 200));
         var vpSize = ImGuiHelpers.ViewportSize;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X / 2 - childSize.X / 2, vpSize.Y / 2 - childSize.Y / 2), ImGuiCond.Always);
@@ -127,12 +127,14 @@ public class OtpEntryPage : Page
 
         if (ImGui.BeginChild("###otp", childSize, true, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Dummy(new Vector2(30));
+            ImGui.Dummy(ImGuiHelpers.GetScaled(new Vector2(40)));
 
             // center text in window
             ImGuiHelpers.CenteredText("Please enter your OTP");
 
-            const int INPUT_WIDTH = 150;
+            int INPUT_WIDTH = (int)ImGuiHelpers.GetScaled(150);
+            ImGui.SetNextItemWidth(INPUT_WIDTH);
+            ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             if (this.appearing)
             {
@@ -145,8 +147,8 @@ public class OtpEntryPage : Page
             otpInput.Draw();
 
             // var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4, 30);
-            int buttonW = INPUT_WIDTH / 2 - 4;
-            int buttonH = 40;
+            int buttonW = (int)(INPUT_WIDTH / 2 - ImGuiHelpers.GetScaled(4));
+            int buttonH = (int)ImGuiHelpers.GetScaled(40);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
             otpOKButton.Width = buttonW;

@@ -4,8 +4,6 @@ using CheapLoc;
 
 using Config.Net;
 
-using ImGuiNET;
-
 using Serilog;
 
 using Veldrid;
@@ -27,6 +25,7 @@ using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
 using XIVLauncher.Core.UnixCompatibility;
+using XIVLauncher.Core.DesktopEnvironment;
 using XIVLauncher.Core.Style;
 
 namespace XIVLauncher.Core;
@@ -347,26 +346,37 @@ class Program
 #endif
 
         // Create window, GraphicsDevice, and all resources necessary for the demo.
-        VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, 1280, 800, WindowState.Normal, $"XIVLauncher-RB {version}"),
+        Sdl2Native.SDL_Init(SDLInitFlags.Video);
+        ImGuiHelpers.GlobalScale = DesktopHelpers.GetDesktopScaleFactor();
+
+        var windowWidth = (int)ImGuiHelpers.GetScaled(1280);
+        var windowHeight = (int)ImGuiHelpers.GetScaled(800);
+
+        XLVeldridStartup.CreateWindowAndGraphicsDevice(
+            new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher-RB {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
 
+        var windowScaleVector = SdlHelpers.GetWindowScale(window);
+        var windowScale = windowScaleVector.Y;
+
         window.Resized += () =>
         {
-            gd.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
-            bindings.WindowResized(window.Width, window.Height);
+            var scaledWidth = (int)Math.Round(window.Width * windowScale);
+            var scaledHeight = (int)Math.Round(window.Height * windowScale);
+
+            gd.MainSwapchain.Resize((uint)scaledWidth, (uint)scaledHeight);
+            bindings.WindowResized(scaledWidth, scaledHeight);
             Invalidate();
         };
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f);
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), ImGuiHelpers.GetScaled(Config.FontPxSize ?? 21.0f), windowScaleVector);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();
-        ImGui.GetIO().FontGlobalScale = Config.GlobalScale ?? 1.0f;
 
         var needUpdate = false;
 
