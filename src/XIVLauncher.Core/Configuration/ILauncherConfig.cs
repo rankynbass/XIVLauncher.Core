@@ -127,6 +127,10 @@ public interface ILauncherConfig
 
     public bool? HelperApp3WineD3D { get; set; }
 
+    public int? WineScale { get; set; }
+
+    public bool? WaylandEnabled { get; set; }
+
     public string? SteamPath { get; set; }
 
     public string? SteamFlatpakPath { get; set; }

@@ -25,12 +25,14 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz"},
             {"mark", "Download"}
         };
+
         Versions["wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"] = new Dictionary<string, string>()
         {
             {"name", "Wine-XIV 8.5"}, {"desc", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results."},
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
+        
         Versions["unofficial-wine-xiv-Proton8-26-x86_64"] = new Dictionary<string, string>()
         {
             {"name", "xiv-Proton8-26"}, {"desc", "Patched version of Wine-GE 8-26. Based on Proton8 Wine."},
@@ -45,17 +47,17 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-05"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-07"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-05"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-05/unofficial-wine-xiv-valvebe-9-05.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-07"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-07/unofficial-wine-xiv-valvebe-9-07.tar.zst"},
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-valvebe-9-05-clean"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-valvebe-9-07-clean"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-valvebe-9-05-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-05/unofficial-wine-xiv-valvebe-9-05-clean.tar.zst"},
+            {"name", "unofficial-wine-xiv-valvebe-9-07-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-07/unofficial-wine-xiv-valvebe-9-07-clean.tar.zst"},
             {"mark", "Download"}
         };
 
@@ -66,10 +68,10 @@ public static class Wine
             {"mark", "Download"}
         };
 
-        Versions["unofficial-wine-xiv-staging-9.12"] = new Dictionary<string, string>()
+        Versions["unofficial-wine-xiv-staging-9.13.1"] = new Dictionary<string, string>()
         {
-            {"name", "unofficial-wine-xiv-staging-9.12"}, {"desc", "Patched version of Wine Staging 9.12. No wayland driver, but lsteamclient support added."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.12/unofficial-wine-xiv-staging-9.12.tar.zst"},
+            {"name", "unofficial-wine-xiv-staging-9.13.1"}, {"desc", "Patched version of Wine Staging 9.13. Now with wayland and lsteamclient support added."},
+            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.13.1/unofficial-wine-xiv-staging-9.13.1.tar.zst"},
             {"mark", "Download"}
         };    
 

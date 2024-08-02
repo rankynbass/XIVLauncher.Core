@@ -166,6 +166,10 @@ class Program
         Config.HelperApp3Args ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
 
+        Config.WineScale = (Config.WineScale is null) ? (int)(Config.GlobalScale * 100) : 25 * (Config.WineScale / 25);
+        Config.WineScale = (Config.WineScale < 100) ? 100 : (Config.WineScale > 400) ? 400 : Config.WineScale;
+        Config.WaylandEnabled ??= false;
+
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
         Config.FixLocale ??= false;

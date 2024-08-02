@@ -25,11 +25,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "UMU-Proton-9.0-2")}
         };
 
-        Versions["GE-Proton9-9"] = new Dictionary<string, string>()
+        Versions["GE-Proton9-11"] = new Dictionary<string, string>()
         {
-            {"name", "GE-Proton9-10"}, {"desc", "GloriousEggroll's Proton release 9-10. May have mouse warp bug in some xwayland sessions."},
-            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-10/GE-Proton9-10.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "GE-Proton9-10")}
+            {"name", "GE-Proton9-11"}, {"desc", "GloriousEggroll's Proton release 9-11. May have mouse warp bug in some xwayland sessions."},
+            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-11/GE-Proton9-11.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "GE-Proton9-11")}
         };
 
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
@@ -39,11 +39,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-9"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-11"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton9-9"}, {"desc", "Patched version of GE-Proton9-9 with Dualsense and Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-9/XIV-Proton9-9.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-9")}
+            {"name", "XIV-Proton9-11"}, {"desc", "Patched version of GE-Proton9-11 with Dualsense and Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-9/XIV-Proton9-11.tar.zst"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-11")}
         };
     } 
 

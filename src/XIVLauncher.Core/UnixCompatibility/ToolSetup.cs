@@ -58,6 +58,8 @@ public static class ToolSetup
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
+    public static int Dpi => ((Program.Config.WineScale ?? 100) > 400 || (Program.Config.WineScale ?? 100) < 100 || (Program.Config.WineScale ?? 100) % 25 != 0) ? 96 : (96 * (Program.Config.WineScale ?? 100)) / 100;
+
     public static bool DxvkEnabled => Program.Config.DxvkVersion != "DISABLED";
 
     public static string DxvkFolder => Program.Config.DxvkVersion ?? Dxvk.GetDefaultVersion();
