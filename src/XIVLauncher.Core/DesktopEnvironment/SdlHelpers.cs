@@ -1,9 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-
 using Serilog;
-
 using Veldrid.Sdl2;
 
 namespace XIVLauncher.Core.DesktopEnvironment;
@@ -22,11 +20,6 @@ internal static unsafe partial class SdlHelpers
         Sdl2Native.LoadFunction<SDL_GetDisplayDPI_t>("SDL_GetDisplayDPI");
     private static int SDL_GetDisplayDPI(int displayIndex, float* ddpi, float* hdpi, float* vdpi)
         => s_sdl_getDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate void SDL_GL_GetDrawableSize_t(SDL_Window SDL2Window, int* w, int* h);
-    private static SDL_GL_GetDrawableSize_t s_getDrawableSize = Sdl2Native.LoadFunction<SDL_GL_GetDrawableSize_t>("SDL_GL_GetDrawableSize");
-    private static void SDL_GL_GetDrawableSize(SDL_Window Sdl2Window, int* w, int* h) => s_getDrawableSize(Sdl2Window, w, h);
 
     private static unsafe string GetString(byte* stringStart)
     {
@@ -57,12 +50,5 @@ internal static unsafe partial class SdlHelpers
 
         Log.Verbose("SDL reports {0}x{1} DPI", hdpi, vdpi);
         return new Vector2(hdpi / 96, vdpi / 96);
-    }
-
-    public static Vector2 GetWindowScale(Sdl2Window window)
-    {
-        int width, height;
-        SDL_GL_GetDrawableSize(window.SdlWindowHandle, &width, &height);
-        return new Vector2((float)width / window.Width, (float)height / window.Height);
     }
 }

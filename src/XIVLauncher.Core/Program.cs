@@ -352,22 +352,16 @@ class Program
         var windowWidth = (int)ImGuiHelpers.GetScaled(1280);
         var windowHeight = (int)ImGuiHelpers.GetScaled(800);
 
-        XLVeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher-RB {version}"),
+        VeldridStartup.CreateWindowAndGraphicsDevice(
+            new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
 
-        var windowScale = SdlHelpers.GetWindowScale(window).Y;
-        ImGuiHelpers.GlobalScale *= windowScale;
-
         window.Resized += () =>
         {
-            var scaledWidth = (int)Math.Round(window.Width * windowScale);
-            var scaledHeight = (int)Math.Round(window.Height * windowScale);
-
-            gd.MainSwapchain.Resize((uint)scaledWidth, (uint)scaledHeight);
-            bindings.WindowResized(scaledWidth, scaledHeight);
+            gd.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
+            bindings.WindowResized(window.Width, window.Height);
             Invalidate();
         };
 
