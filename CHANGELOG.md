@@ -3,7 +3,7 @@
 1.1.0.7
 - Re-added the wayland options to the wine tab
 - Updated wine versions
-- Added automatic scaling in x11/xwayland mode. This should cause sharp upscaling of the xlcore client matching your desktop upscaling.
+- Added automatic scaling in x11/xwayland mode. This should cause sharp upscaling of the xlcore client matching your desktop upscaling. Thanks to Maia Everett (https://github.com/Maia-Everett)
 
 ### Wed Jul 10 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.6
