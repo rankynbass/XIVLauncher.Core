@@ -1,11 +1,13 @@
 # Changelog
 ### Sat Aug 03 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.9
 - Revert Proton9-11 to Proton9-9. There's a nasty bug in prefix updates that causes all sorts of issues.
 - Added warning about Proton9-11.
 - Added button to re-install/update steam runtimes.
 - Fixed default SteamPath to be correct (was ~/.local/share, is now ~/.local/share/Steam)
 
 ### Fri Aug 02 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.8
 - Fixed broken download link for XIV-Proton9-11
 
 ### Fri Aug 02 2024 Rankyn Bass <rankyn@proton.me>
