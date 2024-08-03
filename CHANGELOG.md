@@ -1,4 +1,10 @@
 # Changelog
+### Fri Aug 02 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.7
+- Re-added the wayland options to the wine tab
+- Updated wine versions
+- Added automatic scaling in x11/xwayland mode. This should cause sharp upscaling of the xlcore client matching your desktop upscaling.
+
 ### Wed Jul 10 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.6
 - Permanently fixed a crash that would occur if the user did not have a particular proton version installed with a fresh .ini file.
