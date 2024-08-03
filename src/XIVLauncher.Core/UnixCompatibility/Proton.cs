@@ -42,7 +42,7 @@ public static class Proton
         Versions["XIV-Proton9-11"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton9-11"}, {"desc", "Patched version of GE-Proton9-11 with Dualsense and Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-9/XIV-Proton9-11.tar.zst"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-11/XIV-Proton9-11.tar.zst"},
             {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-11")}
         };
     } 
