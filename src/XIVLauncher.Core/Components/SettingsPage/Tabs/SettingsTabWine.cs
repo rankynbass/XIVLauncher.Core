@@ -17,6 +17,8 @@ public class SettingsTabWine : SettingsTab
 
     private DictionarySettingsEntry protonVersionSetting;
 
+    private DictionarySettingsEntry runtimeVersionSetting;
+
     private readonly string toolDirectory = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
 
     public SettingsTabWine()
@@ -57,9 +59,18 @@ public class SettingsTabWine : SettingsTab
                 //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
                 //     return null;
                 // }
+                CheckWarning = x =>
+                {
+                    var warning = "";
+                    if (!protonVersionSetting.Value.Contains("XIV"))
+                        warning += "Non XIV-Proton versions may crash with the ping plugin. Use XIV-Proton instead.\n";
+                    if (protonVersionSetting.Value.Contains("9-11"))
+                        warning += "GE-Proton9-11 and XIV-Proton9-11 have a bug that causes issues with Dalamud. You may be able to fix it by clearing the prefix.";
+                    return (string.IsNullOrEmpty(warning)) ? null : warning;
+                }
             },
 
-            new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
+            runtimeVersionSetting = new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
             {
                 CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
                 // CheckWarning = x =>
@@ -172,6 +183,24 @@ public class SettingsTabWine : SettingsTab
         {
             this.Save();
             Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {ToolSetup.Dpi} /f").WaitForExit();
+        }
+
+        if (wineTypeSetting.Value == WineType.Proton)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button("Update Steam runtime"))
+            {
+                Runtime.Versions[runtimeVersionSetting.Value]["mark"] = "Downloading";
+                this.Save();
+
+                Task.Run(async () => await Program.CompatibilityTools.DownloadRuntime().ConfigureAwait(false))
+                    .ContinueWith(t => 
+                    {
+                        Runtime.Versions[runtimeVersionSetting.Value].Remove("mark");
+                        Runtime.Initialize();
+                    });;
+
+            }
         }
 
         ImGui.Dummy(SPACER);
