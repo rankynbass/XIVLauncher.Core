@@ -173,7 +173,7 @@ class Program
         Config.FixIM ??= false;
         Config.FixLocale ??= false;
 
-        Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share");
+        Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
         Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
         Config.SteamToolInstalled ??= false;
         Config.SteamFlatpakToolInstalled ??= false;
