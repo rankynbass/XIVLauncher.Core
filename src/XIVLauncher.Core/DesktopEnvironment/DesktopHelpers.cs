@@ -54,8 +54,11 @@ public partial class DesktopHelpers
             return (float)scaleFactor;
         }
 
+        var fallback = SdlHelpers.GetDisplayDpiScale();
+
         // Fallback
-        return 1f;
+        Log.Verbose($"No desktop scale found. Falling back to SDL dpi factor {fallback.X}");
+        return (float)fallback.X;
     }
 
     private static float? GetKScreenDoctorScaleFactor()
@@ -87,6 +90,8 @@ public partial class DesktopHelpers
                     if (output.Pos.X == 0 && output.Pos.Y == 0)
                     {
                         // Primary monitor
+                        if ((int)output.Scale == 0)
+                            throw new System.ArgumentOutOfRangeException("kscreen-doctor returned a scale of 0 - trying other methods");
                         Log.Verbose("Obtained scale from kscreen-doctor: {0}", output.Scale);
                         return output.Scale;
                     }
@@ -128,6 +133,8 @@ public partial class DesktopHelpers
                 
                 if (match != null && match.Success)
                 {
+                    if (int.Parse(match.Groups[1].Value) == 0)
+                        throw new System.ArgumentOutOfRangeException("gsettings returned a scale of 0 - try other methods");
                     return float.Parse(match.Groups[1].Value);
                 }
             }
@@ -173,7 +180,7 @@ public partial class DesktopHelpers
         }
         catch (Exception e)
         {
-            Log.Error(e, "Cannot obtain desktop scale from gsettings - trying other methods");
+            Log.Error(e, "Cannot obtain desktop scale from xrdb - trying other methods");
         }
 
         return null;
