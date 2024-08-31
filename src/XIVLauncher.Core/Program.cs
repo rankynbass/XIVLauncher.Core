@@ -134,7 +134,7 @@ class Program
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
             Config.DxvkVersion = Dxvk.GetDefaultVersion();
         if (!Dxvk.NvapiVersions.ContainsKey(Config.NvapiVersion ?? ""))
-            Config.DxvkVersion = Dxvk.GetDefaultNvapiVersion();
+            Config.NvapiVersion = Dxvk.GetDefaultNvapiVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
