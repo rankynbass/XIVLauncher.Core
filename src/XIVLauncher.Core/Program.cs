@@ -264,6 +264,10 @@ class Program
 
         CreateCompatToolsInstance();
 
+        Console.WriteLine($"Nvidia Wine Path: {CoreEnvironmentSettings.NvidiaWineDLLPath()}");
+        if (!string.IsNullOrEmpty(CoreEnvironmentSettings.NvidiaWineDLLPath()))
+            Log.Information($"Nvidia Wine DLLs found at: {CoreEnvironmentSettings.NvidiaWineDLLPath()}");
+
         Log.Debug("Creating Veldrid devices...");
 
 #if DEBUG

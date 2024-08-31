@@ -73,4 +73,32 @@ public static class CoreEnvironmentSettings
             gameModeInstalled = false;
         return gameModeInstalled ?? false;
     }
+
+    static private string? nvidiaWinePath = Environment.GetEnvironmentVariable("XL_NVIDIAWINEPATH");
+
+    static public string? NvidiaWineDLLPath()
+    {
+        if (nvidiaWinePath is not null)
+            if (File.Exists(Path.Combine(nvidiaWinePath, "nvngx.dll")))
+                return nvidiaWinePath;
+            else
+                return "";
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var psi = new ProcessStartInfo("find");
+            psi.Arguments = "-L /lib -name \"nvngx.dll\"";
+            psi.RedirectStandardOutput = true;
+            var findCmd = new Process();
+            findCmd.StartInfo = psi;
+            findCmd.Start();
+
+            var output = findCmd.StandardOutput.ReadToEnd();
+            var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
+            nvidiaWinePath = nvngx.DirectoryName;
+        }
+        else
+            nvidiaWinePath = "";
+        return nvidiaWinePath ?? "";
+    }
 }
