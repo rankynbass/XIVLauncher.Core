@@ -17,7 +17,11 @@ public static class Dxvk
 
     public static string FolderName => Program.Config.DxvkVersion ?? GetDefaultVersion();
 
-    public static string DownloadUrl => GetDownloadUrl(Program.Config.DxvkVersion);
+    public static string DownloadUrl => GetDownloadUrl(FolderName);
+
+    public static string NvapiFolderName => Program.Config.NvapiVersion ?? GetDefaultNvapiVersion();
+
+    public static string NvapiDownloadUrl => GetNvapiDownloadUrl(NvapiFolderName);
 
     public static int FrameRateLimit => Program.Config.DxvkFrameRateLimit ?? 0;
 
@@ -59,14 +63,14 @@ public static class Dxvk
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
+    public static Dictionary<string, Dictionary<string, string>> NvapiVersions { get; private set; }
+
     static Dxvk()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
+        NvapiVersions = new Dictionary<string, Dictionary<string, string>>();
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
-    }
 
-    public static void Initialize()
-    {
         // Add default versions.
         Versions["dxvk-2.4"] = new Dictionary<string, string>()
         {
@@ -92,6 +96,29 @@ public static class Dxvk
             {"label", "Disabled"}
         };
 
+        NvapiVersions["dxvk-nvapi-v0.7.1"] = new Dictionary<string, string>()
+        {
+            {"name", "dxvk-nvapi 0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
+            {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
+            {"mark", "download"}
+        };
+
+        NvapiVersions["dxvk-nvapi-v0.6.4"] = new Dictionary<string, string>()
+        {
+            {"name", "dxvk-nvapi 0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
+            {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
+            {"mark", "download"}
+        };
+
+        NvapiVersions["DISABLED"] = new Dictionary<string, string>()
+        {
+            {"name", "Disabled"}, {"desc", "Don't use Dxvk-nvapi. DLSS will not be available. (FSR2 mod still works)"},
+            {"label", "DLSS Off"}
+        };
+    }
+
+    public static void Initialize()
+    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
 
         if (!toolDirectory.Exists)
@@ -104,15 +131,27 @@ public static class Dxvk
         {
             if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")) && Directory.Exists(Path.Combine(dxvkDir.FullName, "x32")))
             {
-                if (Versions.ContainsKey(dxvkDir.Name))
+                if (dxvkDir.Name.Contains("nvapi"))
                 {
-                    if (dxvkDir.Name == "DISABLED")
-                        Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
-                    else
-                        Versions[dxvkDir.Name].Remove("mark");
-                    continue;
+                    if (NvapiVersions.ContainsKey(dxvkDir.Name))
+                    {
+                        NvapiVersions[dxvkDir.Name].Remove("mark");
+                        continue;
+                    }
+                    NvapiVersions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
                 }
-                Versions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
+                else
+                {
+                    if (Versions.ContainsKey(dxvkDir.Name))
+                    {
+                        if (dxvkDir.Name == "DISABLED")
+                            Log.Error("Cannot use custom DXVK with folder name DISABLED. Skipping.");
+                        else
+                            Versions[dxvkDir.Name].Remove("mark");
+                        continue;
+                    }
+                    Versions[dxvkDir.Name] = new Dictionary<string, string>() { {"label", "Custom"} };
+                }
             }
         }
     }
@@ -132,6 +171,21 @@ public static class Dxvk
         if (Versions.ContainsKey("dxvk-2.4"))
             return "dxvk-2.4";
         return Versions.First().Key;
+    }
+
+    public static string GetNvapiDownloadUrl(string? name)
+    {
+        name ??= GetDefaultNvapiVersion();
+        if (NvapiVersions.ContainsKey(name))
+            return NvapiVersions[name].ContainsKey("url") ? NvapiVersions[name]["url"] : "";
+        return Versions[GetDefaultNvapiVersion()].ContainsKey("url") ? Versions[GetDefaultNvapiVersion()]["url"] : "";
+    }
+
+    public static string GetDefaultNvapiVersion()
+    {
+        if (NvapiVersions.ContainsKey("dxvk-nvapi-v0.7.1"))
+            return "dxvk-nvapi-v0.7.1";
+        return NvapiVersions.First().Key;
     }
 
 }

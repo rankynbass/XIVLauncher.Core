@@ -127,12 +127,14 @@ class Program
 
         Config.WineType ??= WineType.Managed;
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
+            Config.WineVersion = Wine.GetDefaultVersion();
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
-            Config.DxvkVersion = "dxvk-async-1.10.3";
+            Config.DxvkVersion = Dxvk.GetDefaultVersion();
+        if (!Dxvk.NvapiVersions.ContainsKey(Config.NvapiVersion ?? ""))
+            Config.DxvkVersion = Dxvk.GetDefaultNvapiVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
@@ -263,10 +265,6 @@ class Program
         DalamudUpdater.Run();
 
         CreateCompatToolsInstance();
-
-        Console.WriteLine($"Nvidia Wine Path: {CoreEnvironmentSettings.NvidiaWineDLLPath()}");
-        if (!string.IsNullOrEmpty(CoreEnvironmentSettings.NvidiaWineDLLPath()))
-            Log.Information($"Nvidia Wine DLLs found at: {CoreEnvironmentSettings.NvidiaWineDLLPath()}");
 
         Log.Debug("Creating Veldrid devices...");
 

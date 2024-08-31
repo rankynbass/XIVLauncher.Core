@@ -76,13 +76,16 @@ public static class CoreEnvironmentSettings
 
     static private string? nvidiaWinePath = Environment.GetEnvironmentVariable("XL_NVIDIAWINEPATH");
 
+    static public bool IsDLSSAvailable => !string.IsNullOrEmpty(NvidiaWineDLLPath());
+
     static public string? NvidiaWineDLLPath()
     {
         if (nvidiaWinePath is not null)
-            if (File.Exists(Path.Combine(nvidiaWinePath, "nvngx.dll")))
-                return nvidiaWinePath;
-            else
-                return "";
+        {
+            if (!File.Exists(Path.Combine(nvidiaWinePath, "nvngx.dll")))
+                nvidiaWinePath = "";
+            return nvidiaWinePath;
+        }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {

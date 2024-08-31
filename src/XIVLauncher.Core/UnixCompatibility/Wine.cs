@@ -35,10 +35,7 @@ public static class Wine
     static Wine()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
-    }
-
-    public static void Initialize()
-    {
+        
         // Add default versions.
         Versions["wine-xiv-staging-fsync-git-7.10.r3.g560db77d"] = new Dictionary<string, string>()
         {
@@ -52,7 +49,10 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
+    }
 
+    public static void Initialize()
+    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
         if (!toolDirectory.Exists)
