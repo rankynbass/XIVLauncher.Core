@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Serilog;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Unix.Compatibility;
+using XIVLauncher.Core;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
@@ -19,9 +20,13 @@ public static class Dxvk
 
     public static string DownloadUrl => GetDownloadUrl(FolderName);
 
-    public static string NvapiFolderName => Program.Config.NvapiVersion ?? GetDefaultNvapiVersion();
+    public static string NvapiFolderName => NvapiEnabled ? Program.Config.NvapiVersion ?? GetDefaultNvapiVersion() : "";
 
-    public static string NvapiDownloadUrl => GetNvapiDownloadUrl(NvapiFolderName);
+    public static string NvapiDownloadUrl => NvapiEnabled ? GetNvapiDownloadUrl(NvapiFolderName) : "";
+
+    public static string NvngxFolderName => NvapiEnabled ? CoreEnvironmentSettings.NvidiaWineDLLPath() : "";
+
+    public static bool NvapiEnabled => CoreEnvironmentSettings.IsDLSSAvailable && Program.Config.NvapiVersion != "DISABLED";
 
     public static int FrameRateLimit => Program.Config.DxvkFrameRateLimit ?? 0;
 

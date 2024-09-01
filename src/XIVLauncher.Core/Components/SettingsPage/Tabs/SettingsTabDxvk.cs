@@ -32,6 +32,18 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
 
+            new DictionarySettingsEntry("Nvapi Version", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            {
+                CheckWarning = s =>
+                {
+                    if (s == "DISABLED") return null;
+                    if (!DxvkSettings.DxvkAllowsNvapi(dxvkVersionSetting.Value))
+                        return "Nvapi/DLSS requires DXVK 2.0 or greater.";
+                    return null;
+                },
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && CoreEnvironmentSettings.IsDLSSAvailable,
+            },
+
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
