@@ -75,7 +75,10 @@ public static class Dxvk
         Versions = new Dictionary<string, Dictionary<string, string>>();
         NvapiVersions = new Dictionary<string, Dictionary<string, string>>();
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
+    }
 
+    public static void Initialize()
+    {
         // Add default versions.
         Versions["dxvk-2.4"] = new Dictionary<string, string>()
         {
@@ -120,10 +123,7 @@ public static class Dxvk
             {"name", "Disabled"}, {"desc", "Don't use Dxvk-nvapi. DLSS will not be available. (FSR2 mod still works)"},
             {"label", "DLSS Off"}
         };
-    }
 
-    public static void Initialize()
-    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
 
         if (!toolDirectory.Exists)

@@ -76,17 +76,17 @@ public static class CoreEnvironmentSettings
         return gameModeInstalled ?? false;
     }
 
-    static private string? nvidiaWinePath = ForceDLSS ? "" : Environment.GetEnvironmentVariable("XL_NVNGXPATH");
+    static private string? nvngxPath = ForceDLSS ? "" : Environment.GetEnvironmentVariable("XL_NVNGXPATH");
 
     static public bool IsDLSSAvailable => !string.IsNullOrEmpty(NvidiaWineDLLPath()) || ForceDLSS;
 
-    static public string? NvidiaWineDLLPath()
+    static public string NvidiaWineDLLPath()
     {
-        if (nvidiaWinePath is not null)
+        if (nvngxPath is not null)
         {
-            if (!File.Exists(Path.Combine(nvidiaWinePath, "nvngx.dll")))
-                nvidiaWinePath = "";
-            return nvidiaWinePath;
+            if (!File.Exists(Path.Combine(nvngxPath, "nvngx.dll")))
+                nvngxPath = "";
+            return nvngxPath;
         }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -94,7 +94,6 @@ public static class CoreEnvironmentSettings
             string[] targets = { "/lib", Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia") };
             foreach (var target in targets)
             {
-                Console.WriteLine($"target = {target}");
                 var psi = new ProcessStartInfo("/bin/find");
                 psi.Arguments = $"-L {target} -name \"nvngx.dll\"";
                 psi.RedirectStandardOutput = true;
@@ -106,15 +105,14 @@ public static class CoreEnvironmentSettings
                 if (!string.IsNullOrWhiteSpace(output))
                 {
                     var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
-                    nvidiaWinePath = nvngx.DirectoryName;
+                    nvngxPath = nvngx.DirectoryName;
                     break;
                 }
             }
         }
         else
-            nvidiaWinePath = "";
-        nvidiaWinePath ??= "";
-        Console.WriteLine($"nvngx path = {nvidiaWinePath}");
-        return nvidiaWinePath ?? "";
+            nvngxPath = "";
+        nvngxPath ??= ""; // If nvngxPath is still null, set it to empty string to prevent an infinite loop.
+        return nvngxPath ?? "";
     }
 }

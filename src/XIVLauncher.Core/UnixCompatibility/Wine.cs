@@ -35,7 +35,10 @@ public static class Wine
     static Wine()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
-        
+    }
+
+    public static void Initialize()
+    {
         // Add default versions.
         Versions["wine-xiv-staging-fsync-git-7.10.r3.g560db77d"] = new Dictionary<string, string>()
         {
@@ -49,10 +52,13 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
-    }
+        Versions["unofficial-wine-xiv-staging-9.13.1"] = new Dictionary<string, string>()
+        {
+            {"name", "Unofficial Wine-XIV 9.13.1"}, {"desc", "Patched version of Wine Staging 9.13. Now with wayland and lsteamclient support added."},
+            {"label", "Unofficial"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.13.1/unofficial-wine-xiv-staging-9.13.1.tar.zst"},
+            {"mark", "Download"}
+        };    
 
-    public static void Initialize()
-    {
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
         if (!toolDirectory.Exists)
@@ -86,6 +92,8 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
+        if (Versions.ContainsKey("unofficial-wine-xiv-staging-9.13.1"))
+            return "unofficial-wine-xiv-staging-9.13.1";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
             return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))
