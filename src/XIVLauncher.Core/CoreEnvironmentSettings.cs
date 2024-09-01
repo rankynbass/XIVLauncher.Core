@@ -20,6 +20,8 @@ public static class CoreEnvironmentSettings
     public static bool? UseSteam => CheckEnvBoolOrNull("XL_USE_STEAM"); // Fix for Steam Deck users who lock themselves out
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
 
+    public static bool ForceDLSS => CheckEnvBool("XL_FORCE_DLSS"); // Don't search for nvngx.dll. Assume it's already in the game directory.
+
     private static bool CheckEnvBool(string key)
     {
         string val = (System.Environment.GetEnvironmentVariable(key) ?? string.Empty).ToLower();
@@ -74,9 +76,9 @@ public static class CoreEnvironmentSettings
         return gameModeInstalled ?? false;
     }
 
-    static private string? nvidiaWinePath = Environment.GetEnvironmentVariable("XL_NVIDIAWINEPATH");
+    static private string? nvidiaWinePath = ForceDLSS ? "" : Environment.GetEnvironmentVariable("XL_NVNGXPATH");
 
-    static public bool IsDLSSAvailable => !string.IsNullOrEmpty(NvidiaWineDLLPath());
+    static public bool IsDLSSAvailable => !string.IsNullOrEmpty(NvidiaWineDLLPath()) || ForceDLSS;
 
     static public string? NvidiaWineDLLPath()
     {
@@ -89,19 +91,30 @@ public static class CoreEnvironmentSettings
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var psi = new ProcessStartInfo("find");
-            psi.Arguments = "-L /lib -name \"nvngx.dll\"";
-            psi.RedirectStandardOutput = true;
-            var findCmd = new Process();
-            findCmd.StartInfo = psi;
-            findCmd.Start();
+            string[] targets = { "/lib", Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia") };
+            foreach (var target in targets)
+            {
+                Console.WriteLine($"target = {target}");
+                var psi = new ProcessStartInfo("/bin/find");
+                psi.Arguments = $"-L {target} -name \"nvngx.dll\"";
+                psi.RedirectStandardOutput = true;
+                var findCmd = new Process();
+                findCmd.StartInfo = psi;
+                findCmd.Start();
 
-            var output = findCmd.StandardOutput.ReadToEnd();
-            var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
-            nvidiaWinePath = nvngx.DirectoryName;
+                var output = findCmd.StandardOutput.ReadToEnd();
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
+                    nvidiaWinePath = nvngx.DirectoryName;
+                    break;
+                }
+            }
         }
         else
             nvidiaWinePath = "";
+        nvidiaWinePath ??= "";
+        Console.WriteLine($"nvngx path = {nvidiaWinePath}");
         return nvidiaWinePath ?? "";
     }
 }
