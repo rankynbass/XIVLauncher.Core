@@ -81,6 +81,8 @@ public interface ILauncherConfig
 
     public string? DxvkVersion { get; set; }
 
+    public string? NvapiVersion { get; set; }
+
     public int? DxvkFrameRateLimit { get; set; }
 
     public DxvkHud? DxvkHud { get; set; }

@@ -144,6 +144,8 @@ class Program
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
             Config.DxvkVersion = Dxvk.GetDefaultVersion();
+        if (!Dxvk.NvapiVersions.ContainsKey(Config.NvapiVersion ?? ""))
+            Config.NvapiVersion = Dxvk.GetDefaultNvapiVersion();
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
@@ -454,7 +456,7 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled);
+        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName, CoreEnvironmentSettings.ForceDLSS);
         var wineSettings = new WineSettings(ToolSetup.IsProton, ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var steamFolder = new DirectoryInfo(ToolSetup.STEAM);

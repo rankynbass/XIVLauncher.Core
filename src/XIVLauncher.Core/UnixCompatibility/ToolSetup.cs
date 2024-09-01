@@ -46,6 +46,14 @@ public static class ToolSetup
         _ => throw new ArgumentOutOfRangeException(),
     };
 
+    public static string NvapiFolderName => NvapiEnabled ? Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion() : "";
+
+    public static string NvapiDownloadUrl => NvapiEnabled ? Dxvk.GetNvapiDownloadUrl(NvapiFolderName) : "";
+
+    public static string NvngxFolderName => NvapiEnabled ? CoreEnvironmentSettings.NvidiaWineDLLPath() : "";
+
+    public static bool NvapiEnabled => CoreEnvironmentSettings.IsDLSSAvailable && Program.Config.NvapiVersion != "DISABLED" && DxvkEnabled;
+
     public static string WineDLLOverrides => Program.Config.WineDLLOverrides ?? "";
 
     public static string DebugVars => Program.Config.WineDebugVars ?? "-all";
