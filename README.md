@@ -3,6 +3,16 @@
 # XIVLauncher-RB: XIVLauncher.Core with additional patches [![Discord Shield](https://discordapp.com/api/guilds/581875019861328007/widget.png?style=shield)](https://discord.gg/3NMcUV5)
 Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with several versions of [WINE tuned for FFXIV](https://github.com/rankynbass/unofficial-wine-xiv-git), as well as Proton and Steam Runtime support.
 
+## Changes from XIVLauncher.Core
+1) Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Steam Runtime with Proton
+2) Preview of various PRs for XIVLauncher.Core: I try to add various feature and bugfix PRs before they get merged.
+3) Wine and DXVK switchers. This feature will hopefully be merged upstream soon. For now, though, you can test it out here.
+  - Allows switching between various pre-selected Wine and DXVK versions. DXVK is moved to its own tab.
+  - Allows you to easily add new wine and dxvk versions by dropping them in `~/.xlcore/compatibilitytool/wine` and `~/.xlcore/compatibilitytool/dxvk`, respectively.
+4) Automatic DLSS. You can either use proton, or choose an nvapi version in the DXVK tab. You need to use Wine 9, ValveBE wine, or wine-ge 8-x wine, along with DXVK 2.0+.
+5) Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
+6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
+
 ## Using on Steam Deck
 If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as using the official version, but still not too difficult.
 
@@ -13,7 +23,19 @@ If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as usi
 4) Go into the FFXIV properties, and go to Compatibility. Check "Force the use of a specific Steam Play compatibility tool", and select "XIVLauncher.Core as Compatibility Tool".
 5) You can now launch the game from desktop mode *or* game mode. Both should work.
 
-If you're having trouble, you can [join the XIVLauncher Discord server](https://discord.gg/3NMcUV5) and join the $linux-and-deck channel. I'm online most days and can usually help out, and there are a number of other people who may also be willing. Please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher-RB.
+If you're having trouble, you can [join the XIVLauncher Discord server](https://discord.gg/3NMcUV5), grab the Steam Deck & Linux and join the #xlcore-questions channel. I'm online most days and can usually help out, and there are a number of other people who may also be willing. Please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher-RB.
+
+## Environment Variables for troubleshooting
+| Variable      | Description    |
+| ------------- | -------------- |
+| `XL_SECRET_PROVIDER` | Set to `file` if using the Steam Deck or other desktop session that doesn't have a secret provider. |
+| `XL_DECK` | Force XIVLauncher-RB to pretend it's Steam Deck. Does not enable the Steam keyboard. |
+| `XL_GAMEMODE` | Forces XIVLauncher-RB to pretend it's in Steam Deck Game Mode. Also does not enable the Steam keyboard. |
+| `XL_FIRSTRUN` | Set to 0 or 1 to force the launcher to skip or activate the Steam Deck First Run screen. |
+| `XL_USE_STEAM` | Set to 0 or 1 to enable or disable steam API checks. |
+| `XL_APPID` | Set to a steam AppID number to hook that application instead of FFXIV or the free trial. |
+| `XL_FORCE_DLSS` | Skip DLSS checks and assume that the nvngx dlls are in the game folder. |
+| `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
 
 ## Building & Contributing
 1. Clone this repository with submodules

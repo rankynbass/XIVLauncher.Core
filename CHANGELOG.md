@@ -1,4 +1,14 @@
 # Changelog
+### Sun Sep 01 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.10
+- Updated wine and proton builds
+- Added DLSS support to wine via dxvk-nvapi. The launcher will search /lib and ~/.xlcore/compatibilitytool/nvidia for nvngx.dll. If it can't find it, you'll need to set the environment variable explained below.
+- Merged some fixes from the official repos
+- Environment vars added:
+  - `XL_APPID=12345` can be set to the AppId of any steam game you own. This will allow you to hijack that entry for Steam Input. Useful if your  region doesn't have FFXIV or FFXIV Free trial.
+  - `XL_FORCE_DLSS=1` prevents the search for nvidia wine dlls and assumes they are already in the FFXIV/game folder. Yes, this means you can enable nvapi on an AMD card. No, it does not magically give you DLSS.
+  - `XL_NVNGXPATH=/nix/some-weird-path/nvidia/wine` allows you to set a path to your nvidia wine dll folder, so that the files can actually be found. Only use this if Nvapi version doesn't appear in your DXVK tab.
+
 ### Sat Aug 03 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.9
 - Revert Proton9-11 to Proton9-9. There's a nasty bug in prefix updates that causes all sorts of issues.
