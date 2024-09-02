@@ -23,6 +23,13 @@ If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as usi
 4) Go into the FFXIV properties, and go to Compatibility. Check "Force the use of a specific Steam Play compatibility tool", and select "XIVLauncher.Core as Compatibility Tool".
 5) You can now launch the game from desktop mode *or* game mode. Both should work.
 
+## Using the AppImage
+I've started creating AppImages as well. These have worked on the Steam Deck in my testing, although there are a couple of minor issues.
+1) Download the AppImage tarball and extract somewhere.
+2) Run the included `install.sh` script. This will move the AppImage to ~/Applications and create a .desktop entry in your menus.
+3) The desktop shortcut can now be added to steam the same way you'd do with the official Flatpak, without the need for the extra parameters. You will still need the `XL_SECRET_PROVIDER=file` if you want to save passwords in Game Mode.
+4) Do *not* hilight the AppImage file in your file browser and launch with the enter key. It launches multiple copies, for some unknown reason. Double-clicking on it, or launching from the terminal or desktop file all work fine, however.
+
 If you're having trouble, you can [join the XIVLauncher Discord server](https://discord.gg/3NMcUV5), grab the Steam Deck & Linux and join the #xlcore-questions channel. I'm online most days and can usually help out, and there are a number of other people who may also be willing. Please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher-RB.
 
 ## Environment Variables for troubleshooting
@@ -45,7 +52,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 Common components that are shared with the Windows version of XIVLauncher are linked as a submodule in the "lib" folder. XIVLauncher Core can run on Windows, but is by far not as polished as the [original Windows version](https://github.com/goatcorp/FFXIVQuickLauncher). Windows users should not use this application unless for troubleshooting purposes or development work.
 
 ## Distribution
-XIVLauncher-RB is not officially supported by the XIVLauncher community, but many people have used it successfully on different linux distros. You can download flatpak files from the releases, but it is also in several user-submitted repos:
+XIVLauncher-RB is not officially supported by the XIVLauncher community, but many people have used it successfully on different linux distros. You can download flatpak files and AppImages from the releases, but it is also in several user-submitted repos:
 
 | Repo        | Status      |
 | ----------- | ----------- |
