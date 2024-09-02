@@ -7,8 +7,8 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 1) Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Steam Runtime with Proton
 2) Preview of various PRs for XIVLauncher.Core: I try to add various feature and bugfix PRs before they get merged.
 3) Wine and DXVK switchers. This feature will hopefully be merged upstream soon. For now, though, you can test it out here.
-  - Allows switching between various pre-selected Wine and DXVK versions. DXVK is moved to its own tab.
-  - Allows you to easily add new wine and dxvk versions by dropping them in `~/.xlcore/compatibilitytool/wine` and `~/.xlcore/compatibilitytool/dxvk`, respectively.
+    - Allows switching between various pre-selected Wine and DXVK versions. DXVK is moved to its own tab.
+    - Allows you to easily add new wine and dxvk versions by dropping them in `~/.xlcore/compatibilitytool/wine` and `~/.xlcore/compatibilitytool/dxvk`, respectively.
 4) Automatic DLSS. You can either use proton, or choose an nvapi version in the DXVK tab. You need to use Wine 9, ValveBE wine, or wine-ge 8-x wine, along with DXVK 2.0+.
 5) Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
 6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
