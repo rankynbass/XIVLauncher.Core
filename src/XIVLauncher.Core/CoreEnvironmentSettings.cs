@@ -100,7 +100,7 @@ public static class CoreEnvironmentSettings
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            string[] targets = { "/lib", Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia") };
+            string[] targets = { Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia"), "/lib64", "/lib", "/usr/lib64", "/usr/lib" };
             foreach (var target in targets)
             {
                 var psi = new ProcessStartInfo("/bin/find");
