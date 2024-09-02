@@ -105,7 +105,7 @@ public static class CoreEnvironmentSettings
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            string[] targets = { "/lib", Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia") };
+            string[] targets = { Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia"), "/lib64", "/lib", "/usr/lib64", "/usr/lib" };
             foreach (var target in targets)
             {
                 var psi = new ProcessStartInfo("/bin/find");
@@ -116,6 +116,7 @@ public static class CoreEnvironmentSettings
                 findCmd.Start();
 
                 var output = findCmd.StandardOutput.ReadToEnd();
+                Console.WriteLine("find result:\n" + output);
                 if (!string.IsNullOrWhiteSpace(output))
                 {
                     var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
