@@ -1,4 +1,8 @@
 # Changelog
+### Mon Sep 02 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.11
+- Updated search paths for nvngx.dll. Now checks /lib64 as well.
+
 ### Sun Sep 01 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.10
 - Updated wine and proton builds
