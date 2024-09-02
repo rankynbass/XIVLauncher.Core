@@ -19,6 +19,7 @@ public static class CoreEnvironmentSettings
     public static bool ClearAll => CheckEnvBool("XL_CLEAR_ALL");
     public static bool? UseSteam => CheckEnvBoolOrNull("XL_USE_STEAM"); // Fix for Steam Deck users who lock themselves out
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
+    public static uint AltAppID => GetAltAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
 
     public static bool ForceDLSS => CheckEnvBool("XL_FORCE_DLSS"); // Don't search for nvngx.dll. Assume it's already in the game directory.
 
@@ -42,6 +43,14 @@ public static class CoreEnvironmentSettings
         string dirty = Environment.GetEnvironmentVariable(envvar) ?? "";
         if (badstring.Equals("", StringComparison.Ordinal)) return dirty;
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
+    }
+
+    public static uint GetAltAppId(string? appid)
+    {
+        uint.TryParse(appid, out var result);
+        
+        // Will return 0 if appid is invalid (or zero).
+        return result;
     }
 
     public static string GetCType()
