@@ -38,7 +38,7 @@ public class SettingsTabTroubleshooting : SettingsTab
             Program.ClearPrefix();
         }
 
-        ImGui.Text("\nClear the managed Wine and DXVK installs. Custom versions won't be touched.");
+        ImGui.Text("\nClear all Wine, DXVK, and DXVK-Nvapi installs.");
         if (ImGui.Button("Clear Wine & DXVK"))
         {
             Program.ClearTools(true);
