@@ -116,7 +116,6 @@ public static class CoreEnvironmentSettings
                 findCmd.Start();
 
                 var output = findCmd.StandardOutput.ReadToEnd();
-                Console.WriteLine("find result:\n" + output);
                 if (!string.IsNullOrWhiteSpace(output))
                 {
                     var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
