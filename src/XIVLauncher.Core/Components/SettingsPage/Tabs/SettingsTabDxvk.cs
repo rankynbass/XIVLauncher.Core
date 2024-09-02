@@ -9,6 +9,7 @@ namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 public class SettingsTabDxvk : SettingsTab
 {
     private DictionarySettingsEntry dxvkVersionSetting;
+    private DictionarySettingsEntry nvapiVersionSetting;
     private SettingsEntry<DxvkHud> dxvkHudSetting;
     private SettingsEntry<MangoHud> mangoHudSetting;
 
@@ -22,8 +23,8 @@ public class SettingsTabDxvk : SettingsTab
             {
                 CheckWarning = s =>
                 {
-                    if (s is null) return null;
-                    if (s.StartsWith("dxvk-2") || s.StartsWith("dxvk-async-2") || s.StartsWith("dxvk-gplasync-v2"))
+                    if (s == "DISABLED") return null;
+                    if (DxvkSettings.DxvkAllowsNvapi(s))
                         return "May not work with older graphics cards. AMD users may need to use env variable RADV_PERFTEST=gpl";
                     return null;
                 },
@@ -33,7 +34,7 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
 
-            new DictionarySettingsEntry("Nvapi Version", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            nvapiVersionSetting = new DictionarySettingsEntry("Nvapi Version (DLSS)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
                 {
@@ -105,7 +106,7 @@ public class SettingsTabDxvk : SettingsTab
 
     public override void Draw()
     {
-        ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled.");
+        ImGui.TextUnformatted("If you chose Proton in the Wine Tab, the version does not matter, except for Disabled. Nvapi Version is completely ignored.");
         ImGui.TextUnformatted("Choose any version of Dxvk, and set the rest of the options as normal. Disabled will attempt to use WineD3D.");
         ImGui.Dummy(SPACER);
         ImGui.Separator();
@@ -113,22 +114,42 @@ public class SettingsTabDxvk : SettingsTab
 
         base.Draw();
 
-        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
+        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark") || Dxvk.NvapiVersions[nvapiVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.Separator();
 
             ImGui.Dummy(SPACER);
 
-            if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} now!"))
+            if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
             {
-                Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
-                this.Save();
-                var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
-                    .ContinueWith(t => 
-                    {
-                        Dxvk.Versions[dxvkVersionSetting.Value].Remove("mark");
-                        Dxvk.Initialize();
-                    });
+                if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} dxvk now!"))
+                {
+                    this.Save();
+                    Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
+                    var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
+                        .ContinueWith(t => 
+                        {
+                            Dxvk.Versions[dxvkVersionSetting.Value].Remove("mark");
+                            Dxvk.Initialize();
+                        });
+                }
+            }
+
+            if (Dxvk.NvapiVersions[nvapiVersionSetting.Value].ContainsKey("mark"))
+            {
+                ImGui.SameLine();
+
+                if (ImGui.Button($"{Dxvk.NvapiVersions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi now!"))
+                {
+                    this.Save();
+                    Dxvk.NvapiVersions[nvapiVersionSetting.Value]["mark"] = "Downloading";
+                    var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false))
+                        .ContinueWith(t => 
+                        {
+                            Dxvk.NvapiVersions[nvapiVersionSetting.Value].Remove("mark");
+                            Dxvk.Initialize();
+                        });
+                }
             }
         }
     }

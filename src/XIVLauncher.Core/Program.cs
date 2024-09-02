@@ -554,15 +554,15 @@ class Program
     {
         foreach (var winetool in Wine.Versions)
         {
-            if (winetool.Value.ContainsKey("url"))
-                if (!string.IsNullOrEmpty(winetool.Value["url"]))
-                    storage.GetFolder($"compatibilitytool/wine/{winetool.Key}").Delete(true);
+            storage.GetFolder($"compatibilitytool/wine/{winetool.Key}").Delete(true);
         }
         foreach (var dxvktool in Dxvk.Versions)
         {
-            if (dxvktool.Value.ContainsKey("url"))
-                if (!string.IsNullOrEmpty(dxvktool.Value["url"]))
-                    storage.GetFolder($"compatibilitytool/dxvk/{dxvktool.Key}").Delete(true);
+            storage.GetFolder($"compatibilitytool/dxvk/{dxvktool.Key}").Delete(true);
+        }
+        foreach (var nvapitool in Dxvk.NvapiVersions)
+        {
+            storage.GetFolder($"compatibilitytool/dxvk/{nvapitool.Key}").Delete(true);
         }
         // Re-initialize Versions so they get *Download* marks back.
         Wine.Initialize();

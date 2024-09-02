@@ -28,13 +28,14 @@ public static class Dxvk
 
     static Dxvk()
     {
-        Versions = new Dictionary<string, Dictionary<string, string>>();
-        NvapiVersions = new Dictionary<string, Dictionary<string, string>>();
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
     }
 
     public static void Initialize()
     {
+        Versions = new Dictionary<string, Dictionary<string, string>>();
+        NvapiVersions = new Dictionary<string, Dictionary<string, string>>();
+
         // Add default versions.
         Versions["DISABLED"] = new Dictionary<string, string>()
         {
@@ -43,25 +44,25 @@ public static class Dxvk
         };
         Versions["dxvk-2.4"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.4"}, {"desc", "Official version 2.4 of DXVK."},
+            {"name", "2.4"}, {"desc", "Official version 2.4 of DXVK."},
             {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz"},
             {"mark", "Download"}
         };
         Versions["dxvk-gplasync-v2.3.1-1"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.3.1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"name", "2.3.1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
             {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.3.1-1.tar.gz"},
             {"mark", "Download"}
         };
         Versions["dxvk-2.2"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 2.2"}, {"desc", "Previous version, using Graphics Pipeline Libs. Use this if you have problems with ReShade Effects Toggler (REST)."},
+            {"name", "2.2"}, {"desc", "Previous version, using Graphics Pipeline Libs. Use this if you have problems with ReShade Effects Toggler (REST)."},
             {"label", "Previous"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz"},
             {"mark", "Download" }
         };
         Versions["dxvk-async-1.10.3"] = new Dictionary<string, string>()
         {
-            {"name", "DXVK 1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
+            {"name", "1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
             {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
             {"mark", "Download" }
         };
@@ -69,13 +70,13 @@ public static class Dxvk
         // Default dxvi-nvapi versions
         NvapiVersions["dxvk-nvapi-v0.7.1"] = new Dictionary<string, string>()
         {
-            {"name", "dxvk-nvapi 0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
+            {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
             {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
             {"mark", "download"}
         };
         NvapiVersions["dxvk-nvapi-v0.6.4"] = new Dictionary<string, string>()
         {
-            {"name", "dxvk-nvapi 0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
+            {"name", "0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
             {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
             {"mark", "download"}
         };
