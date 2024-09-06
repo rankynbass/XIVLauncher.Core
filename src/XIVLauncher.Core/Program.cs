@@ -78,7 +78,7 @@ sealed class Program
 
     public static Version CoreVersion { get; } = Version.Parse(AppUtil.GetAssemblyVersion());
 
-    public const string CoreRelease = "Official";
+    public const string CoreRelease = "RB-Patched";
 
     public static string CoreHash = AppUtil.GetGitHash() ?? "";
 
