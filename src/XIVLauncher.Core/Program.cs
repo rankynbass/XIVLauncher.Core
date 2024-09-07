@@ -133,6 +133,7 @@ sealed class Program
         if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
             Config.WineVersion = Wine.GetDefaultVersion();
         Config.WineBinaryPath ??= "/usr/bin";
+        Config.WineDLLOverrides ??= "";
         Config.WineDebugVars ??= "-all";
 
         if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
@@ -382,7 +383,7 @@ sealed class Program
     public static void CreateCompatToolsInstance()
     {
         var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled, Dxvk.NvapiFolderName, Dxvk.NvapiDownloadUrl, Dxvk.NvngxFolderName);
-        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
+        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, Wine.ExtraWineDLLOverrides, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, Config.GamePath, OSInfo.IsFlatpak);
     }

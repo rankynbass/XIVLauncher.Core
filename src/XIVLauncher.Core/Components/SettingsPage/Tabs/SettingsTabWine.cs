@@ -59,6 +59,17 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
+            new SettingsEntry<string>("Extra WINEDLLOVERRIDES", "Do not use msquic, mscoree, d3d9, d3d10core, d3d11, or dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
+            {
+                CheckValidity = s =>
+                {
+                    if (!WineSettings.WineDLLOverrideIsValid(s))
+                        return "Not a valid WINEDLLOVERRIDE string";
+                    
+                    return null;
+                }
+            },
+
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };
     }
