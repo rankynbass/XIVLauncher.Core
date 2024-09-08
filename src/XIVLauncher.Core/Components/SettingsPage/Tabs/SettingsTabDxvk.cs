@@ -32,7 +32,7 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
             },
 
-            new DictionarySettingsEntry("Nvapi Version", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            new DictionarySettingsEntry("Enable DLSS (Dxvk-Nvapi)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
                 {
