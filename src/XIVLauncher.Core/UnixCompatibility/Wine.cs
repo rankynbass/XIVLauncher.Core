@@ -30,6 +30,8 @@ public static class Wine
 
     public static bool FSyncEnabled => Program.Config.FSyncEnabled ?? false;
 
+    public static string ExtraWineDLLOverrides => WineSettings.WineDLLOverrideIsValid(Program.Config.WineDLLOverrides) ? Program.Config.WineDLLOverrides ?? "" : "";
+
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
     static Wine()
@@ -52,6 +54,13 @@ public static class Wine
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         };
+        // Beta version for testing. Needed for DLSS.
+        Versions["wine-xiv-staging-fsync-git-9.17.r0.g27b121f2"] = new Dictionary<string, string>()
+        {
+            {"name", "Wine-XIV 9.17"}, {"desc", "Patched version of Wine Staging 9.17. Now with wayland and lsteamclient support added."},
+            {"label", "Testing"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/beta-9.17.r0.g27b121f2/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-9.17.r0.g27b121f2.tar.xz"},
+            {"mark", "Download"}
+        };    
 
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine"));
 
@@ -86,6 +95,8 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
+        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-9.17.r0.g27b121f2"))
+            return "wine-xiv-staging-fsync-git-9.17.r0.g27b121f2";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
             return "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
         if (Versions.ContainsKey("wine-xiv-staging-fsync-git-7.10.r3.g560db77d"))

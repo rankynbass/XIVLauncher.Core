@@ -77,6 +77,8 @@ public interface ILauncherConfig
 
     public string? DxvkVersion { get; set; }
 
+    public string? NvapiVersion { get; set; }
+
     public int? DxvkFrameRateLimit { get; set; }
 
     public DxvkHud? DxvkHud { get; set; }
@@ -88,6 +90,8 @@ public interface ILauncherConfig
     public string? MangoHudCustomString { get; set; }
 
     public string? MangoHudCustomFile { get; set; }
+
+    public string? WineDLLOverrides { get; set; }
 
     public string? WineDebugVars { get; set; }
 
