@@ -237,6 +237,7 @@ sealed class Program
             badxlpathex = e;
         }
 
+        SetupLogging(mainArgs);
         ToolSetup.Initialize();
         Dxvk.Initialize();
 
@@ -259,7 +260,6 @@ sealed class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
 
-        SetupLogging(mainArgs);
         LoadConfig(storage);
 
         Secrets = GetSecretProvider(storage);

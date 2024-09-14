@@ -31,7 +31,14 @@ public static class Wine
             {"name", "Unofficial Wine-XIV 9.13.1"}, {"desc", "Patched version of Wine Staging 9.13. Now with wayland and lsteamclient support added."},
             {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.13.1/unofficial-wine-xiv-staging-9.13.1.tar.zst"},
             {"mark", "Download"}
-        };    
+        };
+
+        Versions["wine-xiv-staging-fsync-git-9.17.r0.g27b121f2"] = new Dictionary<string, string>()
+        {
+            {"name", "Wine-XIV 9.17"}, {"desc", "Patched version of Wine Staging 9.17. Change Windows version to 10 for best results."},
+            {"label", "Testing"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/beta-9.17.r0.g27b121f2/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-9.17.r0.g27b121f2.tar.xz"},
+            {"mark", "Download"}
+        };
 
         Versions["wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"] = new Dictionary<string, string>()
         {

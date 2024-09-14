@@ -29,6 +29,8 @@ public static class Dxvk
     static Dxvk()
     {
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
+        var dlssStatus = CoreEnvironmentSettings.ForceDLSS ? "forced on with XL_FORCE_DLSS=1" : (CoreEnvironmentSettings.IsDLSSAvailable ? $"nvngx.dll found at {CoreEnvironmentSettings.NvidiaWineDLLPath()}" : "nvngx.dll not found");
+        Log.Information($"DLSS: {dlssStatus}");
     }
 
     public static void Initialize()
@@ -67,22 +69,25 @@ public static class Dxvk
             {"mark", "Download" }
         };
 
-        // Default dxvi-nvapi versions
-        NvapiVersions["dxvk-nvapi-v0.7.1"] = new Dictionary<string, string>()
+        if (CoreEnvironmentSettings.IsDLSSAvailable)
         {
-            {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
-            {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
-            {"mark", "download"}
-        };
-        NvapiVersions["dxvk-nvapi-v0.6.4"] = new Dictionary<string, string>()
-        {
-            {"name", "0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
-            {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
-            {"mark", "download"}
-        };
+            // Default dxvi-nvapi versions. Only add if DLSS is available.
+            NvapiVersions["dxvk-nvapi-v0.7.1"] = new Dictionary<string, string>()
+            {
+                {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
+                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
+                {"mark", "download"}
+            };
+            NvapiVersions["dxvk-nvapi-v0.6.4"] = new Dictionary<string, string>()
+            {
+                {"name", "0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
+                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
+                {"mark", "download"}
+            };
+        }
         NvapiVersions["DISABLED"] = new Dictionary<string, string>()
         {
-            {"name", "Disabled"}, {"desc", "Don't use Dxvk-nvapi. DLSS will not be available. (FSR2 mod still works)"},
+            {"name", "Disabled"}, {"desc", "Disable native DLSS. Use this for the FSR2/3/XeSS mod."},
             {"label", "DLSS Off"}
         };
 
@@ -100,6 +105,9 @@ public static class Dxvk
             {
                 if (dxvkDir.Name.Contains("nvapi"))
                 {
+                    // Don't add anything to Nvapi if DLSS is not available.
+                    if (!CoreEnvironmentSettings.IsDLSSAvailable)
+                        continue;
                     if (NvapiVersions.ContainsKey(dxvkDir.Name))
                     {
                         NvapiVersions[dxvkDir.Name].Remove("mark");

@@ -110,14 +110,13 @@ public class SettingsTabWine : SettingsTab
 
             new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver.\nUse the \"Update Wine Scaling\" button below to change this.", () => Program.Config.WineScale ?? 100, i => Program.Config.WineScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
 
-            new SettingsEntry<string>("Wine DLL Overrides", "Add extra WINEDLLOVERRIDES. No spaces, semicolon separated. Do not use msquic, mscoree, d3d11, dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
+            new SettingsEntry<string>("Extra WINEDLLOVERRIDES", "Add extra WINEDLLOVERRIDES. No spaces, semicolon separated. Do not use msquic, mscoree, d3d11, dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
             {
                 CheckValidity = s =>
                 {
-                    if (String.IsNullOrEmpty(s)) return null;
-                    if (s.Contains(' ')) return "Invalid! No spaces allowed!";
-                    if (s.Contains("d3d11") || s.Contains("dxgi") || s.Contains("mscoree") || s.Contains("msquic")) return "Invalid! msquic, mscoree, d3d11, and/or dxgi alread set.";
-
+                    if (!WineSettings.WineDLLOverrideIsValid(s))
+                        return "Not a valid WINEDLLOVERRIDE string";
+                    
                     return null;
                 },
             },

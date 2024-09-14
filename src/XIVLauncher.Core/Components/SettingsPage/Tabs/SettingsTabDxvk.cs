@@ -31,19 +31,21 @@ public class SettingsTabDxvk : SettingsTab
             },
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch. May not be available on DXVK >= 2.0", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("async"),
             },
 
-            nvapiVersionSetting = new DictionarySettingsEntry("Nvapi Version (DLSS)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.\nSet to Disabled for FSR2 mod.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
                 {
                     if (s == "DISABLED") return null;
+                    // This should never be seen, but just in case...
+                    if (!CoreEnvironmentSettings.IsDLSSAvailable)
+                        return "No nvngx dlls found. Incorrect drivers installed, or non-nvidia GPU. Non-nvidia GPU users should set this to Disabled.";
                     if (!DxvkSettings.DxvkAllowsNvapi(dxvkVersionSetting.Value))
                         return "Nvapi/DLSS requires DXVK 2.0 or greater.";
                     return null;
                 },
-                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && CoreEnvironmentSettings.IsDLSSAvailable,
             },
 
             dxvkHudSetting = new SettingsEntry<DxvkHud>("DXVK Overlay", "DXVK Hud is included with DXVK. MangoHud must be installed separately.\nFlatpak users need the flatpak version of MangoHud.", () => Program.Config.DxvkHud ?? DxvkHud.None, x => Program.Config.DxvkHud = x)

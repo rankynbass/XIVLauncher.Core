@@ -123,9 +123,13 @@ public static class CoreEnvironmentSettings
                     break;
                 }
             }
+            if (string.IsNullOrWhiteSpace(nvngxPath))
+                nvngxPath = "";
         }
         else
+        {
             nvngxPath = "";
+        }
         nvngxPath ??= ""; // If nvngxPath is still null, set it to empty string to prevent an infinite loop.
         return nvngxPath ?? "";
     }
