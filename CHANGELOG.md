@@ -1,4 +1,9 @@
 # Changelog
+### Sat Sep 14 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.12
+- Updated nvngx.dll detection to disable nvapi if not found. This should prevent the launcher from deleting the nvngx.dll provided with the FSR2 mod.
+- The `--version and -V options will now correctly report this as RB-Patched instead of Official.
+
 ### Mon Sep 02 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.11
 - Updated search paths for nvngx.dll. Now checks /lib64 as well.

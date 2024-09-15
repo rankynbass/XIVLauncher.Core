@@ -34,7 +34,7 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("async"),
             },
 
-            nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.\nSet to Disabled for FSR2 mod.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
                 {
