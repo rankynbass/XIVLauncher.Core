@@ -1,5 +1,9 @@
 # Changelog
 ### Sat Sep 14 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.13
+- Don't delete nvngx.dll and _nvngx.dll from game directory if using proton. This allows FSR2 mod to work.
+
+### Sat Sep 14 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.12
 - Updated nvngx.dll detection to disable nvapi if not found. This should prevent the launcher from deleting the nvngx.dll provided with the FSR2 mod.
 - The `--version and -V options will now correctly report this as RB-Patched instead of Official.
