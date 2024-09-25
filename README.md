@@ -13,7 +13,36 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 5) Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
 6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
 
-## Using on Steam Deck
+## Using as a Steam compatibility tool using XLM (recommended for Steam Deck)
+Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed.
+
+**Steamdeck**:
+
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-steamdeck.sh)"
+```
+
+**Steam (Native)**
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-native.sh)"
+```
+
+**Steam (Flatpak)**
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-flatpak.sh)"
+```
+
+After the auto-installer has finished running, follow these steps to use it in Steam:
+1) Switch back to gaming mode (Steam Deck) or restart Steam.
+2) Navigate to your library and select "FINAL FANTASY XIV Online" or "FINAL FANTASY XIV Online Free Trial" (trial and non-steam users).**&midast;**
+3) Open the game properties menu and switch to the "compatibility" tab.
+4) Enable the "Force the use of a specific Steam Play compatibility tool" checkbox.
+5) From the dropdown that appears select "XLCore [XLM]" (if this does not show, please make sure you restarted Steam first).
+6) You can now launch the game. XIVLauncher-RB will be automatically installed to the compatibilitytools.d directory and start as usual. When you close the game, Steam will recognise this.
+
+**&midast;** If FFXIV or the FFXIV free trial are not available on Steam in your region, you can technically use *any* game. Download a free game from steam and set up the controls how you like for FFXIV, and then set up the compatibility tool as above from step 3.
+
+## Using on Steam Deck (depricated, <= 1.1.0.13)
 If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as using the official version, but still not too difficult.
 
 1) You'll want to switch to desktop mode and download the latest flatpak file. From the terminal (Konsole) install with `flatpak install --user xivlauncher-rb-v1.1.0.2.flatpak` (or whatever the latest flatpak file is).
