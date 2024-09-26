@@ -14,6 +14,8 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
 
 ## Using as a Steam compatibility tool using XLM (recommended for Steam Deck)
+[XLM](https://github.com/Blooym/xlm) is now the recommended way to install XIVLauncher-RB as a compatibility tool. Instructions are copied from the XLM readme.
+
 Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed.
 
 **Steamdeck**:
