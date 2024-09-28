@@ -1,5 +1,0 @@
-"manifest"
-{
-  "commandline" "/xlcore run"
-  "commandline_waitforexitandrun" "/xlcore waitforexitandrun"
-}
