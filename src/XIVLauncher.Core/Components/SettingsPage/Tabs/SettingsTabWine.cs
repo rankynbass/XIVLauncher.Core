@@ -189,16 +189,13 @@ public class SettingsTabWine : SettingsTab
             ImGui.SameLine();
             if (ImGui.Button("Update Steam runtime"))
             {
-                Runtime.Versions[runtimeVersionSetting.Value]["mark"] = "Downloading";
                 this.Save();
-
-                Task.Run(async () => await Program.CompatibilityTools.DownloadRuntime().ConfigureAwait(false))
-                    .ContinueWith(t => 
-                    {
-                        Runtime.Versions[runtimeVersionSetting.Value].Remove("mark");
-                        Runtime.Initialize();
-                    });;
-
+                Task.Run(async () =>
+                {
+                    Runtime.SetMark(runtimeVersionSetting.Value, "Downloading");
+                    await Program.CompatibilityTools.DownloadRuntime().ConfigureAwait(false);
+                    Runtime.SetMark(runtimeVersionSetting.Value, null);
+                });
             }
         }
 
@@ -267,14 +264,13 @@ public class SettingsTabWine : SettingsTab
 
                 if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
                 {
-                    Wine.Versions[wineVersionSetting.Value]["mark"] = "Downloading";
                     this.Save();
-                    Task.Run(async () => await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false))
-                        .ContinueWith(t => 
-                        {
-                            Wine.Versions[wineVersionSetting.Value].Remove("mark");
-                            Wine.Initialize();
-                        });
+                    Task.Run(async () => 
+                    {
+                        Wine.SetMark(wineVersionSetting.Value, "Downloading");
+                        await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false);
+                        Wine.SetMark(wineVersionSetting.Value, null);
+                    });
                 }
             }
         }
@@ -291,14 +287,13 @@ public class SettingsTabWine : SettingsTab
 
                 if (ImGui.Button($"{Proton.Versions[protonVersionSetting.Value]["mark"]} now!"))
                 {
-                    Proton.Versions[protonVersionSetting.Value]["mark"] = "Downloading";
                     this.Save();
-                    Task.Run(async () => await Program.CompatibilityTools.DownloadProton().ConfigureAwait(false))
-                        .ContinueWith(t => 
-                        {
-                            Proton.Versions[protonVersionSetting.Value].Remove("mark");
-                            Proton.Initialize();
-                        });
+                    Task.Run(async () => 
+                    {
+                        Proton.SetMark(protonVersionSetting.Value, "Downloading");
+                        await Program.CompatibilityTools.DownloadProton().ConfigureAwait(false);
+                        Proton.SetMark(protonVersionSetting.Value, null);
+                    });
                 }
             }
         }

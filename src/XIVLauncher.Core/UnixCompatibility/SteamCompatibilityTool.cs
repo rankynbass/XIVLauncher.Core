@@ -12,219 +12,105 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class SteamCompatibilityTool
 {
-    // This is here to prevent auto-updating with different releases of XLCore. So XIVLauncher-RB will not overwrite official, vice versa. 
     public static bool IsSteamInstalled => Directory.Exists(Program.Config.SteamPath);
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
 
-    public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath, "compatibilitytools.d", "xlcore"));
+    public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath, "compatibilitytools.d", "XLM"));
 
-    public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath, "compatibilitytools.d", "xlcore"));
+    public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath, "compatibilitytools.d", "XLM"));
 
-    private const string ARIA2C_URL = "https://github.com/rankynbass/aria2-static-build/releases/latest/download/aria2-static.tar.gz";
-
-    private static string findXIVLauncherFiles()
+    private static void SetConfigValues()
     {
-        return System.AppDomain.CurrentDomain.BaseDirectory;
+        Program.Config.SteamToolInstalled = IsSteamToolInstalled;
+        Program.Config.SteamFlatpakToolInstalled = IsSteamFlatpakToolInstalled;
     }
 
-    private static void SetConfigValues(bool isFlatpak)
-    {
-        if (isFlatpak)
-            Program.Config.SteamFlatpakToolInstalled = IsSteamFlatpakToolInstalled;
-        else
-            Program.Config.SteamToolInstalled = IsSteamToolInstalled;
-    }
-
-    public static async Task CreateTool(bool isFlatpak)
-    {
-        var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
-        var compatfolder = new DirectoryInfo(Path.Combine(path, "compatibilitytools.d"));
-        compatfolder.Create();
-        var destination = new DirectoryInfo(Path.Combine(compatfolder.FullName, "xlcore"));
-        if (File.Exists(destination.FullName))
-            File.Delete(destination.FullName);
-        if (destination.Exists)
-            destination.Delete(true);
-        
-        destination.Create();
-        destination.CreateSubdirectory("XIVLauncher");
-        destination.CreateSubdirectory("bin");
-
-        var xlcore = new FileInfo(Path.Combine(destination.FullName, "xlcore"));
-        var compatibilitytool_vdf = new FileInfo(Path.Combine(destination.FullName, "compatibilitytool.vdf"));
-        var toolmanifest_vdf = new FileInfo(Path.Combine(destination.FullName, "toolmanifest.vdf"));
-        var openssl_fix = new FileInfo(Path.Combine(destination.FullName, "openssl_fix.cnf"));
-        var version = new FileInfo(Path.Combine(destination.FullName, "version"));
-        
-        xlcore.Delete();
-        compatibilitytool_vdf.Delete();
-        toolmanifest_vdf.Delete();
-        openssl_fix.Delete();
-        version.Delete();
-
-        using (var fs = xlcore.Create())
-        {
-            var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("xlcore");
-            resource.CopyTo(fs);
-            fs.Close();
-        }
-        var permissions =   UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                            UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                            UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
-        File.SetUnixFileMode(xlcore.FullName, permissions);
-
-        using (var fs = compatibilitytool_vdf.Create())
-        {
-            var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("compatibilitytool.vdf");
-            resource.CopyTo(fs);
-            fs.Close();
-        }
-
-        using (var fs = toolmanifest_vdf.Create())
-        {
-            var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("toolmanifest.vdf");
-            resource.CopyTo(fs);
-            fs.Close();
-        }
-
-        using (var fs = openssl_fix.Create())
-        {
-            var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("openssl_fix.cnf");
-            resource.CopyTo(fs);
-            fs.Close();
-        }
-        using (var fs = version.Create())
-        {
-            byte[] resource = new System.Text.UTF8Encoding(true).GetBytes(Program.CoreVersion.ToString() + "\n" + Program.CoreRelease);
-            fs.Write(resource, 0, resource.Length);
-            fs.Close();
-        }
-
-        // Copy XIVLauncher files
-        var XIVLauncherFiles = new DirectoryInfo(findXIVLauncherFiles());
-        foreach (var file in XIVLauncherFiles.GetFiles())
-        {
-            file.CopyTo(Path.Combine(destination.FullName, "XIVLauncher", file.Name), true);
-        }
-
-        using (var client = new HttpClient())
-        {
-            var tempPath = Path.GetTempFileName();
-            File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(ARIA2C_URL));
-            PlatformHelpers.Untar(tempPath, Path.Combine(destination.FullName, "XIVLauncher"));
-            File.Delete(tempPath);
-        }
-        
-        Log.Verbose($"[SCT] XIVLauncher installed as Steam compatibility tool to folder {destination.FullName}");
-        SetConfigValues(isFlatpak);
-    }
-
-    public static void DeleteTool(bool isFlatpak)
+    public static void DeleteOldTool(bool isFlatpak)
     {
         var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
         var steamToolFolder = new DirectoryInfo(Path.Combine(path, "compatibilitytools.d", "xlcore"));
         if (!steamToolFolder.Exists) return;
         steamToolFolder.Delete(true);
         Log.Verbose($"[SCT] Deleted Steam compatibility tool at folder {steamToolFolder.FullName}");
-        SetConfigValues(isFlatpak);
     }
 
-    public static void UpdateSteamTools(bool console = false)
+    private static async Task<bool> DownloadTool(string tempDirectory, string tempName, string downloadUrl, bool untar = false)
     {
-        if (CoreEnvironmentSettings.IsSteamCompatTool)
-            return;
+        using var client = new HttpClient();
+        var tempPath = Path.GetTempFileName();
+        var downloadedFile = new FileInfo(tempPath);
 
-        var message = UpdateTool(false);
-        if (console)
-            Console.WriteLine(message);
-        
-        message = UpdateTool(true);
-        if (console)
-            Console.WriteLine(message);
-    }
-
-    public static string CheckVersion(bool isFlatpak)
-    {
-        var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
-        var versionFile = new FileInfo(Path.Combine(path, "compatibilitytools.d", "xlcore", "version"));
-        
-        if (!versionFile.Exists)
-            return "";
-        
-        var version = "";
+        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(downloadUrl));
         try
         {
-            using (var sr = new StreamReader(versionFile.FullName))
-            {
-                var toolVersion = sr.ReadLine() ?? "";
-                var release = sr.ReadLine() ?? "";
-                sr.Close();
-                if (string.IsNullOrEmpty(toolVersion))
-                    toolVersion = "Unknown";
-                if (string.IsNullOrEmpty(release))
-                    release = "Unknown";
-                version = toolVersion + ',' + release; 
-            }
+            if (!downloadedFile.Exists)
+                return false;
+            if (downloadedFile.Length == 0)
+                return false;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Log.Error(e, $"Could not get the Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool version at {path}.");
-            version = "Unknown,Unknown";
+            Log.Error(ex, $"Could not download file from {downloadUrl} or could not write file to disk.");
+            Console.WriteLine(ex);
+            return false;
         }
-        return version;
+
+        if (untar)
+            PlatformHelpers.Untar(tempPath, Path.Combine(tempDirectory, tempName));
+        else
+            File.Move(tempPath, Path.Combine(tempDirectory, tempName), true);
+
+        File.Delete(tempPath);
+        return true;
     }
 
-    private static string UpdateTool(bool isFlatpak)
+    public static async Task<bool> InstallXLM(string? steamPath = null)
     {
-        var message = string.Empty;
-
-        if ((isFlatpak && !IsSteamFlatpakToolInstalled) || (!isFlatpak && !IsSteamToolInstalled))
+        steamPath ??= Path.Combine(CoreEnvironmentSettings.XDG_DATA_HOME, "Steam");
+        var compatPath = Path.Combine(steamPath, "compatibilitytools.d");
+        if (!Directory.Exists(steamPath))
         {
-            message = $"Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool is not installed. Nothing to update.";
-            Log.Information(message);
-            return message;
+            Log.Error($"Folder {steamPath} does not exist! Cannot install xlm to this location.");
+            return false;
         }
-        var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
-        var versionFile = new FileInfo(Path.Combine(path, "compatibilitytools.d", "xlcore", "version"));
+        var xlmUrl = "https://github.com/Blooym/xlm/releases/latest/download/xlm";
+        var secretEnv = (Program.IsSteamDeckHardware || steamPath == Program.Config.SteamFlatpakPath) ? "--use-fallback-secret-provider " : "";
+        var tempPath = Path.Combine(Program.storage.Root.FullName, "temp");
+        var permissions =   UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
+        
+        var downloaded = await DownloadTool(tempPath, "xlm", xlmUrl, false).ConfigureAwait(false);
 
-        if (!versionFile.Exists)
+        if (!downloaded)
         {
-            CreateTool(isFlatpak);
-            message = $"Updating Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool at {path}/compatibilitytools.d/xlcore to version {Program.CoreVersion.ToString()}";
-            Log.Information(message);
-            return message;
+            Log.Error($"Could not download XLM from {xlmUrl}");
+            return false;
         }
 
-        var toolInfo = CheckVersion(isFlatpak).Split(',', 2);
-        var toolVersion = toolInfo[0];
-        var release = toolInfo[1];
+        File.SetUnixFileMode(Path.Combine(tempPath, "xlm"), permissions);
 
-        try
-        {
-            if (release != Program.CoreRelease)
-            {
-                message = $"Steam {(isFlatpak ? "(flatpak) " : "")}compatibility Tool mismatch! \"{release}\" release is installed, but this is \"{Program.CoreRelease}\" release. Not installing update.";
-                Log.Warning(message);
-                return message;
-            }
-            if (Version.Parse(toolVersion) < Program.CoreVersion)
-            {
-                CreateTool(isFlatpak);
-                message = $"Updating Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool at {path}/compatibilitytools.d/xlcore to version {Program.CoreVersion.ToString()}";
-                Log.Information(message);
-            }
-            else
-            {
-                message = $"Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool version at {path} is {toolVersion} >= {Program.CoreVersion.ToString()}, nothing to do.";
-                Log.Information(message);
-            }
-        }
-        catch (Exception e)
-        {
-            message = $"Could not get the Steam {(isFlatpak ? "(flatpak) " : "")}compatibility tool version at {path}. Not installing update.";
-            Log.Error(e, message);
-        }
-        return message;
+        var xlm = new Process();
+        xlm.StartInfo.FileName = Path.Combine(tempPath, "xlm");
+        xlm.StartInfo.Arguments = $"install-steam-tool --steam-compat-path {compatPath} --extra-launch-args=\"{secretEnv}--xlcore-repo-owner rankynbass --xlcore-repo-name XIVLauncher.Core\"";
+        xlm.Start();
+
+        await xlm.WaitForExitAsync();
+        File.Delete(Path.Combine(tempPath, "xlm"));
+        Log.Verbose($"Installed XLM to {compatPath}");
+        SetConfigValues();
+        return true;
     }
+
+    public static void UninstallXLM(string? steamPath = null)
+    {
+        steamPath ??= Path.Combine(CoreEnvironmentSettings.XDG_DATA_HOME, "Steam");
+        var xlmFolder = new DirectoryInfo(Path.Combine(steamPath, "compatibilitytools.d", "XLM"));
+        if (!xlmFolder.Exists) return;
+        xlmFolder.Delete(true);
+        Log.Verbose($"[SCT] Deleted Steam compatibility tool at folder {xlmFolder.FullName}");
+        SetConfigValues();
+    }
+
 }

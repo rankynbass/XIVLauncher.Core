@@ -34,6 +34,11 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("async"),
             },
 
+            new SettingsEntry<bool>("Enable GPL Async Cache", "Enable the GPL Async State Cache. Only available on Dxvk with GPL Async >= 2.2-3. May improve performance.", () => Program.Config.DxvkGPLAsyncCacheEnabled ?? false, b => Program.Config.DxvkGPLAsyncCacheEnabled = b)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync"),
+            },
+
             nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
@@ -127,13 +132,12 @@ public class SettingsTabDxvk : SettingsTab
                 if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} dxvk now!"))
                 {
                     this.Save();
-                    Dxvk.Versions[dxvkVersionSetting.Value]["mark"] = "Downloading";
-                    var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false))
-                        .ContinueWith(t => 
-                        {
-                            Dxvk.Versions[dxvkVersionSetting.Value].Remove("mark");
-                            Dxvk.Initialize();
-                        });
+                    var _ = Task.Run(async () => 
+                    {
+                        Dxvk.SetDxvkMark(dxvkVersionSetting.Value, "Downloading");
+                        await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false);
+                        Dxvk.SetDxvkMark(dxvkVersionSetting.Value, null);
+                    });
                 }
             }
 
@@ -144,13 +148,12 @@ public class SettingsTabDxvk : SettingsTab
                 if (ImGui.Button($"{Dxvk.NvapiVersions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi now!"))
                 {
                     this.Save();
-                    Dxvk.NvapiVersions[nvapiVersionSetting.Value]["mark"] = "Downloading";
-                    var _ = Task.Run(async () => await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false))
-                        .ContinueWith(t => 
-                        {
-                            Dxvk.NvapiVersions[nvapiVersionSetting.Value].Remove("mark");
-                            Dxvk.Initialize();
-                        });
+                    var _ = Task.Run(async () => 
+                    {
+                        Dxvk.SetNvapiMark(nvapiVersionSetting.Value, "Downloading");
+                        await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false);
+                        Dxvk.SetNvapiMark(nvapiVersionSetting.Value, null);
+                    });
                 }
             }
         }

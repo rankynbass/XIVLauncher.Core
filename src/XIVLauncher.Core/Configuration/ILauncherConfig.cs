@@ -75,6 +75,8 @@ public interface ILauncherConfig
 
     public bool? DxvkAsyncEnabled { get; set; }
 
+    public bool? DxvkGPLAsyncCacheEnabled { get; set; }
+
     public bool? ESyncEnabled { get; set; }
 
     public bool? FSyncEnabled { get; set; }

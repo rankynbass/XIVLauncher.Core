@@ -76,7 +76,9 @@ public static class ToolSetup
 
     public static int DxvkFrameRate => Program.Config.DxvkFrameRateLimit ?? 0;
 
-    public static bool AsyncEnabled => Program.Config.DxvkAsyncEnabled ?? false;
+    public static bool AsyncEnabled => DxvkFolder.Contains("async") ? Program.Config.DxvkAsyncEnabled ?? true : false;
+
+    public static bool GPLAsyncCacheEnabled => DxvkFolder.Contains("gplasync") ? Program.Config.DxvkGPLAsyncCacheEnabled ?? false : false;
 
     public static bool DxvkHudEnabled => Program.Config.DxvkHud != DxvkHud.None;    
 

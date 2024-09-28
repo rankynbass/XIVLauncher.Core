@@ -18,18 +18,18 @@ public static class Proton
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
 
-        Versions["UMU-Proton-9.0-2"] = new Dictionary<string, string>()
+        Versions["UMU-Proton-9.0-3"] = new Dictionary<string, string>()
         {
-            {"name", "UMU Proton 9.0-2"}, {"desc", "UMU-Proton-9.0-2. This is basically Steam's official Proton 9 release."},
-            {"label", "UMU-Proton"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-2/UMU-Proton-9.0-2.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "UMU-Proton-9.0-2")}
+            {"name", "UMU Proton 9.0-3"}, {"desc", "UMU-Proton-9.0-3. This is basically Steam's official Proton 9 release."},
+            {"label", "UMU-Proton"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-3/UMU-Proton-9.0-3.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "UMU-Proton-9.0-3")}
         };
 
-        Versions["GE-Proton9-12"] = new Dictionary<string, string>()
+        Versions["GE-Proton9-14"] = new Dictionary<string, string>()
         {
-            {"name", "GE-Proton 9-12"}, {"desc", "GloriousEggroll's Proton release 9-12. May have mouse warp bug in some xwayland sessions."},
-            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-12/GE-Proton9-12.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "GE-Proton9-12")}
+            {"name", "GE-Proton 9-14"}, {"desc", "GloriousEggroll's Proton release 9-14. May have mouse warp bug in some xwayland sessions."},
+            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-14/GE-Proton9-14.tar.gz"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "GE-Proton9-14")}
         };
 
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
@@ -39,11 +39,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-12"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-14"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-12"}, {"desc", "Patched version of GE-Proton9-12 with Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-12/XIV-Proton9-12.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-12")}
+            {"name", "XIV-Proton 9-14"}, {"desc", "Patched version of GE-Proton9-14 with Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-14/XIV-Proton9-14.tar.zst"},
+            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-14")}
         };
     } 
 
@@ -104,10 +104,10 @@ public static class Proton
 
     public static string GetDefaultVersion()
     {
-        if (VersionExists("UMU-Proton-9.0-2"))
-            return "UMU-Proton-9.0-2";
-        if (VersionExists("Proton 8.0"))
-            return "Proton 8.0";
+        if (VersionExists("XIV-Proton9-14"))
+            return "XIV-Proton9-14";
+        if (VersionExists("UMU-Proton-9.0-3"))
+            return "UMU-Proton-9.0-3";
         return Versions.First().Key;
     }
 
@@ -121,5 +121,16 @@ public static class Proton
     {
         if (!VersionExists(name)) return "";
         return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+    }
+
+    public static void SetMark(string name, string? mark)
+    {
+        if (Versions.ContainsKey(name))
+        {
+            if (!string.IsNullOrEmpty(mark))
+                Versions[name]["mark"] = mark;
+            else
+                Versions[name].Remove("mark");
+        }
     }
 }

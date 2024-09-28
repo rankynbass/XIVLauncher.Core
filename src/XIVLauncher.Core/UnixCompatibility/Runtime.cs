@@ -92,4 +92,15 @@ public static class Runtime
         if (!VersionExists(name)) return "";
         return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
     }
+
+    public static void SetMark(string name, string? mark)
+    {
+        if (Versions.ContainsKey(name))
+        {
+            if (!string.IsNullOrEmpty(mark))
+                Versions[name]["mark"] = mark;
+            else
+                Versions[name].Remove("mark");
+        }
+    }
 }

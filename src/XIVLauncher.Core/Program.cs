@@ -151,6 +151,7 @@ sealed class Program
         if (!Dxvk.NvapiVersions.ContainsKey(Config.NvapiVersion ?? ""))
             Config.NvapiVersion = Dxvk.GetDefaultNvapiVersion();
         Config.DxvkAsyncEnabled ??= true;
+        Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;
         Config.DxvkHud ??= DxvkHud.None;
         Config.DxvkHudCustom ??= Dxvk.DXVK_HUD;
@@ -276,7 +277,6 @@ sealed class Program
                 Log.Information("Exiting...");
                 return;
             }
-            SteamCompatibilityTool.UpdateSteamTools();
         }
 
         uint appId, altId;
@@ -461,11 +461,12 @@ sealed class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName);
+        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.GPLAsyncCacheEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName);
         var wineSettings = new WineSettings(ToolSetup.IsProton, ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var steamFolder = new DirectoryInfo(ToolSetup.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        Console.WriteLine($"DXVK_ASYNC={(ToolSetup.AsyncEnabled ? "1" : "0")}, DXVK_GPLASYNCCACHE={(ToolSetup.GPLAsyncCacheEnabled ? "1" : "0")}");
     }
 
     public static void ShowWindow()
@@ -571,7 +572,7 @@ sealed class Program
         }
         // Re-initialize Versions so they get *Download* marks back.
         Wine.Initialize();
-        Dxvk.Initialize();
+        Dxvk.ReInitialize();
 
         if (tsbutton) CreateCompatToolsInstance();
     }
@@ -663,61 +664,65 @@ sealed class Program
             Console.WriteLine("Verbose Logging enabled...");
         }
 
-        if (mainArgs.Contains("--update-tools") || mainArgs.Contains("-u"))
-        {
-            SteamCompatibilityTool.UpdateSteamTools(true);
-            exit = true;
-        }
-
         if (mainArgs.Contains("--info"))
         {
             Console.WriteLine($"This program: XIVLauncher.Core {CoreVersion.ToString()} - {CoreRelease}");
-            Console.WriteLine($"Steam compatibility tool {(SteamCompatibilityTool.IsSteamToolInstalled ? "is installed: " + SteamCompatibilityTool.CheckVersion(isFlatpak: false).Replace(",", " ") : "is not installed.")}");
-            Console.WriteLine($"Steam (flatpak) compatibility tool {(SteamCompatibilityTool.IsSteamFlatpakToolInstalled ? "is installed: " + SteamCompatibilityTool.CheckVersion(isFlatpak: true).Replace(",", " ") : "is not installed.")}");
+            Console.WriteLine($"Steam compatibility tool {(SteamCompatibilityTool.IsSteamToolInstalled ? "is installed." : "is not installed.")}");
+            Console.WriteLine($"Steam (flatpak) compatibility tool {(SteamCompatibilityTool.IsSteamFlatpakToolInstalled ? "is installed." : "is not installed.")}");
             exit = true;
         }
 
         if (mainArgs.Contains("--deck-install") && mainArgs.Contains("--deck-remove"))
         {
-            SteamCompatibilityTool.DeleteTool(isFlatpak: false);
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamPath);
             Console.WriteLine("Using both --deck-install and --deck-remove. Doing --deck-remove first");
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamPath ?? ""}");
-            SteamCompatibilityTool.CreateTool(isFlatpak: false);
+            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath));
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--deck-install"))
         {
-            SteamCompatibilityTool.CreateTool(isFlatpak: false);
+            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath));
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--deck-remove"))
         {
-            SteamCompatibilityTool.DeleteTool(isFlatpak: false);
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamPath);
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamPath ?? ""}");
             exit = true;
         }
 
         if (mainArgs.Contains("--flatpak-install") && mainArgs.Contains("--flatpak-remove"))
         {
-            Console.WriteLine("Using both --flatpak-install and --flatpak-remove. Doing --deck-remove first");
-            SteamCompatibilityTool.DeleteTool(isFlatpak: true);
+            Console.WriteLine("Using both --flatpak-install and --flatpak-remove. Doing --flatpak-remove first");
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamFlatpakPath);
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamFlatpakPath ?? ""}");
-            SteamCompatibilityTool.CreateTool(isFlatpak: true);
+            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath));
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamFlatpakPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--flatpak-install"))
         {
-            SteamCompatibilityTool.CreateTool(isFlatpak: true);
+            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath));
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamFlatpakPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--flatpak-remove"))
         {
-            SteamCompatibilityTool.DeleteTool(isFlatpak: true);
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamFlatpakPath);
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamFlatpakPath ?? ""}");
+            exit = true;
+        }
+        
+        if (mainArgs.Contains("--delete-old"))
+        {
+            var oldPath = Path.Combine(Program.Config.SteamPath ?? $"{CoreEnvironmentSettings.XDG_DATA_HOME}/Steam", "compatibilitytools.d", "xlcore");
+            var oldFPPath = Path.Combine(Program.Config.SteamFlatpakPath ?? $"{CoreEnvironmentSettings.HOME}/.var/app/com.valvesoftware.Steam/data/Steam", "compatibilitytools.d", "xlcore");
+            Console.WriteLine($"Deleting old compatibility tools from:\n{oldPath}\n{oldFPPath}");
+            SteamCompatibilityTool.DeleteOldTool(true);
+            SteamCompatibilityTool.DeleteOldTool(false);
             exit = true;
         }
 
@@ -743,7 +748,6 @@ sealed class Program
             Console.WriteLine("  -V                 Display brief version info.");
             Console.WriteLine("  --version          Display version and copywrite info.");
             Console.WriteLine("  --info             Display Steam compatibility tool install status");
-            Console.WriteLine("  -u, --update-tools Try to update any installed xlcore steam compatibility tools.");
             Console.WriteLine("\nFor Steam Deck and native Steam");
             Console.WriteLine("  --deck-install     Install as a compatibility tool in the default location.");
             Console.WriteLine($"                     Path: {Program.Config.SteamPath ?? ""}");
@@ -752,6 +756,8 @@ sealed class Program
             Console.WriteLine("  --flatpak-install  Install as a compatibility tool to flatpak Steam.");
             Console.WriteLine($"                     Path: {Program.Config.SteamFlatpakPath ?? ""}");
             Console.WriteLine("  --flatpak-remove   Remove compatibility tool from flatpak Steam.");
+            Console.WriteLine("\nTo delete old versions of the Tool");
+            Console.WriteLine("  --delete-old       Remove old versions of the compatibility tool (1.1.0.13 and earlier)");
             Console.WriteLine("");
             exit = true;
         }

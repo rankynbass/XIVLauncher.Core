@@ -40,7 +40,7 @@ public class SettingsTabSteamTool : SettingsTab
 
     public override bool IsUnixExclusive => true;
 
-    public override string Title => "Steam Tool";
+    public override string Title => "Steam Tool (XLM)";
 
     public override void Draw()
     {
@@ -48,19 +48,14 @@ public class SettingsTabSteamTool : SettingsTab
         {
             ImGui.Dummy(SPACER);
             ImGui.Text("You are currently running XIVLauncher.Core as a Steam compatibility tool.");
-            ImGui.Dummy(SPACER);
-            ImGui.Text("If you are trying to upgrade, you must first update your install of XIVLauncher.Core. Then launch the flatpak or native" +
-                        "\nversion once, and then close it. This should automatically update the steam compatibility tool. Alternately, you" +
-                        "\ncould run \"flatpak run dev.goats.xivlauncher --update-tools\" after updating your native or flatpak install.");
-            ImGui.Text("\nIf you are trying to uninstall, you should likewise launch the flatpak version of XIVLauncher, and click the appropriate" +
-                        "\nuninstall button.");
             return;
         }
         ImGui.Text("\nUse this tab to install XIVLauncher.Core as a Steam compatibility tool.");
         ImGui.Text("\nAfter you have installed XIVLauncher as a Steam compatibility tool please close XIVLauncher and launch or restart Steam. Find 'Final Fantasy XIV Online'");
         ImGui.Text("in your steam library and open the 'Properties' menu and navigate to the 'Compatibility' tab. Enable 'Force the use of a specific Steam Play compatibility tool'");
-        ImGui.Text("and from the dropdown menu select 'XIVLauncher.Core'. If this option does not show up then restart Steam and try again. After finishing these steps,");
-        ImGui.Text("XIVLauncher will now be used when launching FINAL FANTASY XIV from steam.");
+        ImGui.Text("and from the dropdown menu select 'XLCore [XLM]'. If this option does not show up then restart Steam and try again. After finishing these steps,");
+        ImGui.Text("XIVLauncher will be used when launching FINAL FANTASY XIV from Steam.");
+        ImGui.Text("\nIf you wish to use file-based password storage, you will need to set the Launch Options to XL_SECRET_PROVIDER=FILE %%command%%.\nThis should be automatically done for Steam Deck users.");
         // Steam deck should never have flatpak steam
         if (Program.IsSteamDeckHardware != true)
         {
@@ -80,9 +75,8 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button($"{(steamToolInstalled ? "Re-i" : "I")}nstall to native Steam"))
         {
             this.Save();
-            Task.Run(async() => await SteamCompatibilityTool.CreateTool(isFlatpak: false));
+            Task.Run(async() => { await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath).ConfigureAwait(false); steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled; } );
             
-            steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
         }
         if (!steamInstalled) ImGui.EndDisabled();
         ImGui.SameLine();
@@ -90,7 +84,7 @@ public class SettingsTabSteamTool : SettingsTab
         if (ImGui.Button("Uninstall from native Steam"))
         {
             this.Save();
-            SteamCompatibilityTool.DeleteTool(isFlatpak: false);
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamPath);
             steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
         }
         if (!steamToolInstalled) ImGui.EndDisabled();
@@ -107,8 +101,7 @@ public class SettingsTabSteamTool : SettingsTab
             if (ImGui.Button($"{(steamFlatpakToolInstalled ? "Re-i" : "I")}nstall to flatpak Steam"))
             {
                 this.Save();
-                SteamCompatibilityTool.CreateTool(isFlatpak: true);
-                steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
+                Task.Run(async() => { await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath).ConfigureAwait(false); steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled; });
             }
             if (!steamFlatpakInstalled) ImGui.EndDisabled();
             ImGui.SameLine();
@@ -119,7 +112,7 @@ public class SettingsTabSteamTool : SettingsTab
             if (ImGui.Button("Uninstall from Flatpak Steam"))
             {
                 this.Save();
-                Task.Run(async() => await SteamCompatibilityTool.CreateTool(isFlatpak: true));
+                SteamCompatibilityTool.UninstallXLM(Program.Config.SteamFlatpakPath);
                 steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
             }
             if (!steamFlatpakToolInstalled)
