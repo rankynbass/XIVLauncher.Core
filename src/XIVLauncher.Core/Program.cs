@@ -466,7 +466,6 @@ sealed class Program
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var steamFolder = new DirectoryInfo(ToolSetup.STEAM);
         CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
-        Console.WriteLine($"DXVK_ASYNC={(ToolSetup.AsyncEnabled ? "1" : "0")}, DXVK_GPLASYNCCACHE={(ToolSetup.GPLAsyncCacheEnabled ? "1" : "0")}");
     }
 
     public static void ShowWindow()
