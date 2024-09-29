@@ -78,10 +78,10 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-valvebe-9-09-clean", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-valvebe-9-10", new Dictionary<string, string>()
         {
-            {"name", "Unofficial ValveBE 9-09-clean"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. No staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-09/unofficial-wine-xiv-valvebe-9-09-clean.tar.zst"},
+            {"name", "Unofficial ValveBE 9-10"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-10/unofficial-wine-xiv-valvebe-9-10.tar.zst"},
             {"mark", "Download"}
         });
 
