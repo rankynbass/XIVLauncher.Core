@@ -271,8 +271,16 @@ sealed class Program
         {
             if (mainArgs.Length > 0)
                 Log.Information("Command Line option selected: {args}", string.Join(' ', mainArgs));
-            var exitValue = LinuxCommandLineOptions();
-            if (exitValue)
+            bool? exitValue = null;
+            Task.Run(async() => 
+            {
+                exitValue = await LinuxCommandLineOptions().ConfigureAwait(false);
+            });
+            while (exitValue is null)
+            { 
+                // wait
+            }
+            if (exitValue == true)
             {
                 Log.Information("Exiting...");
                 return;
@@ -654,7 +662,7 @@ sealed class Program
         }
     }
 
-    private static bool LinuxCommandLineOptions()
+    private static async Task<bool> LinuxCommandLineOptions()
     {
         bool exit = false;
 
@@ -676,13 +684,13 @@ sealed class Program
             SteamCompatibilityTool.UninstallXLM(Program.Config.SteamPath);
             Console.WriteLine("Using both --deck-install and --deck-remove. Doing --deck-remove first");
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamPath ?? ""}");
-            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath));
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath).ConfigureAwait(false);
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--deck-install"))
         {
-            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath));
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamPath).ConfigureAwait(false);
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamPath ?? ""}");
             exit = true;
         }
@@ -698,13 +706,13 @@ sealed class Program
             Console.WriteLine("Using both --flatpak-install and --flatpak-remove. Doing --flatpak-remove first");
             SteamCompatibilityTool.UninstallXLM(Program.Config.SteamFlatpakPath);
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamFlatpakPath ?? ""}");
-            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath));
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath).ConfigureAwait(false);
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamFlatpakPath ?? ""}");
             exit = true;
         }
         else if (mainArgs.Contains("--flatpak-install"))
         {
-            Task.Run(async() => await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath));
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamFlatpakPath).ConfigureAwait(false);
             Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamFlatpakPath ?? ""}");
             exit = true;
         }
