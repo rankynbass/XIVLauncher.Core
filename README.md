@@ -14,7 +14,7 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
 
 ## Using as a Steam compatibility tool using XLM (recommended for Steam Deck)
-[XLM](https://github.com/Blooym/xlm) is now the recommended way to install XIVLauncher-RB as a compatibility tool. Instructions are copied from the XLM readme.
+[XLM](https://github.com/Blooym/xlm) is now the recommended way to install XIVLauncher-RB as a compatibility tool. XLM will keep itself and its own copy of XIVLauncher-RB up to date. Instructions are copied from the XLM readme.
 
 Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed.
 
@@ -44,15 +44,19 @@ After the auto-installer has finished running, follow these steps to use it in S
 
 **&midast;** If FFXIV or the FFXIV free trial are not available on Steam in your region, you can technically use *any* game. Download a free game from steam and set up the controls how you like for FFXIV, and then set up the compatibility tool as above from step 3.
 
-## Using on Steam Deck (depricated, <= 1.1.0.13)
-If you want to use XIVLauncher on your Steam Deck, it's not quite as easy as using the official version, but still not too difficult.
-
+## Installing as a compatibility tool from the launcher
+Instead of downloading scripts, you can install directly from the launcher. XLM will still keep itself and it's own copy of XIVLauncher-RB up to date.
 1) You'll want to switch to desktop mode and download the latest flatpak file. From the terminal (Konsole) install with `flatpak install --user xivlauncher-rb-v1.1.0.2.flatpak` (or whatever the latest flatpak file is).
 2) Run `XL_USE_STEAM=0 flatpak run dev.rankyn.xivlauncher --deck-install`
 3) Restart Steam. This is necessary to get the compatibility tool to register.
 3) In Steam, do the initial install of FFXIV or FFXIV free trial. You do not have to run the official launcher, you just need to have it installed in your steam library.
-4) Go into the FFXIV properties, and go to Compatibility. Check "Force the use of a specific Steam Play compatibility tool", and select "XIVLauncher.Core as Compatibility Tool".
+4) Go into the FFXIV properties, and go to Compatibility. Check "Force the use of a specific Steam Play compatibility tool", and select "XLCore [XLM]".
 5) You can now launch the game from desktop mode *or* game mode. Both should work.
+
+## Deleting the old compatibility tool
+XIVLauncher-RB v1.1.0.13 and earlier contained a different compatibility tool that was not self-updating. You can use the following methods to remove it.
+* From the command line, run the launcher with `XL_USE_STEAM flatpak run dev.rankyn.xivlauncher --delete-old` (flatpak) or `xivlauncher-rb --delete-old` (native install, AppImage).
+* Alternately, find your steam compatibility tool path at `~/.steam/root/compatibilitytools.d` and delete the `xlcore` folder. For the flatpak, it'll be at `~/.var/app/com.valvesoftware/Steam/data/Steam/compatibilitytools.d`.
 
 ## Using the AppImage
 I've started creating AppImages as well. These have worked on the Steam Deck in my testing, although there are a couple of minor issues.

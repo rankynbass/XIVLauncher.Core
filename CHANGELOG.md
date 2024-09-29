@@ -1,4 +1,10 @@
 # Changelog
+### Sat Sep 28 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.14
+- Replaced the compatibility tool with one based around [XLM](https://github.com/Blooym/xlm)
+- Updated wine, proton, and dxvk versions
+- Fixed the UI so that using the download buttons for wine, dxvk, etc, will properly show them as downloaded. Also fixed up the Clear wine/dxvk in the troubleshooting tab so it also shows.
+
 ### Sat Sep 14 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.13
 - Don't delete nvngx.dll and _nvngx.dll from game directory if using proton. This allows FSR2 mod to work.
