@@ -203,7 +203,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open prefix"))
         {
-            PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Settings.Prefix.FullName);
+            PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Wine.Prefix.FullName);
         }
 
         ImGui.SameLine();

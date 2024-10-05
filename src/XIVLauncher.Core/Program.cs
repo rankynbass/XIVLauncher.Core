@@ -469,11 +469,23 @@ sealed class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var dxvkSettings = new DxvkSettings(ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.GPLAsyncCacheEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString, ToolSetup.DxvkEnabled, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName);
-        var wineSettings = new WineSettings(ToolSetup.IsProton, ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
-        var toolsFolder = storage.GetFolder("compatibilitytool");
-        var steamFolder = new DirectoryInfo(ToolSetup.STEAM);
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, steamFolder, Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        WineSettings wineSettings;
+        DxvkSettings dxvkSettings;
+        DLSSSettings dlssSettings;
+        if (ToolSetup.IsProton)
+        {
+            wineSettings = new WineSettings(ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
+            dxvkSettings = new DxvkSettings(ToolSetup.DxvkEnabled, storage.Root.FullName, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString);
+            dlssSettings = new DLSSSettings(ToolSetup.NvapiEnabled);
+        }
+        else
+        {
+            wineSettings = new WineSettings(ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
+            dxvkSettings = new DxvkSettings(ToolSetup.DxvkEnabled, ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.GPLAsyncCacheEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString);
+            dlssSettings = new DLSSSettings(ToolSetup.NvapiEnabled, CoreEnvironmentSettings.ForceDLSS, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName);
+        }
+        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(ToolSetup.STEAM), Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(gameSettings, wineSettings, dxvkSettings, dlssSettings);
     }
 
     public static void ShowWindow()
