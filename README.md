@@ -34,6 +34,11 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Cor
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-flatpak.sh)"
 ```
 
+**Steam (Snap)** (Ubuntu 24.04 default)
+```
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-snap.sh)
+```
+
 After the auto-installer has finished running, follow these steps to use it in Steam:
 1) Switch back to gaming mode (Steam Deck) or restart Steam.
 2) Navigate to your library and select "FINAL FANTASY XIV Online" or "FINAL FANTASY XIV Online Free Trial" (trial and non-steam users).**&midast;**
