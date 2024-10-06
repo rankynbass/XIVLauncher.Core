@@ -778,6 +778,11 @@ public class MainPage : Page
                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 
+            if (UpdateDxvkConfigFile())
+                Log.Information($"Fixing {Path.Combine(App.Settings.GamePath.FullName, "game", "dxvk.conf")}.");
+            else
+                Log.Verbose($"Dxvk.conf file already present and fixed.");
+
             var signal = new ManualResetEvent(false);
             var isFailed = false;
 
@@ -1251,6 +1256,59 @@ public class MainPage : Page
 
 
         return doLogin;
+    }
+
+    // This will partially fix crashing / hanging with wine >= 9.18.
+    private bool UpdateDxvkConfigFile()
+    {
+        var dxvkConf = new FileInfo(Path.Combine(App.Settings.GamePath.FullName, "game", "dxvk.conf"));
+        var needsUpdate = true;
+        var deferFound = false;
+        var confUpdate = new System.Text.StringBuilder("");
+        if (dxvkConf.Exists)
+        {
+            using(StreamReader sr = new StreamReader(dxvkConf.FullName))
+            {
+                string[] lines = sr.ReadToEnd().Split("\n");
+                if (lines[0] != "# Modified by XIVLauncher")
+                    confUpdate.Append("# Modified by XIVLauncher\n\n");
+                foreach (var line in lines)
+                {
+                    if (line.TrimStart().StartsWith("dxgi.deferSurfaceCreation"))
+                    {
+                        if (line.Contains("True"))
+                        {
+                            deferFound = true;
+                            needsUpdate = false;
+                            break;
+                        }
+                        else
+                        {
+                            deferFound = true;
+                            confUpdate.Append("dxgi.deferSurfaceCreation = True\n");
+                        }
+                        continue;
+                    }
+                    confUpdate.Append(line + "\n");
+                }
+                if (!deferFound)
+                    confUpdate.Append("dxgi.deferSurfaceCreation = True\n");
+            }
+        }
+        else
+        {
+            confUpdate.Append("# Modified by XIVLauncher\n\ndxgi.deferSurfaceCreation = True" + "\n");
+        }
+        
+        if (needsUpdate)
+        {
+            dxvkConf.Delete();
+            using (StreamWriter sw = new StreamWriter(dxvkConf.FullName))
+            {
+                sw.Write(confUpdate.ToString().TrimEnd() + "\n");
+            }
+        }
+        return needsUpdate;
     }
 
     private void Hide()
