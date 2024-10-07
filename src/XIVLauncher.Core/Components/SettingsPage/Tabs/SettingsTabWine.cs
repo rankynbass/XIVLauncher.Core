@@ -11,7 +11,7 @@ namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
 public class SettingsTabWine : SettingsTab
 {
-    private SettingsEntry<WineType> wineTypeSetting;
+    private SettingsEntry<RunnerType> RunnerTypeSetting;
 
     private DictionarySettingsEntry wineVersionSetting;
 
@@ -25,12 +25,12 @@ public class SettingsTabWine : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            wineTypeSetting = new SettingsEntry<WineType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.WineType ?? WineType.Managed, x => Program.Config.WineType = x)
+            RunnerTypeSetting = new SettingsEntry<RunnerType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
+                () => Program.Config.RunnerType ?? RunnerType.Managed, x => Program.Config.RunnerType = x)
             {
                 // CheckWarning = x =>
                 // {
-                //     if (x == WineType.Proton && !)
+                //     if (x == RunnerType.Proton && !)
                 //     {
                 //         return "Umu-launcher is not installed. You have to install it yourself. See https://github.com/Open-Wine-Components/umu-launcher for more info.";
                 //     }
@@ -40,22 +40,22 @@ public class SettingsTabWine : SettingsTab
 
             wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Managed
+                CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Managed
             },
             
             new SettingsEntry<string>("Wine Binary Path",
                 "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Custom
+                CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Custom
             },
 
             protonVersionSetting = new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+                CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Proton,
                 // CheckWarning = x =>
                 // {
-                //     if (wineTypeSetting.Value == WineType.Proton)
+                //     if (RunnerTypeSetting.Value == RunnerType.Proton)
                 //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
                 //     return null;
                 // }
@@ -72,10 +72,10 @@ public class SettingsTabWine : SettingsTab
 
             runtimeVersionSetting = new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
             {
-                CheckVisibility = () => wineTypeSetting.Value == WineType.Proton,
+                CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Proton,
                 // CheckWarning = x =>
                 // {
-                //     if (wineTypeSetting.Value == WineType.Proton)
+                //     if (RunnerTypeSetting.Value == RunnerType.Proton)
                 //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
                 //     return null;
                 // }
@@ -139,7 +139,7 @@ public class SettingsTabWine : SettingsTab
 
         ImGui.Dummy(SPACER);
 
-        if (wineTypeSetting.Value == WineType.Managed)
+        if (RunnerTypeSetting.Value == RunnerType.Managed)
         {
             if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
             {
@@ -149,7 +149,7 @@ public class SettingsTabWine : SettingsTab
                 ImGui.Dummy(SPACER);
             }
         }
-        else if (wineTypeSetting.Value == WineType.Proton)
+        else if (RunnerTypeSetting.Value == RunnerType.Proton)
         {
             if (Proton.Versions[protonVersionSetting.Value].ContainsKey("mark"))
             {
@@ -160,20 +160,20 @@ public class SettingsTabWine : SettingsTab
             }
         }
 
-        if (!File.Exists(Path.Combine(ToolSetup.Prefix.FullName, "wayland_driver")))
+        if (!File.Exists(Path.Combine(Runner.Prefix.FullName, "wayland_driver")))
         {
             if (ImGui.Button("Enable Wayland Driver"))
             {
                 this.Save();
                 Program.CompatibilityTools.AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Drivers", "Graphics", "x11,wayland");
-                Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {ToolSetup.Dpi} /f").WaitForExit();
+                Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {Runner.Dpi} /f").WaitForExit();
                 var startTime = DateTime.UtcNow;
-                while (!File.Exists(Path.Combine(ToolSetup.Prefix.FullName, "system.reg")) && !File.Exists(Path.Combine(ToolSetup.Prefix.FullName, "user.reg")) || !File.Exists(Path.Combine(ToolSetup.Prefix.FullName, "userdef.reg")))
+                while (!File.Exists(Path.Combine(Runner.Prefix.FullName, "system.reg")) && !File.Exists(Path.Combine(Runner.Prefix.FullName, "user.reg")) || !File.Exists(Path.Combine(Runner.Prefix.FullName, "userdef.reg")))
                 {
                     if (DateTime.UtcNow - startTime > TimeSpan.FromSeconds(10))
                         break;
                 }
-                File.Create(Path.Combine(ToolSetup.Prefix.FullName, "wayland_driver"));
+                File.Create(Path.Combine(Runner.Prefix.FullName, "wayland_driver"));
             }
             ImGui.SameLine();
         }
@@ -181,10 +181,10 @@ public class SettingsTabWine : SettingsTab
         if (ImGui.Button("Update Wine Scaling"))
         {
             this.Save();
-            Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {ToolSetup.Dpi} /f").WaitForExit();
+            Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {Runner.Dpi} /f").WaitForExit();
         }
 
-        if (wineTypeSetting.Value == WineType.Proton)
+        if (RunnerTypeSetting.Value == RunnerType.Proton)
         {
             ImGui.SameLine();
             if (ImGui.Button("Update Steam runtime"))
@@ -251,7 +251,7 @@ public class SettingsTabWine : SettingsTab
             Program.CompatibilityTools.Kill();
         }
 
-        if (wineTypeSetting.Value == WineType.Managed)
+        if (RunnerTypeSetting.Value == RunnerType.Managed)
         {
             if (Wine.Versions[wineVersionSetting.Value].ContainsKey("mark"))
             {
@@ -274,7 +274,7 @@ public class SettingsTabWine : SettingsTab
                 }
             }
         }
-        else if (wineTypeSetting.Value == WineType.Proton)
+        else if (RunnerTypeSetting.Value == RunnerType.Proton)
         {
             if (Proton.Versions[protonVersionSetting.Value].ContainsKey("mark"))
             {

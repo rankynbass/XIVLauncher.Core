@@ -14,6 +14,14 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
+    public const string DEFAULT = "dxvk-2.4.1";
+
+    public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
+
+    public static string Folder => Enabled ? GetVersion(Program.Config.DxvkVersion) : "";
+
+    public static string DownloadUrl => GetDownloadUrl(Program.Config.DxvkVersion);
+
     public static bool MangoHudInstalled { get; }
 
     public static string DXVK_HUD => "fps,frametimes,gpuload,version";
@@ -21,18 +29,46 @@ public static class Dxvk
     public static string MANGOHUD_CONFIG => "ram,vram,resolution,vulkan_driver,engine_version,wine,frame_timing=0";
 
     public static string MANGOHUD_CONFIGFILE => Path.Combine(CoreEnvironmentSettings.XDG_CONFIG_HOME, "MangoHud", "MangoHud.conf");
+    
+    public static int FrameRateLimit => Program.Config.DxvkFrameRateLimit ?? 0;
+
+    public static bool AsyncEnabled => Folder.Contains("async") ? Program.Config.DxvkAsyncEnabled ?? true : false;
+
+    public static bool GPLAsyncCacheEnabled => Folder.Contains("gplasync") ? Program.Config.DxvkGPLAsyncCacheEnabled ?? false : false;
+
+    public static bool DxvkHudEnabled => Program.Config.DxvkHud != DxvkHud.None;    
+
+    public static string DxvkHudString => Program.Config.DxvkHud switch
+    {
+        DxvkHud.None => "",
+        DxvkHud.Custom => Program.Config.DxvkHudCustom ?? "1",
+        DxvkHud.Default => "1",
+        DxvkHud.Fps => "fps",
+        DxvkHud.Full => "full",
+        _ => throw new ArgumentOutOfRangeException(),
+
+    };
+
+    public static bool MangoHudEnabled => Program.Config.MangoHud != MangoHud.None;
+
+    public static bool MangoHudCustomIsFile => Program.Config.MangoHud == MangoHud.CustomFile;
+
+    public static string MangoHudString => Program.Config.MangoHud switch
+    {
+        MangoHud.None => "",
+        MangoHud.Default => "",
+        MangoHud.Full => "full",
+        MangoHud.CustomString => Program.Config.MangoHudCustomString ?? "",
+        MangoHud.CustomFile => Program.Config.MangoHudCustomFile ?? "",
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
-
-    public static Dictionary<string, Dictionary<string, string>> NvapiVersions { get; private set; }
 
     static Dxvk()
     {
         MangoHudInstalled = DxvkSettings.MangoHudIsInstalled();
-        var dlssStatus = CoreEnvironmentSettings.ForceDLSS ? "forced on with XL_FORCE_DLSS=1" : (CoreEnvironmentSettings.IsDLSSAvailable ? $"nvngx.dll found at {CoreEnvironmentSettings.NvidiaWineDLLPath()}" : "nvngx.dll not found");
-        Log.Information($"DLSS: {dlssStatus}");
         Versions = new Dictionary<string, Dictionary<string, string>>();
-        NvapiVersions = new Dictionary<string, Dictionary<string, string>>();
     }
 
     public static void Initialize()
@@ -68,28 +104,6 @@ public static class Dxvk
             {"mark", "Download" }
         });
 
-        if (CoreEnvironmentSettings.IsDLSSAvailable)
-        {
-            // Default dxvi-nvapi versions. Only add if DLSS is available.
-            NvapiVersions.Add("dxvk-nvapi-v0.7.1", new Dictionary<string, string>()
-            {
-                {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Latest version, should be compatible with latest Nvidia drivers." },
-                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
-                {"mark", "download"}
-            });
-            NvapiVersions.Add("dxvk-nvapi-v0.6.4", new Dictionary<string, string>()
-            {
-                {"name", "0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
-                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
-                {"mark", "download"}
-            });
-        }
-        NvapiVersions.Add("DISABLED", new Dictionary<string, string>()
-        {
-            {"name", "Disabled"}, {"desc", "Disable native DLSS. Use this for the FSR2/3/XeSS mod."},
-            {"label", "DLSS Off"}
-        });
-
         var toolDirectory = new DirectoryInfo(Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "dxvk"));
 
         if (!toolDirectory.Exists)
@@ -104,15 +118,7 @@ public static class Dxvk
             {
                 if (dxvkDir.Name.Contains("nvapi"))
                 {
-                    // Don't add anything to Nvapi if DLSS is not available.
-                    if (!CoreEnvironmentSettings.IsDLSSAvailable)
-                        continue;
-                    if (NvapiVersions.ContainsKey(dxvkDir.Name))
-                    {
-                        NvapiVersions[dxvkDir.Name].Remove("mark");
-                        continue;
-                    }
-                    NvapiVersions.Add(dxvkDir.Name, new Dictionary<string, string>() { {"label", "Custom"} });
+                    continue;
                 }
                 else
                 {
@@ -130,6 +136,14 @@ public static class Dxvk
         }
     }
 
+    public static string GetVersion(string? name)
+    {
+        name ??= GetDefaultVersion();
+        if (Versions.ContainsKey(name))
+            return name;
+        return GetDefaultVersion();
+    }
+ 
     public static string GetDownloadUrl(string? name)
     {
         name ??= GetDefaultVersion();
@@ -140,14 +154,12 @@ public static class Dxvk
 
     public static string GetDefaultVersion()
     {
-        if (Versions.ContainsKey("dxvk-2.4"))
-            return "dxvk-2.4";
-        if (Versions.ContainsKey("dxvk-async-1.10.3"))
-            return "dxvk-async-1.10.3";
+        if (Versions.ContainsKey(DEFAULT))
+            return DEFAULT;
         return Versions.First().Key;
     }
 
-    public static void SetDxvkMark(string name, string? mark)
+    public static void SetMark(string name, string? mark)
     {
         if (Versions.ContainsKey(name))
         {
@@ -158,38 +170,10 @@ public static class Dxvk
         }
     }
 
-    public static void SetNvapiMark(string name, string? mark)
-    {
-        if (NvapiVersions.ContainsKey(name))
-        {
-            if (!string.IsNullOrEmpty(mark))
-                NvapiVersions[name]["mark"] = mark;
-            else
-                NvapiVersions[name].Remove("mark");
-        }
-    }
-
-    public static string GetNvapiDownloadUrl(string? name)
-    {
-        name ??= GetDefaultNvapiVersion();
-        if (NvapiVersions.ContainsKey(name))
-            return NvapiVersions[name].ContainsKey("url") ? NvapiVersions[name]["url"] : "";
-        return Versions[GetDefaultNvapiVersion()].ContainsKey("url") ? Versions[GetDefaultNvapiVersion()]["url"] : "";
-    }
-
-    public static string GetDefaultNvapiVersion()
-    {
-        if (NvapiVersions.ContainsKey("dxvk-nvapi-v0.7.1"))
-            return "dxvk-nvapi-v0.7.1";
-        return NvapiVersions.First().Key;
-    }
-
     public static void ReInitialize()
     {
         foreach (var dxvk in Versions)
             Versions.Remove(dxvk.Key);
-        foreach (var nvapi in NvapiVersions)
-            NvapiVersions.Remove(nvapi.Key);
         Initialize();
     }
 }

@@ -12,6 +12,12 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
+    public const string DEFAULT = "unofficial-wine-xiv-staging-9.16";
+
+    public static string Folder => GetVersion(Program.Config.WineVersion);
+
+    public static string DownloadUrl => GetDownloadUrl(Program.Config.WineVersion);
+
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
     static Wine()
@@ -108,8 +114,21 @@ public static class Wine
         }
     }
 
+    public static string GetVersion(string? name, bool folderOnly = false)
+    {
+        if (Program.Config.RunnerType == RunnerType.Custom)
+            return Program.Config.WineBinaryPath ?? "/usr/bin";
+        name ??= GetDefaultVersion();
+        var path = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
+        if (Versions.ContainsKey(name))
+            return folderOnly ? name : Path.Combine(path, name);
+        return folderOnly ? GetDefaultVersion() : Path.Combine(path, GetDefaultVersion());
+    }
+
     public static string GetDownloadUrl(string? name)
     {
+        if (Program.Config.RunnerType == RunnerType.Custom)
+            return "";
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
             return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
@@ -118,10 +137,8 @@ public static class Wine
 
     public static string GetDefaultVersion()
     {
-        if (Versions.ContainsKey("unofficial-wine-xiv-staging-9.16"))
-            return "unofficial-wine-xiv-staging-9.16";
-        if (Versions.ContainsKey("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"))
-            return "wine-xiv-staging-fsync-git-9.17.r0.g27b121f2";
+        if (Versions.ContainsKey(DEFAULT))
+            return DEFAULT;
         return Versions.First().Key;
     }
 

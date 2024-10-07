@@ -12,6 +12,12 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Runtime
 {
+    public const string DEFAULT = "SteamLinuxRuntime_sniper";
+
+    public static string Folder => Runtime.GetVersion(Program.Config.RuntimeVersion);
+
+    public static string DownloadUrl => Runtime.GetDownloadUrl(Program.Config.RuntimeVersion);
+
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
    
     private const string SNIPER_RUNTIME = "https://repo.steampowered.com/steamrt3/images/latest-container-runtime-depot/SteamLinuxRuntime_sniper.tar.xz";
@@ -25,13 +31,13 @@ public static class Runtime
         Versions["SteamLinuxRuntime_sniper"] = new Dictionary<string, string>()
         {
             {"name", "Sniper"}, {"desc", "Steam sniper runtime container. For use with Proton 8+."},
-            {"url", SNIPER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CommonDir.FullName, "SteamLinuxRuntime_sniper")}
+            {"url", SNIPER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(Runner.CommonDir.FullName, "SteamLinuxRuntime_sniper")}
         };
         
         Versions["SteamLinuxRuntime_soldier"] = new Dictionary<string, string>()
         {
             {"name", "Soldier"}, {"desc", "Steam soldier runtime container. May be needed for some Proton 7 versions."},
-            {"url", SOLDIER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CommonDir.FullName, "SteamLinuxRuntime_soldier")}
+            {"url", SOLDIER_RUNTIME}, {"mark", "Download"}, {"path", Path.Combine(Runner.CommonDir.FullName, "SteamLinuxRuntime_soldier")}
         };
 
         Versions["DISABLED"] = new Dictionary<string, string>()
@@ -40,11 +46,11 @@ public static class Runtime
             {"path", ""}
         };
 
-        if (ToolSetup.IsSteamInstalled)
+        if (Runner.IsSteamInstalled)
         {
             try
             {
-                foreach (var dir in ToolSetup.CommonDir.EnumerateDirectories().OrderBy(x => x.Name))
+                foreach (var dir in Runner.CommonDir.EnumerateDirectories().OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"_v2-entry-point")))
                     {
@@ -63,22 +69,24 @@ public static class Runtime
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error($"Couldn't find any Steam runtimes in {ToolSetup.CommonDir}. No runtimes or directory does not exist.");
+                Log.Error($"Couldn't find any Steam runtimes in {Runner.CommonDir}. No runtimes or directory does not exist.");
             }
         }
     }
 
-    public static string GetVersionPath(string? name)
+    public static string GetVersion(string? name, bool folderOnly = false)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return Versions[name]["path"];
-        return Versions[GetDefaultVersion()]["path"];
+            return folderOnly ? name : Versions[name]["path"];
+        return folderOnly ? GetDefaultVersion() : Versions[GetDefaultVersion()]["path"];
     }
 
     public static string GetDefaultVersion()
     {
-        return "SteamLinuxRuntime_sniper";
+        if (Versions.ContainsKey(DEFAULT))
+            return DEFAULT;
+        return Versions.First().Key;
     }
 
     public static bool VersionExists(string? name)

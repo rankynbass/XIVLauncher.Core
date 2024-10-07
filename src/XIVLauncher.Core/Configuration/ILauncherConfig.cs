@@ -61,7 +61,7 @@ public interface ILauncherConfig
 
     #region Linux
 
-    public WineType? WineType { get; set; }
+    public RunnerType? RunnerType { get; set; }
 
     public string? WineVersion { get; set; }
 

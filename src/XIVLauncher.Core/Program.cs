@@ -135,21 +135,16 @@ sealed class Program
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
 
-        Config.WineType ??= WineType.Managed;
-        if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
-            Config.WineVersion = Wine.GetDefaultVersion();
+        Config.RunnerType ??= RunnerType.Managed;
+        Config.WineVersion ??= Wine.DEFAULT;
         Config.WineBinaryPath ??= "/usr/bin";
-        if (!Proton.VersionExists(Config.ProtonVersion))
-            Config.ProtonVersion = Proton.GetDefaultVersion();
-        if (!Runtime.VersionExists(Config.RuntimeVersion))
-            Config.RuntimeVersion = Runtime.GetDefaultVersion();
+        Config.ProtonVersion ??= Proton.DEFAULT;
+        Config.RuntimeVersion ??= Runtime.DEFAULT;
         Config.WineDLLOverrides ??= "";
         Config.WineDebugVars ??= "-all";
 
-        if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
-            Config.DxvkVersion = Dxvk.GetDefaultVersion();
-        if (!Dxvk.NvapiVersions.ContainsKey(Config.NvapiVersion ?? ""))
-            Config.NvapiVersion = Dxvk.GetDefaultNvapiVersion();
+        Config.DxvkVersion ??= Dxvk.DEFAULT;
+        Config.NvapiVersion ??= DLSS.DEFAULT;
         Config.DxvkAsyncEnabled ??= true;
         Config.DxvkGPLAsyncCacheEnabled ??= false;
         Config.DxvkFrameRateLimit ??= 0;
@@ -239,8 +234,6 @@ sealed class Program
         }
 
         SetupLogging(mainArgs);
-        ToolSetup.Initialize();
-        Dxvk.Initialize();
 
         if (badxlpath)
         {
@@ -262,6 +255,8 @@ sealed class Program
         }
 
         LoadConfig(storage);
+
+        Runner.Initialize();
 
         Secrets = GetSecretProvider(storage);
 
@@ -472,19 +467,19 @@ sealed class Program
         WineSettings wineSettings;
         DxvkSettings dxvkSettings;
         DLSSSettings dlssSettings;
-        if (ToolSetup.IsProton)
+        if (Runner.IsProton)
         {
-            wineSettings = new WineSettings(ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.RuntimePath, ToolSetup.RuntimeDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
-            dxvkSettings = new DxvkSettings(ToolSetup.DxvkEnabled, storage.Root.FullName, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString);
-            dlssSettings = new DLSSSettings(ToolSetup.NvapiEnabled);
+            wineSettings = new WineSettings(Proton.Folder, Proton.DownloadUrl, Runtime.Folder, Runtime.DownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
+            dxvkSettings = new DxvkSettings(Dxvk.Enabled, storage.Root.FullName, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
+            dlssSettings = new DLSSSettings(DLSS.IsDLSSAvailable);
         }
         else
         {
-            wineSettings = new WineSettings(ToolSetup.FolderName, ToolSetup.WineDownloadUrl, ToolSetup.WineDLLOverrides, ToolSetup.DebugVars, ToolSetup.LogFile, ToolSetup.Prefix, ToolSetup.ESyncEnabled, ToolSetup.FSyncEnabled);
-            dxvkSettings = new DxvkSettings(ToolSetup.DxvkEnabled, ToolSetup.DxvkFolder, ToolSetup.DxvkDownloadUrl, storage.Root.FullName, ToolSetup.AsyncEnabled, ToolSetup.GPLAsyncCacheEnabled, ToolSetup.DxvkFrameRate, ToolSetup.DxvkHudEnabled, ToolSetup.DxvkHudString, ToolSetup.MangoHudEnabled, ToolSetup.MangoHudCustomIsFile, ToolSetup.MangoHudString);
-            dlssSettings = new DLSSSettings(ToolSetup.NvapiEnabled, CoreEnvironmentSettings.ForceDLSS, ToolSetup.NvapiFolderName, ToolSetup.NvapiDownloadUrl, ToolSetup.NvngxFolderName);
+            wineSettings = new WineSettings(Wine.Folder, Wine.DownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
+            dxvkSettings = new DxvkSettings(Dxvk.Enabled, Dxvk.Folder, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.GPLAsyncCacheEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
+            dlssSettings = new DLSSSettings(DLSS.Enabled, CoreEnvironmentSettings.ForceDLSS, DLSS.Folder, DLSS.DownloadUrl, DLSS.NvngxPath);
         }
-        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(ToolSetup.STEAM), Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
         CompatibilityTools = new CompatibilityTools(gameSettings, wineSettings, dxvkSettings, dlssSettings);
     }
 
@@ -585,13 +580,14 @@ sealed class Program
         {
             storage.GetFolder($"compatibilitytool/dxvk/{dxvktool.Key}").Delete(true);
         }
-        foreach (var nvapitool in Dxvk.NvapiVersions)
+        foreach (var nvapitool in DLSS.Versions)
         {
             storage.GetFolder($"compatibilitytool/dxvk/{nvapitool.Key}").Delete(true);
         }
         // Re-initialize Versions so they get *Download* marks back.
         Wine.Initialize();
         Dxvk.ReInitialize();
+        DLSS.ReInitialize();
 
         if (tsbutton) CreateCompatToolsInstance();
     }

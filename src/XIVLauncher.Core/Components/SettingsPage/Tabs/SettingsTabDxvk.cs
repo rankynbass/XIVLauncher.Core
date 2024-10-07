@@ -39,13 +39,13 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync"),
             },
 
-            nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", Dxvk.NvapiVersions, () => Program.Config.NvapiVersion ?? Dxvk.GetDefaultNvapiVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
+            nvapiVersionSetting = new DictionarySettingsEntry("Enable DLSS (Disable for FSR2 mod)", $"Choose which version of dxvk-nvapi to use. Wine >= 9.0 or Valve Wine (wine-ge/valvebe) >= 8.x are needed for DLSS.", DLSS.Versions, () => Program.Config.NvapiVersion ?? DLSS.GetDefaultVersion(), s => Program.Config.NvapiVersion = s, Dxvk.GetDefaultVersion())
             {
                 CheckWarning = s =>
                 {
                     if (s == "DISABLED") return null;
                     // This should never be seen, but just in case...
-                    if (!CoreEnvironmentSettings.IsDLSSAvailable)
+                    if (!DLSS.IsDLSSAvailable)
                         return "No nvngx dlls found. Incorrect drivers installed, or non-nvidia GPU. Non-nvidia GPU users should set this to Disabled.";
                     if (!DxvkSettings.DxvkAllowsNvapi(dxvkVersionSetting.Value))
                         return "Nvapi/DLSS requires DXVK 2.0 or greater.";
@@ -121,7 +121,7 @@ public class SettingsTabDxvk : SettingsTab
 
         base.Draw();
 
-        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark") || Dxvk.NvapiVersions[nvapiVersionSetting.Value].ContainsKey("mark"))
+        if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark") || DLSS.Versions[nvapiVersionSetting.Value].ContainsKey("mark"))
         {
             ImGui.Separator();
 
@@ -134,25 +134,25 @@ public class SettingsTabDxvk : SettingsTab
                     this.Save();
                     var _ = Task.Run(async () => 
                     {
-                        Dxvk.SetDxvkMark(dxvkVersionSetting.Value, "Downloading");
+                        Dxvk.SetMark(dxvkVersionSetting.Value, "Downloading");
                         await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false);
-                        Dxvk.SetDxvkMark(dxvkVersionSetting.Value, null);
+                        Dxvk.SetMark(dxvkVersionSetting.Value, null);
                     });
                 }
             }
 
-            if (Dxvk.NvapiVersions[nvapiVersionSetting.Value].ContainsKey("mark"))
+            if (DLSS.Versions[nvapiVersionSetting.Value].ContainsKey("mark"))
             {
                 ImGui.SameLine();
 
-                if (ImGui.Button($"{Dxvk.NvapiVersions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi now!"))
+                if (ImGui.Button($"{DLSS.Versions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi now!"))
                 {
                     this.Save();
                     var _ = Task.Run(async () => 
                     {
-                        Dxvk.SetNvapiMark(nvapiVersionSetting.Value, "Downloading");
+                        DLSS.SetMark(nvapiVersionSetting.Value, "Downloading");
                         await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false);
-                        Dxvk.SetNvapiMark(nvapiVersionSetting.Value, null);
+                        DLSS.SetMark(nvapiVersionSetting.Value, null);
                     });
                 }
             }

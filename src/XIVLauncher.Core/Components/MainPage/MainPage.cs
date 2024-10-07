@@ -143,7 +143,7 @@ public class MainPage : Page
 
             if (App.Settings.WaylandEnabled ?? false)
             {
-                if (!File.Exists(Path.Combine(ToolSetup.Prefix.FullName, "wayland_driver")))
+                if (!File.Exists(Path.Combine(Runner.Prefix.FullName, "wayland_driver")))
                 {
                     App.ShowMessageBlocking(
                         "You're trying to use Wayland, but you didn't enable the Wine Wayland Driver. Go into settings to the wine tab, scroll down and press the button \"Enable Wayland Driver\" or uncheck \"Enable Wayland\".",
@@ -765,7 +765,7 @@ public class MainPage : Page
         }
         else if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
-            if (App.Settings.WineType.Value == WineType.Custom)
+            if (App.Settings.RunnerType.Value == RunnerType.Custom)
             {
                 if (App.Settings.WineBinaryPath == null)
                     throw new InvalidOperationException("Custom wine binary path wasn't set.");

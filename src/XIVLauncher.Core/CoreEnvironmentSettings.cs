@@ -24,8 +24,9 @@ public static class CoreEnvironmentSettings
     public static string HOME => System.Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     public static string XDG_CONFIG_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME")) ? Path.Combine(HOME, ".config") : System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") ?? "";
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? "";
+    public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
+    public static string? NvngxPath => System.Environment.GetEnvironmentVariable("XL_NVNGXPATH"); // We want this null if unset.
     public static uint AltAppID => GetAltAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
-
     public static bool ForceDLSS => CheckEnvBool("XL_FORCE_DLSS"); // Don't search for nvngx.dll. Assume it's already in the game directory.
 
     private static bool CheckEnvBool(string key)
@@ -88,49 +89,5 @@ public static class CoreEnvironmentSettings
         else
             gameModeInstalled = false;
         return gameModeInstalled ?? false;
-    }
-
-    static private string? nvngxPath = ForceDLSS ? "" : Environment.GetEnvironmentVariable("XL_NVNGXPATH");
-
-    static public bool IsDLSSAvailable => !string.IsNullOrEmpty(NvidiaWineDLLPath()) || ForceDLSS;
-
-    static public string NvidiaWineDLLPath()
-    {
-        if (nvngxPath is not null)
-        {
-            if (!File.Exists(Path.Combine(nvngxPath, "nvngx.dll")))
-                nvngxPath = "";
-            return nvngxPath;
-        }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            string[] targets = { Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia"), "/lib64", "/lib", "/usr/lib64", "/usr/lib" };
-            foreach (var target in targets)
-            {
-                var psi = new ProcessStartInfo("/bin/find");
-                psi.Arguments = $"-L {target} -name \"nvngx.dll\"";
-                psi.RedirectStandardOutput = true;
-                var findCmd = new Process();
-                findCmd.StartInfo = psi;
-                findCmd.Start();
-
-                var output = findCmd.StandardOutput.ReadToEnd();
-                if (!string.IsNullOrWhiteSpace(output))
-                {
-                    var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
-                    nvngxPath = nvngx.DirectoryName;
-                    break;
-                }
-            }
-            if (string.IsNullOrWhiteSpace(nvngxPath))
-                nvngxPath = "";
-        }
-        else
-        {
-            nvngxPath = "";
-        }
-        nvngxPath ??= ""; // If nvngxPath is still null, set it to empty string to prevent an infinite loop.
-        return nvngxPath ?? "";
     }
 }

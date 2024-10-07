@@ -12,48 +12,54 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
+    public const string DEFAULT = "XIV-Proton 8-30";
+
+    public static string Folder => Proton.GetVersion(Program.Config.ProtonVersion);
+
+    public static string DownloadUrl => Proton.GetDownloadUrl(Program.Config.ProtonVersion);
+
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
-    
+
     static Proton()
     {
         Versions = new Dictionary<string, Dictionary<string, string>>();
+    } 
 
+    public static void Initialize()
+    {
         Versions["UMU-Proton-9.0-3"] = new Dictionary<string, string>()
         {
             {"name", "UMU Proton 9.0-3"}, {"desc", "UMU-Proton-9.0-3. This is basically Steam's official Proton 9 release."},
             {"label", "UMU-Proton"}, {"url", "https://github.com/Open-Wine-Components/umu-proton/releases/download/UMU-Proton-9.0-3/UMU-Proton-9.0-3.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "UMU-Proton-9.0-3")}
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "UMU-Proton-9.0-3")}
         };
 
         Versions["GE-Proton9-14"] = new Dictionary<string, string>()
         {
             {"name", "GE-Proton 9-14"}, {"desc", "GloriousEggroll's Proton release 9-14. May have mouse warp bug in some xwayland sessions."},
             {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-14/GE-Proton9-14.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "GE-Proton9-14")}
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "GE-Proton9-14")}
         };
 
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 8-30"}, {"desc", "Patched version of GE-Proton8-30 with Ping plugin support."},
             {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton8-30")}
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
         Versions["XIV-Proton9-14"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 9-14"}, {"desc", "Patched version of GE-Proton9-14 with Ping plugin support"},
             {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-14/XIV-Proton9-14.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(ToolSetup.CompatDir.FullName, "XIV-Proton9-14")}
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-14")}
         };
-    } 
 
-    public static void Initialize()
-    {       
-        if (ToolSetup.IsSteamInstalled)
+        if (Runner.IsSteamInstalled)
         {
             try
             {
-                foreach (var dir in ToolSetup.CommonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
+                foreach (var dir in Runner.CommonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
@@ -66,11 +72,11 @@ public static class Proton
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error(ex, $"Couldn't find any Proton versions in {ToolSetup.CommonDir}. No proton or directory does not exist.");
+                Log.Error(ex, $"Couldn't find any Proton versions in {Runner.CommonDir}. No proton or directory does not exist.");
             }
             try
             {
-                foreach (var dir in ToolSetup.CompatDir.EnumerateDirectories().OrderBy(x => x.Name))
+                foreach (var dir in Runner.CompatDir.EnumerateDirectories().OrderBy(x => x.Name))
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
@@ -89,25 +95,23 @@ public static class Proton
             }
             catch (DirectoryNotFoundException ex)
             {
-                Log.Error(ex, $"Couldn't find any Proton versions {ToolSetup.CompatDir}. No proton or directory does not exist.");
+                Log.Error(ex, $"Couldn't find any Proton versions {Runner.CompatDir}. No proton or directory does not exist.");
             }
         }
     }
 
-    public static string GetVersionPath(string? name)
+    public static string GetVersion(string? name, bool folderOnly = false)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return Versions[name]["path"];
-        return Versions[GetDefaultVersion()]["path"];
+            return folderOnly ? name : Versions[name]["path"];
+        return folderOnly ? GetDefaultVersion() : Versions[GetDefaultVersion()]["path"];
     }
 
     public static string GetDefaultVersion()
     {
-        if (VersionExists("XIV-Proton9-14"))
-            return "XIV-Proton9-14";
-        if (VersionExists("UMU-Proton-9.0-3"))
-            return "UMU-Proton-9.0-3";
+        if (VersionExists(DEFAULT))
+            return DEFAULT;
         return Versions.First().Key;
     }
 
