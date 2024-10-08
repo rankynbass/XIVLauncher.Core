@@ -14,9 +14,7 @@ public static class Wine
 {
     public const string DEFAULT = "unofficial-wine-xiv-staging-9.16";
 
-    public static string Folder => GetVersion(Program.Config.WineVersion);
-
-    public static string DownloadUrl => GetDownloadUrl(Program.Config.WineVersion);
+    internal const string FALLBACK = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -114,31 +112,34 @@ public static class Wine
         }
     }
 
-    public static string GetVersion(string? name, bool folderOnly = false)
+    internal static string GetVersion(string? name, bool fullName = true)
     {
         if (Program.Config.RunnerType == RunnerType.Custom)
             return Program.Config.WineBinaryPath ?? "/usr/bin";
         name ??= GetDefaultVersion();
         var path = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
         if (Versions.ContainsKey(name))
-            return folderOnly ? name : Path.Combine(path, name);
-        return folderOnly ? GetDefaultVersion() : Path.Combine(path, GetDefaultVersion());
+            return fullName ? Path.Combine(path, name) : name;
+        return fullName ? Path.Combine(path, GetDefaultVersion()) : GetDefaultVersion();
     }
 
-    public static string GetDownloadUrl(string? name)
+    internal static string GetDownloadUrl(string? name)
     {
         if (Program.Config.RunnerType == RunnerType.Custom)
             return "";
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
             return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
-        return Versions[GetDefaultVersion()]["url"];
+        return Versions[GetDefaultVersion()].ContainsKey("url") ? Versions[GetDefaultVersion()]["url"] : "";
     }
 
     public static string GetDefaultVersion()
     {
         if (Versions.ContainsKey(DEFAULT))
             return DEFAULT;
+        // Just in case DEFAULT doesn't get updated properly
+        if (Versions.ContainsKey(FALLBACK))
+            return FALLBACK;
         return Versions.First().Key;
     }
 

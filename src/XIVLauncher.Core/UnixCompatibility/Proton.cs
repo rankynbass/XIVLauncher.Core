@@ -14,10 +14,6 @@ public static class Proton
 {
     public const string DEFAULT = "XIV-Proton 8-30";
 
-    public static string Folder => Proton.GetVersion(Program.Config.ProtonVersion);
-
-    public static string DownloadUrl => Proton.GetDownloadUrl(Program.Config.ProtonVersion);
-
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
     static Proton()
@@ -100,31 +96,33 @@ public static class Proton
         }
     }
 
-    public static string GetVersion(string? name, bool folderOnly = false)
+    internal static string GetVersion(string? name, bool fullName = true)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return folderOnly ? name : Versions[name]["path"];
-        return folderOnly ? GetDefaultVersion() : Versions[GetDefaultVersion()]["path"];
+            return fullName ? Versions[name]["path"] : name;
+        return fullName ? Versions[GetDefaultVersion()]["path"] : GetDefaultVersion();
     }
 
     public static string GetDefaultVersion()
     {
-        if (VersionExists(DEFAULT))
+        if (Versions.ContainsKey(DEFAULT))
             return DEFAULT;
+        if (Versions.ContainsKey("Proton 9.0"))
+            return "Proton 9.0";
+        if (Versions.ContainsKey("Proton 9.0 (Beta)"))
+            return "Proton 9.0 (Beta)";
+        if (Versions.ContainsKey("Proton 8.0"))
+            return "Proton 8.0";
         return Versions.First().Key;
     }
 
-    public static bool VersionExists(string? name)
+    internal static string GetDownloadUrl(string? name)
     {
-        if (string.IsNullOrEmpty(name)) return false;
-        return Versions.ContainsKey(name);
-    }
-
-    public static string GetDownloadUrl(string? name)
-    {
-        if (!VersionExists(name)) return "";
-        return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+        name ??= GetDefaultVersion();
+        if (Versions.ContainsKey(name))
+            return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+        return Versions[GetDefaultVersion()].ContainsKey("url") ? Versions[name]["url"] : "";
     }
 
     public static void SetMark(string name, string? mark)

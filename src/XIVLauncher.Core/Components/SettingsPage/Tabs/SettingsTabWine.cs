@@ -114,7 +114,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckValidity = s =>
                 {
-                    if (!WineSettings.WineDLLOverrideIsValid(s))
+                    if (!RunnerSettings.WINEDLLOVERRIDEIsValid(s))
                         return "Not a valid WINEDLLOVERRIDE string";
                     
                     return null;
@@ -203,7 +203,7 @@ public class SettingsTabWine : SettingsTab
 
         if (ImGui.Button("Open prefix"))
         {
-            PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Wine.Prefix.FullName);
+            PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Runner.Prefix.FullName);
         }
 
         ImGui.SameLine();

@@ -22,15 +22,13 @@ public static class Runner
 
     public static bool IsProton => Program.Config.RunnerType == RunnerType.Proton;
 
-    public static string RuntimeDownloadUrl => IsProton ? Runtime.GetDownloadUrl(Program.Config.RuntimeVersion) : "";
+    public static string FullName => IsProton ? Proton.GetVersion(Program.Config.ProtonVersion) : Wine.GetVersion(Program.Config.WineVersion);
 
-    public static string WineDownloadUrl => Program.Config.RunnerType switch
-    {
-        RunnerType.Managed => Wine.GetDownloadUrl(Program.Config.WineVersion),
-        RunnerType.Proton => Proton.GetDownloadUrl(Program.Config.ProtonVersion),
-        RunnerType.Custom => "",
-        _ => throw new ArgumentOutOfRangeException(),
-    };
+    public static string DownloadUrl => IsProton ? Proton.GetDownloadUrl(Program.Config.ProtonVersion) : Wine.GetDownloadUrl(Program.Config.WineVersion);
+
+    public static string RuntimeFullName => IsProton ? Runtime.GetVersion(Program.Config.RuntimeVersion) : "";
+
+    public static string RuntimeDownloadUrl => IsProton ? Runtime.GetDownloadUrl(Program.Config.RuntimeVersion) : "";
 
     public static string WineDLLOverrides => Program.Config.WineDLLOverrides ?? "";
 
@@ -79,9 +77,9 @@ public static class Runner
         DLSS.Initialize();
 
         // Fix various versions in case they don't exist.
-        Program.Config.WineVersion = Wine.GetVersion(Program.Config.WineVersion, true);
-        Program.Config.ProtonVersion = Proton.GetVersion(Program.Config.ProtonVersion, true);
-        Program.Config.RuntimeVersion = Runtime.GetVersion(Program.Config.RuntimeVersion, true);
+        Program.Config.WineVersion = Wine.GetVersion(Program.Config.WineVersion, false);
+        Program.Config.ProtonVersion = Proton.GetVersion(Program.Config.ProtonVersion, false);
+        Program.Config.RuntimeVersion = Runtime.GetVersion(Program.Config.RuntimeVersion, false);
         Program.Config.DxvkVersion = Dxvk.GetVersion(Program.Config.DxvkVersion);
         Program.Config.NvapiVersion = DLSS.GetVersion(Program.Config.NvapiVersion);
     }

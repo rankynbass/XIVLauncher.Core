@@ -464,23 +464,23 @@ sealed class Program
 
     public static void CreateCompatToolsInstance()
     {
-        WineSettings wineSettings;
+        RunnerSettings runnerSettings;
         DxvkSettings dxvkSettings;
         DLSSSettings dlssSettings;
         if (Runner.IsProton)
         {
-            wineSettings = new WineSettings(Proton.Folder, Proton.DownloadUrl, Runtime.Folder, Runtime.DownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
+            runnerSettings = new RunnerSettings(Runner.FullName, Runner.DownloadUrl, Runner.RuntimeFullName, Runner.RuntimeDownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
             dxvkSettings = new DxvkSettings(Dxvk.Enabled, storage.Root.FullName, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
             dlssSettings = new DLSSSettings(DLSS.IsDLSSAvailable);
         }
         else
         {
-            wineSettings = new WineSettings(Wine.Folder, Wine.DownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
+            runnerSettings = new RunnerSettings(Runner.FullName, Runner.DownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
             dxvkSettings = new DxvkSettings(Dxvk.Enabled, Dxvk.Folder, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.GPLAsyncCacheEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
             dlssSettings = new DLSSSettings(DLSS.Enabled, CoreEnvironmentSettings.ForceDLSS, DLSS.Folder, DLSS.DownloadUrl, DLSS.NvngxPath);
         }
         var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
-        CompatibilityTools = new CompatibilityTools(gameSettings, wineSettings, dxvkSettings, dlssSettings);
+        CompatibilityTools = new CompatibilityTools(gameSettings, runnerSettings, dxvkSettings, dlssSettings);
     }
 
     public static void ShowWindow()

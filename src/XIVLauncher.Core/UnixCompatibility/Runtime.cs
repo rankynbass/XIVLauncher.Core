@@ -14,10 +14,6 @@ public static class Runtime
 {
     public const string DEFAULT = "SteamLinuxRuntime_sniper";
 
-    public static string Folder => Runtime.GetVersion(Program.Config.RuntimeVersion);
-
-    public static string DownloadUrl => Runtime.GetDownloadUrl(Program.Config.RuntimeVersion);
-
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
    
     private const string SNIPER_RUNTIME = "https://repo.steampowered.com/steamrt3/images/latest-container-runtime-depot/SteamLinuxRuntime_sniper.tar.xz";
@@ -74,12 +70,12 @@ public static class Runtime
         }
     }
 
-    public static string GetVersion(string? name, bool folderOnly = false)
+    internal static string GetVersion(string? name, bool fullName = true)
     {
         name ??= GetDefaultVersion();
         if (Versions.ContainsKey(name))
-            return folderOnly ? name : Versions[name]["path"];
-        return folderOnly ? GetDefaultVersion() : Versions[GetDefaultVersion()]["path"];
+            return fullName ? Versions[name]["path"] : name;
+        return fullName ? Versions[GetDefaultVersion()]["path"] : GetDefaultVersion();
     }
 
     public static string GetDefaultVersion()
@@ -89,16 +85,12 @@ public static class Runtime
         return Versions.First().Key;
     }
 
-    public static bool VersionExists(string? name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        return Versions.ContainsKey(name);
-    }
-
     public static string GetDownloadUrl(string? name)
     {
-        if (!VersionExists(name)) return "";
-        return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+        name ??= GetDefaultVersion();
+        if (Versions.ContainsKey(name))
+            return Versions[name].ContainsKey("url") ? Versions[name]["url"] : "";
+        return Versions[GetDefaultVersion()].ContainsKey("url") ? Versions[name]["url"] : "";
     }
 
     public static void SetMark(string name, string? mark)
