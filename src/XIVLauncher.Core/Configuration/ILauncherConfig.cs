@@ -139,9 +139,14 @@ public interface ILauncherConfig
 
     public string? SteamFlatpakPath { get; set; }
 
+    public string? SteamSnapPath { get; set; }
+
     public bool? SteamToolInstalled { get; set; }
 
     public bool? SteamFlatpakToolInstalled { get; set; }
+
+    public bool? SteamSnapToolInstalled { get; set; }
+
 
     #endregion
 

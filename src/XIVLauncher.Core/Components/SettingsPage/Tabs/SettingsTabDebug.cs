@@ -27,8 +27,8 @@ public class SettingsTabDebug : SettingsTab
         if (Program.IsSteamDeckGamingMode)
             ImGui.Text("Steam Deck Gaming Mode Detected");
 
-        if (OSInfo.IsFlatpak)
-            ImGui.Text("Running as a Flatpak");
+        if (OSInfo.Container != ContainerType.none)
+            ImGui.Text($"Running as a {OSInfo.Container.ToString()}.");
 
 
         ImGui.Spacing();

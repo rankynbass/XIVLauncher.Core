@@ -46,7 +46,12 @@ public static class Runner
 
     public static void Initialize()
     {
-        Steam = (OSInfo.IsFlatpak && CoreEnvironmentSettings.IsSteamCompatTool) ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
+        Steam = OSInfo.Container switch
+        {
+            ContainerType.none => Program.Config.SteamPath,
+            ContainerType.flatpak => CoreEnvironmentSettings.IsSteamCompatTool ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath,
+            ContainerType.snap => Program.Config.SteamSnapPath,
+        };
         CommonDir = new DirectoryInfo(Path.Combine(Steam, "steamapps", "common"));
         CompatDir = new DirectoryInfo(Path.Combine(Steam, "compatibilitytools.d"));
 

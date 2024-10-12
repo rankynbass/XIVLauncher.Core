@@ -14,6 +14,8 @@ public class SettingsTabSteamTool : SettingsTab
     
     private SettingsEntry<string> steamFlatpakPath;
 
+    private SettingsEntry<string> steamSnapPath;
+
     private bool steamInstalled = SteamCompatibilityTool.IsSteamInstalled;
 
     private bool steamToolInstalled = SteamCompatibilityTool.IsSteamToolInstalled;
@@ -22,14 +24,23 @@ public class SettingsTabSteamTool : SettingsTab
     
     private bool steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
 
+    private bool steamSnapInstalled = SteamCompatibilityTool.IsSteamSnapInstalled;
+
+    private bool steamSnapToolInstalled = SteamCompatibilityTool.IsSteamSnapToolInstalled;
+
     public SettingsTabSteamTool()
     {
         Entries = new SettingsEntry[]
         {
-            steamPath = new SettingsEntry<string>("Steam Path (native)", "Path to the native steam install. Only change this if you have Steam installed in a non-default location.",
+            steamPath = new SettingsEntry<string>("Steam Path (native)", "Path to the native steam user folder. Only change this if you have your Steam user folder set to a non-default location.",
                 () => Program.Config.SteamPath ?? Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam"), s => Program.Config.SteamPath = s),
-            steamFlatpakPath = new SettingsEntry<string>("Steam Path (flatpak)", "Path to the flatpak Steam installation. Only change this if you have your flatpak Steam installed to a non-default location.",
-                () => Program.Config.SteamFlatpakPath ?? Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" ), s => Program.Config.SteamFlatpakPath = s)
+            steamFlatpakPath = new SettingsEntry<string>("Steam Path (flatpak)", "Path to the flatpak Steam user folder. Only change this if you have your snap Steam user folder set to a non-default location.",
+                () => Program.Config.SteamFlatpakPath ?? Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam" ), s => Program.Config.SteamFlatpakPath = s)
+            {    
+                CheckVisibility = () => Program.IsSteamDeckHardware != true,
+            },
+            steamSnapPath = new SettingsEntry<string>("Steam Path (snap)", "Path to the snap Steam user folder. Only change this if you have your snap Steam user folder set to a non-default location.",
+                () => Program.Config.SteamSnapPath ?? Path.Combine(CoreEnvironmentSettings.HOME, "snap", "steam", "common", ".local", "share", "Steam"), s => Program.Config.SteamSnapPath = s)
             {    
                 CheckVisibility = () => Program.IsSteamDeckHardware != true,
             },
@@ -116,6 +127,38 @@ public class SettingsTabSteamTool : SettingsTab
                 steamFlatpakToolInstalled = SteamCompatibilityTool.IsSteamFlatpakToolInstalled;
             }
             if (!steamFlatpakToolInstalled)
+            {
+                ImGui.EndDisabled();
+            }
+        }
+
+        if (!Program.IsSteamDeckHardware && steamSnapInstalled)
+        {
+            ImGui.Dummy(SPACER);
+            ImGui.Separator();
+            ImGui.Dummy(SPACER);
+
+            ImGui.Text($"Snap Steam settings directory: PRESENT. Snap Steam Tool: {(steamSnapToolInstalled ? "INSTALLED" : "Not Installed")}");
+            ImGui.Dummy(SPACER);
+            if (!steamSnapInstalled) ImGui.BeginDisabled();
+            if (ImGui.Button($"{(steamSnapToolInstalled ? "Re-i" : "I")}nstall to snap Steam"))
+            {
+                this.Save();
+                Task.Run(async() => { await SteamCompatibilityTool.InstallXLM(Program.Config.SteamSnapPath).ConfigureAwait(false); steamSnapToolInstalled = SteamCompatibilityTool.IsSteamSnapToolInstalled; });
+            }
+            if (!steamSnapInstalled) ImGui.EndDisabled();
+            ImGui.SameLine();
+            if (!steamSnapToolInstalled)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (ImGui.Button("Uninstall from Snap Steam"))
+            {
+                this.Save();
+                SteamCompatibilityTool.UninstallXLM(Program.Config.SteamSnapPath);
+                steamSnapToolInstalled = SteamCompatibilityTool.IsSteamSnapToolInstalled;
+            }
+            if (!steamSnapToolInstalled)
             {
                 ImGui.EndDisabled();
             }

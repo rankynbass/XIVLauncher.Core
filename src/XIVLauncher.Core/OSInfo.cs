@@ -17,13 +17,20 @@ public enum LinuxDistroPackage
     none,
 }
 
+public enum ContainerType
+{
+    none,
+    flatpak,
+    snap,
+}
+
 public static class OSInfo
 {
     public static LinuxDistroPackage Package { get; private set; }
 
     public static string Name { get; private set; }
 
-    public static bool IsFlatpak { get; private set; }
+    public static ContainerType Container { get; private set; } = ContainerType.none;
 
     public static Platform Platform { get; private set; }
 
@@ -34,7 +41,6 @@ public static class OSInfo
         {
             Package = LinuxDistroPackage.none;
             Name = os.VersionString;
-            IsFlatpak = false;
             Platform = Platform.Win32;
             return;
         }
@@ -45,7 +51,6 @@ public static class OSInfo
         {
             Platform = Platform.Mac;
             Name = os.VersionString;
-            IsFlatpak = false;
             Package = LinuxDistroPackage.none;
             return;
         }
@@ -54,7 +59,6 @@ public static class OSInfo
         {
             Platform = Platform.Mac;  // Don't have an option for this atm.
             Name = os.VersionString;
-            IsFlatpak = false;
             Package = LinuxDistroPackage.none;
             return;            
         }
@@ -66,7 +70,6 @@ public static class OSInfo
             {
                 Package = LinuxDistroPackage.ubuntu;
                 Name = "Unknown distribution";
-                IsFlatpak = false;
                 return;
             }
             var osRelease = File.ReadAllLines("/etc/os-release");
@@ -86,13 +89,19 @@ public static class OSInfo
 
             if (CheckFlatpak(osInfo))
             {
-                IsFlatpak = true;
+                Container = ContainerType.flatpak;
+                Package = LinuxDistroPackage.ubuntu;
+                return;
+            }
+
+            if (CheckSnap(osInfo))
+            {
+                Container = ContainerType.snap;
                 Package = LinuxDistroPackage.ubuntu;
                 return;
             }
 
             Package = CheckDistro(osInfo);
-            IsFlatpak = false;
             return;
         }
         catch
@@ -100,7 +109,6 @@ public static class OSInfo
             // If there's any kind of error opening the file or even finding it, just go with default.
             Package = LinuxDistroPackage.ubuntu;
             Name = "Unknown distribution";
-            IsFlatpak = false;
         }
     }
 
@@ -108,6 +116,14 @@ public static class OSInfo
     {
         if (osInfo.ContainsKey("ID"))
             if (osInfo["ID"] == "org.freedesktop.platform")
+                return true;
+        return false;
+    }
+
+    private static bool CheckSnap(Dictionary<string, string> osInfo)
+    {
+        if (osInfo.ContainsKey("ID") && osInfo.ContainsKey("HOME_URL"))
+            if (osInfo["ID"] == "ubuntu-core" && osInfo["HOME_URL"] == "https://snapcraft.io")
                 return true;
         return false;
     }

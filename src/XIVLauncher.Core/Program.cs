@@ -176,9 +176,8 @@ sealed class Program
         Config.FixLocale ??= false;
 
         Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
-        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", "data", "Steam" );
-        Config.SteamToolInstalled ??= false;
-        Config.SteamFlatpakToolInstalled ??= false;
+        Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam" );
+        Config.SteamSnapPath ??= Path.Combine(CoreEnvironmentSettings.HOME, "snap", "steam", "common", ".local", "share", "Steam");
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -384,13 +383,13 @@ sealed class Program
 
         var needUpdate = false;
 
-        if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
+        if (OSInfo.Container == ContainerType.flatpak && (Config.DoVersionCheck ?? false))
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
-        }   
+        }
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
@@ -479,7 +478,7 @@ sealed class Program
             dxvkSettings = new DxvkSettings(Dxvk.Enabled, Dxvk.Folder, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.GPLAsyncCacheEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
             dlssSettings = new DLSSSettings(DLSS.Enabled, CoreEnvironmentSettings.ForceDLSS, DLSS.Folder, DLSS.DownloadUrl, DLSS.NvngxPath);
         }
-        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath, OSInfo.IsFlatpak);
+        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath, OSInfo.Container == ContainerType.flatpak);
         CompatibilityTools = new CompatibilityTools(gameSettings, runnerSettings, dxvkSettings, dlssSettings);
     }
 
@@ -585,7 +584,7 @@ sealed class Program
             storage.GetFolder($"compatibilitytool/dxvk/{nvapitool.Key}").Delete(true);
         }
         // Re-initialize Versions so they get *Download* marks back.
-        Wine.Initialize();
+        Wine.ReInitialize();
         Dxvk.ReInitialize();
         DLSS.ReInitialize();
 
@@ -683,7 +682,8 @@ sealed class Program
         {
             Console.WriteLine($"This program: XIVLauncher.Core {CoreVersion.ToString()} - {CoreRelease}");
             Console.WriteLine($"Steam compatibility tool {(SteamCompatibilityTool.IsSteamToolInstalled ? "is installed." : "is not installed.")}");
-            Console.WriteLine($"Steam (flatpak) compatibility tool {(SteamCompatibilityTool.IsSteamFlatpakToolInstalled ? "is installed." : "is not installed.")}");
+            Console.WriteLine($"Steam flatpak compatibility tool {(SteamCompatibilityTool.IsSteamFlatpakToolInstalled ? "is installed." : "is not installed.")}");
+            Console.WriteLine($"Steam snap compatibility tool {(SteamCompatibilityTool.IsSteamSnapToolInstalled ? "is installed." : "is not installed.")}");
             exit = true;
         }
 
@@ -730,14 +730,33 @@ sealed class Program
             Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamFlatpakPath ?? ""}");
             exit = true;
         }
-        
+
+        if (mainArgs.Contains("--snap-install") && mainArgs.Contains("--snap-remove"))
+        {
+            Console.WriteLine("Using both --snap-install and --snap-remove. Doing --snap-remove first");
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamSnapPath);
+            Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamSnapPath ?? ""}");
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamSnapPath).ConfigureAwait(false);
+            Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamSnapPath ?? ""}");
+            exit = true;
+        }
+        else if (mainArgs.Contains("--snap-install"))
+        {
+            await SteamCompatibilityTool.InstallXLM(Program.Config.SteamSnapPath).ConfigureAwait(false);
+            Console.WriteLine($"Installed as Steam compatibility tool to {Program.Config.SteamSnapPath ?? ""}");
+            exit = true;
+        }
+        else if (mainArgs.Contains("--snap-remove"))
+        {
+            SteamCompatibilityTool.UninstallXLM(Program.Config.SteamSnapPath);
+            Console.WriteLine($"Removed XIVLauncher.Core as a Steam compatibility tool from {Program.Config.SteamSnapPath ?? ""}");
+            exit = true;
+        }
+
         if (mainArgs.Contains("--delete-old"))
         {
-            var oldPath = Path.Combine(Program.Config.SteamPath ?? $"{CoreEnvironmentSettings.XDG_DATA_HOME}/Steam", "compatibilitytools.d", "xlcore");
-            var oldFPPath = Path.Combine(Program.Config.SteamFlatpakPath ?? $"{CoreEnvironmentSettings.HOME}/.var/app/com.valvesoftware.Steam/data/Steam", "compatibilitytools.d", "xlcore");
-            Console.WriteLine($"Deleting old compatibility tools from:\n{oldPath}\n{oldFPPath}");
-            SteamCompatibilityTool.DeleteOldTool(true);
-            SteamCompatibilityTool.DeleteOldTool(false);
+            Console.WriteLine($"Deleting old compatibility tools.");
+            SteamCompatibilityTool.DeleteOldTools();
             exit = true;
         }
 
@@ -757,7 +776,7 @@ sealed class Program
 
         if (mainArgs.Contains("--help") || mainArgs.Contains("-h"))
         {
-            Console.WriteLine($"XIVLaunher.Core {CoreVersion.ToString()}\nA third-party launcher for Final Fantasy XIV.\n\nOptions (use only one):");
+            Console.WriteLine($"XIVLauncher.Core {CoreVersion.ToString()} ({CoreRelease})\nA third-party launcher for Final Fantasy XIV.\n\nOptions (use only one):");
             Console.WriteLine("  -v                 Turn on verbose logging, then run the launcher.");
             Console.WriteLine("  -h, --help         Display this message.");
             Console.WriteLine("  -V                 Display brief version info.");
@@ -771,6 +790,8 @@ sealed class Program
             Console.WriteLine("  --flatpak-install  Install as a compatibility tool to flatpak Steam.");
             Console.WriteLine($"                     Path: {Program.Config.SteamFlatpakPath ?? ""}");
             Console.WriteLine("  --flatpak-remove   Remove compatibility tool from flatpak Steam.");
+            Console.WriteLine("  --snap-install     Install as a compatibility tool to snap Steam (Ubuntu 24.04+ default)");
+            Console.WriteLine($"                     Path: {Program.Config.SteamSnapPath ?? ""}");
             Console.WriteLine("\nTo delete old versions of the Tool");
             Console.WriteLine("  --delete-old       Remove old versions of the compatibility tool (1.1.0.13 and earlier)");
             Console.WriteLine("");

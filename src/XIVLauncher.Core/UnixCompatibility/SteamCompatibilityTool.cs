@@ -16,23 +16,24 @@ public static class SteamCompatibilityTool
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
 
+    public static bool IsSteamSnapInstalled => Directory.Exists(Program.Config.SteamSnapPath);
+
     public static bool IsSteamToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamPath, "compatibilitytools.d", "XLM"));
 
     public static bool IsSteamFlatpakToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamFlatpakPath, "compatibilitytools.d", "XLM"));
 
-    private static void SetConfigValues()
-    {
-        Program.Config.SteamToolInstalled = IsSteamToolInstalled;
-        Program.Config.SteamFlatpakToolInstalled = IsSteamFlatpakToolInstalled;
-    }
+    public static bool IsSteamSnapToolInstalled => Directory.Exists(Path.Combine(Program.Config.SteamSnapPath, "compatibilitytools.d", "XLM"));
 
-    public static void DeleteOldTool(bool isFlatpak)
+    public static void DeleteOldTools()
     {
-        var path = isFlatpak ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath;
-        var steamToolFolder = new DirectoryInfo(Path.Combine(path, "compatibilitytools.d", "xlcore"));
-        if (!steamToolFolder.Exists) return;
-        steamToolFolder.Delete(true);
-        Log.Verbose($"[SCT] Deleted Steam compatibility tool at folder {steamToolFolder.FullName}");
+        var paths = new string[] { Program.Config.SteamPath, Program.Config.SteamFlatpakPath, Program.Config.SteamSnapPath };
+        foreach (var path in paths)
+        {
+            var steamToolFolder = new DirectoryInfo(Path.Combine(path, "compatibilitytools.d", "xlcore"));
+            if (!steamToolFolder.Exists) return;
+            steamToolFolder.Delete(true);
+            Log.Verbose($"[SCT] Deleted Steam compatibility tool at folder {steamToolFolder.FullName}");
+        }
     }
 
     private static async Task<bool> DownloadTool(string tempDirectory, string tempName, string downloadUrl, bool untar = false)
@@ -99,7 +100,6 @@ public static class SteamCompatibilityTool
         await xlm.WaitForExitAsync();
         File.Delete(Path.Combine(tempPath, "xlm"));
         Log.Verbose($"Installed XLM to {compatPath}");
-        SetConfigValues();
         return true;
     }
 
@@ -110,7 +110,6 @@ public static class SteamCompatibilityTool
         if (!xlmFolder.Exists) return;
         xlmFolder.Delete(true);
         Log.Verbose($"[SCT] Deleted Steam compatibility tool at folder {xlmFolder.FullName}");
-        SetConfigValues();
     }
 
 }
