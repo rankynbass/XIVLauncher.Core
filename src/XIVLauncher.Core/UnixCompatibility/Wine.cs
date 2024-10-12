@@ -26,24 +26,17 @@ public static class Wine
     public static void Initialize()
     {
         // Add default versions.
+        Versions.Add("unofficial-wine-xiv-staging-9.19", new Dictionary<string, string>()
+        {
+            {"name", "Unofficial Wine-XIV 9.19"}, {"desc", "Patched version of Wine Staging 9.19. Now with wayland and lsteamclient support added."},
+            {"label", "Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.19/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.19.tar.zst"},
+            {"mark", "Download"}
+        });
+
         Versions.Add("unofficial-wine-xiv-staging-9.16", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 9.16"}, {"desc", "Patched version of Wine Staging 9.13. Now with wayland and lsteamclient support added."},
+            {"name", "Unofficial Wine-XIV 9.16"}, {"desc", "Patched version of Wine Staging 9.16. Now with wayland and lsteamclient support added."},
             {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.16/unofficial-wine-xiv-staging-9.16.tar.zst"},
-            {"mark", "Download"}
-        });
-
-        Versions.Add("unofficial-wine-xiv-staging-9.13.1", new Dictionary<string, string>()
-        {
-            {"name", "Unofficial Wine-XIV 9.13.1"}, {"desc", "Patched version of Wine Staging 9.13. Now with wayland and lsteamclient support added."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.13.1/unofficial-wine-xiv-staging-9.13.1.tar.zst"},
-            {"mark", "Download"}
-        });
-
-        Versions.Add("wine-xiv-staging-fsync-git-9.17.r0.g27b121f2", new Dictionary<string, string>()
-        {
-            {"name", "Wine-XIV 9.17"}, {"desc", "Patched version of Wine Staging 9.17. Change Windows version to 10 for best results."},
-            {"label", "Testing"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/beta-9.17.r0.g27b121f2/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-9.17.r0.g27b121f2.tar.xz"},
             {"mark", "Download"}
         });
 
@@ -72,13 +65,6 @@ public static class Wine
         {
             {"name", "Unofficial ValveBE 8-2"}, {"desc", "Patched Valve Wine 8. A replacement for wine-ge, since it's discontinued."},
             {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-8-2/unofficial-wine-xiv-valvebe-8-2.tar.zst"},
-            {"mark", "Download"}
-        });
-
-        Versions.Add("unofficial-wine-xiv-valvebe-9-09", new Dictionary<string, string>()
-        {
-            {"name", "Unofficial ValveBE 9-09"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-09/unofficial-wine-xiv-valvebe-9-09.tar.zst"},
             {"mark", "Download"}
         });
 

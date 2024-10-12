@@ -1,4 +1,12 @@
 # Changelog
+### Sat Oct 12 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.15
+- Added snap support to the compatibility tool.
+- Updated wine, proton.
+- More rework on the XL.Common.Unix backend.
+- Launcher will now use `find` instead of `/bin/find`, and hid stderr messages. DLSS files will not be found if find is not installed (`XL_NVNGXPATH` can still be used)
+- zstd added to the requirements for COPR (arch will have it installed since it's used for pacman).
+
 ### Sat Sep 28 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.14
 - Replaced the compatibility tool with one based around [XLM](https://github.com/Blooym/xlm)

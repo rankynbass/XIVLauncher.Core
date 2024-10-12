@@ -26,17 +26,7 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             RunnerTypeSetting = new SettingsEntry<RunnerType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.RunnerType ?? RunnerType.Managed, x => Program.Config.RunnerType = x)
-            {
-                // CheckWarning = x =>
-                // {
-                //     if (x == RunnerType.Proton && !)
-                //     {
-                //         return "Umu-launcher is not installed. You have to install it yourself. See https://github.com/Open-Wine-Components/umu-launcher for more info.";
-                //     }
-                //     return null;
-                // }
-            },
+                () => Program.Config.RunnerType ?? RunnerType.Managed, x => Program.Config.RunnerType = x),
 
             wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {
@@ -53,16 +43,10 @@ public class SettingsTabWine : SettingsTab
             protonVersionSetting = new DictionarySettingsEntry("Proton Version", "The Wine configuration and Wine explorer buttons below may not function properly with Proton.", Proton.Versions, () => Program.Config.ProtonVersion, s => Program.Config.ProtonVersion = s, Proton.GetDefaultVersion())
             {
                 CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Proton,
-                // CheckWarning = x =>
-                // {
-                //     if (RunnerTypeSetting.Value == RunnerType.Proton)
-                //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
-                //     return null;
-                // }
                 CheckWarning = x =>
                 {
                     var warning = "";
-                    if (!protonVersionSetting.Value.Contains("XIV"))
+                    if (!protonVersionSetting.Value.ToUpper().Contains("XIV"))
                         warning += "Non XIV-Proton versions may crash with the ping plugin. Use XIV-Proton instead.\n";
                     if (protonVersionSetting.Value.Contains("9-11"))
                         warning += "GE-Proton9-11 and XIV-Proton9-11 have a bug that causes issues with Dalamud. You may be able to fix it by clearing the prefix.";
