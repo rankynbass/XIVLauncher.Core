@@ -26,10 +26,10 @@ public static class Wine
     public static void Initialize()
     {
         // Add default versions.
-        Versions.Add("unofficial-wine-xiv-staging-9.19", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-9.20", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 9.19"}, {"desc", "Patched version of Wine Staging 9.19. Now with wayland and lsteamclient support added."},
-            {"label", "Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.19/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.19.tar.zst"},
+            {"name", "Unofficial Wine-XIV 9.20"}, {"desc", "Patched version of Wine Staging 9.20. Now with wayland and lsteamclient support added."},
+            {"label", "Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.20/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.20.tar.zst"},
             {"mark", "Download"}
         });
 
@@ -68,10 +68,10 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-valvebe-9-10", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-valvebe-9-11", new Dictionary<string, string>()
         {
-            {"name", "Unofficial ValveBE 9-10"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-10/unofficial-wine-xiv-valvebe-9-10.tar.zst"},
+            {"name", "Unofficial ValveBE 9-11"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-11/unofficial-wine-xiv-valvebe-9-11.tar.zst"},
             {"mark", "Download"}
         });
 

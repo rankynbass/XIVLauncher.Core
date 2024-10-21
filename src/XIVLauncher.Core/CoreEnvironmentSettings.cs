@@ -26,7 +26,8 @@ public static class CoreEnvironmentSettings
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? "";
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
     public static string? NvngxPath => System.Environment.GetEnvironmentVariable("XL_NVNGXPATH"); // We want this null if unset.
-    public static uint AltAppID => GetAltAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
+    public static uint SteamAppId => GetAppId(System.Environment.GetEnvironmentVariable("SteamAppId"));
+    public static uint AltAppID => GetAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
     public static bool ForceDLSS => CheckEnvBool("XL_FORCE_DLSS"); // Don't search for nvngx.dll. Assume it's already in the game directory.
 
     private static bool CheckEnvBool(string key)
@@ -51,7 +52,7 @@ public static class CoreEnvironmentSettings
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
     }
 
-    public static uint GetAltAppId(string? appid)
+    public static uint GetAppId(string? appid)
     {
         uint.TryParse(appid, out var result);
         

@@ -291,6 +291,13 @@ sealed class Program
             appName = $"Override AppId={appId.ToString()}";
             altName = "FFXIV Free Trial";
         }
+        else if (CoreEnvironmentSettings.SteamAppId > 0 && CoreEnvironmentSettings.IsSteamCompatTool)
+        {
+            appId = CoreEnvironmentSettings.SteamAppId;
+            altId = STEAM_APP_ID_FT;
+            appName = $"Override AppId={appId.ToString()} (XLM)";
+            altName = "FFXIV Free Trial";
+        }
         else if (Config.IsFt == true)
         {
             appId = STEAM_APP_ID_FT;
