@@ -1,4 +1,10 @@
 # Changelog
+### Thu Oct 24 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.16
+- Fix default paths for Steam installs. Previous versions of the installer wanted the `~/.local/share` folder and would add Steam internally. Current version uses `~/.local/share/Steam`.
+- Fixed XLM install scripts to use `.local/share/Steam` instead of `.steam/root`, in case the script is run before steam is run for the first time.
+- Updated wine, valvebe wine, and proton
+
 ### Sat Oct 12 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.15
 - Added snap support to the compatibility tool.
