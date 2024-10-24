@@ -4,6 +4,7 @@
 - Fix default paths for Steam installs. Previous versions of the installer wanted the `~/.local/share` folder and would add Steam internally. Current version uses `~/.local/share/Steam`.
 - Fixed XLM install scripts to use `.local/share/Steam` instead of `.steam/root`, in case the script is run before steam is run for the first time.
 - Updated wine, valvebe wine, and proton
+- When used with XLM, it will automatically use the selected game's SteamAppId if no XL_APPID is set.
 
 ### Sat Oct 12 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.15
