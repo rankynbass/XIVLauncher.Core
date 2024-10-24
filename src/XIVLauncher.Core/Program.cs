@@ -178,6 +178,14 @@ sealed class Program
         Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
         Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam" );
         Config.SteamSnapPath ??= Path.Combine(CoreEnvironmentSettings.HOME, "snap", "steam", "common", ".local", "share", "Steam");
+
+        // Fix bad paths from previous versions.
+        if (Config.SteamPath == Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share"))
+            Config.SteamPath = Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
+        if (Config.SteamFlatpakPath == Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share"))
+            Config.SteamFlatpakPath = Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam" );
+        if (Config.SteamSnapPath == Path.Combine(CoreEnvironmentSettings.HOME, "snap", "steam", "common", ".local", "share"))
+            Config.SteamSnapPath = Path.Combine(CoreEnvironmentSettings.HOME, "snap", "steam", "common", ".local", "share", "Steam");
     }
 
     public const uint STEAM_APP_ID = 39210;
