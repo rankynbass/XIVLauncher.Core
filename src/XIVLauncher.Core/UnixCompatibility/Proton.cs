@@ -26,7 +26,7 @@ public static class Proton
         Versions["xiv-proton-9.0-3c"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 9.0-3c"}, {"desc", "XIV-Proton-9.0-3c. This is basically Steam's official Proton 9 release with XIV patches."},
-            {"label", "UMU-Proton"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-3c/xiv-proton-9.0-3c.tar.zst"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-3c/xiv-proton-9.0-3c.tar.zst"},
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "xiv-proton-9.0-3c")}
         };
 
