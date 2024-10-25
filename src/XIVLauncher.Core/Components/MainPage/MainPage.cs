@@ -847,15 +847,6 @@ public class MainPage : Page
             throw new NotImplementedException();
         }
 
-        if (!Program.IsSteamDeckHardware)
-        {
-            Hide();
-        }
-        else
-        {
-            App.State = LauncherApp.LauncherState.SteamDeckPrompt;
-        }
-
         // We won't do any sanity checks here anymore, since that should be handled in StartLogin
         var launchedProcess = App.Launcher.LaunchGame(runner,
             loginResult.UniqueId,
@@ -867,6 +858,18 @@ public class MainPage : Page
             App.Settings.ClientLanguage.GetValueOrDefault(ClientLanguage.English),
             App.Settings.IsEncryptArgs.GetValueOrDefault(true),
             App.Settings.DpiAwareness.GetValueOrDefault(DpiAwareness.Unaware));
+
+        // Hide the launcher if not Steam Deck, or if using XLM or other Steam compatibility mode.
+        // Otherwise, if using the Steam Deck, show the Steam deck prompt page.
+        if (!Program.IsSteamDeckHardware || CoreEnvironmentSettings.IsSteamCompatTool)
+        {
+            
+            Hide();
+        }
+        else
+        {
+            App.State = LauncherApp.LauncherState.SteamDeckPrompt;
+        }
 
         if (launchedProcess == null)
         {
