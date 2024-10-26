@@ -289,36 +289,25 @@ sealed class Program
             }
         }
 
-        uint appId, altId;
-        string appName, altName;
-        // AppId of 0 is invalid (though still a valid uint)
-        if (CoreEnvironmentSettings.AltAppID > 0)
+        Dictionary<uint, string> apps = new Dictionary<uint, string>();
+        uint[] ignoredIds = { 0, STEAM_APP_ID, STEAM_APP_ID_FT};
+        if (!ignoredIds.Contains(CoreEnvironmentSettings.SteamAppId))
         {
-            appId = CoreEnvironmentSettings.AltAppID;
-            altId = STEAM_APP_ID_FT;
-            appName = $"Override AppId={appId.ToString()}";
-            altName = "FFXIV Free Trial";
+            apps.Add(CoreEnvironmentSettings.SteamAppId, "XLM");
         }
-        else if (CoreEnvironmentSettings.SteamAppId > 0 && CoreEnvironmentSettings.IsSteamCompatTool)
+        if (!ignoredIds.Contains(CoreEnvironmentSettings.AltAppID))
         {
-            appId = CoreEnvironmentSettings.SteamAppId;
-            altId = STEAM_APP_ID_FT;
-            appName = $"Override AppId={appId.ToString()} (XLM)";
-            altName = "FFXIV Free Trial";
+            apps.Add(CoreEnvironmentSettings.AltAppID, "XL_APPID");
         }
-        else if (Config.IsFt == true)
+        if (Config.IsFt == true)
         {
-            appId = STEAM_APP_ID_FT;
-            altId = STEAM_APP_ID;
-            appName = "FFXIV Free Trial";
-            altName = "FFXIV Retail";
+            apps.Add(STEAM_APP_ID_FT, "FFXIV Free Trial");
+            apps.Add(STEAM_APP_ID, "FFXIV Retail");
         }
         else
         {
-            appId = STEAM_APP_ID;
-            altId = STEAM_APP_ID_FT;
-            appName = "FFXIV Retail";
-            altName = "FFXIV Free Trial";
+            apps.Add(STEAM_APP_ID, "FFXIV Retail");
+            apps.Add(STEAM_APP_ID_FT, "FFXIV Free Trial");
         }
         try
         {
@@ -337,15 +326,23 @@ sealed class Program
             }
             if (Config.IsIgnoringSteam != true || CoreEnvironmentSettings.IsSteamCompatTool)
             {
-                try
+                var initialized = false;
+                foreach (var app in apps)
                 {
-                    Steam.Initialize(appId);
+                    try
+                    {
+                        Steam.Initialize(app.Key);
+                        Log.Information($"Successfully initialized Steam entry {app.Key} - {app.Value}");
+                        initialized = true;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Failed to initialize Steam Steam entry {app.Key} - {app.Value}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Couldn't init Steam with AppId={appId} ({appName}), trying AppId={altId} ({altName})");
-                    Steam.Initialize(altId);
-                }
+                if (!initialized)
+                    Log.Error("Failed to initialize Steam. Please attach XLM to a valid steam game or set XL_APPID to a valid steam app id in your library.");
             }
         }
         catch (Exception ex)
