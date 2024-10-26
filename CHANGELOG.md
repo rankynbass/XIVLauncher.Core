@@ -1,5 +1,12 @@
 # Changelog
 ### Thu Oct 24 2024 Rankyn Bass <rankyn@proton.me>
+1.1.0.17
+- Don't show Steam Deck prompt if using with XLM
+- Don't hide launcher until after ffxiv is launched. This prevents the several-seconds wait from launcher disappearance to ffxiv window appearance.
+- Improve steam initialization. It will now use SteamAppId if you attach it to a non-ffxiv steam game. This should help steam input work properly.
+- Fix the label on xiv-Proton_9.0-3c to be "XIV-patched" instead of "UMU-Proton".
+
+### Thu Oct 24 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.16
 - Fix default paths for Steam installs. Previous versions of the installer wanted the `~/.local/share` folder and would add Steam internally. Current version uses `~/.local/share/Steam`.
 - Fixed XLM install scripts to use `.local/share/Steam` instead of `.steam/root`, in case the script is run before steam is run for the first time.
