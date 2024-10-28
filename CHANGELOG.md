@@ -3,7 +3,7 @@
 1.1.0.18
 - Fixed a bug with downloading dxvk-nvapi. The dxvk-nvapi tarballs do not have a top-level folder, and I forgot to account for that when I did the last rework in 1.1.0.15.
 
-### Thu Oct 24 2024 Rankyn Bass <rankyn@proton.me>
+### Sat Oct 26 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.17
 - Don't show Steam Deck prompt if using with XLM
 - Don't hide launcher until after ffxiv is launched. This prevents the several-seconds wait from launcher disappearance to ffxiv window appearance.
