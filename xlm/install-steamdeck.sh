@@ -4,7 +4,7 @@ echo "-- XLM Steam Deck Auto-Installer --"
 echo ""
 
 echo "[Step: 1] Downloading XLM"
-curl -L https://github.com/Blooym/xlm/releases/latest/download/xlm > /tmp/xlm
+curl -L https://github.com/Blooym/xlm/releases/latest/download/xlm-x86_64-unknown-linux-gnu > /tmp/xlm
 
 echo "[Step: 2] Configuring XLM as a Steam Tool using XIVLauncher-RB"
 chmod +x /tmp/xlm
