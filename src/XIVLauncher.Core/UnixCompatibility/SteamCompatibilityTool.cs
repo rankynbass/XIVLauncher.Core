@@ -12,6 +12,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class SteamCompatibilityTool
 {
+    private const string XLM_URL = "https://github.com/Blooym/xlm/releases/latest/download/xlm-x86_64-unknown-linux-gnu";
     public static bool IsSteamInstalled => Directory.Exists(Program.Config.SteamPath);
 
     public static bool IsSteamFlatpakInstalled => Directory.Exists(Program.Config.SteamFlatpakPath);
