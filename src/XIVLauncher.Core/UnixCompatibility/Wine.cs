@@ -29,14 +29,14 @@ public static class Wine
         Versions.Add("unofficial-wine-xiv-staging-9.20", new Dictionary<string, string>()
         {
             {"name", "Unofficial Wine-XIV 9.20"}, {"desc", "Patched version of Wine Staging 9.20. Now with wayland and lsteamclient support added."},
-            {"label", "Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.20/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.20.tar.zst"},
+            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.20/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.20.tar.zst"},
             {"mark", "Download"}
         });
 
         Versions.Add("unofficial-wine-xiv-staging-9.16", new Dictionary<string, string>()
         {
             {"name", "Unofficial Wine-XIV 9.16"}, {"desc", "Patched version of Wine Staging 9.16. Now with wayland and lsteamclient support added."},
-            {"label", "Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.16/unofficial-wine-xiv-staging-9.16.tar.zst"},
+            {"label", "XIV-Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.16/unofficial-wine-xiv-staging-9.16.tar.zst"},
             {"mark", "Download"}
         });
 
@@ -57,21 +57,21 @@ public static class Wine
         Versions.Add("unofficial-wine-xiv-Proton8-26-x86_64", new Dictionary<string, string>()
         {
             {"name", "Wine-GE-XIV 8-26"}, {"desc", "Patched version of Wine-GE 8-26. Based on Proton8 Wine."},
-            {"label", "Wine-GE"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz"},
+            {"label", "Wine-GE-XIV"}, {"url", "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz"},
             {"mark", "Download"}
         });
 
         Versions.Add("unofficial-wine-xiv-valvebe-8-2", new Dictionary<string, string>()
         {
             {"name", "Unofficial ValveBE 8-2"}, {"desc", "Patched Valve Wine 8. A replacement for wine-ge, since it's discontinued."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-8-2/unofficial-wine-xiv-valvebe-8-2.tar.zst"},
+            {"label", "XIV-ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-8-2/unofficial-wine-xiv-valvebe-8-2.tar.zst"},
             {"mark", "Download"}
         });
 
         Versions.Add("unofficial-wine-xiv-valvebe-9-11", new Dictionary<string, string>()
         {
             {"name", "Unofficial ValveBE 9-11"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-11/unofficial-wine-xiv-valvebe-9-11.tar.zst"},
+            {"label", "XIV-ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-11/unofficial-wine-xiv-valvebe-9-11.tar.zst"},
             {"mark", "Download"}
         });
 
@@ -93,7 +93,26 @@ public static class Wine
                     Versions[wineDir.Name].Remove("mark");
                     continue;
                 }
-                Versions.Add(wineDir.Name, new Dictionary<string, string>() { {"label", "Custom"} });
+                string label;
+                string dirname = wineDir.Name.ToLower();
+                if (dirname.Contains("ge-proton"))
+                    label = "Wine-GE";
+                else if (dirname.StartsWith("wine-xiv-staging"))
+                    label = "Official";
+                else if (dirname.StartsWith("unofficial-wine-xiv"))
+                {
+                    if (dirname.Contains("proton"))
+                        label = "Wine-GE-XIV";
+                    else if (dirname.Contains("valvebe"))
+                        label = "XIV-ValveBE";
+                    else if (dirname.Contains("staging"))
+                        label = "XIV-Staging";
+                    else
+                        label = "XIV-patched";
+                }
+                else
+                    label = "Custom";
+                Versions.Add(wineDir.Name, new Dictionary<string, string>() { {"label", label} });
             }
         }
     }

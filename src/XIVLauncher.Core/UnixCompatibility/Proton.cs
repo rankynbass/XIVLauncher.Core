@@ -12,7 +12,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
-    public const string DEFAULT = "XIV-Proton 8-30";
+    public const string DEFAULT = "xiv-proton-9.0-3c";
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -30,13 +30,6 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "xiv-proton-9.0-3c")}
         };
 
-        Versions["GE-Proton9-16"] = new Dictionary<string, string>()
-        {
-            {"name", "GE-Proton 9-16"}, {"desc", "GloriousEggroll's Proton release 9-16. May have mouse warp bug in some xwayland sessions."},
-            {"label", "GE-Proton"}, {"url", "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-16/GE-Proton9-16.tar.gz"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "GE-Proton9-16")}
-        };
-
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 8-30"}, {"desc", "Patched version of GE-Proton8-30 with Ping plugin support."},
@@ -44,11 +37,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-16"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-18"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-16"}, {"desc", "Patched version of GE-Proton9-16 with Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-16/XIV-Proton9-16.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-16")}
+            {"name", "XIV-Proton 9-18"}, {"desc", "Patched version of GE-Proton9-18 with Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-18/XIV-Proton9-18.tar.zst"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-18")}
         };
 
 
@@ -83,9 +76,20 @@ public static class Proton
                             Versions[dir.Name].Remove("mark");
                             Log.Verbose($"{dir.FullName} already exists. Removing download mark.");
                             continue;
-                        }
+                        }                        
+                        string label;
+                        string dirname = dir.Name.ToLower();
+                        if (dirname.StartsWith("xiv-proton"))
+                            label = "XIV-patched";
+                        else if (dirname.StartsWith("ge-proton"))
+                            label = "GE-Proton";
+                        else if (dirname.StartsWith("umu-proton"))
+                            label = "UMU-Proton";
+                        else
+                            label = "Custom";
+
                         Log.Verbose($"Adding {dir.FullName} to Proton.Versions");
-                        Versions[dir.Name] = new Dictionary<string, string>() {  {"name", dir.Name}, {"label", "Custom"}, {"path", dir.FullName} };
+                        Versions[dir.Name] = new Dictionary<string, string>() {  {"name", dir.Name}, {"label", label}, {"path", dir.FullName} };
                     }
                     else
                         Log.Verbose($"{dir.FullName} is not a proton directory. Skipping...");
