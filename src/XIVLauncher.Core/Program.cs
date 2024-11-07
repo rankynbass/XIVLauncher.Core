@@ -20,6 +20,7 @@ using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Common.Windows;
+using XIVLauncher.Common.Unix;
 using XIVLauncher.Core.Accounts.Secrets;
 using XIVLauncher.Core.Accounts.Secrets.Providers;
 using XIVLauncher.Core.Components.LoadingPage;
@@ -397,7 +398,7 @@ sealed class Program
 
         var needUpdate = false;
 
-        if (OSInfo.Container == ContainerType.flatpak && (Config.DoVersionCheck ?? false))
+        if (LinuxInfo.Container == LinuxContainer.flatpak && (Config.DoVersionCheck ?? false))
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 

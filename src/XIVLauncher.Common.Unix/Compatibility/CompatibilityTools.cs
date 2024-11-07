@@ -8,10 +8,6 @@ using System.Net.Http;
 using XIVLauncher.Common.Util;
 using Serilog;
 
-#if FLATPAK
-#warning THIS IS A FLATPAK BUILD!!!
-#endif
-
 namespace XIVLauncher.Common.Unix.Compatibility;
 
 public class CompatibilityTools

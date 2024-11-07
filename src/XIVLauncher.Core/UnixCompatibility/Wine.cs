@@ -6,13 +6,14 @@ using System.IO;
 using System.Linq;
 using Serilog;
 using XIVLauncher.Common;
+using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public const string DEFAULT = "unofficial-wine-xiv-staging-9.16";
+    public const string DEFAULT = "unofficial-wine-xiv-staging-9.20";
 
     internal const string FALLBACK = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
@@ -43,7 +44,7 @@ public static class Wine
         Versions.Add("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7", new Dictionary<string, string>()
         {
             {"name", "Wine-XIV 8.5"}, {"desc", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results."},
-            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
+            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{LinuxInfo.Package.ToString()}-8.5.r4.g4211bac7.tar.xz"},
             {"mark", "Download"}
         });
 
