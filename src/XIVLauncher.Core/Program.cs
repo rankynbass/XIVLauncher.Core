@@ -338,7 +338,7 @@ sealed class Program
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"Failed to initialize Steam Steam entry {app.Key} - {app.Value}");
+                        Log.Error($"Failed to initialize Steam entry {app.Key} - {app.Value}");
                     }
                 }
                 if (!initialized)

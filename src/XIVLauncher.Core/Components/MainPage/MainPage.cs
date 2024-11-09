@@ -859,11 +859,10 @@ public class MainPage : Page
             App.Settings.IsEncryptArgs.GetValueOrDefault(true),
             App.Settings.DpiAwareness.GetValueOrDefault(DpiAwareness.Unaware));
 
-        // Hide the launcher if not Steam Deck, or if using XLM or other Steam compatibility mode.
-        // Otherwise, if using the Steam Deck, show the Steam deck prompt page.
+        // Hide the launcher if not Steam Deck or if using as a compatibility tool (XLM)
+        // Show the Steam Deck prompt if on steam deck and not using as a compatibility tool
         if (!Program.IsSteamDeckHardware || CoreEnvironmentSettings.IsSteamCompatTool)
         {
-            
             Hide();
         }
         else
