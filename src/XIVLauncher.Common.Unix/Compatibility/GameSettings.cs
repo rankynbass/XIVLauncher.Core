@@ -17,18 +17,15 @@ public class GameSettings
 
     public DirectoryInfo SteamFolder { get; }
 
-    public bool IsFlatpak { get; }
-
     public Dictionary<string, string> Environment { get; }
 
-    public GameSettings(bool? gamemodeOn, DirectoryInfo toolsFolder, DirectoryInfo steamFolder, DirectoryInfo gamePath, DirectoryInfo gameConfigPath, bool isFlatpak, Dictionary<string, string> extraEnvVars = null)
+    public GameSettings(bool? gamemodeOn, DirectoryInfo toolsFolder, DirectoryInfo steamFolder, DirectoryInfo gamePath, DirectoryInfo gameConfigPath, Dictionary<string, string> extraEnvVars = null)
     {
         GameModeEnabled = gamemodeOn ?? false;
         ToolsFolder = toolsFolder;
         SteamFolder = steamFolder;
         GameFolder = gamePath;
         ConfigFolder = gameConfigPath;
-        IsFlatpak = isFlatpak;
         Environment = extraEnvVars ?? new Dictionary<string, string>();
     }
 }

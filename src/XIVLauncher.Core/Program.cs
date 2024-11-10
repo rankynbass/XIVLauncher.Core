@@ -504,7 +504,7 @@ sealed class Program
             dxvkSettings = new DxvkSettings(Dxvk.Enabled, Dxvk.Folder, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.GPLAsyncCacheEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
             dlssSettings = new DLSSSettings(DLSS.Enabled, CoreEnvironmentSettings.ForceDLSS, DLSS.Folder, DLSS.DownloadUrl, DLSS.NvngxPath);
         }
-        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath, LinuxInfo.Container == LinuxContainer.flatpak);
+        var gameSettings = new GameSettings(Config.GameModeEnabled, storage.GetFolder("compatibilitytool"), new DirectoryInfo(Runner.Steam), Config.GamePath, Config.GameConfigPath);
         CompatibilityTools = new CompatibilityTools(gameSettings, runnerSettings, dxvkSettings, dlssSettings);
     }
 
