@@ -30,7 +30,7 @@ public static class Wine
         Versions.Add("unofficial-wine-xiv-staging-9.20", new Dictionary<string, string>()
         {
             {"name", "Unofficial Wine-XIV 9.20"}, {"desc", "Patched version of Wine Staging 9.20. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.20/unofficial-wine-xiv-staging-{OSInfo.Package.ToString()}-9.20.tar.zst"},
+            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.20/unofficial-wine-xiv-staging-{LinuxInfo.Package.ToString()}-9.20.tar.zst"},
             {"mark", "Download"}
         });
 
@@ -51,7 +51,7 @@ public static class Wine
         Versions.Add("wine-xiv-staging-fsync-git-7.10.r3.g560db77d", new Dictionary<string, string>()
         {
             {"name", "Wine-XIV 7.10"}, {"desc","Patched version of Wine Staging 7.10. Default."},
-            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{OSInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz"},
+            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{LinuxInfo.Package.ToString()}-7.10.r3.g560db77d.tar.xz"},
             {"mark", "Download"}
         });
         

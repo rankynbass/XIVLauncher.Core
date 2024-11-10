@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Serilog;
 using XIVLauncher.Common;
+using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 
 namespace XIVLauncher.Core.UnixCompatibility;
@@ -46,11 +47,12 @@ public static class Runner
 
     public static void Initialize()
     {
-        Steam = OSInfo.Container switch
+        Steam = LinuxInfo.Container switch
         {
-            ContainerType.none => Program.Config.SteamPath,
-            ContainerType.flatpak => CoreEnvironmentSettings.IsSteamCompatTool ? Program.Config.SteamFlatpakPath : Program.Config.SteamPath,
-            ContainerType.snap => Program.Config.SteamSnapPath,
+            LinuxContainer.none => Program.Config.SteamPath ?? "",
+            LinuxContainer.flatpak => CoreEnvironmentSettings.IsSteamCompatTool ? Program.Config.SteamFlatpakPath ?? "" : Program.Config.SteamPath ?? "",
+            LinuxContainer.snap => Program.Config.SteamSnapPath ?? "",
+            _ => throw new ArgumentOutOfRangeException()
         };
         CommonDir = new DirectoryInfo(Path.Combine(Steam, "steamapps", "common"));
         CompatDir = new DirectoryInfo(Path.Combine(Steam, "compatibilitytools.d"));
