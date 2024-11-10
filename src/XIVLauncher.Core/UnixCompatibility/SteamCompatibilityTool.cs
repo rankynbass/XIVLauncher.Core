@@ -76,18 +76,17 @@ public static class SteamCompatibilityTool
             Log.Error($"Folder {steamPath} does not exist! Cannot install xlm to this location.");
             return false;
         }
-        var xlmUrl = "https://github.com/Blooym/xlm/releases/latest/download/xlm";
         var secretEnv = (Program.IsSteamDeckHardware || steamPath == Program.Config.SteamFlatpakPath) ? "--use-fallback-secret-provider " : "";
         var tempPath = Path.Combine(Program.storage.Root.FullName, "temp");
         var permissions =   UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
                     UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
                     UnixFileMode.OtherRead | UnixFileMode.OtherExecute;
         
-        var downloaded = await DownloadTool(tempPath, "xlm", xlmUrl, false).ConfigureAwait(false);
+        var downloaded = await DownloadTool(tempPath, "xlm", XLM_URL, false).ConfigureAwait(false);
 
         if (!downloaded)
         {
-            Log.Error($"Could not download XLM from {xlmUrl}");
+            Log.Error($"Could not download XLM from {XLM_URL}");
             return false;
         }
 
