@@ -4,8 +4,9 @@
 - Moved XL.Common.Unix to XL.Core repo to keep up with latest upstream
 - Fixed a bug where aria2 would not pause and shutdown when the launcher was closed during download.
 - Fixed XLM download url, so the compatibility tool installer should work again.
-- Update Wine versions
-- No longer use the linux find command to find nvngx. Now it's done with dotnet Directory.GetFiles(). I didn't use it previously because I didn't know how to make it avoid infinite loops caused by symlinks
+- Update Wine versions.
+- No longer use the linux find command to find nvngx. Now it's done with dotnet Directory.GetFiles(). I didn't use it previously because I didn't know how to make it avoid infinite loops caused by symlinks.
+- Added `XL_SCALE` environment variable to force a specific launcher scale. This will override the desktop detection. Only applies to XWayland/X11 for now.
 
 ### Sun Oct 27 2024 Rankyn Bass <rankyn@proton.me>
 1.1.0.18

@@ -26,8 +26,19 @@ public static class CoreEnvironmentSettings
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? "";
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
     public static string? NvngxPath => System.Environment.GetEnvironmentVariable("XL_NVNGXPATH"); // We want this null if unset.
-    public static uint SteamAppId => GetAppId(System.Environment.GetEnvironmentVariable("SteamAppId"));
-    public static uint AltAppID => GetAppId(System.Environment.GetEnvironmentVariable("XL_APPID"));
+    public static uint SteamAppId => GetUInt(System.Environment.GetEnvironmentVariable("SteamAppId"));
+    public static uint AltAppID => GetUInt(System.Environment.GetEnvironmentVariable("XL_APPID"));
+    public static float? Scale
+    { 
+        get
+        {
+            float? scale = GetFloat(System.Environment.GetEnvironmentVariable("XL_SCALE"));
+            if (scale is null)
+                return null;
+            float scale2 = scale ?? 1.0f;
+            return scale2 < 1.0f ? 1.0f : (scale2 > 4.0f) ? 4.0f : scale2; 
+        }
+    }
     public static bool ForceDLSS => CheckEnvBool("XL_FORCE_DLSS"); // Don't search for nvngx.dll. Assume it's already in the game directory.
 
     private static bool CheckEnvBool(string key)
@@ -52,11 +63,20 @@ public static class CoreEnvironmentSettings
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
     }
 
-    public static uint GetAppId(string? appid)
+    public static uint GetUInt(string? number)
     {
-        uint.TryParse(appid, out var result);
+        uint.TryParse(number, out var result);
         
         // Will return 0 if appid is invalid (or zero).
+        return result;
+    }
+
+    public static float? GetFloat(string? number)
+    {
+
+        var test = Single.TryParse(number, out var result);
+        if (!test)
+            return null;
         return result;
     }
 

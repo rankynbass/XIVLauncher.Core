@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using XIVLauncher.Core;
 
 using Serilog;
 
@@ -28,6 +29,11 @@ public partial class DesktopHelpers
 
     private static float GetXWaylandScaleFactor()
     {
+        if (CoreEnvironmentSettings.Scale is not null)
+        {
+            return CoreEnvironmentSettings.Scale ?? 1.0f;
+        }
+        
         float? scaleFactor;
 
         if (Environment.GetEnvironmentVariable("XDG_SESSION_DESKTOP") == "KDE")
