@@ -146,7 +146,6 @@ public class SettingsTabDxvk : SettingsTab
                             Dxvk.SetMark(dxvkVersionSetting.Value, "Download Failed -");
                             Log.Error(e, $"Could not download {Dxvk.GetDownloadUrl(dxvkVersionSetting.Value)}");
                         }
-                        Dxvk.SetMark(dxvkVersionSetting.Value, "Downloading");
                     });
                 }
             }
@@ -163,7 +162,7 @@ public class SettingsTabDxvk : SettingsTab
                         DLSS.SetMark(nvapiVersionSetting.Value, "Downloading");
                         try
                         {
-                            await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false);
+                            await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false);
                             DLSS.SetMark(nvapiVersionSetting.Value, null);
                         }
                         catch (Exception e)

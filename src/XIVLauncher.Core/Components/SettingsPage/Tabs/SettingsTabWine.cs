@@ -178,8 +178,16 @@ public class SettingsTabWine : SettingsTab
                 Task.Run(async () =>
                 {
                     Runtime.SetMark(runtimeVersionSetting.Value, "Downloading");
-                    await Program.CompatibilityTools.DownloadRuntime().ConfigureAwait(false);
-                    Runtime.SetMark(runtimeVersionSetting.Value, null);
+                    try
+                    {
+                        await Program.CompatibilityTools.DownloadRuntime().ConfigureAwait(false);
+                        Runtime.SetMark(runtimeVersionSetting.Value, null);
+                    }
+                    catch (Exception e)
+                    {
+                        Runtime.SetMark(runtimeVersionSetting.Value, "Download Failed!");
+                        Log.Error(e, $"Could not download {Runtime.GetDownloadUrl(runtimeVersionSetting.Value)}");
+                    }
                 });
             }
         }
