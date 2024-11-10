@@ -34,10 +34,10 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-staging-9.16", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-9.21", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 9.16"}, {"desc", "Patched version of Wine Staging 9.16. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.16/unofficial-wine-xiv-staging-9.16.tar.zst"},
+            {"name", "Unofficial Wine-XIV 9.21"}, {"desc", "Patched version of Wine Staging 9.21. Now with wayland and lsteamclient support added."},
+            {"label", "XIV-Staging"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.21/unofficial-wine-xiv-staging-9.21.tar.zst"},
             {"mark", "Download"}
         });
 

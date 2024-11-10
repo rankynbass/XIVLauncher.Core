@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Serilog;
 using XIVLauncher.Common;
+using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Core;
 
@@ -146,38 +147,29 @@ public static class DLSS
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            string[] targets = { Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".xlcore", "compatibilitytool", "nvidia"), "/usr/lib64", "/usr/lib", "/lib64", "/lib" };
+            var targets = new List<string> { Path.Combine(CoreEnvironmentSettings.HOME, ".xlcore", "compatibilitytool", "nvidia") };
+            targets.AddRange(LinuxInfo.LibraryPaths);
             
+            var options = new EnumerationOptions();
+            options.RecurseSubdirectories = true;
+            options.MaxRecursionDepth = 5;
+
             foreach (var target in targets)
             {
-                var psi = new ProcessStartInfo("find");
-                psi.Arguments = $"{target} -name \"nvngx.dll\"";
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                var findCmd = new Process();
-                findCmd.StartInfo = psi;
-                try
+                if (!Directory.Exists(target))
+                    continue;
+
+                var found = Directory.GetFiles(target, "nvngx.dll", options);
+                if (found.Length > 0)
                 {
-                    findCmd.Start();
-                    var output = findCmd.StandardOutput.ReadToEnd();
-                    if (!string.IsNullOrWhiteSpace(output))
+                    if (File.Exists(found[0]))
                     {
-                        var nvngx = new FileInfo(output.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault());
-                        nvngxPath = nvngx.DirectoryName;
-                        break;
+                        nvngxPath = new FileInfo(found[0]).DirectoryName;
                     }
-                }
-                catch (System.ComponentModel.Win32Exception ex)
-                {
-                    Console.WriteLine("Error: could not execute \"find\" command. Is it installed?");
-                    Console.WriteLine(ex.Message);
-                }
-                finally
-                {
-                    findCmd.Dispose();
+                    break;
                 }
             }
-            if (string.IsNullOrWhiteSpace(nvngxPath))
+            if (nvngxPath is null)
                 nvngxPath = "";
         }
         else
