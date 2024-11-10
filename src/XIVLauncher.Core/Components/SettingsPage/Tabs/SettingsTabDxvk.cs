@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
+using Serilog;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Core.UnixCompatibility;
 
@@ -129,14 +130,23 @@ public class SettingsTabDxvk : SettingsTab
 
             if (Dxvk.Versions[dxvkVersionSetting.Value].ContainsKey("mark"))
             {
-                if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} dxvk now!"))
+                if (ImGui.Button($"{Dxvk.Versions[dxvkVersionSetting.Value]["mark"]} Dxvk"))
                 {
                     this.Save();
                     var _ = Task.Run(async () => 
                     {
                         Dxvk.SetMark(dxvkVersionSetting.Value, "Downloading");
-                        await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false);
-                        Dxvk.SetMark(dxvkVersionSetting.Value, null);
+                        try
+                        {
+                            await Program.CompatibilityTools.DownloadDxvk().ConfigureAwait(false);
+                            Dxvk.SetMark(dxvkVersionSetting.Value, null);
+                        }
+                        catch (Exception e)
+                        {
+                            Dxvk.SetMark(dxvkVersionSetting.Value, "Download Failed -");
+                            Log.Error(e, $"Could not download {Dxvk.GetDownloadUrl(dxvkVersionSetting.Value)}");
+                        }
+                        Dxvk.SetMark(dxvkVersionSetting.Value, "Downloading");
                     });
                 }
             }
@@ -145,14 +155,22 @@ public class SettingsTabDxvk : SettingsTab
             {
                 ImGui.SameLine();
 
-                if (ImGui.Button($"{DLSS.Versions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi now!"))
+                if (ImGui.Button($"{DLSS.Versions[nvapiVersionSetting.Value]["mark"]} dxvk-nvapi"))
                 {
                     this.Save();
                     var _ = Task.Run(async () => 
                     {
                         DLSS.SetMark(nvapiVersionSetting.Value, "Downloading");
-                        await Program.CompatibilityTools.DownloadNvapi().ConfigureAwait(false);
-                        DLSS.SetMark(nvapiVersionSetting.Value, null);
+                        try
+                        {
+                            await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false);
+                            DLSS.SetMark(nvapiVersionSetting.Value, null);
+                        }
+                        catch (Exception e)
+                        {
+                            DLSS.SetMark(nvapiVersionSetting.Value, "Download Failed!");
+                            Log.Error(e, $"Could not download {DLSS.GetDownloadUrl(nvapiVersionSetting.Value)}");
+                        }
                     });
                 }
             }

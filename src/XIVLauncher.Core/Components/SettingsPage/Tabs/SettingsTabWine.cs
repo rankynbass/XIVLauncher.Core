@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 
 using ImGuiNET;
+using Serilog;
 
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Util;
@@ -246,14 +247,22 @@ public class SettingsTabWine : SettingsTab
             {
                 ImGui.SameLine();
 
-                if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]} now!"))
+                if (ImGui.Button($"{Wine.Versions[wineVersionSetting.Value]["mark"]}"))
                 {
                     this.Save();
                     Task.Run(async () => 
                     {
                         Wine.SetMark(wineVersionSetting.Value, "Downloading");
-                        await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false);
-                        Wine.SetMark(wineVersionSetting.Value, null);
+                        try
+                        {
+                            await Program.CompatibilityTools.DownloadWine().ConfigureAwait(false);
+                            Wine.SetMark(wineVersionSetting.Value, null);
+                        }
+                        catch (Exception e)
+                        {
+                            Wine.SetMark(wineVersionSetting.Value, "Download Failed!");
+                            Log.Error(e, $"Could not download {Wine.GetDownloadUrl(wineVersionSetting.Value)}");
+                        }
                     });
                 }
             }
@@ -269,14 +278,22 @@ public class SettingsTabWine : SettingsTab
             {
                 ImGui.SameLine();
 
-                if (ImGui.Button($"{Proton.Versions[protonVersionSetting.Value]["mark"]} now!"))
+                if (ImGui.Button($"{Proton.Versions[protonVersionSetting.Value]["mark"]}"))
                 {
                     this.Save();
                     Task.Run(async () => 
                     {
                         Proton.SetMark(protonVersionSetting.Value, "Downloading");
-                        await Program.CompatibilityTools.DownloadProton().ConfigureAwait(false);
-                        Proton.SetMark(protonVersionSetting.Value, null);
+                        try
+                        {
+                            await Program.CompatibilityTools.DownloadProton().ConfigureAwait(false);
+                            Proton.SetMark(protonVersionSetting.Value, null);
+                        }
+                        catch (Exception e)
+                        {
+                            Proton.SetMark(protonVersionSetting.Value, "Download Failed!");
+                            Log.Error(e, $"Could not download {Proton.GetDownloadUrl(protonVersionSetting.Value)}");
+                        }
                     });
                 }
             }
