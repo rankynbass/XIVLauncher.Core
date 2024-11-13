@@ -125,7 +125,7 @@ public static class LinuxInfo
         {
             case LinuxContainer.flatpak:
                 LibraryPaths.Add(Path.Combine("/", "app", "lib"));
-                LibraryPaths.Add(Path.Combine("/", "usr", "lib", "x84_64-linux-gnu"));
+                LibraryPaths.Add(Path.Combine("/", "usr", "lib", "x86_64-linux-gnu"));
                 LibraryPaths.Add(Path.Combine("/", "usr", "lib", "extensions"));
                 break;
 

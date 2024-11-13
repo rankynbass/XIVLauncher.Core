@@ -1,5 +1,10 @@
 # Changelog
-### Sun Oct 27 2024 Rankyn Bass <rankyn@proton.me>
+### Tue Nov 12 2024 Rankyn Bass <rankyn@proton.me>
+1.1.1.2
+- Fixed a typo in the library paths for flatpaks. DLSS should now work.
+- Updated DXVK to 2.5
+
+### Sun Nov 10 2024 Rankyn Bass <rankyn@proton.me>
 1.1.1.1
 - Moved XL.Common.Unix to XL.Core repo to keep up with latest upstream
 - Fixed a bug where aria2 would not pause and shutdown when the launcher was closed during download.

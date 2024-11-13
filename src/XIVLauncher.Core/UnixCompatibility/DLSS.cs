@@ -152,12 +152,16 @@ public static class DLSS
             
             var options = new EnumerationOptions();
             options.RecurseSubdirectories = true;
-            options.MaxRecursionDepth = 5;
+            options.MaxRecursionDepth = 10;
 
             foreach (var target in targets)
             {
                 if (!Directory.Exists(target))
+                {
+                    Log.Verbose($"DLSS: {target} directory does not exist");
                     continue;
+                }
+                Log.Verbose($"DLSS: {target} directory exists... Searching...");
 
                 var found = Directory.GetFiles(target, "nvngx.dll", options);
                 if (found.Length > 0)
@@ -168,6 +172,7 @@ public static class DLSS
                     }
                     break;
                 }
+                Log.Verbose($"DLSS: No nvngx.dll found at {target}");
             }
             if (nvngxPath is null)
                 nvngxPath = "";

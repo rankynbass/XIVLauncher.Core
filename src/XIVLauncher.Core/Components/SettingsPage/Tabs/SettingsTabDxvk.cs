@@ -20,16 +20,7 @@ public class SettingsTabDxvk : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            dxvkVersionSetting = new DictionarySettingsEntry("DXVK Version", $"Choose which version of DXVK to use. Put your custom DXVK in {dxvkPath}\nEntries marked with *Download* will be downloaded when you log in.", Dxvk.Versions, () => Program.Config.DxvkVersion ?? "dxvk-async-1.10.3", s => Program.Config.DxvkVersion = s, Dxvk.GetDefaultVersion())
-            {
-                CheckWarning = s =>
-                {
-                    if (s == "DISABLED") return null;
-                    if (DxvkSettings.DxvkAllowsNvapi(s))
-                        return "May not work with older graphics cards. AMD users may need to use env variable RADV_PERFTEST=gpl";
-                    return null;
-                },
-            },
+            dxvkVersionSetting = new DictionarySettingsEntry("DXVK Version", $"Choose which version of DXVK to use. Put your custom DXVK in {dxvkPath}\nEntries marked with *Download* will be downloaded when you log in.", Dxvk.Versions, () => Program.Config.DxvkVersion ?? "dxvk-2.5", s => Program.Config.DxvkVersion = s, Dxvk.GetDefaultVersion()),
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch. May not be available on DXVK >= 2.0", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("async"),
