@@ -31,6 +31,8 @@ public class DictionarySettingsEntry : SettingsEntry<string>
         ImGuiHelpers.TextWrapped(this.Name);
 
         Dictionary<string, Dictionary<string, string>>.KeyCollection keys = Pairs.Keys;
+        if (!Pairs.ContainsKey(idx))
+            idx = DefaultValue;
         var label = Pairs[idx].ContainsKey("label") ? $"[{Pairs[idx]["label"]}] " : "";
         var name = Pairs[idx].ContainsKey("name") ? Pairs[idx]["name"] : idx;
         var desc = ShowDescription && Pairs[idx].ContainsKey("desc") ? $" - {Pairs[idx]["desc"]}" : "";

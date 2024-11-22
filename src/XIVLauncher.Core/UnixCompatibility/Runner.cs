@@ -23,7 +23,15 @@ public static class Runner
 
     public static bool IsProton => Program.Config.RunnerType == RunnerType.Proton;
 
-    public static string FullName => IsProton ? Proton.GetVersion(Program.Config.ProtonVersion) : Wine.GetVersion(Program.Config.WineVersion);
+    public static bool IsCustom => Program.Config.RunnerType == RunnerType.Custom;
+
+    public static string FullName => Program.Config.RunnerType switch
+    {
+        RunnerType.Managed => Wine.GetVersion(Program.Config.WineVersion),
+        RunnerType.Proton => Proton.GetVersion(Program.Config.ProtonVersion),
+        RunnerType.Custom => Program.Config.WineBinaryPath ?? "/usr/bin",
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
     public static string DownloadUrl => IsProton ? Proton.GetDownloadUrl(Program.Config.ProtonVersion) : Wine.GetDownloadUrl(Program.Config.WineVersion);
 
@@ -76,7 +84,6 @@ public static class Runner
             Log.Error(ex, "No Steam directory found.");
             IsSteamInstalled = false;
         }
-        
         Wine.Initialize();
         Proton.Initialize();
         Runtime.Initialize();

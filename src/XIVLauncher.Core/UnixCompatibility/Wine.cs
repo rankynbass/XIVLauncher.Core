@@ -120,8 +120,6 @@ public static class Wine
 
     internal static string GetVersion(string? name, bool fullName = true)
     {
-        if (Program.Config.RunnerType == RunnerType.Custom)
-            return Program.Config.WineBinaryPath ?? "/usr/bin";
         name ??= GetDefaultVersion();
         var path = Path.Combine(Program.storage.Root.FullName, "compatibilitytool", "wine");
         if (Versions.ContainsKey(name))

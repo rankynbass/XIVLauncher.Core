@@ -36,7 +36,7 @@ public class SettingsTabWine : SettingsTab
             
             new SettingsEntry<string>("Wine Binary Path",
                 "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
-                () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
+                () => Program.Config.WineBinaryPath, st => Program.Config.WineBinaryPath = st)
             {
                 CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Custom
             },
