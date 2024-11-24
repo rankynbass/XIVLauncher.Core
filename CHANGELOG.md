@@ -1,4 +1,9 @@
 # Changelog
+### Sat Nov 23 2024 Rankyn Bass <rankyn@proton.me>
+1.1.1.3
+- Fixed an issue where the custom wine path was being saved as the managed wine path. This would cause a crash when switching back to managed wine.
+- Updated Wine, Proton, Dxvk, and Dxvk-gplasync
+
 ### Tue Nov 12 2024 Rankyn Bass <rankyn@proton.me>
 1.1.1.2
 - Fixed a typo in the library paths for flatpaks. DLSS should now work.

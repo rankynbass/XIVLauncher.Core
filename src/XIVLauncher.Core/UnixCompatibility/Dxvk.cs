@@ -14,7 +14,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
-    public const string DEFAULT = "dxvk-2.5";
+    public const string DEFAULT = "dxvk-2.5.1";
 
     public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
 
