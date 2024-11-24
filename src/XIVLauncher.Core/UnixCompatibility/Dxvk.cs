@@ -79,16 +79,16 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         });
-        Versions.Add("dxvk-2.5", new Dictionary<string, string>()
+        Versions.Add("dxvk-2.5.1", new Dictionary<string, string>()
         {
-            {"name", "2.5"}, {"desc", "Official version 2.5 of DXVK."},
-            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.5/dxvk-2.5.tar.gz"},
+            {"name", "2.5.1"}, {"desc", "Official version 2.5.1 of DXVK."},
+            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.5.1/dxvk-2.5.1.tar.gz"},
             {"mark", "Download"}
         });
-        Versions.Add("dxvk-gplasync-v2.4.1-1", new Dictionary<string, string>()
+        Versions.Add("dxvk-gplasync-v2.5.1-1", new Dictionary<string, string>()
         {
-            {"name", "2.4.1-1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
-            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.4.1-1.tar.gz"},
+            {"name", "2.5.1-1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.5.1-1.tar.gz"},
             {"mark", "Download"}
         });
         Versions.Add("dxvk-2.2", new Dictionary<string, string>()
@@ -101,6 +101,12 @@ public static class Dxvk
         {
             {"name", "1.10.3"}, {"desc", "Legacy version with high compatibility. Includes async patch."},
             {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"},
+            {"mark", "Download" }
+        });
+        Versions.Add("dxvk-async-1.10.1", new Dictionary<string, string>()
+        {
+            {"name", "1.10.1"}, {"desc", "Legacy version shipped with the official XIVLauncher.Core. Includes async patch."},
+            {"label", "Legacy"}, {"url", "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz"},
             {"mark", "Download" }
         });
 

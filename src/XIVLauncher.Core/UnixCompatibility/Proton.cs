@@ -37,11 +37,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-18"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-20"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-18"}, {"desc", "Patched version of GE-Proton9-18 with Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-18/XIV-Proton9-18.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-18")}
+            {"name", "XIV-Proton 9-20"}, {"desc", "Patched version of GE-Proton9-20 with Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-20/XIV-Proton9-20.tar.zst"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-20")}
         };
 
 
