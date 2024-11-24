@@ -16,6 +16,8 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 ## Using as a Steam compatibility tool using XLM (recommended for Steam Deck)
 [XLM](https://github.com/Blooym/xlm) is now the recommended way to install XIVLauncher-RB as a compatibility tool. XLM will keep itself and its own copy of XIVLauncher-RB up to date. Instructions are copied from the XLM readme.
 
+**Before using any of these scripts, run Steam at least once!**
+
 Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed.
 
 **Steamdeck**:

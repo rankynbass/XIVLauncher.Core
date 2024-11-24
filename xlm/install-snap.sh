@@ -8,7 +8,7 @@ curl -L https://github.com/Blooym/xlm/releases/latest/download/xlm-x86_64-unknow
 
 echo "[Step: 2] Configuring XLM as a Steam Tool"
 chmod +x /tmp/xlm
-/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-repo-owner rankynbass" --steam-compat-path ~/snap/steam/common/.local/share/Steam/compatibilitytools.d/
+/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-repo-owner rankynbass" --steam-compat-path ~/snap/steam/common/.steam/root/compatibilitytools.d/
 
 echo "[Step: 3] Cleanup XLM binary"
 rm /tmp/xlm
