@@ -6,8 +6,6 @@ using Serilog;
 
 using XIVLauncher.Common.Http;
 
-using XIVLauncher.Core.Components.Common;
-
 namespace XIVLauncher.Core.Components;
 
 public class OtpEntryPage : Page
@@ -21,54 +19,19 @@ public class OtpEntryPage : Page
 
     private OtpListener? otpListener;
 
-    private Input otpInput;
-
-    private Button otpOKButton;
-
-    private Button otpCancelButton;
-
-    public string otpValue
-    {
-        get => this.otpInput.Value;
-        set => this.otpInput.Value = value;
-    }
-
     public OtpEntryPage(LauncherApp app)
         : base(app)
     {
-        void getOtp()
-        {
-            TryAcceptOtp(this.otpValue);
-        }
-
-        void cancelOtp()
-        {
-            this.Cancelled = true;
-        }
-
-        // if (Program.Steam is not null) Program.Steam.OnGamepadTextInputDismissed += this.SteamOnOnGamepadTextInputDismissed;
-        
-        this.otpInput = new Input("", "", new Vector2(12f, 0f), 6, 150, flags: ImGuiInputTextFlags.CharsDecimal)
-        {
-            TakeKeyboardFocus = true
-        };
-        this.otpInput.Enter += getOtp;
-        this.otpInput.Escape += cancelOtp;
-
-        this.otpOKButton = new Button("OK");
-        this.otpOKButton.Click += getOtp;
-
-        this.otpCancelButton = new Button("Cancel");
-        this.otpCancelButton.Click += cancelOtp;
+        if (Program.Steam is not null) Program.Steam.OnGamepadTextInputDismissed += this.SteamOnOnGamepadTextInputDismissed;
     }
 
-    // private void SteamOnOnGamepadTextInputDismissed(bool success)
-    // {
-    //     if (success)
-    //     {
-    //         if (Program.Steam is not null) Result = Program.Steam.GetEnteredGamepadText();
-    //     }
-    // }
+    private void SteamOnOnGamepadTextInputDismissed(bool success)
+    {
+        if (success)
+        {
+            if (Program.Steam is not null) Result = Program.Steam.GetEnteredGamepadText();
+        }
+    }
 
     public void Reset()
     {
@@ -79,11 +42,11 @@ public class OtpEntryPage : Page
 
         // TODO(goat): This doesn't work if you call it right after starting the app... Steam probably takes a little while to initialize. Might be annoying for autologin.
         // BUG: We have to turn this off when using OTP server, because there's no way to dismiss open keyboards
-        // if (Program.Steam != null && Program.Steam.IsValid && Program.IsSteamDeckHardware && App.Settings.IsOtpServer is false)
-        // {
-        //     var success = Program.Steam.ShowGamepadTextInput(false, false, "Please enter your OTP", 6, string.Empty);
-        //     Log.Verbose("ShowGamepadTextInput: {Success}", success);
-        // }
+        if (Program.Steam != null && Program.Steam.IsValid && Program.IsSteamDeckHardware && App.Settings.IsOtpServer is false)
+        {
+            var success = Program.Steam.ShowGamepadTextInput(false, false, "Please enter your OTP", 6, string.Empty);
+            Log.Verbose("ShowGamepadTextInput: {Success}", success);
+        }
 
         if (App.Settings.IsOtpServer ?? false)
         {
@@ -127,13 +90,14 @@ public class OtpEntryPage : Page
 
         if (ImGui.BeginChild("###otp", childSize, true, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ImGui.Dummy(ImGuiHelpers.GetScaled(new Vector2(40)));
+            ImGui.Dummy(ImGuiHelpers.GetScaled(new Vector2(25)));
 
             // center text in window
             ImGuiHelpers.CenteredText("Please enter your OTP");
 
+            ImGui.Dummy(ImGuiHelpers.GetScaled(new Vector2(4)));
+
             int INPUT_WIDTH = (int)ImGuiHelpers.GetScaled(150);
-            Vector2 BUTTON_PADDING = ImGuiHelpers.GetScaled(new Vector2(8f, 8f));
             ImGui.SetNextItemWidth(INPUT_WIDTH);
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
@@ -143,36 +107,30 @@ public class OtpEntryPage : Page
                 this.appearing = false;
             }
 
-            //var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
-            otpInput.Width = INPUT_WIDTH;
-            otpInput.Draw();
+            // Style the buttons and input
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ImGuiHelpers.GetScaled(new Vector2(8f, 8f)));
 
-            // var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4, 30);
-            int buttonW = (int)(INPUT_WIDTH / 2 - ImGuiHelpers.GetScaled(4));
-            //int buttonH = (int)ImGuiHelpers.GetScaled(30);
+            var doEnter = ImGui.InputText("###otpInput", ref this.otp, 6, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
+
+            ImGui.Dummy(ImGuiHelpers.GetScaled(new Vector2(4)));
+
+            var buttonSize = new Vector2(INPUT_WIDTH / 2 - ImGuiHelpers.GetScaled(4), ImGuiHelpers.GetScaled(40));
             ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
 
-            otpOKButton.Width = buttonW;
-            otpOKButton.Padding = BUTTON_PADDING;
-            //otpOKButton.Height = buttonH;
-            otpOKButton.Draw();
-
-            // if (ImGui.Button("OK", buttonSize)) // || doEnter)
-            // {
-            //     TryAcceptOtp(this.otpValue);
-            // }
+            if (ImGui.Button("OK", buttonSize) || doEnter)
+            {
+                TryAcceptOtp(this.otp);
+            }
 
             ImGui.SameLine();
 
-            otpCancelButton.Width = buttonW;
-            otpCancelButton.Padding = BUTTON_PADDING;
-            //otpCancelButton.Height = buttonH;
-            otpCancelButton.Draw();
+            if (ImGui.Button("Cancel", buttonSize))
+            {
+                this.Cancelled = true;
+            }
 
-            // if (ImGui.Button("Cancel", buttonSize))
-            // {
-            //     this.Cancelled = true;
-            // }
+            // Get rid of the style
+            ImGui.PopStyleVar(1);
         }
 
         ImGui.EndChild();
