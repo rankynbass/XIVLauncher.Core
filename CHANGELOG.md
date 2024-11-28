@@ -1,4 +1,9 @@
 # Changelog
+### Thu Nov 28 2024 Rankyn Bass <rankyn@proton.me>
+1.1.1.4
+- Reverted OTP page to upstream version, and added scaling tweaks. This should fix the OTP not working properly on Steam Deck.
+- Updated Wine versions. xiv-9.22.1 and valvebe-9-13 should no longer show the prefix updating or try to install mono. This should greatly reduce crashes and delays on prefix creation and update. (Updates happen whenever changing wine versions.) The launcher should switch to the ffxiv process more quickly, although Dalamud may still take a while to load.
+
 ### Sat Nov 23 2024 Rankyn Bass <rankyn@proton.me>
 1.1.1.3
 - Fixed an issue where the custom wine path was being saved as the managed wine path. This would cause a crash when switching back to managed wine.

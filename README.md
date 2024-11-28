@@ -13,6 +13,8 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 5) Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
 6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
 
+For an up-to-date changelog, see: [CHANGELOG.md](CHANGELOG.md)
+
 ## Using as a Steam compatibility tool using XLM (recommended for Steam Deck)
 [XLM](https://github.com/Blooym/xlm) is now the recommended way to install XIVLauncher-RB as a compatibility tool. XLM will keep itself and its own copy of XIVLauncher-RB up to date. Instructions are copied from the XLM readme.
 
@@ -86,6 +88,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | `XL_APPID` | Set to a steam AppID number to hook that application instead of FFXIV or the free trial. |
 | `XL_FORCE_DLSS` | Skip DLSS checks and assume that the nvngx dlls are in the game folder. |
 | `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
+| `XL_DISTRO` | Override the wine package to download. Valid values are `arch`, `fedora`, and `ubuntu`. |
 
 ## Building & Contributing
 1. Clone this repository with submodules
