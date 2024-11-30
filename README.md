@@ -67,6 +67,15 @@ XIVLauncher-RB v1.1.0.13 and earlier contained a different compatibility tool th
 * From the command line, run the launcher with `XL_USE_STEAM flatpak run dev.rankyn.xivlauncher --delete-old` (flatpak) or `xivlauncher-rb --delete-old` (native install, AppImage).
 * Alternately, find your steam compatibility tool path at `~/.steam/root/compatibilitytools.d` and delete the `xlcore` folder. For the flatpak, it'll be at `~/.var/app/com.valvesoftware/Steam/data/Steam/compatibilitytools.d`.
 
+## Installing Locally (Experimental)
+The vast majority of desktop linux distributions will already have all the dependencies of XIVLauncher already installed. I've checked this on HoloIso, official Steam Deck, Bazzite, Ubuntu 22.04, and Fedora KDE spin, and all of them can launch XIVLauncher out of the box. As such, I've created a local install script which will create a .desktop entry in your application menu. This will use [XLM](https://github.com/Blooym/xlm) to keep XIVLauncher-RB up-to-date and launch the game.
+
+This is experimental, and may not be quite ready yet.
+
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-local.sh)"
+```
+
 ## Using the AppImage
 I've started creating AppImages as well. These have worked on the Steam Deck in my testing, although there are a couple of minor issues.
 1) Download the AppImage tarball and extract somewhere.
