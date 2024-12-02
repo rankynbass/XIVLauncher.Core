@@ -103,6 +103,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 1. Clone this repository with submodules
 2. Make sure you have a recent(.NET 8.0) version of the .NET SDK installed
 2. Run `dotnet build` or `dotnet publish`
+3. There are a few extra runtime dependencies that may not be installed on some systems, particularly Gentoo and Nix. These include [aria2](https://github.com/aria2/aria2), zstd, and libunwind. If you need a static copy of aria2, you can download one [here](https://github.com/rankynbass/aria2-static-build/releases/tag/v1.37.0-2) and copy it into the same directory as XIVLauncher.Core.
 
 Common components that are shared with the Windows version of XIVLauncher are linked as a submodule in the "lib" folder. XIVLauncher Core can run on Windows, but is by far not as polished as the [original Windows version](https://github.com/goatcorp/FFXIVQuickLauncher). Windows users should not use this application unless for troubleshooting purposes or development work.
 
