@@ -193,6 +193,9 @@ sealed class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
 
+        // Unset WINEPREFIX so it can't be overridden by users
+        System.Environment.SetEnvironmentVariable("WINEPREFIX", null);
+
         SetupLogging(mainArgs);
         LoadConfig(storage);
 
