@@ -45,7 +45,7 @@ public static class Runner
 
     public static FileInfo LogFile => new FileInfo(Path.Combine(Program.storage.GetFolder("logs").FullName, "wine.log"));
 
-    public static DirectoryInfo Prefix => IsProton ? new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(Program.storage.Root.FullName, "protonprefix")) : new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(Program.storage.Root.FullName, "wineprefix"));
+    public static DirectoryInfo Prefix => IsProton ? new DirectoryInfo(CoreEnvironmentSettings.ProtonPrefix ?? Path.Combine(Program.storage.Root.FullName, "protonprefix")) : new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(Program.storage.Root.FullName, "wineprefix"));
 
     public static bool ESyncEnabled => Program.Config.ESyncEnabled ?? true;
 

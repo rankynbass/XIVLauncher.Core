@@ -90,6 +90,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | ------------- | -------------- |
 | `XL_SECRET_PROVIDER` | Set to `file` if using the Steam Deck or other desktop session that doesn't have a secret provider. |
 | `XL_SCALE` | Set a custom scale factor for the UI. Accepts decimal values between 1 and 4 (e.g. 1.5). Overrides the desktop scale factor. |
+| `WINEPREFIX`<br>`PROTONPREFIX` | Set a custom wine or proton prefix. **DO NOT SHARE PREFIXES** between wine and proton. It will probably permanently corrupt the prefixes. |
 | `XL_DECK` | Force XIVLauncher-RB to pretend it's Steam Deck. Does not enable the Steam keyboard. |
 | `XL_GAMEMODE` | Forces XIVLauncher-RB to pretend it's in Steam Deck Game Mode. Also does not enable the Steam keyboard. |
 | `XL_FIRSTRUN` | Set to 0 or 1 to force the launcher to skip or activate the Steam Deck First Run screen. |

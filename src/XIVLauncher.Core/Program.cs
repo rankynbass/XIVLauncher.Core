@@ -266,8 +266,6 @@ sealed class Program
 
         LoadConfig(storage);
 
-        System.Environment.SetEnvironmentVariable("WINEPREFIX", null);
-
         Runner.Initialize();
 
         Secrets = GetSecretProvider(storage);

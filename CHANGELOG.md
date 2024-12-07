@@ -1,4 +1,10 @@
 # Changelog
+### Sat Dec 07 2024 Rankyn Bass <rankyn@proton.me>
+1.1.1.5
+- The `WINEPREFIX` environment variable will now be ignored for proton. Use `PROTONPREFIX` for a proton prefix. *DO NOT* use the same folder for both prefix types; it will almost certainly break, and you'll get an "Internal Dalamud Error" of some sort when trying to launch.
+- Updated valve wine to latest bleeding edge.
+- Added feature to disable all plugins but still load Dalamud on launch. See [PR#204](https://github.com/goatcorp/XIVLauncher.Core/pull/204) from the main repo.
+
 ### Thu Nov 28 2024 Rankyn Bass <rankyn@proton.me>
 1.1.1.4
 - Reverted OTP page to upstream version, and added scaling tweaks. This should fix the OTP not working properly on Steam Deck.

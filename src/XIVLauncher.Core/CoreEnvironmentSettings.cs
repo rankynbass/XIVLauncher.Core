@@ -25,6 +25,7 @@ public static class CoreEnvironmentSettings
     public static string XDG_CONFIG_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME")) ? Path.Combine(HOME, ".config") : System.Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") ?? "";
     public static string XDG_DATA_HOME => string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("XDG_DATA_HOME")) ? Path.Combine(HOME, ".local", "share") : System.Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? "";
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
+    public static string? ProtonPrefix => System.Environment.GetEnvironmentVariable("PROTONPREFIX");
     public static string? NvngxPath => System.Environment.GetEnvironmentVariable("XL_NVNGXPATH"); // We want this null if unset.
     public static uint SteamAppId => GetUInt(System.Environment.GetEnvironmentVariable("SteamAppId"));
     public static uint AltAppID => GetUInt(System.Environment.GetEnvironmentVariable("XL_APPID"));
