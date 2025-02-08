@@ -177,6 +177,7 @@ sealed class Program
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
         Config.FixLocale ??= false;
+        Config.FixError127 ??= false;
 
         Config.SteamPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".local", "share", "Steam");
         Config.SteamFlatpakPath ??= Path.Combine(CoreEnvironmentSettings.HOME, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam" );

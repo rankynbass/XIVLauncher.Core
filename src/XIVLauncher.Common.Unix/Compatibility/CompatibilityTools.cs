@@ -126,7 +126,7 @@ public class CompatibilityTools
         {
             if (!DLSS.NoOverwrite && Directory.Exists(DLSS.NvidiaWineFolder))
             {
-                InstallToGameFolder(DLSS.NvidiaWineFolder, new List<string>{"nvngx.dll", "_nvngx.dll"});
+                InstallNvngx(DLSS.NvidiaWineFolder, new List<string>{"nvngx.dll", "_nvngx.dll"}, DLSS.InstallNvngxToPrefix);
             }
             await InstallToPrefix(dxvkDirectory, DLSS.FolderName, DLSS.DownloadUrl, "DXVK-Nvapi", false).ConfigureAwait(false);
         }
@@ -215,9 +215,9 @@ public class CompatibilityTools
         }
     }
 
-    internal void InstallToGameFolder(string sourceFolder, List<string> files)
+    internal void InstallNvngx(string sourceFolder, List<string> files, bool  installToPrefix = false)
     {
-        // Create symlinks to nvngx.dll and _nvngx.dll in the GamePath/game folder. For some reason it doesn't work if you put them in system32.
+        // Create symlinks to nvngx.dll and _nvngx.dll in the GamePath/game folder. Also adding to system32 for OptiScaler.
         // If NoOverwrite is set, assume the files/symlinks are already there. For Nix compatibility and to prevent FSR2 mod from being overwritten.
 
 
@@ -225,6 +225,7 @@ public class CompatibilityTools
         {
             var source = new FileInfo(Path.Combine(sourceFolder, target));
             var destination = new FileInfo(Path.Combine(Game.GameFolder.FullName, "game", target));
+            var prefixdest = new FileInfo(Path.Combine(Runner.Prefix.FullName, "drive_c", "windows", "system32", target));
             if (source.Exists)
             {
                 if (!destination.Exists) // No file, create link.
@@ -245,10 +246,37 @@ public class CompatibilityTools
                     Log.Verbose($"Symbolic link at {destination.FullName} incorrectly links to {destination.ResolveLinkTarget(true).FullName}. Replacing with link to {source.FullName}");
                 }
                 else
+                {
                     Log.Verbose($"Symbolic link at {destination.FullName} to {source.FullName} is correct.");
+                }
+                
+                if (installToPrefix)
+                {
+                    if (!prefixdest.Exists) // No file, create link.
+                    {
+                        prefixdest.CreateAsSymbolicLink(source.FullName);
+                        Log.Verbose($"Making symbolic link at {prefixdest.FullName} to {source.FullName}");
+                    }
+                    else if (prefixdest.ResolveLinkTarget(false) is null) // File exists, is not a symlink. Delete and create link.
+                    {
+                        prefixdest.Delete();
+                        prefixdest.CreateAsSymbolicLink(source.FullName);
+                        Log.Verbose($"Replacing file at {prefixdest.FullName} with symbolic link to {source.FullName}");
+                    }
+                    else if (prefixdest.ResolveLinkTarget(true).FullName != source.FullName) // Link exists, but does not point to source. Replace.
+                    {
+                        prefixdest.Delete();
+                        prefixdest.CreateAsSymbolicLink(source.FullName);
+                        Log.Verbose($"Symbolic link at {prefixdest.FullName} incorrectly links to {prefixdest.ResolveLinkTarget(true).FullName}. Replacing with link to {source.FullName}");
+                    }
+                    else
+                    {
+                        Log.Verbose($"Symbolic link at {prefixdest.FullName} to {source.FullName} is correct.");
+                    }
+                }
             }
             else
-                Log.Error($"Missing file {target}! Cannot symlink from {source} to {destination}.");
+                Log.Error($"Missing file {target}! Cannot symlink from {source.FullName} to {destination.FullName} or {prefixdest.FullName}.");
         }
     }
 

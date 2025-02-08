@@ -98,6 +98,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | `XL_APPID` | Set to a steam AppID number to hook that application instead of FFXIV or the free trial. |
 | `XL_FORCE_DLSS` | Skip DLSS checks and assume that the nvngx dlls are in the game folder. |
 | `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
+| `XL_NVNGX_TO_PREFIX` | Set to 1 to install nvngx.dll to the prefix as well as the game folder. Needed for Optiscaler. |
 | `XL_DISTRO` | Override the wine package to download. Valid values are `arch`, `fedora`, and `ubuntu`. |
 
 ## Building & Contributing

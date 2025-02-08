@@ -19,6 +19,8 @@ public class DLSSSettings
 
     public string NvidiaWineFolder { get; }
 
+    public bool InstallNvngxToPrefix => InstallToPrefix();
+
     // May use this in the future for the FSR2 mod
     public List<string> NvidiaFiles { get; }
 
@@ -50,5 +52,15 @@ public class DLSSSettings
         Environment = new Dictionary<string, string>();
         if (!Enabled)
             Environment.Add("PROTON_DISABLE_NVAPI", "1");
+    }
+
+    private bool InstallToPrefix()
+    {
+        string nvngxToPrefix = (System.Environment.GetEnvironmentVariable("XL_NVNGX_TO_PREFIX") ?? "0").ToLower();
+        string[] yesValues = {"yes", "true", "on", "y", "1"};
+        if (yesValues.Contains(nvngxToPrefix))
+            return true;
+
+        return false;
     }
 }
