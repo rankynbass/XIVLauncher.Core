@@ -1,4 +1,13 @@
 # Changelog
+### Sat Feb 08 2025 Rankyn Bass <rankyn@proton.me>
+- Add a hack in the troubleshooting tab for an internal Dalamud error related to experimental proton-wine that results in this error message at the terminal:
+```
+Cannot get symbol u_charsToUChars from libicuuc
+Error: 127
+```
+- Updated wine, valvebe wine, proton, dxvk, and dxvk-nvapi
+- Added an environment variable `XL_NVNGX_TO_PREFIX`, which when set to "1" will copy nvngx files to the prefix as well as the game folder. This should allow OptiScaler to include DLSS when using nvidia GPUs.
+
 ### Sat Dec 07 2024 Rankyn Bass <rankyn@proton.me>
 1.1.1.5
 - The `WINEPREFIX` environment variable will now be ignored for proton. Use `PROTONPREFIX` for a proton prefix. *DO NOT* use the same folder for both prefix types; it will almost certainly break, and you'll get an "Internal Dalamud Error" of some sort when trying to launch.
