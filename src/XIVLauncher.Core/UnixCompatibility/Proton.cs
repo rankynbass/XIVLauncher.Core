@@ -23,11 +23,11 @@ public static class Proton
 
     public static void Initialize()
     {
-        Versions["xiv-proton-9.0-3c"] = new Dictionary<string, string>()
+        Versions["xiv-proton-9.0-4"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9.0-3c"}, {"desc", "XIV-Proton-9.0-3c. This is basically Steam's official Proton 9 release with XIV patches."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-3c/xiv-proton-9.0-3c.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "xiv-proton-9.0-3c")}
+            {"name", "XIV-Proton 9.0-4"}, {"desc", "XIV-Proton-9.0-4. This is basically Steam's official Proton 9 release with XIV patches."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-4/xiv-proton-9.0-4.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "xiv-proton-9.0-4")}
         };
 
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
@@ -37,11 +37,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-20"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-24"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-20"}, {"desc", "Patched version of GE-Proton9-20 with Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-20/XIV-Proton9-20.tar.zst"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-20")}
+            {"name", "XIV-Proton 9-24"}, {"desc", "Patched version of GE-Proton9-24 with Ping plugin support"},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-24/XIV-Proton9-24.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-24")}
         };
 
 
