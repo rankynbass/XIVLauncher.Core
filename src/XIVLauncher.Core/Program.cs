@@ -827,4 +827,5 @@ sealed class Program
         
         return exit;
     }
+    public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();
 }
