@@ -49,6 +49,7 @@ public class MainPage : Page
         this.loginFrame.OnLogin += this.ProcessLogin;
         this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
+        this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
 
         this.Padding = ImGuiHelpers.GetScaled(new Vector2(32f, 32f));
 
@@ -601,7 +602,7 @@ public class MainPage : Page
         }
     }
 
-    public async Task<Process> StartGameAndAddon(Launcher.LoginResult loginResult, bool isSteam, bool forceNoDalamud, bool noPlugins , bool noThird)
+    public async Task<Process> StartGameAndAddon(Launcher.LoginResult loginResult, bool isSteam, bool forceNoDalamud, bool noPlugins, bool noThird)
     {
         var dalamudOk = false;
 
