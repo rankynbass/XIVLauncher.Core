@@ -473,7 +473,7 @@ sealed class Program
         gd.WaitForIdle();
         bindings.Dispose();
         cl.Dispose();
-        gd.Dispose();
+        //gd.Dispose();
 
         HttpClient.Dispose();
 
