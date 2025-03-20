@@ -79,7 +79,7 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         });
-        Versions.Add("dxvk-6", new Dictionary<string, string>()
+        Versions.Add("dxvk-2.6", new Dictionary<string, string>()
         {
             {"name", "2.6"}, {"desc", "Official version 2.6 of DXVK."},
             {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.6/dxvk-2.6.tar.gz"},
