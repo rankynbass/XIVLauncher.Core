@@ -16,7 +16,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class DLSS
 {
-    public const string DEFAULT = "dxvk-nvapi-0.8.0";
+    public const string DEFAULT = "dxvk-nvapi-0.9.0";
 
     public static bool Enabled => IsDLSSAvailable && Program.Config.NvapiVersion != "DISABLED" && Dxvk.Enabled;
 
@@ -44,22 +44,28 @@ public static class DLSS
         if (IsDLSSAvailable)
         {
             // Default dxvi-nvapi versions. Only add if DLSS is available.
+            Versions.Add("dxvk-nvapi-v0.9.0", new Dictionary<string, string>()
+            {
+                {"name", "0.9.0"}, {"desc", "dxvk-nvapi 0.9.0. Latest version, should be compatible with latest Nvidia drivers." },
+                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.9.0/dxvk-nvapi-v0.9.0.tar.gz"},
+                {"mark", "download"}
+            });
             Versions.Add("dxvk-nvapi-v0.8.0", new Dictionary<string, string>()
             {
-                {"name", "0.8.0"}, {"desc", "dxvk-nvapi 0.8.0. Latest version, should be compatible with latest Nvidia drivers." },
-                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.8.0/dxvk-nvapi-v0.8.0.tar.gz"},
+                {"name", "0.8.0"}, {"desc", "dxvk-nvapi 0.8.0. Previous version. Try this if 0.9.0 doesn't work." },
+                {"label", "Previous"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.8.0/dxvk-nvapi-v0.8.0.tar.gz"},
                 {"mark", "download"}
             });
             Versions.Add("dxvk-nvapi-v0.7.1", new Dictionary<string, string>()
             {
-                {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Previous version. Try this if 0.8.0 doesn't work." },
-                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
+                {"name", "0.7.1"}, {"desc", "dxvk-nvapi 0.7.1. Older version. Try this if 0.8.0 doesn't work." },
+                {"label", "Older"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz"},
                 {"mark", "download"}
             });
             Versions.Add("dxvk-nvapi-v0.6.4", new Dictionary<string, string>()
             {
                 {"name", "0.6.4"}, {"desc", "dxvk-nvapi 0.6.4. Try this if 0.7.1 doesn't work." },
-                {"label", "Current"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
+                {"label", "Old"}, {"url", "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.4/dxvk-nvapi-v0.6.4.tar.gz"},
                 {"mark", "download"}
             });
         }
