@@ -78,6 +78,7 @@
     <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.9.0" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0" />
+    <PackageReference Include="Tommy" Version="3.1.2" />
   </ItemGroup>
 
   <ItemGroup>

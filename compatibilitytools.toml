@@ -1,0 +1,95 @@
+# For generating compatibility tools list in XIVLauncher-RB
+
+# Generate timestamp with `date --rfc-3339=seconds --utc`
+Timestamp = 2025-03-21 16:24:42+00:00
+
+[Wine]
+
+[Wine.unofficial-wine-xiv-staging-10.3]
+name = "Unofficial Wine-XIV 10.3"
+desc = "Patched version of Wine Staging 10.3"
+label = "XIV-Staging"
+url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.3/unofficial-wine-xiv-staging-{distro}-10.3.tar.xz"
+
+[Wine.unofficial-wine-xiv-staging-ntsync-10.3]
+name = "Unofficial Wine-XIV 10.3"
+desc = "Patched version of Wine Staging 10.3. NTSync, without ESync/Fsync. Requires compatible kernel."
+label = "XIV-NTSync"
+url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.3/unofficial-wine-xiv-staging-ntsync-10.3.tar.xz"
+
+[Wine.unofficial-wine-xiv-staging-9.22.1]
+name = "Unofficial Wine-XIV 9.22.1"
+desc = "Patched version of Wine Staging 9.22"
+label "XIV-Staging"
+url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.22.1/unofficial-wine-xiv-staging-{distro}-9.22.1.tar.zst"
+
+[Wine.unofficial-wine-xiv-staging-8.21]
+name = "Unofficial Wine-XIV 8.21"
+desc = "Patched version of Wine Staging 8.21"
+label "XIV-Staging"
+url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21/unofficial-wine-xiv-staging-{distro}-8.21.tar.zst"
+
+[Wine.unofficial-wine-xiv-valvebe-9-19]
+name = "Unofficial ValveBE 9-19"
+desc = "Patched Valve Bleeding Edge Wine. Similar to Wine-GE"
+label = "XIV-ValveBE"
+url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-16/unofficial-wine-xiv-valvebe-9-16.tar.xz"
+
+[Wine.unofficial-wine-xiv-Proton8-26]
+name = "Wine-GE-XIV"
+desc = "Wine-GE 8-26 with XIVLauncher patches. Last version."
+label = "Wine-GE-XIV"
+url = "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz"
+
+[Wine.wine-xiv-staging-fsync-git-8.5.r4.g4211bac7]
+name = "Wine-XIV 8.5"
+desc = "Patched version of Wine Staginge 8.5. Default for the official XIVLauncher.Core"
+label = "Official"
+url = "https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{distro}-8.5.r4.g4211bac7.tar.xz"
+
+[Dxvk]
+
+[Dxvk.dxvk-2.6]
+desc = "Official version of DXVK 2.6"
+label = "Latest"
+url = "https://github.com/doitsujin/dxvk/releases/download/v2.6/dxvk-2.6.tar.gz
+
+[Dxvk.dxvk-gplasync-v2.6-1]
+desc = "GPLAsync version of DXVK 2.6"
+label "GPLAsync"
+url = "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.6-1.tar.gz"
+
+[Dxvk.dxvk-2.2]
+desc = "Official version of DXVK 2.2. Provided for compatibility."
+label = "Legacy"
+url = "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz
+
+[Dxvk.dxvk-1.10.3]
+desc = "Async version of DXVK 1.10.3. Provided for compatibility."
+label = "Legacy"
+url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz
+
+[Dxvk.dxvk-1.10.1]
+desc = "Async version of DXVK 1.10.1. Exact version shipped with Official XIVLauncher.Core"
+label = "Legacy"
+url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz
+
+[Proton]
+
+[Proton.xiv-proton-9.0-4]
+name = "XIV-Proton 9.0-4"
+desc = "Patched version of Valve's Proton 9.0-4"
+label = "XIV-Patched"
+url = "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-4/xiv-proton-9.0-4.tar.xz"
+
+[Proton.XIV-Proton8-30]
+name = "XIV-Proton 8-30"
+desc = "Patched version of GE-Proton8-30"
+label = "XIV-Patched"
+url = "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"
+
+[Proton.XIV-Proton9-25]
+name = "XIV-Proton 9-25"
+desc = "Patched version of GE-Proton9-25"
+label = "XIV-Patched"
+url = "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-25/XIV-Proton9-25.tar.gz"
