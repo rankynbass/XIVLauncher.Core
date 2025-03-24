@@ -13,7 +13,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public const string DEFAULT = "unofficial-wine-xiv-staging-10.0";
+    public const string DEFAULT = "unofficial-wine-xiv-staging-10.4";
 
     internal const string FALLBACK = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
@@ -35,6 +35,20 @@ public static class Wine
     public static void Initialize()
     {
         // Add default versions.
+        Versions.Add("unofficial-wine-xiv-staging-10.4", new Dictionary<string, string>()
+        {
+            {"name", "Unofficial Wine-XIV 10.4"}, {"desc", "Patched version of Wine Staging 10.4. Now with wayland and lsteamclient support added."},
+            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.4/unofficial-wine-xiv-staging-{distro}-10.4.tar.xz"},
+            {"mark", "Download"}
+        });
+
+        Versions.Add("unofficial-wine-xiv-staging-ntsync-10.4", new Dictionary<string, string>()
+        {
+            {"name", "Unofficial Wine-XIV 10.4 NTSYNC"}, {"desc", "Patched version of Wine Staging 10.4. NTSync version. Disable Esync/Fsync. Requires compatible kernel."},
+            {"label", "NTSYNC"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.4/unofficial-wine-xiv-staging-ntsync-10.4.tar.xz"},
+            {"mark", "Download"}
+        });
+
         Versions.Add("unofficial-wine-xiv-staging-10.0", new Dictionary<string, string>()
         {
             {"name", "Unofficial Wine-XIV 10.0"}, {"desc", "Patched version of Wine Staging 10.0. Now with wayland and lsteamclient support added."},
