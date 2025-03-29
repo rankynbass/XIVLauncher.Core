@@ -13,7 +13,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public const string DEFAULT = "unofficial-wine-xiv-staging-10.0";
+    public const string DEFAULT = "unofficial-wine-xiv-staging-10.4.1";
 
     internal const string FALLBACK = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
@@ -35,24 +35,17 @@ public static class Wine
     public static void Initialize()
     {
         // Add default versions.
-        Versions.Add("unofficial-wine-xiv-staging-10.0", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-10.4.1", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 10.0"}, {"desc", "Patched version of Wine Staging 10.0. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.0/unofficial-wine-xiv-staging-{distro}-10.0.tar.xz"},
+            {"name", "Unofficial Wine-XIV 10.4.1"}, {"desc", "Patched version of Wine Staging 10.4.1. Now with wayland and lsteamclient support added."},
+            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.4.1/unofficial-wine-xiv-staging-{distro}-10.4.1.tar.xz"},
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-staging-ntsync-10.0", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-ntsync-10.4.1", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 10.0 NTSYNC"}, {"desc", "Patched version of Wine Staging 10.0. NTSync version. Disable Esync/Fsync. Requires compatible kernel."},
-            {"label", "NTSYNC"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.0/unofficial-wine-xiv-staging-ntsync-10.0.tar.xz"},
-            {"mark", "Download"}
-        });
-
-        Versions.Add("unofficial-wine-xiv-staging-9.22.1", new Dictionary<string, string>()
-        {
-            {"name", "Unofficial Wine-XIV 9.22.1"}, {"desc", "Patched version of Wine Staging 9.22. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.22.1/unofficial-wine-xiv-staging-{distro}-9.22.1.tar.zst"},
+            {"name", "Unofficial Wine-XIV 10.4.1 NTSYNC"}, {"desc", "Patched version of Wine Staging 10.4.1. NTSync version. Disable Esync/Fsync. Requires compatible kernel."},
+            {"label", "NTSYNC"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.4.1/unofficial-wine-xiv-staging-ntsync-10.4.1.tar.xz"},
             {"mark", "Download"}
         });
 
@@ -63,10 +56,10 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-valvebe-9-16", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-valvebe-9-20", new Dictionary<string, string>()
         {
-            {"name", "Unofficial ValveBE 9-16"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
-            {"label", "XIV-ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-16/unofficial-wine-xiv-valvebe-9-16.tar.xz"},
+            {"name", "Unofficial ValveBE 9-20"}, {"desc", "Patched Valve Wine 9. A replacement for wine-ge, since it's discontinued. Includes staging patches."},
+            {"label", "XIV-ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-20/unofficial-wine-xiv-valvebe-9-20.tar.xz"},
             {"mark", "Download"}
         });
 

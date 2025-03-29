@@ -74,6 +74,26 @@ desc = "Async version of DXVK 1.10.1. Exact version shipped with Official XIVLau
 label = "Legacy"
 url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz
 
+[Nvapi]
+
+[Nvapi.dxvk-nvapi-v0.9.0]
+name = "0.9.0"
+desc = "Latest version of Dxvk-nvapi"
+label = "Latest"
+url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.9.0/dxvk-nvapi-v0.9.0.tar.gz"
+
+[Nvapi.dxvk-nvapi-v0.8.0]
+name = "0.8.0"
+desc = "Previous version. Try if later versions don't work."
+label = "Latest"
+url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.8.0/dxvk-nvapi-v0.8.0.tar.gz"
+
+[Nvapi.dxvk-nvapi-v0.7.1]
+name = "0.7.1"
+desc = "Previous version. Try if later versions don't work."
+label = "Latest"
+url = "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.9.0/dxvk-nvapi-v0.9.0.tar.gz"
+
 [Proton]
 
 [Proton.xiv-proton-9.0-4]
@@ -93,3 +113,15 @@ name = "XIV-Proton 9-25"
 desc = "Patched version of GE-Proton9-25"
 label = "XIV-Patched"
 url = "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-25/XIV-Proton9-25.tar.gz"
+
+[Runtime]
+
+[Runtime.SteamLinuxRuntime_sniper]
+name = "Sniper"
+desc = "Steam sniper runtime container. For use with Proton 8+"
+url = "https://repo.steampowered.com/steamrt3/images/latest-container-runtime-depot/SteamLinuxRuntime_sniper.tar.xz"
+
+[Runtime.SteamLinuxRuntime_soldier]
+name = "Soldier"
+desc = "Steam soldier runtime container. For use with Proton 7"
+url = "https://repo.steampowered.com/steamrt2/images/latest-container-runtime-depot/SteamLinuxRuntime_soldier.tar.xz"

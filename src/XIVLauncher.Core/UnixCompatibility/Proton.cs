@@ -37,14 +37,12 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-24"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-26.1"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-24"}, {"desc", "Patched version of GE-Proton9-24 with Ping plugin support"},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-24/XIV-Proton9-24.tar.xz"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-24")}
+            {"name", "XIV-Proton 9-26.1"}, {"desc", "Patched version of GE-Proton9-26 with Ping plugin support. Patched for 7.2 Dalamud."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-26.1/XIV-Proton9-26.1.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-26.1")}
         };
-
-
 
         if (Runner.IsSteamInstalled)
         {

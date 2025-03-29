@@ -27,7 +27,13 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             RunnerTypeSetting = new SettingsEntry<RunnerType>("Installation Type", "Choose how XIVLauncher will start and manage your game installation.",
-                () => Program.Config.RunnerType ?? RunnerType.Managed, x => Program.Config.RunnerType = x),
+                () => Program.Config.RunnerType ?? RunnerType.Managed, x => Program.Config.RunnerType = x)
+            {
+                CheckWarning = x =>
+                {
+                    return "If you are using wine 9+, valvebe 9+, or Proton 9+, Dalamud with FFXIV 7.2+ *requires* a new patch.\nPlease update to at least Wine-XIV 10.4.1, ValveBE 9-20, or XIV-Proton 9-26.1. Wine 8.5 is still OK.";
+                }
+            },
 
             wineVersionSetting = new DictionarySettingsEntry("Wine Version", $"Wine versions in {toolDirectory}\nEntries marked with *Download* will be downloaded when you log in.", Wine.Versions, () => Program.Config.WineVersion, s => Program.Config.WineVersion = s, Wine.GetDefaultVersion())
             {

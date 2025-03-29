@@ -217,7 +217,12 @@ public class LauncherApp : Component
         if (task.IsFaulted)
         {
             Log.Error(task.Exception, "Task failed");
-            this.ShowMessageBlocking(task.Exception?.InnerException?.Message ?? "Unknown error - please check logs.", "Error");
+            string message = "";
+            if ((task.Exception?.InnerException?.Message ?? "").Contains("Dalamud"))
+                message = "\n\nDalamud for FFXIV 7.2+ does not work with unpatched Wine 9+. " +
+                "You may be able to fix this error by switching to the officially supported wine-xiv-staging-fsync-git-8.5.r4.g4211bac7, " + 
+                "or updating to unofficial-wine-xiv-staging-10.4.1, unofficial-wine-xiv-valvebe-9-20, or XIV-Proton9-26.1 or later.";
+            this.ShowMessageBlocking((task.Exception?.InnerException?.Message ?? "Unknown error - please check logs.") + message, "Error");
             return false;
         }
         else if (task.IsCanceled)

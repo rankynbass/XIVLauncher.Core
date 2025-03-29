@@ -14,7 +14,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
-    public const string DEFAULT = "dxvk-2.5.1";
+    public const string DEFAULT = "dxvk-2.6";
 
     public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
 
@@ -79,16 +79,16 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         });
-        Versions.Add("dxvk-2.5.3", new Dictionary<string, string>()
+        Versions.Add("dxvk-2.6", new Dictionary<string, string>()
         {
-            {"name", "2.5.3"}, {"desc", "Official version 2.5.3 of DXVK."},
-            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.5.3/dxvk-2.5.3.tar.gz"},
+            {"name", "2.6"}, {"desc", "Official version 2.6 of DXVK."},
+            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.6/dxvk-2.6.tar.gz"},
             {"mark", "Download"}
         });
-        Versions.Add("dxvk-gplasync-v2.5.3-1", new Dictionary<string, string>()
+        Versions.Add("dxvk-gplasync-v2.6-1", new Dictionary<string, string>()
         {
-            {"name", "2.5.3-1 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
-            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.5.3-1.tar.gz"},
+            {"name", "2.6 GPLAsync"}, {"desc", "Latest version, using Graphics Pipeline Libs. GPL Async included."},
+            {"label", "GPLAsync"}, {"url", "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.6-1.tar.gz"},
             {"mark", "Download"}
         });
         Versions.Add("dxvk-2.2", new Dictionary<string, string>()
