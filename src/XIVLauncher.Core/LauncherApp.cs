@@ -218,10 +218,12 @@ public class LauncherApp : Component
         {
             Log.Error(task.Exception, "Task failed");
             string message = "";
-            if ((task.Exception?.InnerException?.Message ?? "").Contains("Dalamud"))
-                message = "\n\nDalamud for FFXIV 7.2+ does not work with unpatched Wine 9+. " +
-                "You may be able to fix this error by switching to the officially supported wine-xiv-staging-fsync-git-8.5.r4.g4211bac7, " + 
-                "or updating to unofficial-wine-xiv-staging-10.4.1, unofficial-wine-xiv-valvebe-9-20, or XIV-Proton9-26.1 or later.";
+            if ((task.Exception?.InnerException?.Message ?? "").ToLower().Contains("dalamud"))
+                message = "\nPossible causes:\nDalamud for FFXIV 7.2+ does not work with unpatched Wine 9+. " +
+                "Try switching to the officially supported wine-xiv-staging-fsync-git-8.5.r4.g4211bac7, " +
+                "or updating to unofficial-wine-xiv-staging-10.4.1, unofficial-wine-xiv-valvebe-9-20, or XIV-Proton9-26.1 or later." +
+                "\nA broken prefix from using unpatched valve-based wine (such as GE-Proton). You can try activating a fix " +
+                "in the troubleshooting tab: \"Hack: Fix libcuuc Dalamud error\".";
             this.ShowMessageBlocking((task.Exception?.InnerException?.Message ?? "Unknown error - please check logs.") + message, "Error");
             return false;
         }
