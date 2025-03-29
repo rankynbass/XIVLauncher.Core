@@ -1,4 +1,13 @@
 # Changelog
+### Sat Mar 29 2025 Rankyn Bass <rankyn@proton.me>
+No auto-updating of compatibility tools in this version, sorry.
+- Updated wine, valvebe, and Proton versions to work with FFXIV 7.2
+- Partially fixed segfault on closing
+- Got rid of update checks
+- Changed the internal dalamud error message to offer possible solutions
+- Updated dxvk and dxvk-nvapi versions
+- `XL_NVNGX_TO_PREFIX` now defaults to true. There's not really a reason *not* to do this.
+
 ### Sat Feb 08 2025 Rankyn Bass <rankyn@proton.me>
 - Add a hack in the troubleshooting tab for an internal Dalamud error related to experimental proton-wine that results in this error message at the terminal:
 ```

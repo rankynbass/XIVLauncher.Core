@@ -56,11 +56,11 @@ public class DLSSSettings
 
     private bool InstallToPrefix()
     {
-        string nvngxToPrefix = (System.Environment.GetEnvironmentVariable("XL_NVNGX_TO_PREFIX") ?? "0").ToLower();
-        string[] yesValues = {"yes", "true", "on", "y", "1"};
-        if (yesValues.Contains(nvngxToPrefix))
-            return true;
+        string nvngxToPrefix = (System.Environment.GetEnvironmentVariable("XL_NVNGX_TO_PREFIX") ?? "1").ToLower();
+        string[] noValues = {"no", "false", "off", "n", "0"};
+        if (noValues.Contains(nvngxToPrefix))
+            return false;
 
-        return false;
+        return true;
     }
 }

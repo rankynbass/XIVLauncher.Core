@@ -215,7 +215,7 @@ public class CompatibilityTools
         }
     }
 
-    internal void InstallNvngx(string sourceFolder, List<string> files, bool  installToPrefix = false)
+    internal void InstallNvngx(string sourceFolder, List<string> files, bool installToPrefix = true)
     {
         // Create symlinks to nvngx.dll and _nvngx.dll in the GamePath/game folder. Also adding to system32 for OptiScaler.
         // If NoOverwrite is set, assume the files/symlinks are already there. For Nix compatibility and to prevent FSR2 mod from being overwritten.
