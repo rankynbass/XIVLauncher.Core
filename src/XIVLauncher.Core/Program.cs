@@ -294,7 +294,7 @@ sealed class Program
         }
 
         Dictionary<uint, string> apps = new Dictionary<uint, string>();
-        uint[] ignoredIds = { 0, STEAM_APP_ID, STEAM_APP_ID_FT};
+        uint[] ignoredIds = { 0, STEAM_APP_ID, STEAM_APP_ID_FT };
         if (!ignoredIds.Contains(CoreEnvironmentSettings.SteamAppId))
         {
             apps.Add(CoreEnvironmentSettings.SteamAppId, "XLM");
@@ -397,20 +397,8 @@ sealed class Program
 
         StyleModelV1.DalamudStandard.Apply();
 
-        var needUpdate = false;
-
-        if (LinuxInfo.Container == LinuxContainer.flatpak && (Config.DoVersionCheck ?? false))
-        {
-            var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
-
-            if (versionCheckResult.Success)
-                needUpdate = versionCheckResult.NeedUpdate;
-        }
-
-        needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
-
         var launcherClientConfig = LauncherClientConfig.GetAsync().GetAwaiter().GetResult();
-        launcherApp = new LauncherApp(storage, needUpdate, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
+        launcherApp = new LauncherApp(storage, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
 
         Invalidate(20);
 
@@ -480,7 +468,7 @@ sealed class Program
         if (Patcher is not null)
         {
             Patcher.CancelAllDownloads();
-            Task.Run(async() =>
+            Task.Run(async () =>
             {
                 await PatchManager.UnInitializeAcquisition().ConfigureAwait(false);
                 Environment.Exit(0);

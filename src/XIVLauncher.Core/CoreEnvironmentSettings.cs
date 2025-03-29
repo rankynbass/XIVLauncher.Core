@@ -11,7 +11,6 @@ public static class CoreEnvironmentSettings
     public static bool? IsDeckGameMode => CheckEnvBoolOrNull("XL_GAMEMODE");
     public static bool IsSteamGamepadUIVar => CheckEnvBool("SteamGamepadUI");
     public static bool? IsDeckFirstRun => CheckEnvBoolOrNull("XL_FIRSTRUN");
-    public static bool IsUpgrade => CheckEnvBool("XL_SHOW_UPGRADE");
     public static bool ClearSettings => CheckEnvBool("XL_CLEAR_SETTINGS");
     public static bool ClearPrefix => CheckEnvBool("XL_CLEAR_PREFIX");
     public static bool ClearDalamud => CheckEnvBool("XL_CLEAR_DALAMUD");
@@ -83,7 +82,7 @@ public static class CoreEnvironmentSettings
 
     public static string GetCType()
     {
-        if (System.OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows())
             return "";
         var psi = new ProcessStartInfo("sh");
         psi.Arguments = "-c \"locale -a 2>/dev/null | grep -i utf\"";
