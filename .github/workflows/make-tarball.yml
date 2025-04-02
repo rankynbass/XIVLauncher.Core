@@ -29,8 +29,6 @@ jobs:
 
       - name: Make tarball
         run: |
-          mkdir -p out
-          cd out
           tar -czf XIVLauncher.Core.tar.gz -C src/XIVLauncher.Core/dist/XIVLauncher.Core .
           sha512sum XIVLauncher.Core.tar.gz > XIVLauncher.Core.sha512sum
 
@@ -38,5 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: XIVLauncher-RB
-          path: out
+          path: |
+            XIVLauncher.Core.tar.gz
+            XIVLauncher.Core.sha512sum
           compression-level: 0
