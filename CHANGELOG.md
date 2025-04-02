@@ -1,5 +1,13 @@
 # Changelog
+### Tue Apr 01 2025 Rankyn Bass <rankyn@proton.me>
+1.1.2.1
+- Enabled actions on the repo, so I can build on github and release directly.
+- Updated to match upstream release 1.1.2
+- Still no auto-updating.
+- No tumbleweed release as of release. COPR is broken atm.
+
 ### Sat Mar 29 2025 Rankyn Bass <rankyn@proton.me>
+1.1.1.7
 No auto-updating of compatibility tools in this version, sorry.
 - Updated wine, valvebe, and Proton versions to work with FFXIV 7.2
 - Partially fixed segfault on closing
@@ -9,6 +17,7 @@ No auto-updating of compatibility tools in this version, sorry.
 - `XL_NVNGX_TO_PREFIX` now defaults to true. There's not really a reason *not* to do this.
 
 ### Sat Feb 08 2025 Rankyn Bass <rankyn@proton.me>
+1.1.1.6
 - Add a hack in the troubleshooting tab for an internal Dalamud error related to experimental proton-wine that results in this error message at the terminal:
 ```
 Cannot get symbol u_charsToUChars from libicuuc

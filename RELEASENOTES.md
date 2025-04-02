@@ -1,0 +1,4 @@
+- Enabled actions on the repo, so I can build on github and release directly.
+- Updated to match upstream release 1.1.2
+- Still no auto-updating.
+- No tumbleweed release as of release. COPR is broken atm.
