@@ -1,8 +1,6 @@
 name: "Build XIVLauncher-RB"
 
 on:
-  push:
-    branches: [RB-patched]
   pull_request:
     branches: [RB-patched]
   workflow_dispatch:
