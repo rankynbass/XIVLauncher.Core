@@ -1,10 +1,10 @@
-name: "Build XLCore"
+name: "Build XIVLauncher-RB"
 
 on:
   push:
-    branches: [main]
+    branches: [RB-patched]
   pull_request:
-    branches: [main]
+    branches: [RB-patched]
   workflow_dispatch:
 
 jobs:
@@ -33,17 +33,8 @@ jobs:
       - name: Dotnet Restore
         run: dotnet restore
 
-      - name: Dotnet Build (Default)
+      - name: Dotnet Build
         run: dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core
-
-      - name: Dotnet Build (Arch)
-        run: dotnet publish -r linux-x64 --sc --configuration Release -p:DefineConstants=WINE_XIV_ARCH_LINUX --no-restore -o ./dist/XIVLauncher.Core-arch
-
-      - name: Dotnet Build (Fedora)
-        run: dotnet publish -r linux-x64 --sc --configuration Release -p:DefineConstants=WINE_XIV_FEDORA_LINUX --no-restore -o ./dist/XIVLauncher.Core-fedora
-
-      - name: Dotnet Build (Windows)
-        run: dotnet publish -r win-x64 --sc --configuration Release -o ./dist/XIVLauncher.Core-win10x64
 
       - name: Dotnet Test
         run: dotnet test --no-build --verbosity normal

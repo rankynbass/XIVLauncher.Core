@@ -1,16 +1,11 @@
-name: "Release XLCore"
+name: "Build XIVLauncher-RB tarball"
 
 on:
-  push:
-    tags:
-      - "*.*.*"
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
   Release:
-    if: github.repository == 'goatcorp/XIVLauncher.Core'
+    if: github.repository == 'rankynbass/XIVLauncher.Core'
     runs-on: ubuntu-latest
     env:
       GITHUB_REPOSITORY: ${{ github.repository }}
@@ -21,75 +16,23 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Setup Python3
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
-
-      - name: Setup Flatpak
-        run: |
-          sudo apt update -y
-          sudo apt install flatpak -y
-          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 
-          flatpak install --user org.freedesktop.Sdk.Extension.dotnet8/x86_64/24.08 -y
-          flatpak install --user org.freedesktop.Sdk/x86_64/24.08 -y
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x # Set this to be the same as the projects required dotnet version.
 
-      - name: Dotnet Restore
-        working-directory: ./src/XIVLauncher.Core/
-        run: dotnet restore
-
-      - name: Dotnet Build (Default)
-        working-directory: ./src/XIVLauncher.Core/
-        run: dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core
-
-      - name: Dotnet Build (Arch)
-        working-directory: ./src/XIVLauncher.Core/
-        run: dotnet publish -r linux-x64 --sc --configuration Release -p:DefineConstants=WINE_XIV_ARCH_LINUX --no-restore -o ./dist/XIVLauncher.Core-arch
-
-      - name: Dotnet Build (Fedora)
-        working-directory: ./src/XIVLauncher.Core/
-        run: dotnet publish -r linux-x64 --sc --configuration Release -p:DefineConstants=WINE_XIV_FEDORA_LINUX --no-restore -o ./dist/XIVLauncher.Core-fedora
-
-      - name: Dotnet Build (Windows)
-        working-directory: ./src/XIVLauncher.Core/
-        run: dotnet publish -r win-x64 --sc --configuration Release -o ./dist/XIVLauncher.Core-win10x64
-
-      - name: Generate nuget-dependencies.json
-        working-directory: ./src/XIVLauncher.Core/
+      - name: Dotnet Build
+        working-directory: src/XIVLauncher.Core/
         run: |
-          curl -LO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/dotnet/flatpak-dotnet-generator.py
-          python3 flatpak-dotnet-generator.py --dotnet 8 --freedesktop 24.08 nuget-dependencies.json XIVLauncher.Core.csproj
+          dotnet restore
+          dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core
 
-      - name: Upload nuget-dependencies.json
+      - name: Make tarball
+        run: tar -czf XIVLauncher.Core.tar.gz -C src/XIVLauncher.Core/dist/XIVLauncher.Core
+
+      - name: Archive the artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-dependencies
-          path: |
-            ./src/XIVLauncher.Core/nuget-dependencies.json
-
-      - name: Compress release files
-        run: |
-          sudo apt install zip -y
-          mkdir -p ./dist
-          # remove leading directories
-          tar -czf ./dist/XIVLauncher.Core.tar.gz -C ./src/XIVLauncher.Core/dist/XIVLauncher.Core .
-          tar -czf ./dist/XIVLauncher.Core-arch.tar.gz -C ./src/XIVLauncher.Core/dist/XIVLauncher.Core-arch .
-          tar -czf ./dist/XIVLauncher.Core-fedora.tar.gz -C ./src/XIVLauncher.Core/dist/XIVLauncher.Core-fedora .
-          zip -r ./dist/XIVLauncher.Core-win10x64.zip ./src/XIVLauncher.Core/dist/XIVLauncher.Core-win10x64
-
-      - name: Release on GitHub
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          # body_path: .github/release_notices.md
-          # append_body: true # and this to make sure they are appended, not replacing the original.
-          files: |
-            ./dist/XIVLauncher.Core.tar.gz
-            ./dist/XIVLauncher.Core-arch.tar.gz
-            ./dist/XIVLauncher.Core-fedora.tar.gz
-            ./dist/XIVLauncher.Core-win10x64.zip
+          name: XIVLauncher-RB
+          path: XIVLauncher.Core.tar.gz
+          compression-level: 0
