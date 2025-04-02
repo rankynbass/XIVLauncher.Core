@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  Release:
+  MakeTarball:
     if: github.repository == 'rankynbass/XIVLauncher.Core'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps:
