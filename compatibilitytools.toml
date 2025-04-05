@@ -20,13 +20,13 @@ url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v
 [Wine.unofficial-wine-xiv-staging-9.22.1]
 name = "Unofficial Wine-XIV 9.22.1"
 desc = "Patched version of Wine Staging 9.22"
-label "XIV-Staging"
+label = "XIV-Staging"
 url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v9.22.1/unofficial-wine-xiv-staging-{distro}-9.22.1.tar.zst"
 
 [Wine.unofficial-wine-xiv-staging-8.21]
 name = "Unofficial Wine-XIV 8.21"
 desc = "Patched version of Wine Staging 8.21"
-label "XIV-Staging"
+label = "XIV-Staging"
 url = "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v8.21/unofficial-wine-xiv-staging-{distro}-8.21.tar.zst"
 
 [Wine.unofficial-wine-xiv-valvebe-9-19]
@@ -52,27 +52,27 @@ url = "https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211ba
 [Dxvk.dxvk-2.6]
 desc = "Official version of DXVK 2.6"
 label = "Latest"
-url = "https://github.com/doitsujin/dxvk/releases/download/v2.6/dxvk-2.6.tar.gz
+url = "https://github.com/doitsujin/dxvk/releases/download/v2.6/dxvk-2.6.tar.gz"
 
 [Dxvk.dxvk-gplasync-v2.6-1]
 desc = "GPLAsync version of DXVK 2.6"
-label "GPLAsync"
+label = "GPLAsync"
 url = "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.6-1.tar.gz"
 
 [Dxvk.dxvk-2.2]
 desc = "Official version of DXVK 2.2. Provided for compatibility."
 label = "Legacy"
-url = "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz
+url = "https://github.com/doitsujin/dxvk/releases/download/v2.2/dxvk-2.2.tar.gz"
 
 [Dxvk.dxvk-1.10.3]
 desc = "Async version of DXVK 1.10.3. Provided for compatibility."
 label = "Legacy"
-url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz
+url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz"
 
 [Dxvk.dxvk-1.10.1]
 desc = "Async version of DXVK 1.10.1. Exact version shipped with Official XIVLauncher.Core"
 label = "Legacy"
-url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz
+url = "https://github.com/Sporif/dxvk-async/releases/download/1.10.1/dxvk-async-1.10.1.tar.gz"
 
 [Nvapi]
 
