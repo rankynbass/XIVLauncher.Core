@@ -26,7 +26,7 @@ public class CompatibilityTools
     private readonly StreamWriter logWriter;
 
     private string WineBinPath => Settings.StartupType == WineStartupType.Managed ?
-                                    Path.Combine(wineDirectory.FullName, Settings.WineRelease.Name, "bin") :
+                                    Path.Combine(wineDirectory.FullName, Settings.WineRelease.Folder, "bin") :
                                     Settings.CustomBinPath;
     private string Wine64Path => Path.Combine(WineBinPath, "wine64");
     private string WineServerPath => Path.Combine(WineBinPath, "wineserver");

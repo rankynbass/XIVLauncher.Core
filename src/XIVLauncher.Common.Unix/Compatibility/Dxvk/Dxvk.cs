@@ -43,14 +43,14 @@ public static class Dxvk
         {
             return;
         }
-        IDxvkRelease release = version switch
+        IToolRelease release = version switch
         {
             DxvkVersion.Stable => new DxvkStableRelease(),
             DxvkVersion.Legacy => new DxvkLegacyRelease(),
             _ => throw new NotImplementedException(),
         };
 
-        var dxvkPath = Path.Combine(installDirectory.FullName, release.Name, "x64");
+        var dxvkPath = Path.Combine(installDirectory.FullName, release.Folder, "x64");
         if (!Directory.Exists(dxvkPath))
         {
             Log.Information("DXVK does not exist, downloading");

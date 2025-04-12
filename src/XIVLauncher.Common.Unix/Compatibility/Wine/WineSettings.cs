@@ -26,7 +26,7 @@ public enum WineManagedVersion
 public class WineSettings
 {
     public WineStartupType StartupType { get; private set; }
-    public IWineRelease WineRelease { get; private set; }
+    public IToolRelease WineRelease { get; private set; }
 
     public string CustomBinPath { get; private set; }
     public string EsyncOn { get; private set; }
