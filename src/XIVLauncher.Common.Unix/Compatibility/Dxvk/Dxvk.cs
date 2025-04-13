@@ -37,18 +37,14 @@ public enum DxvkHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, DxvkVersion version)
+    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, string version)
     {
-        if (version is DxvkVersion.Disabled)
+        if (version is "Disabled")
         {
             return;
         }
-        IToolRelease release = version switch
-        {
-            DxvkVersion.Stable => new DxvkStableRelease(),
-            DxvkVersion.Legacy => new DxvkLegacyRelease(),
-            _ => throw new NotImplementedException(),
-        };
+
+        CompatToolRelease release = CompatToolbox.GetTool("Dxvk", version);
 
         var dxvkPath = Path.Combine(installDirectory.FullName, release.Folder, "x64");
         if (!Directory.Exists(dxvkPath))

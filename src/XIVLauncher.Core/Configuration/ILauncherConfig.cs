@@ -63,13 +63,13 @@ public interface ILauncherConfig
 
     public WineStartupType? WineStartupType { get; set; }
 
-    public WineManagedVersion? WineManagedVersion { get; set; }
+    public string? WineManagedVersion { get; set; }
 
     public string? WineBinaryPath { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 
-    public DxvkVersion? DxvkVersion { get; set; }
+    public string? DxvkVersion { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
 

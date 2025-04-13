@@ -30,6 +30,11 @@ public static class CompatToolbox
         var defaultWineLegacy = ConvertToCompatToolRelease(new WineLegacyRelease(wineDistroId));
         var defaultDxvkStable = ConvertToCompatToolRelease(new DxvkStableRelease());
         var defaultDxvkLegacy = ConvertToCompatToolRelease(new DxvkLegacyRelease());
+        var defaultDxvkDisabled = new CompatToolRelease
+        {
+            Name = "Disabled", Description = "Disabled. Use WineD3D instead.",
+            Folder = "", DownloadUrl = "", TopLevelFolder = true,
+        };
         
         Console.WriteLine("WineStableRelease.Name = " + defaultWineStable.Name);
 
@@ -58,6 +63,8 @@ public static class CompatToolbox
         {
             ReadJSONToTools(jsonFile);
         }
+        if(!Tools["Dxvk"].ContainsKey("Disabled"))
+            Tools["Dxvk"].Add("Disabled", defaultDxvkDisabled);
         Initialized = true;
     }
 
@@ -65,7 +72,14 @@ public static class CompatToolbox
     {
         return Tools[tooltype];
     }
+    
+    public static CompatToolRelease GetTool(string tooltype, string toolname)
+    {
+        if (Tools[tooltype].ContainsKey(toolname))
+            return Tools[tooltype][toolname];
 
+        return new CompatToolRelease { Folder = ""};
+    }
     public static CompatToolRelease ConvertToCompatToolRelease(IToolRelease release)
     {
         return new CompatToolRelease

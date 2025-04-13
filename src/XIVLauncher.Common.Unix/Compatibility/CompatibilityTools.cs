@@ -31,7 +31,7 @@ public class CompatibilityTools
     private string Wine64Path => Path.Combine(WineBinPath, "wine64");
     private string WineServerPath => Path.Combine(WineBinPath, "wineserver");
 
-    private readonly DxvkVersion dxvkVersion;
+    private readonly string dxvkVersion;
     private readonly DxvkHudType hudType;
     private readonly bool gamemodeOn;
     private readonly string dxvkAsyncOn;
@@ -40,7 +40,7 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, DxvkVersion dxvkVersion, DxvkHudType hudType, bool gamemodeOn, bool dxvkAsyncOn, DirectoryInfo toolsFolder)
+    public CompatibilityTools(WineSettings wineSettings, string dxvkVersion, DxvkHudType hudType, bool gamemodeOn, bool dxvkAsyncOn, DirectoryInfo toolsFolder)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
@@ -151,7 +151,7 @@ public class CompatibilityTools
         psi.UseShellExecute = false;
         psi.WorkingDirectory = workingDirectory;
 
-        var ogl = wineD3D || this.dxvkVersion == DxvkVersion.Disabled;
+        var ogl = wineD3D || this.dxvkVersion == "Disabled";
 
         var wineEnviromentVariables = new Dictionary<string, string>
         {

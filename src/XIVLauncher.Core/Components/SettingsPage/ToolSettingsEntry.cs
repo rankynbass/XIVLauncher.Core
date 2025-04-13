@@ -17,7 +17,7 @@ public class ToolSettingsEntry : SettingsEntry<string>
 
     public bool ShowItemDescription;
 
-    public ToolSettingsEntry(string name, string description, Dictionary<string, CompatToolRelease> pairs, Func<string> load, Action<string?> save, string defaultValue, bool showSelectedDesc = false, bool showItemDesc = true)
+    public ToolSettingsEntry(string name, string description, Func<string> load, Action<string?> save, Dictionary<string, CompatToolRelease> pairs, string defaultValue, bool showSelectedDesc = false, bool showItemDesc = true)
         : base(name, description, load, save)
     { 
         this.Pairs = pairs;

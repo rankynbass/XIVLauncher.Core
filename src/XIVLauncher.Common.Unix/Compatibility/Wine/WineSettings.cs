@@ -27,7 +27,7 @@ public enum WineManagedVersion
 public class WineSettings
 {
     public WineStartupType StartupType { get; private set; }
-    public IToolRelease WineRelease { get; private set; }
+    public CompatToolRelease WineRelease { get; private set; }
 
     public string CustomBinPath { get; private set; }
     public string EsyncOn { get; private set; }
@@ -36,22 +36,10 @@ public class WineSettings
     public FileInfo LogFile { get; private set; }
     public DirectoryInfo Prefix { get; private set; }
 
-    public WineSettings(WineStartupType startupType, WineManagedVersion managedWine, string customBinPath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
+    public WineSettings(WineStartupType startupType, string managedWine, string customBinPath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
     {
         this.StartupType = startupType;
-
-        var wineDistroId = CompatUtil.GetWineIdForDistro();
-        switch (managedWine)
-        {
-            case WineManagedVersion.Stable:
-                this.WineRelease = new WineStableRelease(wineDistroId);
-                break;
-            case WineManagedVersion.Legacy:
-                this.WineRelease = new WineLegacyRelease(wineDistroId);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(managedWine.ToString());
-        }
+        this.WineRelease = CompatToolbox.GetTool("Wine", managedWine);
         this.CustomBinPath = customBinPath;
         this.EsyncOn = esyncOn ? "1" : "0";
         this.FsyncOn = fsyncOn ? "1" : "0";
