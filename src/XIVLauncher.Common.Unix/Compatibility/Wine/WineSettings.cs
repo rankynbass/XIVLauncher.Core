@@ -2,6 +2,7 @@
 using System.IO;
 
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 

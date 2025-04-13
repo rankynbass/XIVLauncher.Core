@@ -235,6 +235,12 @@ sealed class Program
 
                 case PlatformID.Unix:
                     Steam = new UnixSteam();
+                    CompatToolbox.Initialize(storage.Root);
+                    Log.Information("Initialized toolbox");
+                    foreach (var kvp in CompatToolbox.Tools)
+                    {
+                        Log.Information($"Tool type: \"{kvp.Key}\"");
+                    }
                     break;
 
                 default:
