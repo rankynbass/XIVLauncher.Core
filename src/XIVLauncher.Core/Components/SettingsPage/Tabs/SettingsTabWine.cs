@@ -27,9 +27,9 @@ public class SettingsTabWine : SettingsTab
         var dxvkToolList = CompatToolbox.GetToolList("Dxvk");
         Entries = new SettingsEntry[]
         {
-            new ToolSettingsEntry("Test", "List of Wine tools", wineToolList, () => temp, x => temp = x, "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7"),
+            new ToolSettingsEntry("Test", "List of Wine tools", wineToolList, () => temp, x => temp = x, "BadValue"),
 
-            new ToolSettingsEntry("Test2", "List of Dxvk tools", dxvkToolList, () => temp, x => temp = x, "dxvk-async-1.10.3"),
+            new ToolSettingsEntry("Test2", "List of Dxvk tools", dxvkToolList, () => temp, x => temp = x, "Stable"),
 
             startupTypeSetting = new SettingsEntry<WineStartupType>("Wine Version", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.WineStartupType ?? WineStartupType.Managed, x => Program.Config.WineStartupType = x),

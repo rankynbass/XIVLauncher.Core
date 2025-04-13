@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using XIVLauncher.Common.Unix.Compatibility;
+using Serilog;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
@@ -23,24 +24,36 @@ public class ToolSettingsEntry : SettingsEntry<string>
         this.DefaultValue = defaultValue;
         this.ShowDescription = showSelectedDesc;
         this.ShowItemDescription = showItemDesc;
+        if (!Pairs.ContainsKey(DefaultValue))
+        {
+            // We don't care which one we get, we just don't want to crash!
+            var idx = Pairs.FirstOrDefault().Key;
+            Log.Warning($"The default value of \"{DefaultValue}\" is not a valid compatiblity tool. Using \"{idx}\"");
+            DefaultValue = idx;
+        }
     }
 
 
     public override void Draw()
     {
-        string idx = (string)(this.InternalValue ?? DefaultValue);
+        if (!Pairs.ContainsKey((string)this.InternalValue))
+        {
+            Log.Warning($"Value \"{(string)this.InternalValue}\" from launcher.ini is not a valid compatibility tool. Using default \"{DefaultValue}\"");
+            this.InternalValue = DefaultValue;
+        }
+
+        string idx = (string)this.InternalValue;
 
         ImGuiHelpers.TextWrapped(this.Name);
 
-        if (!Pairs.ContainsKey(idx))
-            idx = DefaultValue;
-        var label = Pairs[idx].Name + (ShowDescription ? " - " + Pairs[idx].Description : "");
+
+        var label = Pairs[idx].Name + (ShowDescription ? " - " + Pairs[idx].Description : "") + " : " + idx;
 
         if (ImGui.BeginCombo($"###{Id.ToString()}", label))
         {
             foreach ( string key in Pairs.Keys)
             {
-                var itemlabel = Pairs[key].Name + (ShowItemDescription ? " - " + Pairs[key].Description : "");
+                var itemlabel = Pairs[key].Name + (ShowItemDescription ? " - " + Pairs[key].Description : "") + " : " + key;
                 if (ImGui.Selectable(itemlabel, idx == key))
                 {
                     this.InternalValue = key;
