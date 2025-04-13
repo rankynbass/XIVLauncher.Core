@@ -19,17 +19,19 @@ public static class CompatToolbox
 
     public static bool Initialized { get; private set; } = false;
 
+    private static WineReleaseDistro wineDistroId;
+
     public static void Initialize(DirectoryInfo storageFolder)
     {
         Storage = storageFolder;
+        wineDistroId = CompatUtil.GetWineIdForDistro();
         var jsonFile = Path.Combine(storageFolder.FullName, "compattools.json");
-        var wineDistroId = CompatUtil.GetWineIdForDistro();
         var defaultWineStable = ConvertToCompatToolRelease(new WineStableRelease(wineDistroId));
         var defaultWineLegacy = ConvertToCompatToolRelease(new WineLegacyRelease(wineDistroId));
         var defaultDxvkStable = ConvertToCompatToolRelease(new DxvkStableRelease());
         var defaultDxvkLegacy = ConvertToCompatToolRelease(new DxvkLegacyRelease());
         
-        Console.WriteLine("WineStableRelease.Folder = " + defaultWineStable.Folder);
+        Console.WriteLine("WineStableRelease.Name = " + defaultWineStable.Name);
 
         if (!File.Exists(jsonFile))
         {
@@ -38,34 +40,30 @@ public static class CompatToolbox
                 {
                     "Wine", new Dictionary<string, CompatToolRelease>()
                     { 
-                        { defaultWineStable.Folder, defaultWineStable },
-                        { defaultWineLegacy.Folder, defaultWineLegacy },
+                        { defaultWineStable.Name.Replace(' ', '_'), defaultWineStable },
+                        { defaultWineLegacy.Name.Replace(' ', '_'), defaultWineLegacy },
                     }
                 },
                 {
                     "Dxvk", new Dictionary<string, CompatToolRelease>()
                     {
-                        { defaultDxvkStable.Folder, defaultDxvkStable },
-                        { defaultDxvkLegacy.Folder, defaultDxvkLegacy },
+                        { defaultDxvkStable.Name.Replace(' ', '_'), defaultDxvkStable },
+                        { defaultDxvkLegacy.Name.Replace(' ', '_'), defaultDxvkLegacy },
                     }
                 }
             };
-            string json = JsonConvert.SerializeObject(Tools, Formatting.Indented);
-            json = json.Replace($"-{wineDistroId.ToString()}-", "-{distro}-");
-            File.WriteAllText(jsonFile, json);
+            WriteToolsToJSON(jsonFile);
         }
         else
         {
-            string json = File.ReadAllText(jsonFile);
-            json = json.Replace("-{distro}-", $"-{wineDistroId.ToString()}-");
-            Tools = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, CompatToolRelease>>>(json);
+            ReadJSONToTools(jsonFile);
         }
         Initialized = true;
     }
 
-    public static Dictionary<string, CompatToolRelease> GetToolList(string toolType)
+    public static Dictionary<string, CompatToolRelease> GetToolList(string tooltype)
     {
-        return Tools[toolType];
+        return Tools[tooltype];
     }
 
     public static CompatToolRelease ConvertToCompatToolRelease(IToolRelease release)
@@ -80,4 +78,38 @@ public static class CompatToolbox
         };
     }
 
+    private static void WriteToolsToJSON(string filename)
+    {
+        if (Tools is null)
+            throw new InvalidOperationException("CompatToolbox.Tools is empty. Can't generate a JSON.");
+        Dictionary<string, List<CompatToolRelease>> toolbox = new Dictionary<string, List<CompatToolRelease>>();
+        foreach (var tooltype in Tools)
+        {
+            var toollist = new List<CompatToolRelease>();
+            foreach (var tool in tooltype.Value)
+            {
+                toollist.Add(tool.Value);
+            }
+            toolbox.Add(tooltype.Key, toollist);
+        }
+        var json = JsonConvert.SerializeObject(toolbox, Formatting.Indented).Replace($"-{wineDistroId.ToString()}-", "-{wineDistroId}-");
+        File.WriteAllText(filename, json);
+    }
+
+    private static void ReadJSONToTools(string filename)
+    {
+        Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>();
+        var json = File.ReadAllText(filename).Replace("-{wineDistroId}-", $"-{wineDistroId.ToString()}-");
+        var toolbox = JsonConvert.DeserializeObject<Dictionary<string, List<CompatToolRelease>>>(json);
+        foreach (var tooltype in toolbox)
+        {
+            var toollist = new Dictionary<string, CompatToolRelease>(); 
+            foreach (var tool in tooltype.Value)
+            {
+                toollist.Add(tool.Name.Replace(' ', '_'), tool);
+            }
+            Tools.Add(tooltype.Key, toollist);
+        }
+        Console.WriteLine(JsonConvert.SerializeObject(Tools, Formatting.Indented));
+    }
 }
