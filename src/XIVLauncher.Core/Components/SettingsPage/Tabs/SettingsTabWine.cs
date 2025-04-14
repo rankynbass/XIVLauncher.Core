@@ -20,7 +20,6 @@ public class SettingsTabWine : SettingsTab
 
     public SettingsTabWine()
     {
-        var dxvkToolList = CompatToolbox.GetToolList("Dxvk");
         Entries = new SettingsEntry[]
         {
             startupTypeSetting = new SettingsEntry<WineStartupType>("Wine Version", "Choose how XIVLauncher will start and manage your wine installation.",
@@ -44,6 +43,12 @@ public class SettingsTabWine : SettingsTab
                 x => Program.Config.DxvkVersion = x, CompatToolbox.GetToolList("Dxvk"), "Stable"),
 
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value != "Disabled"
+            },
+
+            new ToolSettingsEntry("Dxvk-nvapi Version", "Choose which version of dxvk-nvapi to use for dlss. Disable for AMD.", () => Program.Config.NvapiVersion ?? "",
+                x => Program.Config.NvapiVersion = x, CompatToolbox.GetToolList("Nvapi"), "Stable")
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "Disabled"
             },

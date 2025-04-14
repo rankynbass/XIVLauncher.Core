@@ -5,9 +5,11 @@ using Newtonsoft.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
-using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 
+using Serilog;
 
 namespace XIVLauncher.Common.Unix.Compatibility;
 
@@ -31,9 +33,12 @@ public static class CompatToolbox
         var defaultDxvkStable = ConvertToCompatToolRelease(new DxvkStableRelease());
         var defaultDxvkLegacy = ConvertToCompatToolRelease(new DxvkLegacyRelease());
         var defaultDxvkDisabled = ConvertToCompatToolRelease(new DxvkDisabledRelease());
+        var defaultNvapiStable = ConvertToCompatToolRelease(new NvapiStableRelease());
+        var defaultNvapiLegacy071 = ConvertToCompatToolRelease(new NvapiLegacyRelease071());
+        var defaultNvapiLegacy060 = ConvertToCompatToolRelease(new NvapiLegacyRelease060());
+        var defaultNvapiLegacy054 = ConvertToCompatToolRelease(new NvapiLegacyRelease054());
+        var defaultNvapiDisabled = ConvertToCompatToolRelease(new NvapiDisabledRelease());
         
-        Console.WriteLine("WineStableRelease.Name = " + defaultWineStable.Name);
-
         if (!File.Exists(jsonFile))
         {
             Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>()
@@ -51,6 +56,15 @@ public static class CompatToolbox
                         { defaultDxvkStable.Name.Replace(' ', '_'), defaultDxvkStable },
                         { defaultDxvkLegacy.Name.Replace(' ', '_'), defaultDxvkLegacy },
                     }
+                },
+                {
+                    "Nvapi", new Dictionary<string, CompatToolRelease>()
+                    {
+                        { defaultNvapiStable.Name, defaultNvapiStable },
+                        { defaultNvapiLegacy071.Name.Replace(' ', '_'), defaultNvapiLegacy071 },
+                        { defaultNvapiLegacy060.Name.Replace(' ', '_'), defaultNvapiLegacy060 },
+                        { defaultNvapiLegacy054.Name.Replace(' ', '_'), defaultNvapiLegacy054 },
+                    }
                 }
             };
             WriteToolsToJSON(jsonFile);
@@ -61,11 +75,13 @@ public static class CompatToolbox
         }
         if(!Tools["Dxvk"].ContainsKey("Disabled"))
             Tools["Dxvk"].Add("Disabled", defaultDxvkDisabled);
+        if(!Tools["Nvapi"].ContainsKey("Disabled"))
+            Tools["Nvapi"].Add("Disabled", defaultNvapiDisabled);
         Initialized = true;
     }
 
     public static Dictionary<string, CompatToolRelease> GetToolList(string tooltype)
-    {
+    {        
         return Tools[tooltype];
     }
     
@@ -116,9 +132,16 @@ public static class CompatToolbox
             var toollist = new Dictionary<string, CompatToolRelease>(); 
             foreach (var tool in tooltype.Value)
             {
-                toollist.Add(tool.Name.Replace(' ', '_'), tool);
+                var name = tool.Name.Replace(' ', '_');
+                if (toollist.ContainsKey(name))
+                {
+                    Log.Error($"Tools[{tooltype.Key}][{name}] already exists. There is duplicate entry in your ~/.xlcore/compattools.json file.");
+                    continue;
+                }
+                toollist.Add(name, tool);
             }
             Tools.Add(tooltype.Key, toollist);
         }
+        JsonConvert.SerializeObject(Tools, Formatting.Indented);
     }
 }

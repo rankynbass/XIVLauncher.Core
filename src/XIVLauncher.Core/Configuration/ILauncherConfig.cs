@@ -71,6 +71,8 @@ public interface ILauncherConfig
 
     public string? DxvkVersion { get; set; }
 
+    public string? NvapiVersion { get; set; }
+
     public bool? DxvkAsyncEnabled { get; set; }
 
     public bool? ESyncEnabled { get; set; }

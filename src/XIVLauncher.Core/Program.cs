@@ -130,6 +130,7 @@ sealed class Program
 
         Config.GameModeEnabled ??= false;
         Config.DxvkVersion ??= "Stable";
+        Config.NvapiVersion ??= "Stable";
         Config.DxvkAsyncEnabled ??= true;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -236,11 +237,6 @@ sealed class Program
                 case PlatformID.Unix:
                     Steam = new UnixSteam();
                     CompatToolbox.Initialize(storage.Root);
-                    Log.Information("Initialized toolbox");
-                    foreach (var kvp in CompatToolbox.Tools)
-                    {
-                        Log.Information($"Tool type: \"{kvp.Key}\"");
-                    }
                     break;
 
                 default:
@@ -383,7 +379,7 @@ sealed class Program
         var toolsFolder = storage.GetFolder("compatibilitytool");
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "wine"));
-        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkVersion, Config.DxvkHudType, Config.GameModeEnabled ?? false, Config.DxvkAsyncEnabled ?? true, toolsFolder);
+        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkVersion, Config.NvapiVersion, Config.DxvkHudType, Config.GameModeEnabled ?? false, Config.DxvkAsyncEnabled ?? true, toolsFolder, Config.GamePath);
     }
 
     public static void ShowWindow()

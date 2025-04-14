@@ -47,13 +47,13 @@ public class ToolSettingsEntry : SettingsEntry<string>
         ImGuiHelpers.TextWrapped(this.Name);
 
 
-        var label = Pairs[idx].Name + (ShowDescription ? " - " + Pairs[idx].Description : "") + " : " + idx;
+        var label = Pairs[idx].Name + (ShowDescription ? " - " + Pairs[idx].Description : "");
 
         if (ImGui.BeginCombo($"###{Id.ToString()}", label))
         {
             foreach ( string key in Pairs.Keys)
             {
-                var itemlabel = Pairs[key].Name + (ShowItemDescription ? " - " + Pairs[key].Description : "") + " : " + key;
+                var itemlabel = Pairs[key].Name + (ShowItemDescription ? " - " + Pairs[key].Description : "");
                 if (ImGui.Selectable(itemlabel, idx == key))
                 {
                     this.InternalValue = key;

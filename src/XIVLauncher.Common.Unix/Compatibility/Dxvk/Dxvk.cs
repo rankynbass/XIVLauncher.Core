@@ -37,8 +37,11 @@ public static class Dxvk
         var dxvkPath = Path.Combine(installDirectory.FullName, release.Folder, "x64");
         if (!Directory.Exists(dxvkPath))
         {
+            var installPath = new DirectoryInfo(release.TopLevelFolder ? installDirectory.FullName : Path.Combine(installDirectory.FullName, release.Folder));
+            if (!installPath.Exists)
+                installPath.Create();
             Log.Information("DXVK does not exist, downloading");
-            await DownloadDxvk(installDirectory, release.DownloadUrl).ConfigureAwait(false);
+            await DownloadDxvk(installPath, release.DownloadUrl).ConfigureAwait(false);
         }
 
         var system32 = Path.Combine(prefix.FullName, "drive_c", "windows", "system32");
