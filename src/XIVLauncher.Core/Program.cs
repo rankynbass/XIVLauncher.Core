@@ -466,6 +466,7 @@ sealed class Program
         storage.GetFolder("compatibilitytool").Delete(true);
         storage.GetFolder("compatibilitytool/wine");
         storage.GetFolder("compatibilitytool/dxvk");
+        storage.GetFolder("compatibilitytool/nvapi");
         if (tsbutton) CreateCompatToolsInstance();
     }
 
