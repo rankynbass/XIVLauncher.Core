@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Text;
 
 using CheapLoc;
 
@@ -211,7 +213,7 @@ sealed class Program
     /// <returns>A <see cref="DalamudUpdater"/> instance.</returns>
     private static DalamudUpdater CreateDalamudUpdater()
     {
-        FileInfo runnerOverride = null;
+        FileInfo? runnerOverride = null;
         if (Config.DalamudManualInjectPath is not null &&
             Config.DalamudManualInjectionEnabled == true &&
             Config.DalamudManualInjectPath.Exists &&
@@ -376,12 +378,21 @@ sealed class Program
         var windowWidth = (int)ImGuiHelpers.GetScaled(1280);
         var windowHeight = (int)ImGuiHelpers.GetScaled(800);
 
+        // For now, just spawn the window on the primary display, which in SDL2 has displayIndex 0.
+        // Maybe we may want to save the window location or the preferred display in the config at some point?
+        if (!GetDisplayBounds(displayIndex: 0, out var bounds))
+            Log.Warning("Couldn't figure out the bounds of the primary display, falling back to previous assumption that (0,0) is the top left corner of the left-most monitor.");
+
+        // Create the window and graphics device separately, because Veldrid would have reinitialised SDL if done with their combined method.
+        window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher {version}"));
+        gd = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true));
+        
         VeldridStartup.CreateWindowAndGraphicsDevice(
             new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher {version}"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
-
+       
         window.Resized += () =>
         {
             gd.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
@@ -407,7 +418,7 @@ sealed class Program
         {
             Thread.Sleep(50);
 
-            InputSnapshot snapshot = window.PumpEvents();
+            var snapshot = window.PumpEvents();
 
             if (!window.Exists)
                 break;
@@ -458,6 +469,7 @@ sealed class Program
         }
 
         // Clean up Veldrid resources
+        // FIXME: Veldrid doesn't clean up after SDL though, so some leakage may have been happening for all this time.
         gd.WaitForIdle();
         bindings.Dispose();
         cl.Dispose();
@@ -816,4 +828,17 @@ sealed class Program
         return exit;
     }
     public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();
+
+    private static unsafe bool GetDisplayBounds(int displayIndex, out Rectangle bounds)
+    {
+        bounds = new Rectangle();
+        fixed (Rectangle* rectangle = &bounds)
+        {
+            if (Sdl2Native.SDL_GetDisplayBounds(displayIndex, rectangle) != 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }
