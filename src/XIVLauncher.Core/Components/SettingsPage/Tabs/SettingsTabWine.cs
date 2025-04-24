@@ -2,7 +2,9 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 
 using ImGuiNET;
+using Serilog;
 
+using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Util;
@@ -13,7 +15,8 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineStartupType> startupTypeSetting;
 
-    private SettingsEntry<DxvkVersion> dxvkVersionSetting;
+    private ToolSettingsEntry dxvkVersionSetting;
+
 
     public SettingsTabWine()
     {
@@ -22,8 +25,9 @@ public class SettingsTabWine : SettingsTab
             startupTypeSetting = new SettingsEntry<WineStartupType>("Wine Version", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.WineStartupType ?? WineStartupType.Managed, x => Program.Config.WineStartupType = x),
 
-            new SettingsEntry<WineManagedVersion>("Wine Release", "If you change wine releases, you might have to clear your prefix (Troubleshooting tab)", () => Program.Config.WineManagedVersion ?? WineManagedVersion.Stable,
-                x => Program.Config.WineManagedVersion = x )
+            new ToolSettingsEntry("Wine Release", "If you downgrade wine releases, you might have to clear your prefix (Troubleshooting tab)",
+                () => Program.Config.WineManagedVersion ?? "", x => Program.Config.WineManagedVersion = x,
+                CompatToolbox.GetToolList("Wine"), "Stable")
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Managed
             },
@@ -35,11 +39,18 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Custom
             },
 
-            dxvkVersionSetting = new SettingsEntry<DxvkVersion>("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.DxvkVersion ?? DxvkVersion.Stable, x => Program.Config.DxvkVersion = x),
+            dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.DxvkVersion ?? "",
+                x => Program.Config.DxvkVersion = x, CompatToolbox.GetToolList("Dxvk"), "Stable"),
 
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled
+                CheckVisibility = () => dxvkVersionSetting.Value != "Disabled"
+            },
+
+            new ToolSettingsEntry("Dxvk-nvapi Version", "Choose which version of dxvk-nvapi to use for dlss. Disable for AMD.", () => Program.Config.NvapiVersion ?? "",
+                x => Program.Config.NvapiVersion = x, CompatToolbox.GetToolList("Nvapi"), "Stable")
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value != "Disabled"
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)

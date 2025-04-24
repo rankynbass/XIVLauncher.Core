@@ -11,18 +11,6 @@ using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
-public enum DxvkVersion
-{
-    [SettingsDescription("Stable", "Dxvk 2.6 with GPLAsync patches. For most graphics cards.")]
-    Stable,
-
-    [SettingsDescription("Legacy", "Dxvk 1.10.3 with Async patches. For older graphics cards.")]
-    Legacy,
-
-    [SettingsDescription("Disabled", "Use OpenGL/WineD3D instead. Slow, and might not work with Dalamud.")]
-    Disabled,
-}
-
 public enum DxvkHudType
 {
     [SettingsDescription("None", "Show nothing")]
@@ -37,24 +25,23 @@ public enum DxvkHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, DxvkVersion version)
+    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, string version)
     {
-        if (version is DxvkVersion.Disabled)
+        if (version is "Disabled")
         {
             return;
         }
-        IDxvkRelease release = version switch
-        {
-            DxvkVersion.Stable => new DxvkStableRelease(),
-            DxvkVersion.Legacy => new DxvkLegacyRelease(),
-            _ => throw new NotImplementedException(),
-        };
 
-        var dxvkPath = Path.Combine(installDirectory.FullName, release.Name, "x64");
+        CompatToolRelease release = CompatToolbox.GetTool("Dxvk", version);
+
+        var dxvkPath = Path.Combine(installDirectory.FullName, release.Folder, "x64");
         if (!Directory.Exists(dxvkPath))
         {
+            var installPath = new DirectoryInfo(release.TopLevelFolder ? installDirectory.FullName : Path.Combine(installDirectory.FullName, release.Folder));
+            if (!installPath.Exists)
+                installPath.Create();
             Log.Information("DXVK does not exist, downloading");
-            await DownloadDxvk(installDirectory, release.DownloadUrl).ConfigureAwait(false);
+            await DownloadDxvk(installPath, release.DownloadUrl).ConfigureAwait(false);
         }
 
         var system32 = Path.Combine(prefix.FullName, "drive_c", "windows", "system32");
