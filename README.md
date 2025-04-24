@@ -117,7 +117,6 @@ XIVLauncher-RB is not officially supported by the XIVLauncher community, but man
 | [AUR](https://aur.archlinux.org/packages/xivlauncher-rb) | ![AUR version](https://img.shields.io/aur/version/xivlauncher-rb) |
 | [Copr (Fedora+openSuse+EL9)](https://copr.fedorainfracloud.org/coprs/rankyn/xivlauncher/) | ![COPR version](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frankynbass%2FXIVLauncher4rpm%2FRB-patched%2Fbadge.json)|
 | [MPR (Debian+Ubuntu)](https://mpr.makedeb.org/packages/xivlauncher-rb)&#42; | ![MPR package](https://repology.org/badge/version-for-repo/mpr/xivlauncher-rb.svg?header=MPR) |
-| [Nix Flake](https://github.com/drakon64/nixos-xivlauncher-rb) | [![Update](https://github.com/drakon64/nixos-xivlauncher-rb/actions/workflows/xivlauncher-rb.yml/badge.svg?event=schedule)](https://github.com/drakon64/nixos-xivlauncher-rb/actions/workflows/xivlauncher-rb.yml) |
 
 &#42; The MPR just pulls the latest git master, so it should always be up to date. If you want a specific tag, change the url in the PKGBUILD source section from `branch=RB-patched` to `tag={tag}`. Tags will be in the format `rb-v1.1.0.11`.
 
