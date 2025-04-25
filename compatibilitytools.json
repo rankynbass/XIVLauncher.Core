@@ -1,0 +1,67 @@
+{
+    "ID": "Official",
+    "Name": "Builtin XLCore tool list",
+    "Timestamp": "2025-04-24 12:34:56",
+    "Wine": [
+      {
+        "Folder": "wine-xiv-staging-fsync-git-10.5.r0.g835c92a2",
+        "DownloadUrl": "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/10.5.r0.g835c92a2/wine-xiv-staging-fsync-git-{wineDistroId}-10.5.r0.g835c92a2.tar.xz",
+        "TopLevelFolder": true,
+        "Name": "Stable",
+        "Description": "Based on Wine 10.5 - Recommended for most users."
+      },
+      {
+        "Folder": "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7",
+        "DownloadUrl": "https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{wineDistroId}-8.5.r4.g4211bac7.tar.xz",
+        "TopLevelFolder": true,
+        "Name": "Legacy",
+        "Description": "Based on Wine 8.5 - use for compatibility with some plugins."
+      }
+    ],
+    "Dxvk": [
+      {
+        "Folder": "dxvk-gplasync-v2.6-1",
+        "DownloadUrl": "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/releases/dxvk-gplasync-v2.6-1.tar.gz",
+        "TopLevelFolder": true,
+        "Name": "Stable",
+        "Description": "Dxvk 2.6 with GPLAsync patches. Works with most graphics cards."
+      },
+      {
+        "Folder": "dxvk-async-1.10.3",
+        "DownloadUrl": "https://github.com/Sporif/dxvk-async/releases/download/1.10.3/dxvk-async-1.10.3.tar.gz",
+        "TopLevelFolder": true,
+        "Name": "Legacy",
+        "Description": "Dxvk 1.10.3 with Async patches. For older graphics cards."
+      }
+    ],
+    "Nvapi": [
+      {
+        "Folder": "dxvk-nvapi-v0.9.0",
+        "DownloadUrl": "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.9.0/dxvk-nvapi-v0.9.0.tar.gz",
+        "TopLevelFolder": false,
+        "Name": "Stable",
+        "Description": "Dxvk-nvapi 0.9.0 to enable DLSS. For latest Nvidia drivers."
+      },
+      {
+        "Folder": "dxvk-nvapi-v0.7.1",
+        "DownloadUrl": "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.7.1/dxvk-nvapi-v0.7.1.tar.gz",
+        "TopLevelFolder": false,
+        "Name": "Legacy 0.7.1",
+        "Description": "Dxvk-nvapi 0.7.1 to enable DLSS. For nvidia driver version <= 550."
+      },
+      {
+        "Folder": "dxvk-nvapi-v0.6.0",
+        "DownloadUrl": "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.6.0/dxvk-nvapi-v0.6.0.tar.gz",
+        "TopLevelFolder": false,
+        "Name": "Legacy 0.6.0",
+        "Description": "Dxvk-nvapi 0.6.0 to enable DLSS. For nvidia driver version <= 525."
+      },
+      {
+        "Folder": "dxvk-nvapi-v0.5.4",
+        "DownloadUrl": "https://github.com/jp7677/dxvk-nvapi/releases/download/v0.5.4/dxvk-nvapi-v0.5.4.tar.gz",
+        "TopLevelFolder": false,
+        "Name": "Legacy 0.5.4",
+        "Description": "Dxvk-nvapi 0.5.4 to enable DLSS. May work with Dxvk 1.10.3."
+      }
+    ]
+  }

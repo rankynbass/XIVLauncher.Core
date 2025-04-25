@@ -15,6 +15,18 @@ namespace XIVLauncher.Common.Unix.Compatibility;
 
 public static class CompatToolbox
 {
+    private static DateTime DefaultTimestamp => new DateTime(2025, 4, 20, 0, 0, 0, DateTimeKind.Utc);
+    
+    private static string DefaultName => "Builtin XLCore tool list";
+
+    private static string DefaultID => "Official";
+
+    public static DateTime CurrentTimestamp { get; private set; }
+
+    public static string CurrentName { get; private set; }
+
+    public static string CurrentID { get; private set; }
+
     public static Dictionary<string, Dictionary<string, CompatToolRelease>> Tools { get; private set; }
 
     private static DirectoryInfo Storage;
@@ -28,56 +40,71 @@ public static class CompatToolbox
         Storage = storageFolder;
         wineDistroId = CompatUtil.GetWineIdForDistro();
         var jsonFile = Path.Combine(storageFolder.FullName, "compattools.json");
-        var defaultWineStable = ConvertToCompatToolRelease(new WineStableRelease(wineDistroId));
-        var defaultWineLegacy = ConvertToCompatToolRelease(new WineLegacyRelease(wineDistroId));
-        var defaultDxvkStable = ConvertToCompatToolRelease(new DxvkStableRelease());
-        var defaultDxvkLegacy = ConvertToCompatToolRelease(new DxvkLegacyRelease());
-        var defaultDxvkDisabled = ConvertToCompatToolRelease(new DxvkDisabledRelease());
-        var defaultNvapiStable = ConvertToCompatToolRelease(new NvapiStableRelease());
-        var defaultNvapiLegacy071 = ConvertToCompatToolRelease(new NvapiLegacyRelease071());
-        var defaultNvapiLegacy060 = ConvertToCompatToolRelease(new NvapiLegacyRelease060());
-        var defaultNvapiLegacy054 = ConvertToCompatToolRelease(new NvapiLegacyRelease054());
-        var defaultNvapiDisabled = ConvertToCompatToolRelease(new NvapiDisabledRelease());
         
         if (!File.Exists(jsonFile))
         {
-            Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>()
-            {
-                {
-                    "Wine", new Dictionary<string, CompatToolRelease>()
-                    { 
-                        { defaultWineStable.Name.Replace(' ', '_'), defaultWineStable },
-                        { defaultWineLegacy.Name.Replace(' ', '_'), defaultWineLegacy },
-                    }
-                },
-                {
-                    "Dxvk", new Dictionary<string, CompatToolRelease>()
-                    {
-                        { defaultDxvkStable.Name.Replace(' ', '_'), defaultDxvkStable },
-                        { defaultDxvkLegacy.Name.Replace(' ', '_'), defaultDxvkLegacy },
-                    }
-                },
-                {
-                    "Nvapi", new Dictionary<string, CompatToolRelease>()
-                    {
-                        { defaultNvapiStable.Name, defaultNvapiStable },
-                        { defaultNvapiLegacy071.Name.Replace(' ', '_'), defaultNvapiLegacy071 },
-                        { defaultNvapiLegacy060.Name.Replace(' ', '_'), defaultNvapiLegacy060 },
-                        { defaultNvapiLegacy054.Name.Replace(' ', '_'), defaultNvapiLegacy054 },
-                    }
-                }
-            };
+            Console.WriteLine("JSON DOES NOT EXIST");
+            InitializeDefaultTools();
             WriteToolsToJSON(jsonFile);
         }
         else
         {
-            ReadJSONToTools(jsonFile);
+            Console.WriteLine("INITIALIZING TOOLS");
+            var IsValid = ReadJSONToTools(jsonFile);
+            Console.WriteLine("TOOLS INITIALIZED? " + IsValid.ToString());
+            if (!IsValid)
+            {
+                InitializeDefaultTools();
+                File.Delete(jsonFile);
+                WriteToolsToJSON(jsonFile);
+            }
         }
-        if(!Tools["Dxvk"].ContainsKey("Disabled"))
-            Tools["Dxvk"].Add("Disabled", defaultDxvkDisabled);
-        if(!Tools["Nvapi"].ContainsKey("Disabled"))
-            Tools["Nvapi"].Add("Disabled", defaultNvapiDisabled);
+        Tools["Dxvk"]["Disabled"] = ConvertToCompatToolRelease(new DxvkDisabledRelease());
+        Tools["Nvapi"]["Disabled"] = ConvertToCompatToolRelease(new NvapiDisabledRelease());
         Initialized = true;
+    }
+
+    private static void InitializeDefaultTools()
+    {
+        var defaultWineStable = ConvertToCompatToolRelease(new WineStableRelease(wineDistroId));
+        var defaultWineLegacy = ConvertToCompatToolRelease(new WineLegacyRelease(wineDistroId));
+        var defaultDxvkStable = ConvertToCompatToolRelease(new DxvkStableRelease());
+        var defaultDxvkLegacy = ConvertToCompatToolRelease(new DxvkLegacyRelease());
+        var defaultNvapiStable = ConvertToCompatToolRelease(new NvapiStableRelease());
+        var defaultNvapiLegacy071 = ConvertToCompatToolRelease(new NvapiLegacyRelease071());
+        var defaultNvapiLegacy060 = ConvertToCompatToolRelease(new NvapiLegacyRelease060());
+        var defaultNvapiLegacy054 = ConvertToCompatToolRelease(new NvapiLegacyRelease054());
+
+        CurrentID = DefaultID;
+        CurrentName = DefaultName;
+        CurrentTimestamp = DefaultTimestamp;
+
+        Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>()
+        {
+            {
+                "Wine", new Dictionary<string, CompatToolRelease>()
+                { 
+                    { defaultWineStable.Name.Replace(' ', '_'), defaultWineStable },
+                    { defaultWineLegacy.Name.Replace(' ', '_'), defaultWineLegacy },
+                }
+            },
+            {
+                "Dxvk", new Dictionary<string, CompatToolRelease>()
+                {
+                    { defaultDxvkStable.Name.Replace(' ', '_'), defaultDxvkStable },
+                    { defaultDxvkLegacy.Name.Replace(' ', '_'), defaultDxvkLegacy },
+                }
+            },
+            {
+                "Nvapi", new Dictionary<string, CompatToolRelease>()
+                {
+                    { defaultNvapiStable.Name, defaultNvapiStable },
+                    { defaultNvapiLegacy071.Name.Replace(' ', '_'), defaultNvapiLegacy071 },
+                    { defaultNvapiLegacy060.Name.Replace(' ', '_'), defaultNvapiLegacy060 },
+                    { defaultNvapiLegacy054.Name.Replace(' ', '_'), defaultNvapiLegacy054 },
+                }
+            }
+        };
     }
 
     public static Dictionary<string, CompatToolRelease> GetToolList(string tooltype)
@@ -104,44 +131,103 @@ public static class CompatToolbox
         };
     }
 
-    private static void WriteToolsToJSON(string filename)
+    private static void WriteToolsToJSON(string filename, string id = "", string name = "", string timestamp = "")
     {
         if (Tools is null)
             throw new InvalidOperationException("CompatToolbox.Tools is empty. Can't generate a JSON.");
-        Dictionary<string, List<CompatToolRelease>> toolbox = new Dictionary<string, List<CompatToolRelease>>();
-        foreach (var tooltype in Tools)
+        if (!Tools.ContainsKey("Wine") || !Tools.ContainsKey("Dxvk") || !Tools.ContainsKey("Nvapi"))
+            throw new InvalidOperationException("CompatToolbox.Tools is missing critical tools. Can't generate a JSON.");
+
+        if (string.IsNullOrEmpty(id))
+            id = DefaultID;
+        if (string.IsNullOrEmpty(name))
+            name = DefaultName;
+        if (string.IsNullOrEmpty(timestamp))
+            timestamp = ToTimestamp(DefaultTimestamp);
+
+        Console.WriteLine($"INITIALIZING JSON: {name}, {timestamp}");
+
+        var toolbox = new CompatToolList(id, name, timestamp);
+
+        foreach (var tool in Tools["Wine"])
         {
-            var toollist = new List<CompatToolRelease>();
-            foreach (var tool in tooltype.Value)
-            {
-                toollist.Add(tool.Value);
-            }
-            toolbox.Add(tooltype.Key, toollist);
+            toolbox.AddWine(tool.Value);
+            Console.WriteLine($"Adding wine {tool.Value}");
         }
+        foreach (var tool in Tools["Dxvk"])
+            toolbox.AddDxvk(tool.Value);
+        foreach (var tool in Tools["Nvapi"])
+            toolbox.AddNvapi(tool.Value);
+
         var json = JsonConvert.SerializeObject(toolbox, Formatting.Indented).Replace($"-{wineDistroId.ToString()}-", "-{wineDistroId}-");
         File.WriteAllText(filename, json);
+        Console.WriteLine(json);
     }
 
-    private static void ReadJSONToTools(string filename)
+    private static bool ReadJSONToTools(string filename)
     {
         Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>();
         var json = File.ReadAllText(filename).Replace("-{wineDistroId}-", $"-{wineDistroId.ToString()}-");
-        var toolbox = JsonConvert.DeserializeObject<Dictionary<string, List<CompatToolRelease>>>(json);
-        foreach (var tooltype in toolbox)
+        var toolbox = JsonConvert.DeserializeObject<CompatToolList>(json);
+
+        var timestamp = ToDateTime(toolbox.Timestamp);
+        if (timestamp is null)
         {
-            var toollist = new Dictionary<string, CompatToolRelease>(); 
-            foreach (var tool in tooltype.Value)
-            {
-                var name = tool.Name.Replace(' ', '_');
-                if (toollist.ContainsKey(name))
-                {
-                    Log.Error($"Tools[{tooltype.Key}][{name}] already exists. There is duplicate entry in your ~/.xlcore/compattools.json file.");
-                    continue;
-                }
-                toollist.Add(name, tool);
-            }
-            Tools.Add(tooltype.Key, toollist);
+            Log.Warning($"Timestamp of json file ({toolbox.Timestamp}) is invalid.");
+            return false;
         }
-        JsonConvert.SerializeObject(Tools, Formatting.Indented);
+
+        if (ToDateTime(toolbox.Timestamp) < DefaultTimestamp && toolbox.ID == DefaultID)
+        {
+            Log.Warning($"Timestamp of json file ({toolbox.Timestamp}) is older than the default ({(ToTimestamp(DefaultTimestamp))})");
+            return false;
+        }
+        var winetools = new Dictionary<string, CompatToolRelease>();
+        foreach (var tool in toolbox.Wine)
+        {
+            var name = tool.Name.Replace(' ', '_');
+            winetools.Add(name, tool);
+        }
+        var dxvktools = new Dictionary<string, CompatToolRelease>();
+        foreach (var tool in toolbox.Dxvk)
+        {
+            var name = tool.Name.Replace(' ', '_');
+            dxvktools.Add(name, tool);
+        }
+        var nvapitools = new Dictionary<string, CompatToolRelease>();
+        foreach (var tool in toolbox.Nvapi)
+        {
+            var name = tool.Name.Replace(' ', '_');
+            nvapitools.Add(name, tool);
+        }
+        Tools.Add("Wine", winetools);
+        Tools.Add("Dxvk", dxvktools);
+        Tools.Add("Nvapi", nvapitools);
+
+        CurrentID = toolbox.ID;
+        CurrentName = toolbox.Name;
+        CurrentTimestamp = timestamp ?? DefaultTimestamp;
+
+        return true;
+    }
+
+    public static DateTime? ToDateTime(string timestamp)
+    {
+        var datetime = timestamp.Split(' ');
+        if (datetime.Length != 2)
+            return null;
+        var date = datetime[0].Split('-');
+        var time = datetime[1].Split(':');
+        if (date.Length != 3)
+            return null;
+        if (time.Length != 3)
+            return null;
+        return new DateTime(int.Parse(date[0]), int.Parse(date[0]), int.Parse(date[0]),
+            int.Parse(time[0]), int.Parse(time[0]), int.Parse(time[0]), DateTimeKind.Utc);
+    }
+
+    public static string ToTimestamp(DateTime timestamp)
+    {
+        return timestamp.ToString("yyyy-MM-dd HH:mm:ss");
     }
 }
