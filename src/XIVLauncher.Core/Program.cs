@@ -269,6 +269,8 @@ sealed class Program
         DalamudUpdater = CreateDalamudUpdater();
         DalamudUpdater.Run();
 
+        CompatToolbox.GetLatestJSON();
+
         CreateCompatToolsInstance();
 
         Log.Debug("Creating Veldrid devices...");

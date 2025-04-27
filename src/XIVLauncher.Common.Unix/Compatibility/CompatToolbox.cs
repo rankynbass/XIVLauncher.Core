@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
+using XIVLauncher.Common.Util;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
@@ -20,6 +21,8 @@ public static class CompatToolbox
     private static string DefaultName => "Builtin XLCore tool list";
 
     private static string DefaultID => "Official";
+
+    private static string DEFAULT_URL = "https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/simple-compat-rework/compatibilitytools.json";
 
     public static DateTime CurrentTimestamp { get; private set; }
 
@@ -166,6 +169,7 @@ public static class CompatToolbox
 
     private static bool ReadJSONToTools(string filename)
     {
+        Console.WriteLine("READING JSON FILE");
         Tools = new Dictionary<string, Dictionary<string, CompatToolRelease>>();
         var json = File.ReadAllText(filename).Replace("-{wineDistroId}-", $"-{wineDistroId.ToString()}-");
         var toolbox = JsonConvert.DeserializeObject<CompatToolList>(json);
@@ -187,22 +191,27 @@ public static class CompatToolbox
         {
             var name = tool.Name.Replace(' ', '_');
             winetools.Add(name, tool);
+            Console.WriteLine($"Adding {name}");
         }
         var dxvktools = new Dictionary<string, CompatToolRelease>();
         foreach (var tool in toolbox.Dxvk)
         {
             var name = tool.Name.Replace(' ', '_');
             dxvktools.Add(name, tool);
+            Console.WriteLine($"Adding {name}");
         }
         var nvapitools = new Dictionary<string, CompatToolRelease>();
         foreach (var tool in toolbox.Nvapi)
         {
             var name = tool.Name.Replace(' ', '_');
             nvapitools.Add(name, tool);
+            Console.WriteLine($"Adding {name}");
         }
         Tools.Add("Wine", winetools);
         Tools.Add("Dxvk", dxvktools);
         Tools.Add("Nvapi", nvapitools);
+
+        Console.WriteLine(JsonConvert.SerializeObject(Tools, Formatting.Indented));
 
         CurrentID = toolbox.ID;
         CurrentName = toolbox.Name;
@@ -213,21 +222,41 @@ public static class CompatToolbox
 
     public static DateTime? ToDateTime(string timestamp)
     {
-        var datetime = timestamp.Split(' ');
+        Console.WriteLine($"TIMESTAMP: {timestamp}");
+        var datetime = timestamp.Trim().Split(' ');
         if (datetime.Length != 2)
             return null;
-        var date = datetime[0].Split('-');
-        var time = datetime[1].Split(':');
+        var date = datetime[0].Trim().Split('-');
+        var time = datetime[1].Trim().Split(':');
         if (date.Length != 3)
             return null;
         if (time.Length != 3)
             return null;
-        return new DateTime(int.Parse(date[0]), int.Parse(date[0]), int.Parse(date[0]),
-            int.Parse(time[0]), int.Parse(time[0]), int.Parse(time[0]), DateTimeKind.Utc);
+        return new DateTime(int.Parse(date[0]), int.Parse(date[1]), int.Parse(date[2]),
+            int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]), DateTimeKind.Utc);
     }
 
     public static string ToTimestamp(DateTime timestamp)
     {
         return timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+
+    public static async Task GetLatestJSON(string url = "")
+    {
+        if (!Initialized)
+            return;
+
+        if (string.IsNullOrEmpty(url))
+            url = DEFAULT_URL;
+        
+        using var client = new HttpClient();
+        var tempPath = PlatformHelpers.GetTempFileName();
+
+        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(url).ConfigureAwait(false));
+        var IsValid = ReadJSONToTools(tempPath);
+        if (IsValid)
+            File.Copy(tempPath, Path.Combine(Storage.FullName, "compattools.json"), true);
+
+        File.Delete(tempPath);           
     }
 }
