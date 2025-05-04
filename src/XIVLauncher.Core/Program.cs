@@ -36,10 +36,17 @@ namespace XIVLauncher.Core;
 
 sealed class Program
 {
+    private const string APP_NAME = "xlcore";
+
+    private static readonly Vector3 ClearColor = new(0.1f, 0.1f, 0.1f);
+    private static string[] mainArgs = [];
+    private static LauncherApp launcherApp = null!;
     private static Sdl2Window window = null!;
     private static CommandList cl = null!;
     private static GraphicsDevice gd = null!;
     private static ImGuiBindings bindings = null!;
+    private static uint invalidationFrames = 0;
+    private static Vector2 lastMousePosition = Vector2.Zero;
 
     public static GraphicsDevice GraphicsDevice => gd;
     public static ImGuiBindings ImGuiBindings => bindings;
@@ -55,12 +62,9 @@ sealed class Program
         Timeout = TimeSpan.FromSeconds(5)
     };
     public static PatchManager Patcher { get; set; } = null!;
-
-    private static readonly Vector3 ClearColor = new(0.1f, 0.1f, 0.1f);
-
-    private static LauncherApp launcherApp = null!;
     public static Storage storage = null!;
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
+    public static string CType = CoreEnvironmentSettings.GetCType();
 
     // TODO: We don't have the steamworks api for this yet.
     // SteamDeck=1 on Steam Deck by default. SteamGamepadUI=1 in Big Picture / Gaming Mode.
@@ -70,14 +74,6 @@ sealed class Program
     public static bool IsSteamDeckGamingMode => CoreEnvironmentSettings.IsDeckGameMode.HasValue ?
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck() && CoreEnvironmentSettings.IsSteamGamepadUIVar;
-
-    private const string APP_NAME = "xlcore";
-
-    private static string[] mainArgs = { };
-
-    private static uint invalidationFrames = 0;
-    private static Vector2 lastMousePosition = Vector2.Zero;
-
 
     public static string CType = CoreEnvironmentSettings.GetCType();
 
@@ -114,7 +110,14 @@ sealed class Program
             Config.AcceptLanguage = ApiHelpers.GenerateAcceptLanguage();
         }
 
-        Config.GamePath ??= storage.GetFolder("ffxiv");
+        if (Config.GamePath == null)
+        {
+            var envPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_INSTALL_PATH"); // auto-set when using compat tool
+            Config.GamePath = !string.IsNullOrWhiteSpace(envPath)
+                ? new DirectoryInfo(envPath)
+                : storage.GetFolder("ffxiv");
+        }
+
         Config.GameConfigPath ??= storage.GetFolder("ffxivConfig");
         Config.ClientLanguage ??= ClientLanguage.English;
         Config.DpiAwareness ??= DpiAwareness.Unaware;

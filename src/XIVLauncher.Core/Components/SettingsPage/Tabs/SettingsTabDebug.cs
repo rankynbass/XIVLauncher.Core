@@ -45,7 +45,7 @@ public class SettingsTabDebug : SettingsTab
             ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableSetupColumn("Value");
             ImGui.TableHeadersRow();
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().OrderBy(entry => entry.Key.ToString()))
             {
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
