@@ -12,7 +12,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
-    public const string DEFAULT = "xiv-proton-9.0-3c";
+    public const string DEFAULT = "xiv-proton-9.0-4";
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -37,11 +37,11 @@ public static class Proton
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
-        Versions["XIV-Proton9-26.1"] = new Dictionary<string, string>()
+        Versions["XIV-Proton9-27"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 9-26.1"}, {"desc", "Patched version of GE-Proton9-26 with Ping plugin support. Patched for 7.2 Dalamud."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-26.1/XIV-Proton9-26.1.tar.xz"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-26.1")}
+            {"name", "XIV-Proton 9-27"}, {"desc", "Patched version of GE-Proton9-27 with Ping plugin support. Patched for 7.2 Dalamud."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-27/XIV-Proton9-27.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-27")}
         };
 
         if (Runner.IsSteamInstalled)

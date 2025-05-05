@@ -143,14 +143,6 @@ public class MainPage : Page
 
             if (App.Settings.WaylandEnabled ?? false)
             {
-                if (!File.Exists(Path.Combine(Runner.Prefix.FullName, "wayland_driver")))
-                {
-                    App.ShowMessageBlocking(
-                        "You're trying to use Wayland, but you didn't enable the Wine Wayland Driver. Go into settings to the wine tab, scroll down and press the button \"Enable Wayland Driver\" or uncheck \"Enable Wayland\".",
-                        "Setup Error");
-                    Reactivate();
-                    return;
-                }
                 System.Environment.SetEnvironmentVariable("DISPLAY", null);
             }
 

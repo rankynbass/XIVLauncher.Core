@@ -97,7 +97,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable Wayland", "Requires compatible wine build.If \"Enable Wayland Driver\" button is available below, you MUST press it.\n The UI may freeze for a few seconds, please be patient.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
+            new SettingsEntry<bool>("Enable Wayland Driver (Experimental)", "Requires compatible wine build. Will probably not work with proton or valvebe wine.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
 
             new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver.\nUse the \"Update Wine Scaling\" button below to change this.", () => Program.Config.WineScale ?? 100, i => Program.Config.WineScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
 
@@ -149,24 +149,6 @@ public class SettingsTabWine : SettingsTab
 
                 ImGui.Dummy(SPACER);
             }
-        }
-
-        if (!File.Exists(Path.Combine(Runner.Prefix.FullName, "wayland_driver")))
-        {
-            if (ImGui.Button("Enable Wayland Driver"))
-            {
-                this.Save();
-                Program.CompatibilityTools.AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Drivers", "Graphics", "x11,wayland");
-                Program.CompatibilityTools.RunInPrefix($"reg add \"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts\" /v LogPixels /t REG_DWORD /d {Runner.Dpi} /f").WaitForExit();
-                var startTime = DateTime.UtcNow;
-                while (!File.Exists(Path.Combine(Runner.Prefix.FullName, "system.reg")) && !File.Exists(Path.Combine(Runner.Prefix.FullName, "user.reg")) || !File.Exists(Path.Combine(Runner.Prefix.FullName, "userdef.reg")))
-                {
-                    if (DateTime.UtcNow - startTime > TimeSpan.FromSeconds(10))
-                        break;
-                }
-                File.Create(Path.Combine(Runner.Prefix.FullName, "wayland_driver"));
-            }
-            ImGui.SameLine();
         }
 
         if (ImGui.Button("Update Wine Scaling"))
