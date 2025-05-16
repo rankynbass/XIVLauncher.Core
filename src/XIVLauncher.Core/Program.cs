@@ -387,13 +387,7 @@ sealed class Program
         // Create the window and graphics device separately, because Veldrid would have reinitialised SDL if done with their combined method.
         window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher {version}"));
         gd = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true));
-        
-        VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, windowWidth, windowHeight, WindowState.Normal, $"XIVLauncher {version}"),
-            new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
-            out window,
-            out gd);
-       
+               
         window.Resized += () =>
         {
             gd.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
