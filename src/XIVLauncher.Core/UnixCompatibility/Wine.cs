@@ -44,8 +44,8 @@ public static class Wine
 
         Versions.Add("unofficial-wine-xiv-staging-ntsync-10.7", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 10.7 NTSYNC"}, {"desc", "Patched version of Wine Staging 10.7. NTSync version. Disable Esync/Fsync. Requires compatible kernel."},
-            {"label", "NTSYNC"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.7/unofficial-wine-xiv-staging-ntsync-10.7.tar.xz"},
+            {"name", "Unofficial Wine-XIV 10.7 NTSync"}, {"desc", "Patched version of Wine Staging 10.7. NTSync version. Requires compatible kernel."},
+            {"label", "XIV-NTSync"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.7/unofficial-wine-xiv-staging-ntsync-10.7.tar.xz"},
             {"mark", "Download"}
         });
 
@@ -114,6 +114,8 @@ public static class Wine
                         label = "Wine-GE-XIV";
                     else if (dirname.Contains("valvebe"))
                         label = "XIV-ValveBE";
+                    else if (dirname.Contains("ntsync"))
+                        label = "XIV-NTSync";
                     else if (dirname.Contains("staging"))
                         label = "XIV-Staging";
                     else
