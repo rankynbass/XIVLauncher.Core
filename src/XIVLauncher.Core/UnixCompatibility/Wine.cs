@@ -63,13 +63,6 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-valvebe-8-2", new Dictionary<string, string>()
-        {
-            {"name", "Unofficial ValveBE 8-2"}, {"desc", "Patched Valve Wine 8. A replacement for wine-ge, since it's discontinued. Same commit as GE-wine 8-26."},
-            {"label", "XIV-ValveBE"}, {"url", "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-8-2/unofficial-wine-xiv-valvebe-8-2.tar.zst"},
-            {"mark", "Download"}
-        });
-
         Versions.Add("unofficial-wine-xiv-Proton8-26-x86_64", new Dictionary<string, string>()
         {
             {"name", "Wine-GE-XIV 8-26"}, {"desc", "Patched version of Wine-GE 8-26. Based on Proton8 Wine."},

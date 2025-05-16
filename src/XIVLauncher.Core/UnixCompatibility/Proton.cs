@@ -12,7 +12,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
-    public const string DEFAULT = "xiv-proton-9.0-4";
+    public const string DEFAULT = "XIV-Proton10-1";
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -42,6 +42,20 @@ public static class Proton
             {"name", "XIV-Proton 9-27"}, {"desc", "Patched version of GE-Proton9-27 with Ping plugin support. Patched for 7.2 Dalamud."},
             {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-27/XIV-Proton9-27.tar.xz"},
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-27")}
+        };
+
+        Versions["XIV-Proton10-1"] = new Dictionary<string, string>()
+        {
+            {"name", "XIV-Proton 10-1"}, {"desc", "Patched version of GE-Proton10-1 (Ping fix is now upstream). Patched for 7.2 Dalamud."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-1/XIV-Proton10-1.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-1")}
+        };
+
+        Versions["XIV-Proton10-1-ntsync"] = new Dictionary<string, string>()
+        {
+            {"name", "XIV-Proton 10-1 NTSync"}, {"desc", "Patched version of GE-Proton10-1 with NTSync (Ping fix is now upstream). Patched for 7.2 Dalamud."},
+            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-1/XIV-Proton10-1-ntsync.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-1-ntsync")}
         };
 
         if (Runner.IsSteamInstalled)
