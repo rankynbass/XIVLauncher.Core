@@ -75,8 +75,6 @@ sealed class Program
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck() && CoreEnvironmentSettings.IsSteamGamepadUIVar;
 
-    public static string CType = CoreEnvironmentSettings.GetCType();
-
     public static Version CoreVersion { get; } = Version.Parse(AppUtil.GetAssemblyVersion());
 
     public const string CoreRelease = "RB-Patched";
