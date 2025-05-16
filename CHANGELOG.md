@@ -1,4 +1,10 @@
 # Changelog
+### Fri May 16 2025 Rankyn Bass <rankyn@proton.me>
+1.1.2.2
+- Updated wine, dxvk, proton versions
+- Cherry-picked some fixes from upstream
+- Still no auto-updating. Will probably add with 1.1.3 changes.
+
 ### Tue Apr 01 2025 Rankyn Bass <rankyn@proton.me>
 1.1.2.1
 - Enabled actions on the repo, so I can build on github and release directly.
