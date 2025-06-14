@@ -1,4 +1,10 @@
 # Changelog
+### Sat Jun 14 2025 Rankyn Bass <rankyn@proton.me>
+1.1.2.3
+- Updated wine, dxvk, proton versions
+- Changed the wayland toggle to use PROTON_ENABLE_WAYLAND when using proton runner
+- Proton selection will now hide some incompatible proton versions. Basically, proton 8 is safe, and proton 9 and 10 are broken unless patched. Custom (non-GE, non-XIV) proton will still be shown, in case the user wants to use their own patched version of proton.
+
 ### Fri May 16 2025 Rankyn Bass <rankyn@proton.me>
 1.1.2.2
 - Updated wine, dxvk, proton versions
