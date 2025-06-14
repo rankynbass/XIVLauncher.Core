@@ -54,7 +54,7 @@ public class SettingsTabWine : SettingsTab
                 {
                     var warning = "";
                     if (!protonVersionSetting.Value.ToUpper().Contains("XIV"))
-                        warning += "Non XIV-Proton versions may not work with Dalamud. Use XIV-Proton instead.\n";
+                        warning += "Non XIV-Proton versions may not work with Dalamud.\n";
                     return (string.IsNullOrEmpty(warning)) ? null : warning;
                 }
             },

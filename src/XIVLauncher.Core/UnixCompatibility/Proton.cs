@@ -90,26 +90,23 @@ public static class Proton
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
-                        // Dalamud for 7.2 breaks regular and GE-proton. Hide them.
-                        string dirname = dir.Name.ToLower();
-                        if (!(dirname.Contains("xiv-") || dirname.Contains("8.0") || dirname.Contains("ge-proton8")))
-                        {
-                            Log.Verbose($"{dir.Name} is incompatible with Dalamud. Skipping.");
-                            continue;
-                        }
                         if (Versions.ContainsKey(dir.Name))
                         {
                             Versions[dir.Name].Remove("mark");
                             Log.Verbose($"{dir.FullName} already exists. Removing download mark.");
                             continue;
-                        }                        
+                        }
+                        string dirname = dir.Name.ToLower();
                         string label;
                         if (dirname.StartsWith("xiv-proton"))
                             label = "XIV";
                         else if (dirname.StartsWith("ge-proton"))
+                        {
+                            // Dalamud for 7.2 breaks GE-proton 9 and 10. Hide them.
+                            if (!(dirname.Contains("ge-proton8") || dirname.Contains("ge-proton7")))
+                                continue;
                             label = "GE";
-                        else if (dirname.StartsWith("umu-proton"))
-                            label = "UMU";
+                        }
                         else
                             label = "Custom";
 
