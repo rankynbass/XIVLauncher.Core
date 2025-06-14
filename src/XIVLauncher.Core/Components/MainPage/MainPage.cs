@@ -144,7 +144,10 @@ public class MainPage : Page
 
             if (App.Settings.WaylandEnabled ?? false)
             {
-                System.Environment.SetEnvironmentVariable("DISPLAY", null);
+                if (App.Settings.RunnerType == RunnerType.Proton)
+                    System.Environment.SetEnvironmentVariable("PROTON_ENABLE_WAYLAND", "1");
+                else
+                    System.Environment.SetEnvironmentVariable("DISPLAY", null);
             }
 
             IsLoggingIn = true;

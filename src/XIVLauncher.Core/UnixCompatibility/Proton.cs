@@ -12,7 +12,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Proton
 {
-    public const string DEFAULT = "XIV-Proton10-1";
+    public const string DEFAULT = "XIV-Proton10-4";
 
     public static Dictionary<string, Dictionary<string, string>> Versions { get; private set; }
 
@@ -26,36 +26,36 @@ public static class Proton
         Versions["xiv-proton-9.0-4"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 9.0-4"}, {"desc", "XIV-Proton-9.0-4. This is basically Steam's official Proton 9 release with XIV patches."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-4/xiv-proton-9.0-4.tar.xz"},
+            {"label", "XIV"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/xiv-proton-9.0-4/xiv-proton-9.0-4.tar.xz"},
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "xiv-proton-9.0-4")}
         };
 
         Versions["XIV-Proton8-30"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 8-30"}, {"desc", "Patched version of GE-Proton8-30 with Ping plugin support."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"},
+            {"label", "XIV"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton8-30/XIV-Proton8-30.tar.gz"},
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton8-30")}
         };
 
         Versions["XIV-Proton9-27"] = new Dictionary<string, string>()
         {
             {"name", "XIV-Proton 9-27"}, {"desc", "Patched version of GE-Proton9-27 with Ping plugin support. Patched for 7.2 Dalamud."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-27/XIV-Proton9-27.tar.xz"},
+            {"label", "XIV"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton9-27/XIV-Proton9-27.tar.xz"},
             {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton9-27")}
         };
 
-        Versions["XIV-Proton10-1"] = new Dictionary<string, string>()
+        Versions["XIV-Proton10-4"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 10-1"}, {"desc", "Patched version of GE-Proton10-1 (Ping fix is now upstream). Patched for 7.2 Dalamud."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-1/XIV-Proton10-1.tar.xz"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-1")}
+            {"name", "XIV-Proton 10-4"}, {"desc", "Patched version of GE-Proton10-4 (Ping fix is now upstream). Patched for 7.2 Dalamud."},
+            {"label", "XIV"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-4/XIV-Proton10-4.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-4")}
         };
 
-        Versions["XIV-Proton10-1-ntsync"] = new Dictionary<string, string>()
+        Versions["XIV-Proton10-4-ntsync"] = new Dictionary<string, string>()
         {
-            {"name", "XIV-Proton 10-1 NTSync"}, {"desc", "Patched version of GE-Proton10-1 with NTSync (Ping fix is now upstream). Patched for 7.2 Dalamud."},
-            {"label", "XIV-patched"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-1/XIV-Proton10-1-ntsync.tar.xz"},
-            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-1-ntsync")}
+            {"name", "XIV-Proton 10-4 NTSync"}, {"desc", "Patched version of GE-Proton10-4 with NTSync (Ping fix is now upstream). Patched for 7.2 Dalamud."},
+            {"label", "XIV"}, {"url", "https://github.com/rankynbass/proton-xiv/releases/download/XIV-Proton10-4/XIV-Proton10-4-ntsync.tar.xz"},
+            {"mark", "Download"}, {"path", Path.Combine(Runner.CompatDir.FullName, "XIV-Proton10-4-ntsync")}
         };
 
         if (Runner.IsSteamInstalled)
@@ -64,6 +64,13 @@ public static class Proton
             {
                 foreach (var dir in Runner.CommonDir.EnumerateDirectories("*Proton*").OrderBy(x => x.Name))
                 {
+                    // Dalamud for 7.2 breaks for proton 9 and 10. Hide them.
+                    var dirname = dir.Name.ToLower();
+                    if (!(dirname.Contains("8.0") || dirname.Contains("7.0")))
+                    {
+                        Log.Verbose($"{dir.Name} is incompatible with Dalamud. Skipping.");
+                        continue;
+                    }
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
                         Log.Verbose($"Adding {dir.FullName} to Proton.Versions");
@@ -83,6 +90,13 @@ public static class Proton
                 {
                     if (File.Exists(Path.Combine(dir.FullName,"proton")))
                     {
+                        // Dalamud for 7.2 breaks regular and GE-proton. Hide them.
+                        string dirname = dir.Name.ToLower();
+                        if (!(dirname.Contains("xiv-") || dirname.Contains("8.0") || dirname.Contains("ge-proton8")))
+                        {
+                            Log.Verbose($"{dir.Name} is incompatible with Dalamud. Skipping.");
+                            continue;
+                        }
                         if (Versions.ContainsKey(dir.Name))
                         {
                             Versions[dir.Name].Remove("mark");
@@ -90,13 +104,12 @@ public static class Proton
                             continue;
                         }                        
                         string label;
-                        string dirname = dir.Name.ToLower();
                         if (dirname.StartsWith("xiv-proton"))
-                            label = "XIV-patched";
+                            label = "XIV";
                         else if (dirname.StartsWith("ge-proton"))
-                            label = "GE-Proton";
+                            label = "GE";
                         else if (dirname.StartsWith("umu-proton"))
-                            label = "UMU-Proton";
+                            label = "UMU";
                         else
                             label = "Custom";
 
@@ -126,10 +139,6 @@ public static class Proton
     {
         if (Versions.ContainsKey(DEFAULT))
             return DEFAULT;
-        if (Versions.ContainsKey("Proton 9.0"))
-            return "Proton 9.0";
-        if (Versions.ContainsKey("Proton 9.0 (Beta)"))
-            return "Proton 9.0 (Beta)";
         if (Versions.ContainsKey("Proton 8.0"))
             return "Proton 8.0";
         return Versions.First().Key;

@@ -54,9 +54,7 @@ public class SettingsTabWine : SettingsTab
                 {
                     var warning = "";
                     if (!protonVersionSetting.Value.ToUpper().Contains("XIV"))
-                        warning += "Non XIV-Proton versions may crash with the ping plugin. Use XIV-Proton instead.\n";
-                    if (protonVersionSetting.Value.Contains("9-11"))
-                        warning += "GE-Proton9-11 and XIV-Proton9-11 have a bug that causes issues with Dalamud. You may be able to fix it by clearing the prefix.";
+                        warning += "Non XIV-Proton versions may not work with Dalamud. Use XIV-Proton instead.\n";
                     return (string.IsNullOrEmpty(warning)) ? null : warning;
                 }
             },
@@ -64,12 +62,6 @@ public class SettingsTabWine : SettingsTab
             runtimeVersionSetting = new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
             {
                 CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Proton,
-                // CheckWarning = x =>
-                // {
-                //     if (RunnerTypeSetting.Value == RunnerType.Proton)
-                //         return "Proton is designed to be run in a container. You may have issues if you use it without Umu-launcher.";
-                //     return null;
-                // }
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
@@ -97,9 +89,9 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable Wayland Driver (Experimental)", "Requires compatible wine build. Will probably not work with proton or valvebe wine.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
+            new SettingsEntry<bool>("Enable Wayland Driver (Experimental)", "Requires compatible wine build.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b),
 
-            new NumericSettingsEntry("Wayland Desktop Scaling", "Set this equal to your desktop scaling. Needed for Wine Wayland driver.\nUse the \"Update Wine Scaling\" button below to change this.", () => Program.Config.WineScale ?? 100, i => Program.Config.WineScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
+            new NumericSettingsEntry("Wayland Desktop Scaling", "If you have fullscreen issues with wayland, set this equal to your desktop scaling.\nUse the \"Update Wine Scaling\" button below to change this.", () => Program.Config.WineScale ?? 100, i => Program.Config.WineScale = (i > 400 || i < 100 || i % 25 !=0) ? 100 : i, 100, 400, 25),
 
             new SettingsEntry<string>("Extra WINEDLLOVERRIDES", "Add extra WINEDLLOVERRIDES. No spaces, semicolon separated. Do not use msquic, mscoree, d3d11, dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
             {
