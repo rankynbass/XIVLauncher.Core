@@ -13,7 +13,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Wine
 {
-    public const string DEFAULT = "unofficial-wine-xiv-staging-10.8";
+    public const string DEFAULT = "wine-xiv-staging-fsync-git-10.8.r0.g47f77594";
 
     internal const string FALLBACK = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
 
@@ -49,13 +49,6 @@ public static class Wine
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-staging-10.8", new Dictionary<string, string>()
-        {
-            {"name", "Unofficial Wine-XIV 10.8"}, {"desc", "Patched version of Wine Staging 10.8. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.8/unofficial-wine-xiv-staging-{distro}-10.8.tar.xz"},
-            {"mark", "Download"}
-        });
-
         Versions.Add("unofficial-wine-xiv-staging-8.21", new Dictionary<string, string>()
         {
             {"name", "Unofficial Wine-XIV 8.21"}, {"desc", "Patched version of Wine Staging 8.21. Now with wayland and lsteamclient support added."},
@@ -77,6 +70,13 @@ public static class Wine
             {"mark", "Download"}
         });
 
+        Versions.Add("wine-xiv-staging-fsync-git-10.8.r0.g47f77594", new Dictionary<string, string>()
+        {
+            {"name", "Wine-XIV 10.8"}, {"desc","Patched version of Wine Staging 10.8. Default."},
+            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{distro}-10.8.r0.g47f77594.tar.xz"},
+            {"mark", "Download"}
+        });
+
         Versions.Add("wine-xiv-staging-fsync-git-8.5.r4.g4211bac7", new Dictionary<string, string>()
         {
             {"name", "Wine-XIV 8.5"}, {"desc", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results."},
@@ -86,7 +86,7 @@ public static class Wine
 
         Versions.Add("wine-xiv-staging-fsync-git-7.10.r3.g560db77d", new Dictionary<string, string>()
         {
-            {"name", "Wine-XIV 7.10"}, {"desc","Patched version of Wine Staging 7.10. Default."},
+            {"name", "Wine-XIV 7.10"}, {"desc","Patched version of Wine Staging 7.10."},
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{distro}-7.10.r3.g560db77d.tar.xz"},
             {"mark", "Download"}
         });

@@ -14,7 +14,7 @@ namespace XIVLauncher.Core.UnixCompatibility;
 
 public static class Dxvk
 {
-    public const string DEFAULT = "dxvk-2.6.1";
+    public const string DEFAULT = "dxvk-2.6.2";
 
     public static bool Enabled => Program.Config.DxvkVersion != "DISABLED";
 
@@ -79,10 +79,10 @@ public static class Dxvk
             {"name", "WineD3D"}, {"desc", "Use WineD3D (OpenGL) instead of DXVK. For old GPUs without Vulkan support."},
             {"label", "Disabled"}
         });
-        Versions.Add("dxvk-2.6.1", new Dictionary<string, string>()
+        Versions.Add("dxvk-2.6.2", new Dictionary<string, string>()
         {
-            {"name", "2.6.1"}, {"desc", "Official version 2.6.1 of DXVK."},
-            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.6.1/dxvk-2.6.1.tar.gz"},
+            {"name", "2.6.2"}, {"desc", "Official version 2.6.2 of DXVK."},
+            {"label", "Current"}, {"url", "https://github.com/doitsujin/dxvk/releases/download/v2.6.2/dxvk-2.6.2.tar.gz"},
             {"mark", "Download"}
         });
         Versions.Add("dxvk-gplasync-v2.6.1-1", new Dictionary<string, string>()
