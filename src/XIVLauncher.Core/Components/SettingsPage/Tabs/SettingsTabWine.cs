@@ -14,6 +14,8 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<WineStartupType> startupTypeSetting;
 
+    private SettingsEntry<WineManagedVersion> wineVersionSetting;
+
     private SettingsEntry<DxvkVersion> dxvkVersionSetting;
 
     public SettingsTabWine()
@@ -23,7 +25,7 @@ public class SettingsTabWine : SettingsTab
             startupTypeSetting = new SettingsEntry<WineStartupType>("Wine Version", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.WineStartupType ?? WineStartupType.Managed, x => Program.Config.WineStartupType = x),
 
-            new SettingsEntry<WineManagedVersion>("Wine Version", "If you change wine releases, you might have to clear your prefix (Troubleshooting tab)", () => Program.Config.WineManagedVersion ?? WineManagedVersion.Stable,
+            wineVersionSetting = new SettingsEntry<WineManagedVersion>("Wine Version", "If you change wine releases, you might have to clear your prefix (Troubleshooting tab)", () => Program.Config.WineManagedVersion ?? WineManagedVersion.Stable,
                 x => Program.Config.WineManagedVersion = x )
             {
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Managed
@@ -43,9 +45,23 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled
             },
 
-            new SettingsEntry<NvapiVersion>("Dxvk-Nvapi Version", "Choose which version of Dxvk-Nvapi to use.", () => Program.Config.NvapiVersion ?? NvapiVersion.Stable, x => Program.Config.NvapiVersion = x)
+            new SettingsEntry<NvapiVersion>("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Does nothing if GPU doesn't support DLSS.", () => Program.Config.NvapiVersion ?? NvapiVersion.Stable, x => Program.Config.NvapiVersion = x)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled
+                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled,
+                CheckWarning = x =>
+                {
+                    string warning = "";
+                    if (dxvkVersionSetting.Value == DxvkVersion.Legacy)
+                        warning += "DLSS will not work with Legacy DXVK. Use Stable instead.\n";
+                    if (startupTypeSetting.Value == WineStartupType.Custom)
+                        warning += "DLSS may not work with custom wine versions. Make sure wine is >= 9.0";
+                    else if (wineVersionSetting.Value == WineManagedVersion.Legacy)
+                        warning += "DLSS will not work with Legacy Wine. Use Stable instead, or Custom Wine >= 9.0";
+
+                    warning = warning.Trim();
+                    
+                    return string.IsNullOrEmpty(warning) ? null : warning;
+                }
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
