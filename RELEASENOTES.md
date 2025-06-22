@@ -1,3 +1,3 @@
-- Updated wine, dxvk, proton versions
-- Changed the wayland toggle to use PROTON_ENABLE_WAYLAND when using proton runner
-- Proton selection will now hide some incompatible proton versions. Basically, proton 8 is safe, and proton 9 and 10 are broken unless patched. Custom (non-GE, non-XIV) proton will still be shown, in case the user wants to use their own patched version of proton.
+**1.1.2.4**
+- Updated wine and dxvk
+- Updated the default version to the new official Wine-XIV 10.8 release

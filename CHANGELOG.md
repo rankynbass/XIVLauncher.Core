@@ -1,4 +1,9 @@
 # Changelog
+### Sat Jun 21 2025 Rankyn Bass <rankyn@proton.me>
+1.1.2.4
+- Updated wine and dxvk
+- Updated the default version to the new official Wine-XIV 10.8 release
+
 ### Sat Jun 14 2025 Rankyn Bass <rankyn@proton.me>
 1.1.2.3
 - Updated wine, dxvk, proton versions
