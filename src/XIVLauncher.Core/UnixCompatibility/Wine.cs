@@ -35,17 +35,17 @@ public static class Wine
     public static void Initialize()
     {
         // Add default versions.
-        Versions.Add("unofficial-wine-xiv-staging-10.9", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-10.10", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 10.9"}, {"desc", "Patched version of Wine Staging 10.9. Now with wayland and lsteamclient support added."},
-            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.9/unofficial-wine-xiv-staging-{distro}-10.9.tar.xz"},
+            {"name", "Unofficial Wine-XIV 10.10"}, {"desc", "Patched version of Wine Staging 10.10. Now with wayland and lsteamclient support added."},
+            {"label", "XIV-Staging"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-{distro}-10.10.tar.xz"},
             {"mark", "Download"}
         });
 
-        Versions.Add("unofficial-wine-xiv-staging-ntsync-10.9", new Dictionary<string, string>()
+        Versions.Add("unofficial-wine-xiv-staging-ntsync-10.10", new Dictionary<string, string>()
         {
-            {"name", "Unofficial Wine-XIV 10.9 NTSync"}, {"desc", "Patched version of Wine Staging 10.9. NTSync version. Requires compatible kernel."},
-            {"label", "XIV-NTSync"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.9/unofficial-wine-xiv-staging-ntsync-10.9.tar.xz"},
+            {"name", "Unofficial Wine-XIV 10.10 NTSync"}, {"desc", "Patched version of Wine Staging 10.10. NTSync version. Requires compatible kernel."},
+            {"label", "XIV-NTSync"}, {"url", $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-ntsync-10.10.tar.xz"},
             {"mark", "Download"}
         });
 
