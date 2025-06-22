@@ -92,6 +92,8 @@ public interface ILauncherConfig
 
     public bool? SetWin7 { get; set; }
 
+    public string? WineDLLOverrides { get; set; }
+
     #endregion
 
     #region Dalamud
