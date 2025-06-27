@@ -784,6 +784,12 @@ public class MainPage : Page
                 Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}");
             }).ContinueWith(t =>
             {
+                // Copy important dlls from game folder to system32. This allows ReShade and OptiScaler to work properly.
+                CopyToWineSystem32("d3dcompiler_47.dll");
+                CopyToWineSystem32("nvngx.dll");
+                CopyToWineSystem32("_nvngx.dll");
+                CopyToWineSystem32("nvngx_dlssg.dll");
+
                 isFailed = t.IsFaulted || t.IsCanceled;
 
                 if (isFailed)
@@ -1246,5 +1252,16 @@ public class MainPage : Page
         this.App.State = LauncherApp.LauncherState.Main;
 
         Program.ShowWindow();
+    }
+
+    private void CopyToWineSystem32(string filename)
+    {
+        if (Environment.OSVersion.Platform != PlatformID.Unix)
+            return;
+        var system32 = Path.Combine(Program.storage.GetFolder("wineprefix").FullName, "drive_c", "windows", "system32");
+        var gameFolder = Path.Combine(App.Settings.GamePath.FullName, "game");
+
+        if (File.Exists(Path.Combine(gameFolder, filename)))
+            File.Copy(Path.Combine(gameFolder, filename), Path.Combine(system32, filename), true);
     }
 }
