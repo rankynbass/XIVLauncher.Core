@@ -12,6 +12,7 @@ using Serilog;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
+using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility;
@@ -99,7 +100,14 @@ public class CompatibilityTools
             await DownloadTool(tempPath).ConfigureAwait(false);
         }
 
+        if (Settings.WineRelease is not WineBetaRelease || Settings.StartupType == WineStartupType.Custom)
+        {
+            var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
+            if (lsteamclient.Exists) lsteamclient.Delete();
+        }
+
         EnsurePrefix();
+
         await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
         await Nvapi.Nvapi.InstallNvapi(Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
         if (nvapiVersion != NvapiVersion.Disabled)
