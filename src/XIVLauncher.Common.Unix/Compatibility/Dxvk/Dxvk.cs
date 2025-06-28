@@ -14,8 +14,11 @@ namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
 public enum DxvkVersion
 {
-    [SettingsDescription("Stable", "Dxvk 2.6 with GPLAsync patches. For most graphics cards.")]
+    [SettingsDescription("Stable", "Dxvk 2.6.2. No Async patches.")]
     Stable,
+
+    [SettingsDescription("Stable Async", "Dxvk 2.6 with GPLAsync patches. For most graphics cards.")]
+    StableAsync,
 
     [SettingsDescription("Legacy", "Dxvk 1.10.3 with Async patches. For older graphics cards.")]
     Legacy,
@@ -38,18 +41,12 @@ public enum DxvkHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, DxvkVersion version)
+    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, IDxvkRelease release)
     {
-        if (version is DxvkVersion.Disabled)
+        if (release.Name == "")
         {
             return;
         }
-        IDxvkRelease release = version switch
-        {
-            DxvkVersion.Stable => new DxvkStableRelease(),
-            DxvkVersion.Legacy => new DxvkLegacyRelease(),
-            _ => throw new NotImplementedException(),
-        };
 
         var dxvkPath = Path.Combine(installDirectory.FullName, release.Name, "x64");
         if (!Directory.Exists(dxvkPath))
@@ -69,6 +66,9 @@ public static class Dxvk
 
     private static async Task DownloadDxvk(DirectoryInfo installDirectory, string url, string checksum)
     {
+        if (string.IsNullOrEmpty(url))
+            throw new ArgumentOutOfRangeException("Download URL is null or empty");
+        
         using var client = new HttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
 

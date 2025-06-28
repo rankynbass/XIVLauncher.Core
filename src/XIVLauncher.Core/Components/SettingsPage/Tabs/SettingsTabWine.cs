@@ -12,9 +12,9 @@ namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
 public class SettingsTabWine : SettingsTab
 {
-    private SettingsEntry<WineStartupType> startupTypeSetting;
+    private SettingsEntry<RBWineStartupType> startupTypeSetting;
 
-    private SettingsEntry<WineManagedVersion> wineVersionSetting;
+    private ToolSettingsEntry wineVersionSetting;
 
     private SettingsEntry<DxvkVersion> dxvkVersionSetting;
 
@@ -22,23 +22,20 @@ public class SettingsTabWine : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            startupTypeSetting = new SettingsEntry<WineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
-                () => Program.Config.WineStartupType ?? WineStartupType.Managed, x => Program.Config.WineStartupType = x),
+            startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
+                () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
-            wineVersionSetting = new SettingsEntry<WineManagedVersion>("Wine Version", "If you change wine releases, you might have to clear your prefix (Troubleshooting tab)", () => Program.Config.WineManagedVersion ?? WineManagedVersion.Stable,
-                x => Program.Config.WineManagedVersion = x )
+            wineVersionSetting = new ToolSettingsEntry("RB: Wine Version", "Test for Wine Version", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
+                s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
             {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Managed
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
             },
-
-            new ToolSettingsEntry("RB: Wine Version", "Test for Wine Version", () => Program.Config.RB_WineVersion ?? "wine-xiv-staging-fsync-git-10.8.r0.g47f77594",
-                s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, "wine-xiv-staging-fsync-git-10.8.r0.g47f77594" ),
 
             new SettingsEntry<string>("Wine Binary Path",
                 "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
-                CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Custom
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom
             },
 
             dxvkVersionSetting = new SettingsEntry<DxvkVersion>("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.DxvkVersion ?? DxvkVersion.Stable, x => Program.Config.DxvkVersion = x),
@@ -56,9 +53,9 @@ public class SettingsTabWine : SettingsTab
                     string warning = "";
                     if (dxvkVersionSetting.Value == DxvkVersion.Legacy)
                         warning += "DLSS will not work with Legacy DXVK. Use Stable instead.\n";
-                    if (startupTypeSetting.Value == WineStartupType.Custom)
+                    if (startupTypeSetting.Value == RBWineStartupType.Custom)
                         warning += "DLSS may not work with custom wine versions. Make sure wine is >= 9.0";
-                    else if (wineVersionSetting.Value == WineManagedVersion.Legacy)
+                    else if (wineVersionSetting.Value == Program.WineManager.LEGACY)
                         warning += "DLSS will not work with Legacy Wine. Use Stable instead, or Custom Wine >= 9.0";
 
                     warning = warning.Trim();

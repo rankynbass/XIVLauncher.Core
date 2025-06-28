@@ -144,7 +144,7 @@ sealed class Program
 
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
-        Config.RB_WineVersion ??= "wine-xiv-staging-fsync-git-10.8.r0.g47f77594";
+        Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
         Config.RB_DxvkVersion ??= "";
         Config.RB_NvapiVersion ??= "";
         Config.RB_GPLAsyncCacheEnabled ??= true;
@@ -203,12 +203,11 @@ sealed class Program
         }
 
         SetupLogging(mainArgs);
+        // This needs to be above LoadConfig so it can properly set defaults.
+        WineManager = new WineManager(storage.Root.FullName);
         LoadConfig(storage);
 
-        // RB-specific
-        WineManager = new WineManager(storage.Root.FullName);
-        Console.WriteLine("[RB Debug] Wine Version = " + WineManager.Version[Config.RB_WineVersion].Label);
-        Console.WriteLine("[RB Debug] lsteamclient = " + WineManager.Version[Config.RB_WineVersion].lsteamclient.ToString());
+
 
         if (badxlpath)
         {
@@ -370,7 +369,7 @@ sealed class Program
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
-        var wineSettings = new WineSettings(Config.WineStartupType ?? WineStartupType.Custom, Config.WineManagedVersion ?? WineManagedVersion.Stable, Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        var wineSettings = new WineSettings(Config.WineStartupType ?? WineStartupType.Custom, WineManager.GetWine(Config.RB_WineVersion), Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
         var toolsFolder = storage.GetFolder("compatibilitytool");
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "nvapi"));

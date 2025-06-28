@@ -6,5 +6,4 @@ public interface IToolRelease
     string Label { get; }
     string Description { get; }
     string DownloadUrl { get; }
-    string[] Checksums { get; }
 }

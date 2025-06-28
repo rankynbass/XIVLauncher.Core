@@ -22,6 +22,10 @@ public enum RBWineStartupType
 
 public class WineManager
 {
+    public string DEFAULT { get; private set; }
+
+    public string LEGACY { get; private set; }
+
     public Dictionary<string, IWineRelease> Version { get; private set; }
 
     private string wineFolder { get; }
@@ -36,7 +40,7 @@ public class WineManager
         Initialize();
     }
 
-    public void Initialize()
+    private void Initialize()
     {
         Version = new Dictionary<string, IWineRelease>();
         
@@ -45,9 +49,41 @@ public class WineManager
         var wineBeta = new WineBetaRelease(wineDistroId);
         var wineLegacy = new WineLegacyRelease(wineDistroId);
 
-        Version.Add(wineStable.Name, wineStable);
-        Version.Add(wineBeta.Name, wineBeta);
-        Version.Add(wineLegacy.Name, wineLegacy);
+        var wineDefault = new WineCustomRelease("Unofficial 10.10", "Rankyn's Unofficial Wine-XIV 10.10", "unofficial-wine-xiv-staging-10.10",
+            $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-{wineDistroId}-10.10.tar.xz", true);
+
+        this.DEFAULT = wineDefault.Name;
+        this.LEGACY = wineLegacy.Name;
+
+        AddVersion(wineDefault);
+        AddVersion(new WineCustomRelease("Unofficial 10.10 NTSync", "Rankyn's Unofficial Wine-XIV 10.10 with NTSync", "unofficial-wine-xiv-staging-ntsync-10.10",
+            "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-ntsync-10.10.tar.xz", true));
+        AddVersion(new WineCustomRelease("ValveBE 9-20", "Patched Valve-Wine Bleeding Edge 9. A replacement for Wine-GE", "unofficial-wine-xiv-valvebe-9-20",
+            "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-20/unofficial-wine-xiv-valvebe-9-20.tar.xz", true));
+        AddVersion(new WineCustomRelease("Wine-GE-XIV 8-26", "Patched version of Wine-GE 8-26", "unofficial-wine-xiv-Proton8-26-x86_64",
+            "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz", false));
+        AddVersion(wineStable);
+        AddVersion(wineBeta);
+        AddVersion(wineLegacy);
+    }
+
+    private void AddVersion(IWineRelease wine)
+    {
+        Version.Add(wine.Name, wine);
+    }
+
+    public string GetVersionOrDefault(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return DEFAULT;
+        if (Version.ContainsKey(name))
+            return name;
+        return DEFAULT;
+    }
+
+    public IWineRelease GetWine(string? name)
+    {
+        return Version[GetVersionOrDefault(name)];
     }
 
     public void Reset()
