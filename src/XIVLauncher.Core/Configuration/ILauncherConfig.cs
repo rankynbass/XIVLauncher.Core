@@ -96,6 +96,20 @@ public interface ILauncherConfig
 
     #endregion
 
+    #region RBpatched
+
+    public RBWineStartupType? RB_WineStartupType { get; set; }
+
+    public string? RB_WineVersion { get; set; }
+
+    public string? RB_DxvkVersion { get; set; }
+
+    public string? RB_NvapiVersion { get; set; }
+
+    public bool? RB_GPLAsyncCacheEnabled { get; set; }
+
+    #endregion
+
     #region Dalamud
 
     public bool? DalamudEnabled { get; set; }

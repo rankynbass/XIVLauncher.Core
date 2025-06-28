@@ -31,6 +31,9 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == WineStartupType.Managed
             },
 
+            new ToolSettingsEntry("RB: Wine Version", "Test for Wine Version", () => Program.Config.RB_WineVersion ?? "wine-xiv-staging-fsync-git-10.8.r0.g47f77594",
+                s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, "wine-xiv-staging-fsync-git-10.8.r0.g47f77594" ),
+
             new SettingsEntry<string>("Wine Binary Path",
                 "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)

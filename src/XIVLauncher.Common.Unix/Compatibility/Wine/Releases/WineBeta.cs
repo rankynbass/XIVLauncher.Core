@@ -1,6 +1,6 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-public sealed class WineBetaRelease(WineReleaseDistro wineDistroId) : IToolRelease
+public sealed class WineBetaRelease(WineReleaseDistro wineDistroId) : IWineRelease
 {
     public string Name { get; } = $"wine-xiv-staging-fsync-git-10.8.r0.g47f77594";
     public string Label { get; } = "Beta";

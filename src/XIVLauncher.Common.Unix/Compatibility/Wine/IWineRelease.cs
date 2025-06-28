@@ -1,10 +1,11 @@
-namespace XIVLauncher.Common.Unix.Compatibility;
+namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
-public interface IToolRelease
+public interface IWineRelease : IToolRelease
 {
     string Name { get; }
     string Label { get; }
     string Description { get; }
     string DownloadUrl { get; }
     string[] Checksums { get; }
+    bool lsteamclient { get; }
 }

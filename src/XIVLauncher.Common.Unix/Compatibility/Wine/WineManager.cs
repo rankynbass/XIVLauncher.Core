@@ -8,9 +8,21 @@ using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
+public enum RBWineStartupType
+{
+    [SettingsDescription("Managed by XIVLauncher-RB", "Wine setup is managed by XIVLauncher - you can leave it up to us.")]
+    Managed,
+
+    [SettingsDescription("Custom", "Point XIVLauncher-RB to a custom location containing wine binaries to run the game with.")]
+    Custom,
+
+    // [SettingsDescription("Proton", "Use Steam sniper runtime and a patched Proton release.")]
+    // Proton,
+}
+
 public class WineManager
 {
-    public Dictionary<string, IToolRelease> Version { get; private set; }
+    public Dictionary<string, IWineRelease> Version { get; private set; }
 
     private string wineFolder { get; }
 
@@ -26,7 +38,7 @@ public class WineManager
 
     public void Initialize()
     {
-        Version = new Dictionary<string, IToolRelease>();
+        Version = new Dictionary<string, IWineRelease>();
         
         var wineDistroId = CompatUtil.GetWineIdForDistro();
         var wineStable = new WineStableRelease(wineDistroId);

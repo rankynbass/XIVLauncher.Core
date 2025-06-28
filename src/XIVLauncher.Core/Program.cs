@@ -64,6 +64,9 @@ sealed class Program
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
     public static string CType = CoreEnvironmentSettings.GetCType();
 
+    // RB-specific properties
+    public static WineManager WineManager { get; private set; }
+
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
         CoreEnvironmentSettings.IsDeck.Value :
@@ -138,6 +141,13 @@ sealed class Program
         Config.FixIM ??= false;
         Config.FixLocale ??= false;
         Config.FixError127 ??= false;
+
+        // RB-patched replacement vars
+        Config.RB_WineStartupType ??= RBWineStartupType.Managed;
+        Config.RB_WineVersion ??= "wine-xiv-staging-fsync-git-10.8.r0.g47f77594";
+        Config.RB_DxvkVersion ??= "";
+        Config.RB_NvapiVersion ??= "";
+        Config.RB_GPLAsyncCacheEnabled ??= true;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -194,6 +204,11 @@ sealed class Program
 
         SetupLogging(mainArgs);
         LoadConfig(storage);
+
+        // RB-specific
+        WineManager = new WineManager(storage.Root.FullName);
+        Console.WriteLine("[RB Debug] Wine Version = " + WineManager.Version[Config.RB_WineVersion].Label);
+        Console.WriteLine("[RB Debug] lsteamclient = " + WineManager.Version[Config.RB_WineVersion].lsteamclient.ToString());
 
         if (badxlpath)
         {

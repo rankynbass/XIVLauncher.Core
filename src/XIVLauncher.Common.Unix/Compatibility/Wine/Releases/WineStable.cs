@@ -1,6 +1,6 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-public sealed class WineStableRelease(WineReleaseDistro wineDistroId) : IToolRelease
+public sealed class WineStableRelease(WineReleaseDistro wineDistroId) : IWineRelease
 {
     public string Name { get; } = $"wine-xiv-staging-fsync-git-10.8.r0.g47f77594-nolsc";
     public string Label { get; } = "Stable";
