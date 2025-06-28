@@ -21,7 +21,7 @@ public class CompatibilityTools
     private const string WINEDLLOVERRIDES = "msquic=,mscoree=n,b;d3d9,d3d11,d3d10core,dxgi=";
     private const uint DXVK_CLEANUP_THRESHHOLD = 5;
     private const uint NVAPI_CLEANUP_THRESHHOLD = 5;
-    private const uint WINE_CLEANUP_THRESHHOLD = 5;
+    private const uint WINE_CLEANUP_THRESHHOLD = 10;
 
     private readonly DirectoryInfo wineDirectory;
     private readonly DirectoryInfo dxvkDirectory;
