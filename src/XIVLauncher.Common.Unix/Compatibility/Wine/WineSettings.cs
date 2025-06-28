@@ -21,6 +21,9 @@ public enum WineManagedVersion
     [SettingsDescription("Stable", "Based on Wine 10.8 - recommended for most users.")]
     Stable,
 
+    [SettingsDescription("Beta", "Testing ground for the newest wine changes. Based on Wine 10.8 with lsteamclient patches.")]
+    Beta,
+
     [SettingsDescription("Legacy", "Based on Wine 8.5 - use for compatibility with some plugins.")]
     Legacy,
 }
@@ -46,6 +49,9 @@ public class WineSettings
         {
             case WineManagedVersion.Stable:
                 this.WineRelease = new WineStableRelease(wineDistroId);
+                break;
+            case WineManagedVersion.Beta:
+                this.WineRelease = new WineBetaRelease(wineDistroId);
                 break;
             case WineManagedVersion.Legacy:
                 this.WineRelease = new WineLegacyRelease(wineDistroId);
