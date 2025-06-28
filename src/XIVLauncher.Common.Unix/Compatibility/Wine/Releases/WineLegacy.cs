@@ -1,8 +1,10 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-public sealed class WineLegacyRelease(WineReleaseDistro wineDistroId) : IWineRelease
+public sealed class WineLegacyRelease(WineReleaseDistro wineDistroId) : IToolRelease
 {
     public string Name { get; } = $"wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
+    public string Label { get; } = "Legacy";
+    public string Description { get; } = "Based on Wine 8.5 - use for compatibility with some plugins.";
     public string DownloadUrl { get; } = $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{wineDistroId}-8.5.r4.g4211bac7.tar.xz";
     public string[] Checksums { get; } = [
         "832de4d834bdbd6e1e069f13efcb56fa1508c9d7ba0609e1161a52d814f2c6f7c89c8e2d1bcff05da7f0b5cab0662f7e5d57865ab7a5c9d144e6bd55051adee5", // wine-xiv-staging-fsync-git-fedora-8.5.r4.g4211bac7.tar.xz

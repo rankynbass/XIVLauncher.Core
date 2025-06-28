@@ -97,6 +97,7 @@ public static class CompatUtil
         {
             return false;
         }
+        if (checksums.Any(checksum => string.Equals(checksum, "skip"))) return true;
         using var sha512 = SHA512.Create();
         using var stream = File.OpenRead(filePath);
         var computedHash = Convert.ToHexString(sha512.ComputeHash(stream)).ToLowerInvariant();

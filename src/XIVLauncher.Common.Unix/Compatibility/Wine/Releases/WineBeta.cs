@@ -1,8 +1,10 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-public sealed class WineBetaRelease(WineReleaseDistro wineDistroId) : IWineRelease
+public sealed class WineBetaRelease(WineReleaseDistro wineDistroId) : IToolRelease
 {
     public string Name { get; } = $"wine-xiv-staging-fsync-git-10.8.r0.g47f77594";
+    public string Label { get; } = "Beta";
+    public string Description { get; } = "Testing ground for the newest wine changes. Based on Wine 10.8 with lsteamclient patches.";
     public string DownloadUrl { get; } = $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{wineDistroId}-10.8.r0.g47f77594.tar.xz";
     public string[] Checksums { get; } = [
         "fac545a5d8ee219bf622903adb7a5ca6f2f968d9a2307da3f0ec394dde08c4d4f956487f4b326ef1cfc92eaface463f270f590695ad8874d5c88028fac8f6250", // wine-xiv-staging-fsync-git-arch-10.8.r0.g47f77594.tar.xz
