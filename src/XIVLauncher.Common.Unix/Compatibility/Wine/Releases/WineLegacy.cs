@@ -12,4 +12,5 @@ public sealed class WineLegacyRelease(WineReleaseDistro wineDistroId) : IWineRel
         "ff77e19d35c598bc5602222d4bb4c0b85ae375f99f9ae0000f847a904ef80c120d89e59da921ee05fe54b0bd583e9cf1fb7f142b95f3ad2d3aba9891b6605f08"  // wine-xiv-staging-fsync-git-arch-8.5.r4.g4211bac7.tar.xz
     ];
     public bool lsteamclient { get; }= false;
+    public string Checksum { get; } = "";
 }

@@ -36,7 +36,7 @@ public class CompatibilityTools
     private string Wine64Path => Path.Combine(WineBinPath, "wine64");
     private string WineServerPath => Path.Combine(WineBinPath, "wineserver");
 
-    private readonly DxvkVersion dxvkVersion;
+    private readonly IToolRelease dxvkVersion;
     private readonly DxvkHudType hudType;
     private readonly NvapiVersion nvapiVersion;
     private readonly string ExtraWineDLLOverrides;
@@ -47,12 +47,12 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, DxvkVersion dxvkVersion, DxvkHudType hudType, NvapiVersion nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, NvapiVersion nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
         this.hudType = hudType;
-        this.nvapiVersion = dxvkVersion != DxvkVersion.Disabled ? nvapiVersion : NvapiVersion.Disabled;
+        this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : NvapiVersion.Disabled;
         this.gamemodeOn = gamemodeOn;
         this.ExtraWineDLLOverrides = WineSettings.WineDLLOverrideIsValid(winedlloverrides) ? winedlloverrides : "";
         this.dxvkAsyncOn = dxvkAsyncOn ? "1" : "0";
@@ -179,7 +179,7 @@ public class CompatibilityTools
         psi.UseShellExecute = false;
         psi.WorkingDirectory = workingDirectory;
 
-        var ogl = wineD3D || this.dxvkVersion == DxvkVersion.Disabled;
+        var ogl = wineD3D || this.dxvkVersion.Name == "DISABLED";
 
         var wineEnviromentVariables = new Dictionary<string, string>
         {

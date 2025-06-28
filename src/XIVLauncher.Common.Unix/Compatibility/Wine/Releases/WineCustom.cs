@@ -8,4 +8,5 @@ public sealed class WineCustomRelease(string label, string desc, string folder, 
     public string DownloadUrl { get; } = url;
     public bool lsteamclient { get; } = lsc;
     public string[] Checksums { get; } = checksums ?? ["skip"];
+    public string Checksum { get; } = "";
 }

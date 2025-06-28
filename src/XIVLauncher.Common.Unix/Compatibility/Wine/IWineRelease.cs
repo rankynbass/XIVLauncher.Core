@@ -6,6 +6,7 @@ public interface IWineRelease : IToolRelease
     string Label { get; }
     string Description { get; }
     string DownloadUrl { get; }
+    string Checksum { get; }
     string[] Checksums { get; }
     bool lsteamclient { get; }
 }

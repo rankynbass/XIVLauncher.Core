@@ -16,7 +16,7 @@ public class SettingsTabWine : SettingsTab
 
     private ToolSettingsEntry wineVersionSetting;
 
-    private SettingsEntry<DxvkVersion> dxvkVersionSetting;
+    private ToolSettingsEntry dxvkVersionSetting;
 
     public SettingsTabWine()
     {
@@ -38,20 +38,21 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom
             },
 
-            dxvkVersionSetting = new SettingsEntry<DxvkVersion>("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.DxvkVersion ?? DxvkVersion.Stable, x => Program.Config.DxvkVersion = x),
+            dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,
+                s => Program.Config.RB_DxvkVersion = s, Program.DxvkManager.Version, Program.DxvkManager.DEFAULT),
 
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("async")
             },
 
             new SettingsEntry<NvapiVersion>("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Does nothing if GPU doesn't support DLSS.", () => Program.Config.NvapiVersion ?? NvapiVersion.Stable, x => Program.Config.NvapiVersion = x)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != DxvkVersion.Disabled,
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
                 CheckWarning = x =>
                 {
                     string warning = "";
-                    if (dxvkVersionSetting.Value == DxvkVersion.Legacy)
+                    if (dxvkVersionSetting.Value == Program.DxvkManager.LEGACY)
                         warning += "DLSS will not work with Legacy DXVK. Use Stable instead.\n";
                     if (startupTypeSetting.Value == RBWineStartupType.Custom)
                         warning += "DLSS may not work with custom wine versions. Make sure wine is >= 9.0";

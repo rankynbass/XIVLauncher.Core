@@ -8,19 +8,19 @@ using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
-public class WineManager
+public class DxvkManager
 {
     public string DEFAULT { get; private set; }
 
     public string LEGACY { get; private set; }
 
-    public Dictionary<string, IDxvkRelease> Version { get; private set; }
+    public Dictionary<string, IToolRelease> Version { get; private set; }
 
     private string dxvkFolder { get; }
 
     private string rootFolder { get; }
 
-    public WineManager(string root)
+    public DxvkManager(string root)
     {
         this.rootFolder = root;
         this.dxvkFolder = Path.Combine(root, "compatibilitytool", "dxvk");
@@ -30,7 +30,7 @@ public class WineManager
 
     private void Initialize()
     {
-        Version = new Dictionary<string, IDxvkRelease>();
+        Version = new Dictionary<string, IToolRelease>();
         
         var dxvkStable = new DxvkStableRelease();
         var dxvkStableAsync = new DxvkStableAsyncRelease();
@@ -42,10 +42,10 @@ public class WineManager
         AddVersion(dxvkStable);
         AddVersion(dxvkStableAsync);
         AddVersion(dxvkLegacy);
-        AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "", ""));
+        AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "DISABLED", ""));
     }
 
-    private void AddVersion(IDxvkRelease dxvk)
+    private void AddVersion(IToolRelease dxvk)
     {
         Version.Add(dxvk.Name, dxvk);
     }
@@ -59,7 +59,7 @@ public class WineManager
         return DEFAULT;
     }
 
-    public IDxvkRelease GetDxvk(string? name)
+    public IToolRelease GetDxvk(string? name)
     {
         return Version[GetVersionOrDefault(name)];
     }

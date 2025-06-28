@@ -12,4 +12,5 @@ public sealed class WineBetaRelease(WineReleaseDistro wineDistroId) : IWineRelea
         "fb0bf85190ec9d001e39135537f27f82e8bd0ab1f222c008012128fbb6f6d8c8547f1315d09d909e7219fe2c221005a5b98927bfb95a24a36c5fca526ae0e95b" // wine-xiv-staging-fsync-git-ubuntu-10.8.r0.g47f77594.tar.xz
     ];
     public bool lsteamclient { get; } = true;
+    public string Checksum { get; } = "";
 }

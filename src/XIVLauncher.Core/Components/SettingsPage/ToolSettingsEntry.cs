@@ -4,6 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
+using XIVLauncher.Common.Unix.Compatibility.Dxvk;
+using XIVLauncher.Common.Unix.Compatibility.Nvapi;
+
 using Serilog;
 
 namespace XIVLauncher.Core.Components.SettingsPage;

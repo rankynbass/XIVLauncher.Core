@@ -1,6 +1,6 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
-public sealed class DxvkLegacyRelease : IDxvkRelease
+public sealed class DxvkLegacyRelease : IToolRelease
 {
     public string Label { get; } = "Legacy";
     public string Description { get; } = "Dxvk 1.10.3 with Async patches. For older graphics cards.";

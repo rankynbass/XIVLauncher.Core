@@ -31,7 +31,7 @@ public static class Nvapi
         {
             return;
         }
-        INvapiRelease release = version switch
+        IToolRelease release = version switch
         {
             NvapiVersion.Stable => new NvapiStableRelease(),
             _ => throw new NotImplementedException(),

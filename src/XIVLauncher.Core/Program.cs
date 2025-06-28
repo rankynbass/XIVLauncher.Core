@@ -66,6 +66,7 @@ sealed class Program
 
     // RB-specific properties
     public static WineManager WineManager { get; private set; }
+    public static DxvkManager DxvkManager { get; private set; }
 
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
@@ -145,7 +146,7 @@ sealed class Program
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
         Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
-        Config.RB_DxvkVersion ??= "";
+        Config.RB_DxvkVersion = DxvkManager.GetVersionOrDefault(Config.RB_DxvkVersion);
         Config.RB_NvapiVersion ??= "";
         Config.RB_GPLAsyncCacheEnabled ??= true;
     }
@@ -205,6 +206,7 @@ sealed class Program
         SetupLogging(mainArgs);
         // This needs to be above LoadConfig so it can properly set defaults.
         WineManager = new WineManager(storage.Root.FullName);
+        DxvkManager = new DxvkManager(storage.Root.FullName);
         LoadConfig(storage);
 
 
@@ -374,7 +376,7 @@ sealed class Program
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "nvapi"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "wine"));
-        CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkVersion ?? DxvkVersion.Stable, Config.DxvkHudType, Config.NvapiVersion ?? NvapiVersion.Stable, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", Config.DxvkAsyncEnabled ?? true, toolsFolder, Config.GamePath);
+        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, Config.NvapiVersion ?? NvapiVersion.Stable, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", Config.DxvkAsyncEnabled ?? true, toolsFolder, Config.GamePath);
     }
 
     public static void ShowWindow()

@@ -1,6 +1,6 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
-public sealed class DxvkStableRelease : IDxvkRelease
+public sealed class DxvkStableRelease : IToolRelease
 {
     public string Label { get; } = "Stable";
     public string Description { get; } = "Dxvk 2.6.2. No Async patches. For most graphics cards.";

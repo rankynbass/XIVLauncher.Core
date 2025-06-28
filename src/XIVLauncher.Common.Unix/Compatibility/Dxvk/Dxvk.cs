@@ -41,9 +41,9 @@ public enum DxvkHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, IDxvkRelease release)
+    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, IToolRelease release)
     {
-        if (release.Name == "")
+        if (release.Name == "DISABLED")
         {
             return;
         }
