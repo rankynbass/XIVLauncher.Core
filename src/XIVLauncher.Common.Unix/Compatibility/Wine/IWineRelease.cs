@@ -5,4 +5,5 @@ public interface IWineRelease
     string Name { get; }
     string DownloadUrl { get; }
     string[] Checksums { get; }
+    bool lsteamclient { get; }
 }

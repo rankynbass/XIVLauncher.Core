@@ -100,10 +100,14 @@ public class CompatibilityTools
             await DownloadTool(tempPath).ConfigureAwait(false);
         }
 
-        if (Settings.WineRelease is not WineBetaRelease || Settings.StartupType == WineStartupType.Custom)
+        if (!Settings.WineRelease.lsteamclient || Settings.StartupType == WineStartupType.Custom)
         {
             var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
-            if (lsteamclient.Exists) lsteamclient.Delete();
+            if (lsteamclient.Exists)
+            {
+                lsteamclient.Delete();
+                Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
+            }
         }
 
         EnsurePrefix();
