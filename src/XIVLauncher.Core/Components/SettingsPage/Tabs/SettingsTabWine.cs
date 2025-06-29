@@ -25,7 +25,7 @@ public class SettingsTabWine : SettingsTab
             startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
-            wineVersionSetting = new ToolSettingsEntry("RB: Wine Version", "Test for Wine Version", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
+            wineVersionSetting = new ToolSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
@@ -46,7 +46,13 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("async")
             },
 
-            new SettingsEntry<NvapiVersion>("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Does nothing if GPU doesn't support DLSS.", () => Program.Config.NvapiVersion ?? NvapiVersion.Stable, x => Program.Config.NvapiVersion = x)
+            new SettingsEntry<bool>("Enable GPLAsync Cache", "Enable GPLASync Cache.", () => Program.Config.RB_GPLAsyncCacheEnabled ?? true, b => Program.Config.RB_GPLAsyncCacheEnabled = b)
+            {
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync")
+            },
+
+            new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use.", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
+                s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED",
                 CheckWarning = x =>

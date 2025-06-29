@@ -30,41 +30,23 @@ public enum WineManagedVersion
 
 public class WineSettings
 {
-    public WineStartupType StartupType { get; private set; }
+    public RBWineStartupType StartupType { get; private set; }
     public IWineRelease WineRelease { get; private set; }
 
     public string CustomBinPath { get; private set; }
-    public string EsyncOn { get; private set; }
-    public string FsyncOn { get; private set; }
+    public bool EsyncOn { get; private set; }
+    public bool FsyncOn { get; private set; }
     public string DebugVars { get; private set; }
     public FileInfo LogFile { get; private set; }
     public DirectoryInfo Prefix { get; private set; }
 
-    public WineSettings(WineStartupType startupType, IWineRelease managedWine, string customBinPath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
+    public WineSettings(RBWineStartupType startupType, IWineRelease managedWine, string customBinPath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
     {
         this.StartupType = startupType;
         this.WineRelease = managedWine;
-        // var wineDistroId = CompatUtil.GetWineIdForDistro();
-        // switch (managedWine)
-        // {
-        //     case WineManagedVersion.Stable:
-        //         this.WineRelease = new WineCustomRelease("Stable", "Based on Wine 10.8 - recommended for most users.",
-        //                             "wine-xiv-staging-fsync-git-10.8.r0.g47f77594-nolsc",
-        //                             $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{wineDistroId}-10.8.r0.g47f77594-nolsc.tar.xz",
-        //                             false, wineDistroId);
-        //         break;
-        //     case WineManagedVersion.Beta:
-        //         this.WineRelease = new WineBetaRelease(wineDistroId);
-        //         break;
-        //     case WineManagedVersion.Legacy:
-        //         this.WineRelease = new WineLegacyRelease(wineDistroId);
-        //         break;
-        //     default:
-        //         throw new ArgumentOutOfRangeException(managedWine.ToString());
-        // }
         this.CustomBinPath = customBinPath;
-        this.EsyncOn = esyncOn ? "1" : "0";
-        this.FsyncOn = fsyncOn ? "1" : "0";
+        this.EsyncOn = esyncOn;
+        this.FsyncOn = fsyncOn;
         this.DebugVars = debugVars;
         this.LogFile = logFile;
         this.Prefix = prefix;

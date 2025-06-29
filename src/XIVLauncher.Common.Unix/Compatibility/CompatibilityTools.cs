@@ -11,6 +11,7 @@ using Serilog;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
+using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Util;
@@ -30,7 +31,7 @@ public class CompatibilityTools
     private readonly DirectoryInfo gameDirectory;
     private readonly StreamWriter logWriter;
 
-    private string WineBinPath => Settings.StartupType == WineStartupType.Managed ?
+    private string WineBinPath => Settings.StartupType == RBWineStartupType.Managed ?
                                     Path.Combine(wineDirectory.FullName, Settings.WineRelease.Name, "bin") :
                                     Settings.CustomBinPath;
     private string Wine64Path => Path.Combine(WineBinPath, "wine64");
@@ -38,24 +39,26 @@ public class CompatibilityTools
 
     private readonly IToolRelease dxvkVersion;
     private readonly DxvkHudType hudType;
-    private readonly NvapiVersion nvapiVersion;
+    private readonly IToolRelease nvapiVersion;
     private readonly string ExtraWineDLLOverrides;
     private readonly bool gamemodeOn;
-    private readonly string dxvkAsyncOn;
+    private readonly bool dxvkAsyncOn;
+    private readonly bool gplAsyncCacheOn;
 
     public bool IsToolReady { get; private set; }
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, NvapiVersion nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
         this.hudType = hudType;
-        this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : NvapiVersion.Disabled;
+        this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", "");
         this.gamemodeOn = gamemodeOn;
         this.ExtraWineDLLOverrides = WineSettings.WineDLLOverrideIsValid(winedlloverrides) ? winedlloverrides : "";
-        this.dxvkAsyncOn = dxvkAsyncOn ? "1" : "0";
+        this.dxvkAsyncOn = dxvkAsyncOn;
+        this.gplAsyncCacheOn = gplAsyncCacheOn;
 
         this.wineDirectory = new DirectoryInfo(Path.Combine(toolsFolder.FullName, "wine"));
         this.dxvkDirectory = new DirectoryInfo(Path.Combine(toolsFolder.FullName, "dxvk"));
@@ -100,7 +103,7 @@ public class CompatibilityTools
             await DownloadTool(tempPath).ConfigureAwait(false);
         }
 
-        if (!Settings.WineRelease.lsteamclient || Settings.StartupType == WineStartupType.Custom)
+        if (!Settings.WineRelease.lsteamclient || Settings.StartupType == RBWineStartupType.Custom)
         {
             var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
             if (lsteamclient.Exists)
@@ -114,8 +117,8 @@ public class CompatibilityTools
 
         await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
         await Nvapi.Nvapi.InstallNvapi(Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
-        if (nvapiVersion != NvapiVersion.Disabled)
-            Nvapi.Nvapi.CopyNvngx(gameDirectory);
+        if (nvapiVersion.Name != "DISABLED")
+            Nvapi.Nvapi.CopyNvngx(gameDirectory, Settings.Prefix);
 
         IsToolReady = true;
     }
@@ -181,21 +184,21 @@ public class CompatibilityTools
 
         var ogl = wineD3D || this.dxvkVersion.Name == "DISABLED";
 
-        var wineEnviromentVariables = new Dictionary<string, string>
+        var wineEnvironmentVariables = new Dictionary<string, string>
         {
             { "WINEPREFIX", Settings.Prefix.FullName },
             { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" }
         };
 
-        if (!ogl && nvapiVersion != NvapiVersion.Disabled)
-            wineEnviromentVariables.Add("DXVK_ENABLE_NVAPI", "1");
+        if (!ogl && nvapiVersion.Name != "DISABLED")
+            wineEnvironmentVariables.Add("DXVK_ENABLE_NVAPI", "1");
 
         if (!string.IsNullOrEmpty(Settings.DebugVars))
         {
-            wineEnviromentVariables.Add("WINEDEBUG", Settings.DebugVars);
+            wineEnvironmentVariables.Add("WINEDEBUG", Settings.DebugVars);
         }
 
-        wineEnviromentVariables.Add("XL_WINEONLINUX", "true");
+        wineEnvironmentVariables.Add("XL_WINEONLINUX", "true");
         string ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
 
         string dxvkHud = hudType switch
@@ -211,14 +214,18 @@ public class CompatibilityTools
             ldPreload = ldPreload.Equals("", StringComparison.OrdinalIgnoreCase) ? "libgamemodeauto.so.0" : ldPreload + ":libgamemodeauto.so.0";
         }
 
-        wineEnviromentVariables.Add("DXVK_HUD", dxvkHud);
-        wineEnviromentVariables.Add("DXVK_ASYNC", dxvkAsyncOn);
-        wineEnviromentVariables.Add("WINEESYNC", Settings.EsyncOn);
-        wineEnviromentVariables.Add("WINEFSYNC", Settings.FsyncOn);
+        wineEnvironmentVariables.Add("DXVK_HUD", dxvkHud);
+        if (dxvkAsyncOn)
+        {
+            wineEnvironmentVariables.Add("DXVK_ASYNC", "1");
+            wineEnvironmentVariables.Add("DXVK_GPLASYNCCACHE", gplAsyncCacheOn ? "1" : "0");
+        }
+        wineEnvironmentVariables.Add("WINEESYNC", Settings.EsyncOn ? "1" : "0");
+        wineEnvironmentVariables.Add("WINEFSYNC", Settings.FsyncOn ? "1" : "0");
 
-        wineEnviromentVariables.Add("LD_PRELOAD", ldPreload);
+        wineEnvironmentVariables.Add("LD_PRELOAD", ldPreload);
 
-        MergeDictionaries(psi.EnvironmentVariables, wineEnviromentVariables);
+        MergeDictionaries(psi.EnvironmentVariables, wineEnvironmentVariables);
         MergeDictionaries(psi.EnvironmentVariables, environment);
 
         Process helperProcess = new();

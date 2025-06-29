@@ -60,15 +60,15 @@ public interface ILauncherConfig
 
     #region Linux
 
-    public WineStartupType? WineStartupType { get; set; }
+    // public WineStartupType? WineStartupType { get; set; }
 
-    public WineManagedVersion? WineManagedVersion { get; set; }
+    // public WineManagedVersion? WineManagedVersion { get; set; }
 
     public string? WineBinaryPath { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 
-    public DxvkVersion? DxvkVersion { get; set; }
+    // public DxvkVersion? DxvkVersion { get; set; }
 
     public bool? DxvkAsyncEnabled { get; set; }
 
@@ -78,7 +78,7 @@ public interface ILauncherConfig
 
     public DxvkHudType DxvkHudType { get; set; }
 
-    public NvapiVersion? NvapiVersion { get; set; }
+    // public NvapiVersion? NvapiVersion { get; set; }
 
     public string? WineDebugVars { get; set; }
 
@@ -92,7 +92,7 @@ public interface ILauncherConfig
 
     public bool? SetWin7 { get; set; }
 
-    public string? WineDLLOverrides { get; set; }
+    // public string? WineDLLOverrides { get; set; }
 
     #endregion
 
@@ -107,6 +107,8 @@ public interface ILauncherConfig
     public string? RB_NvapiVersion { get; set; }
 
     public bool? RB_GPLAsyncCacheEnabled { get; set; }
+
+    public string? RB_WineDLLOverrides { get; set; }
 
     #endregion
 

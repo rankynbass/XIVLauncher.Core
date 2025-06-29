@@ -1,6 +1,6 @@
-namespace XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
+namespace XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 
-public sealed class DxvkCustomRelease(string label, string desc, string folder, string url, string checksum = "skip") : IToolRelease
+public sealed class NvapiCustomRelease(string label, string desc, string folder, string url, string checksum = "skip") : IToolRelease
 {
     public string Label { get; } = label;
     public string Description { get; } = desc;

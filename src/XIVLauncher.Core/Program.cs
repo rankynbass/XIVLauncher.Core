@@ -67,6 +67,7 @@ sealed class Program
     // RB-specific properties
     public static WineManager WineManager { get; private set; }
     public static DxvkManager DxvkManager { get; private set; }
+    public static NvapiManager NvapiManager { get; private set; }
 
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
@@ -125,18 +126,18 @@ sealed class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
-        Config.DxvkVersion ??= DxvkVersion.Stable;
+        // Config.DxvkVersion ??= DxvkVersion.Stable;
         Config.DxvkAsyncEnabled ??= true;
-        Config.NvapiVersion ??= NvapiVersion.Stable;
+        // Config.NvapiVersion ??= NvapiVersion.Stable;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
         Config.SetWin7 ??= true;
 
-        Config.WineStartupType ??= WineStartupType.Managed;
-        Config.WineManagedVersion ??= WineManagedVersion.Stable;
+        // Config.WineStartupType ??= WineStartupType.Managed;
+        // Config.WineManagedVersion ??= WineManagedVersion.Stable;
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
-        Config.WineDLLOverrides ??= "";
+        // Config.WineDLLOverrides ??= "";
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
@@ -147,8 +148,9 @@ sealed class Program
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
         Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
         Config.RB_DxvkVersion = DxvkManager.GetVersionOrDefault(Config.RB_DxvkVersion);
-        Config.RB_NvapiVersion ??= "";
+        Config.RB_NvapiVersion = NvapiManager.GetVersionOrDefault(Config.RB_NvapiVersion);
         Config.RB_GPLAsyncCacheEnabled ??= true;
+        Config.RB_WineDLLOverrides = WineSettings.WineDLLOverrideIsValid(Config.RB_WineDLLOverrides) ? Config.RB_WineDLLOverrides : "";
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -207,6 +209,7 @@ sealed class Program
         // This needs to be above LoadConfig so it can properly set defaults.
         WineManager = new WineManager(storage.Root.FullName);
         DxvkManager = new DxvkManager(storage.Root.FullName);
+        NvapiManager = new NvapiManager(storage.Root.FullName);
         LoadConfig(storage);
 
 
@@ -371,12 +374,14 @@ sealed class Program
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
-        var wineSettings = new WineSettings(Config.WineStartupType ?? WineStartupType.Custom, WineManager.GetWine(Config.RB_WineVersion), Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, WineManager.GetWine(Config.RB_WineVersion), Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
         var toolsFolder = storage.GetFolder("compatibilitytool");
+        var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
+        var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "nvapi"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "wine"));
-        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, Config.NvapiVersion ?? NvapiVersion.Stable, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", Config.DxvkAsyncEnabled ?? true, toolsFolder, Config.GamePath);
+        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.RB_WineDLLOverrides ?? "", async, gplcache, toolsFolder, Config.GamePath);
     }
 
     public static void ShowWindow()

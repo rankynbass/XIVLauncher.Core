@@ -25,17 +25,12 @@ public enum NvapiVersion
 
 public static class Nvapi
 {
-    public static async Task InstallNvapi(DirectoryInfo prefix, DirectoryInfo installDirectory, NvapiVersion version)
+    public static async Task InstallNvapi(DirectoryInfo prefix, DirectoryInfo installDirectory, IToolRelease release)
     {
-        if (version is NvapiVersion.Disabled)
+        if (release.Name == "DISABLED")
         {
             return;
         }
-        IToolRelease release = version switch
-        {
-            NvapiVersion.Stable => new NvapiStableRelease(),
-            _ => throw new NotImplementedException(),
-        };
 
         var nvapiPath = Path.Combine(installDirectory.FullName, release.Name, "x64");
         if (!Directory.Exists(nvapiPath))
@@ -58,16 +53,8 @@ public static class Nvapi
 
     // In order for the nvngx dlls to work properly with wine-staging, they need to be in the game directory.
     // The prefix system32 folder will not work. If the dlls are only in system32, the game will hang on startup.
-    public static void CopyNvngx(DirectoryInfo gameDirectory)
+    public static void CopyNvngx(DirectoryInfo gameDirectory, DirectoryInfo prefix)
     {
-        var game = Path.Combine(gameDirectory.FullName, "game");
-        if (File.Exists(Path.Combine(game, "nvngx.dll")) && File.Exists(Path.Combine(game, "_nvngx.dll")))
-        {
-            // Already installed. Don't bother copying.
-            Log.Verbose($"nvngx.dll installed in {game}: True");
-            return;
-        }
-        Log.Verbose($"nvngx.dll installed in {game}: False");
 
         var nvngxPath = NvidiaWineDLLPath();
         if (string.IsNullOrEmpty(nvngxPath))
@@ -76,14 +63,41 @@ public static class Nvapi
             Log.Information("If using AMD or intel graphics, ignore this message");
             return;
         }
-
         var files = Directory.GetFiles(nvngxPath);
+        var game = Path.Combine(gameDirectory.FullName, "game");
+        var system32 = Path.Combine(prefix.FullName, "drive_c", "windows", "system32");
 
-        // Only nvngx.dll and _nvngx.dll are needed for dlss to function, but there is also nvngx_dlssg.dll
-        // which may be needed in the future. So just copy all the files.
         foreach (var file in files)
         {
-            File.Copy(file, Path.Combine(game, Path.GetFileName(file)), true);
+            var source = new FileInfo(file);
+            CreateSymlink(source, new FileInfo(Path.Combine(game, source.Name)));
+            CreateSymlink(source, new FileInfo(Path.Combine(system32, source.Name)));
+        }
+    }
+
+    private static void CreateSymlink(FileInfo source, FileInfo destination)
+    {
+        if (!source.Exists) return;
+        if (!destination.Exists) // No file, create link.
+        {
+            destination.CreateAsSymbolicLink(source.FullName);
+            Log.Verbose($"Making symbolic link at {destination.FullName} to {source.FullName}");
+        }
+        else if (destination.ResolveLinkTarget(false) is null) // File exists, is not a symlink. Delete and create link.
+        {
+            destination.Delete();
+            destination.CreateAsSymbolicLink(source.FullName);
+            Log.Verbose($"Replacing file at {destination.FullName} with symbolic link to {source.FullName}");
+        }
+        else if (destination.ResolveLinkTarget(true).FullName != source.FullName) // Link exists, but does not point to source. Replace.
+        {
+            destination.Delete();
+            destination.CreateAsSymbolicLink(source.FullName);
+            Log.Verbose($"Symbolic link at {destination.FullName} incorrectly links to {destination.ResolveLinkTarget(true).FullName}. Replacing with link to {source.FullName}");
+        }
+        else
+        {
+            Log.Verbose($"Symbolic link at {destination.FullName} to {source.FullName} is correct.");
         }
     }
 
@@ -139,6 +153,9 @@ public static class Nvapi
 
     private static async Task DownloadNvapi(DirectoryInfo installDirectory, string url, string checksum)
     {
+        if (string.IsNullOrEmpty(url))
+            throw new ArgumentOutOfRangeException("Download URL is null or empty");
+
         using var client = new HttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
 
