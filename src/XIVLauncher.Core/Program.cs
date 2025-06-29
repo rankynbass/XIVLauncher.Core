@@ -68,6 +68,7 @@ sealed class Program
     public static WineManager WineManager { get; private set; }
     public static DxvkManager DxvkManager { get; private set; }
     public static NvapiManager NvapiManager { get; private set; }
+    public static bool GameHasClosed { get; set; } = false;
 
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
@@ -310,7 +311,7 @@ sealed class Program
             Log.Warning("Couldn't figure out the bounds of the primary display, falling back to previous assumption that (0,0) is the top left corner of the left-most monitor.");
 
         // Create the window and graphics device separately, because Veldrid would have reinitialised SDL if done with their combined method.
-        window = VeldridStartup.CreateWindow(new WindowCreateInfo(50 + bounds.X, 50 + bounds.Y, 1280, 800, WindowState.Normal, $"XIVLauncher {version}"));
+        window = VeldridStartup.CreateWindow(new WindowCreateInfo(50 + bounds.X, 50 + bounds.Y, 1280, 800, WindowState.Normal, $"XIVLauncher-RB {version}"));
         graphicsDevice = VeldridStartup.CreateGraphicsDevice(window, new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true));
 
         window.Resized += () =>
@@ -355,7 +356,8 @@ sealed class Program
         guiBindings.Dispose();
         commandList.Dispose();
         // This causes segfault for some reason
-        // graphicsDevice.Dispose();
+        if (GameHasClosed)
+            graphicsDevice.Dispose();
 
         HttpClient.Dispose();
 

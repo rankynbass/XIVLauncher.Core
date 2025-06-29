@@ -897,6 +897,8 @@ public class MainPage : Page
             Log.Error(ex, "Could not shut down Steam");
         }
 
+        Program.GameHasClosed = true;
+
         return launchedProcess!;
     }
 
