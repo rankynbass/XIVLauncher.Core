@@ -354,7 +354,8 @@ sealed class Program
         graphicsDevice.WaitForIdle();
         guiBindings.Dispose();
         commandList.Dispose();
-        graphicsDevice.Dispose();
+        // This causes segfault for some reason
+        // graphicsDevice.Dispose();
 
         HttpClient.Dispose();
 
