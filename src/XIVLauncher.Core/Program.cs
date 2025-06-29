@@ -24,6 +24,7 @@ using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
+using XIVLauncher.Common.Unix.Compatibility.Proton;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Common.Windows;
 using XIVLauncher.Core.Accounts.Secrets;
@@ -68,6 +69,7 @@ sealed class Program
     public static WineManager WineManager { get; private set; }
     public static DxvkManager DxvkManager { get; private set; }
     public static NvapiManager NvapiManager { get; private set; }
+    public static ProtonManager ProtonManager { get; private set; }
     public static bool GameHasClosed { get; set; } = false;
 
     // TODO: We don't have the steamworks api for this yet.
@@ -138,7 +140,7 @@ sealed class Program
         // Config.WineManagedVersion ??= WineManagedVersion.Stable;
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
-        // Config.WineDLLOverrides ??= "";
+        Config.WineDLLOverrides = WineSettings.WineDLLOverrideIsValid(Config.WineDLLOverrides) ? Config.WineDLLOverrides : "";
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
@@ -148,10 +150,11 @@ sealed class Program
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
         Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
+        Config.RB_ProtonVersion ??= "XIV-Proton10-4";
+        Config.RB_UseSniperRuntime ??= true;
         Config.RB_DxvkVersion = DxvkManager.GetVersionOrDefault(Config.RB_DxvkVersion);
         Config.RB_NvapiVersion = NvapiManager.GetVersionOrDefault(Config.RB_NvapiVersion);
         Config.RB_GPLAsyncCacheEnabled ??= true;
-        Config.RB_WineDLLOverrides = WineSettings.WineDLLOverrideIsValid(Config.RB_WineDLLOverrides) ? Config.RB_WineDLLOverrides : "";
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -211,6 +214,7 @@ sealed class Program
         WineManager = new WineManager(storage.Root.FullName);
         DxvkManager = new DxvkManager(storage.Root.FullName);
         NvapiManager = new NvapiManager(storage.Root.FullName);
+        ProtonManager = new ProtonManager(storage.Root.FullName);
         LoadConfig(storage);
 
 
@@ -384,7 +388,7 @@ sealed class Program
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "nvapi"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "wine"));
-        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.RB_WineDLLOverrides ?? "", async, gplcache, toolsFolder, Config.GamePath);
+        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache, toolsFolder, Config.GamePath);
     }
 
     public static void ShowWindow()

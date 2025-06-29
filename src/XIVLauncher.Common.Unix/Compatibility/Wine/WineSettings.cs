@@ -4,29 +4,9 @@ using System.Text.RegularExpressions;
 using System.Linq;
 
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Proton;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
-
-public enum WineStartupType
-{
-    [SettingsDescription("Managed by XIVLauncher", "Wine setup is managed by XIVLauncher - you can leave it up to us.")]
-    Managed,
-
-    [SettingsDescription("Custom", "Point XIVLauncher to a custom location containing wine binaries to run the game with.")]
-    Custom,
-}
-
-public enum WineManagedVersion
-{
-    [SettingsDescription("Stable", "Based on Wine 10.8 - recommended for most users.")]
-    Stable,
-
-    [SettingsDescription("Beta", "Testing ground for the newest wine changes. Based on Wine 10.8 with lsteamclient patches.")]
-    Beta,
-
-    [SettingsDescription("Legacy", "Based on Wine 8.5 - use for compatibility with some plugins.")]
-    Legacy,
-}
 
 public class WineSettings
 {
@@ -42,7 +22,7 @@ public class WineSettings
 
     public WineSettings(RBWineStartupType startupType, IWineRelease managedWine, string customBinPath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
     {
-        this.StartupType = startupType;
+        this.StartupType = (startupType == RBWineStartupType.Proton) ? RBWineStartupType.Managed : startupType;
         this.WineRelease = managedWine;
         this.CustomBinPath = customBinPath;
         this.EsyncOn = esyncOn;

@@ -16,8 +16,8 @@ public enum RBWineStartupType
     [SettingsDescription("Custom", "Point XIVLauncher-RB to a custom location containing wine binaries to run the game with.")]
     Custom,
 
-    // [SettingsDescription("Proton", "Use Steam sniper runtime and a patched Proton release.")]
-    // Proton,
+    [SettingsDescription("Proton", "Use Steam sniper runtime and a patched Proton release.")]
+    Proton,
 }
 
 public class WineManager

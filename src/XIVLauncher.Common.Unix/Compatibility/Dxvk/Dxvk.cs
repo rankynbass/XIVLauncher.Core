@@ -12,21 +12,6 @@ using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
-public enum DxvkVersion
-{
-    [SettingsDescription("Stable", "Dxvk 2.6.2. No Async patches.")]
-    Stable,
-
-    [SettingsDescription("Stable Async", "Dxvk 2.6 with GPLAsync patches. For most graphics cards.")]
-    StableAsync,
-
-    [SettingsDescription("Legacy", "Dxvk 1.10.3 with Async patches. For older graphics cards.")]
-    Legacy,
-
-    [SettingsDescription("Disabled", "Use OpenGL/WineD3D instead. Slow, and might not work with Dalamud.")]
-    Disabled,
-}
-
 public enum DxvkHudType
 {
     [SettingsDescription("None", "Show nothing")]

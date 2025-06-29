@@ -6,6 +6,7 @@ using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
+using XIVLauncher.Common.Unix.Compatibility.Proton;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
@@ -36,6 +37,17 @@ public class SettingsTabWine : SettingsTab
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom
+            },
+
+            new ToolSettingsEntry("Proton Version", "Choose which Proton version to use.", () => Program.Config.RB_ProtonVersion ?? Program.ProtonManager.DEFAULT,
+                s => Program.Config.RB_ProtonVersion = s, Program.ProtonManager.Version, Program.ProtonManager.DEFAULT)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
+            },
+
+            new SettingsEntry<bool>("Enable Sniper", "Use the Steam sniper runtime container (recommended)", () => Program.Config.RB_UseSniperRuntime ?? true, b => Program.Config.RB_UseSniperRuntime = b)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
             },
 
             dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,

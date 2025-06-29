@@ -92,7 +92,7 @@ public interface ILauncherConfig
 
     public bool? SetWin7 { get; set; }
 
-    // public string? WineDLLOverrides { get; set; }
+    public string? WineDLLOverrides { get; set; }
 
     #endregion
 
@@ -108,7 +108,9 @@ public interface ILauncherConfig
 
     public bool? RB_GPLAsyncCacheEnabled { get; set; }
 
-    public string? RB_WineDLLOverrides { get; set; }
+    public string? RB_ProtonVersion { get; set; }
+
+    public bool? RB_UseSniperRuntime { get; set; }
 
     #endregion
 
