@@ -18,9 +18,9 @@ public class ProtonManager
 
     private string rootFolder { get; }
 
-    private string commonFolder { get; }
+    public string commonFolder { get; }
 
-    private string compatFolder { get; }
+    public string compatFolder { get; }
 
     public ProtonManager(string root)
     {
@@ -73,6 +73,15 @@ public class ProtonManager
         if (Version.ContainsKey(name))
             return name;
         return DEFAULT;
+    }
+
+    public string GetProtonPath(IToolRelease name)
+    {
+        if (File.Exists(Path.Combine(commonFolder, name.Name, "proton")))
+            return Path.Combine(commonFolder, name.Name);
+        if (File.Exists(Path.Combine(compatFolder, name.Name, "proton")))
+            return Path.Combine(commonFolder, name.Name);
+        return string.Empty;
     }
 
     public IToolRelease GetProton(string? name)

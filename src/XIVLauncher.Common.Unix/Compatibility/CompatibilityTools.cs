@@ -31,10 +31,8 @@ public class CompatibilityTools
     private readonly DirectoryInfo gameDirectory;
     private readonly StreamWriter logWriter;
 
-    private string WineBinPath => Settings.StartupType == RBWineStartupType.Managed ?
-                                    Path.Combine(wineDirectory.FullName, Settings.WineRelease.Name, "bin") :
-                                    Settings.CustomBinPath;
-    private string Wine64Path => Path.Combine(WineBinPath, "wine64");
+    private string WineBinPath => Settings.WineRelease.Name;
+    private string Wine64Path => Settings.GetWineBinary(WineBinPath);
     private string WineServerPath => Path.Combine(WineBinPath, "wineserver");
 
     private readonly IToolRelease dxvkVersion;
@@ -47,7 +45,7 @@ public class CompatibilityTools
 
     public bool IsToolReady { get; private set; }
     public WineSettings Settings { get; private set; }
-    public bool IsToolDownloaded => File.Exists(Wine64Path) && Settings.Prefix.Exists;
+    public bool IsToolDownloaded => !string.IsNullOrEmpty(Wine64Path) && Settings.Prefix.Exists;
 
     public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
     {
@@ -97,13 +95,13 @@ public class CompatibilityTools
 
     public async Task EnsureTool(DirectoryInfo tempPath)
     {
-        if (!File.Exists(Wine64Path))
+        if (string.IsNullOrEmpty(Wine64Path))
         {
             Log.Information($"Compatibility tool does not exist, downloading {Settings.WineRelease.DownloadUrl}");
             await DownloadTool(tempPath).ConfigureAwait(false);
         }
 
-        if (!Settings.WineRelease.lsteamclient || Settings.StartupType == RBWineStartupType.Custom)
+        if (!Settings.WineRelease.lsteamclient)
         {
             var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
             if (lsteamclient.Exists)

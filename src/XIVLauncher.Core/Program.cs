@@ -24,6 +24,7 @@ using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
+using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Proton;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Common.Windows;
@@ -381,10 +382,13 @@ sealed class Program
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = storage.GetFolder("wineprefix");
-        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, WineManager.GetWine(Config.RB_WineVersion), Config.WineBinaryPath, Config.WineDebugVars, wineLogFile, winePrefix, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
         var toolsFolder = storage.GetFolder("compatibilitytool");
+        var wineRelease = (Config.RB_WineStartupType == RBWineStartupType.Custom)
+            ? new WineCustomRelease("Custom", "Custom Wine", Config.WineBinaryPath, "", WineSettings.Haslsteamclient(Config.WineBinaryPath))
+            : WineManager.GetWine(Config.RB_WineVersion);
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
+        var wineSettings = new WineSettings(wineRelease, Config.WineDebugVars, wineLogFile, winePrefix, toolsFolder, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "dxvk"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "nvapi"));
         Directory.CreateDirectory(Path.Combine(toolsFolder.FullName, "wine"));

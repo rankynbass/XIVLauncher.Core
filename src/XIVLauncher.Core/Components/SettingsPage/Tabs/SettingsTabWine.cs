@@ -24,7 +24,10 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
-                () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
+                () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x)
+            {
+                CheckValidity = x => x == RBWineStartupType.Proton ? "Proton not yet implemented" : null,
+            },
 
             wineVersionSetting = new ToolSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
@@ -33,10 +36,16 @@ public class SettingsTabWine : SettingsTab
             },
 
             new SettingsEntry<string>("Wine Binary Path",
-                "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine64 and wineserver binaries.",
+                "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine and/or win64 and wineserver binaries.",
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
-                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom,
+                CheckValidity = s =>
+                {
+                    if (!WineSettings.IsValidWineBinaryPath(s))
+                        return "Invalid wine path.";
+                    return null;
+                },
             },
 
             new ToolSettingsEntry("Proton Version", "Choose which Proton version to use.", () => Program.Config.RB_ProtonVersion ?? Program.ProtonManager.DEFAULT,
