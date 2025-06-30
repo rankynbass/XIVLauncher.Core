@@ -14,6 +14,8 @@ using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Proton;
+using XIVLauncher.Common.Unix.Compatibility.Proton.Releases;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility;
@@ -30,10 +32,6 @@ public class CompatibilityTools
     private readonly DirectoryInfo nvapiDirectory;
     private readonly DirectoryInfo gameDirectory;
     private readonly StreamWriter logWriter;
-
-    private string WineBinPath => Settings.WineRelease.Name;
-    private string Wine64Path => Settings.GetWineBinary(WineBinPath);
-    private string WineServerPath => Path.Combine(WineBinPath, "wineserver");
 
     private readonly IToolRelease dxvkVersion;
     private readonly DxvkHudType hudType;
