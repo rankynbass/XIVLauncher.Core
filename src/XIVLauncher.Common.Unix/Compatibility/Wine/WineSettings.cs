@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using System.Linq;
 
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
-using XIVLauncher.Common.Unix.Compatibility.Proton;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
@@ -52,7 +51,9 @@ uses 32-bit wine when we can't assume 32-bit support will be available (for exam
 
 public class WineSettings
 {
+    public RBWineStartupType StartupType { get; private set; }
     public IWineRelease WineRelease { get; private set; }
+    public IToolRelease RuntimeRelease { get; private set; }
 
     public bool EsyncOn { get; }
     public bool FsyncOn { get; }
@@ -60,11 +61,11 @@ public class WineSettings
     public FileInfo LogFile { get; }
     public DirectoryInfo Prefix { get; }
 
-    public bool IsProton { get; }
-    public bool IsUsingRuntime => runtimePath != null;
+    public bool IsProton => StartupType == RBWineStartupType.Proton;
+    public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
     private string parentPath { get; }
-    private string runtimePath { get; }
-    private string runnerPath { get; }
+    private string runtimePath => (RuntimeRelease != null) ? Path.Combine(RuntimeRelease.Name, "_v2-entry-point") : "";
+    private string runnerPath { get; private set; }
 
     public string Command => IsUsingRuntime ? runtimePath : runnerPath;
     public string AltCommand => runnerPath;
@@ -84,52 +85,50 @@ public class WineSettings
         If steam runtime, it'll be: /path/to/runtime --verb=waitforexitandrun -- /path/to/proton runinprefix command
     */
 
-    public WineSettings(IWineRelease wineRelease, string debugVars, FileInfo logFile, DirectoryInfo prefix, DirectoryInfo wineFolder, bool esyncOn, bool fsyncOn)
+    public WineSettings(RBWineStartupType startupType, IWineRelease wineRelease, DirectoryInfo wineFolder, IToolRelease runtime, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
     {
         this.WineRelease = wineRelease;
-        this.parentPath = (wineRelease.Label == "CUSTOM") ? WineRelease.Name : Path.Combine(wineFolder, wineRelease.Name, "bin");
-        this.runnerPath = GetBinary(parentPath);
-        this.WineServer = Path.Combine(parentPath, "wineserver");
-        this.runtimePath = null;
-        this.EsyncOn = esyncOn;
-        this.FsyncOn = fsyncOn;
-        this.DebugVars = debugVars;
-        this.LogFile = logFile;
-        this.Prefix = prefix;
-        this.IsProton = false;
-        this.IsUsingRuntime = false;
-    }
-
-    public WineSettings(IToolRelease protonRelease, string protonFolder, string runtimePath, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
-    {
-        this.WineRelease = new WineCustomRelease(protonRelease.Label, protonRelease.Description, protonRelease.Name, protonRelease.DownloadUrl, true, [ protonRelease.Checksum ]);
-        this.parentPath = protonFolder;
-        this.WineServer = Path.Combine(protonFolder, "files", "bin", "wineserver");
-        this.runnerPath = Path.Combine(protonFolder, WineRelease.Name, "proton");
-        this.runtimePath = string.IsNullOrEmpty(runtimePath) ? null : Path.Combine(runtimePath, "_v2-entry-point");
-        this.IsProton = true;
-        this.EsyncOn = esyncOn;
-        this.FsyncOn = fsyncOn;
-        this.DebugVars = debugVars;
-        this.LogFile = logFile;
-        this.Prefix = prefix;
-    }
-
-    private string GetBinary(string binFolder)
-    {
-        if (IsProton)
+        switch (startupType)
         {
-            if (File.Exists(Path.Combine(binFolder, "proton")))
-                return Path.Combine(binFolder, "proton");
+            case RBWineStartupType.Custom:
+                this.parentPath = wineRelease.Name;
+                this.runnerPath = SetWineOrWine64(parentPath);
+                this.WineServer = Path.Combine(parentPath, "wineserver");
+                this.RuntimeRelease = null;
+                break;
+
+            case RBWineStartupType.Managed:
+                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
+                this.runnerPath = SetWineOrWine64(parentPath);
+                this.WineServer = Path.Combine(parentPath, "wineserver");
+                this.RuntimeRelease = null;
+                break;
+
+            case RBWineStartupType.Proton:
+                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
+                this.runnerPath = Path.Combine(parentPath, "proton");
+                this.WineServer = Path.Combine(parentPath, "files", "bin", "wineserver");
+                this.RuntimeRelease = runtime;
+                break;
         }
+        this.EsyncOn = esyncOn;
+        this.FsyncOn = fsyncOn;
+        this.DebugVars = debugVars;
+        this.LogFile = logFile;
+        this.Prefix = prefix;
+    }
+
+    // Some 64-bit wine releases, if 64-bit only, may contain a wine binary but not a wine64 binary.
+    public void SetWineOrWine64(string parentPath)
+    {
+        var wine64 = new FileInfo(parentPath, "wine64");
+        var wine = new FileInfo(parentPath, "wine");
+        if (wine64.Exists)
+            runnerPath = wine64.FullName;
+        else if (wine.Exists)
+            runnerPath = wine.FullName;
         else
-        {
-            if (File.Exists(Path.Combine(binFolder, "wine64")))
-                return Path.Combine(binFolder, "wine64");
-            if (File.Exists(Path.Combine(binFolder, "wine")))
-                return Path.Combine(binFolder, "wine");
-        }
-        return string.Empty;
+            runnerPath = wine64.FullName;
     }
 
     public static bool WineDLLOverrideIsValid(string dlls)
@@ -165,9 +164,9 @@ public class WineSettings
     {
         if (string.IsNullOrEmpty(path))
             return false;
-        var wine = new FileInfo(Path.Combine(path, "wine"));
-        var wine64 = new FileInfo(Path.Combine(path, "wine64"));
-        if (wine64.Exists || wine.Exists)
+        if (File.Exists(Path.Combine(path, "wine64")))
+            return true;
+        if (File.Exists(Path.Combine(path, "wine")))
             return true;
         return false;
     }

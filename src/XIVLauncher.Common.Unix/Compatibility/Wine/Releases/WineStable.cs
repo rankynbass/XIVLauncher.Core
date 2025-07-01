@@ -1,8 +1,9 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-public sealed class WineStableRelease(WineReleaseDistro wineDistroId) : IWineRelease
+public sealed class WineStableRelease(WineReleaseDistro wineDistroId, string parentFolder) : IWineRelease
 {
     public string Name { get; } = $"wine-xiv-staging-fsync-git-10.8.r0.g47f77594-nolsc";
+    public string ParentFolder { get; } = parentFolder;
     public string Label { get; } = "Stable";
     public string Description { get; } = "Based on Wine 10.8 - recommended for most users.";
     public string DownloadUrl { get; } = $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{wineDistroId}-10.8.r0.g47f77594-nolsc.tar.xz";

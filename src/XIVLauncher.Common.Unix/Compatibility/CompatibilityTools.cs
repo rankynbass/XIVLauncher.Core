@@ -14,8 +14,6 @@ using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
-using XIVLauncher.Common.Unix.Compatibility.Proton;
-using XIVLauncher.Common.Unix.Compatibility.Proton.Releases;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility;
@@ -93,6 +91,10 @@ public class CompatibilityTools
 
     public async Task EnsureTool(DirectoryInfo tempPath)
     {
+        if (Settings.IsUsingRuntime && !File.Exists(Settings.Command))
+        {
+            
+        }
         if (string.IsNullOrEmpty(Wine64Path))
         {
             Log.Information($"Compatibility tool does not exist, downloading {Settings.WineRelease.DownloadUrl}");

@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 using Serilog;
 
-using XIVLauncher.Common.Unix.Compatibility.Proton.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Util;
 
-namespace XIVLauncher.Common.Unix.Compatibility.Proton;
+namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public static class Runtime
 {

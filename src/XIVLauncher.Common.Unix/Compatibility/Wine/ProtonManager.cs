@@ -4,9 +4,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 
-using XIVLauncher.Common.Unix.Compatibility.Proton.Releases;
+using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
-namespace XIVLauncher.Common.Unix.Compatibility.Proton;
+namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public class ProtonManager
 {
@@ -14,7 +14,9 @@ public class ProtonManager
 
     public string LEGACY { get; private set; }
 
-    public Dictionary<string, IToolRelease> Version { get; private set; }
+    public Dictionary<string, IWineRelease> Version { get; private set; }
+
+    public IToolRelease Runtime { get; }
 
     private string rootFolder { get; }
 
@@ -38,18 +40,24 @@ public class ProtonManager
             this.commonFolder = steamfolder2;
             this.compatFolder = Path.Combine(home, ".local", "share", "Steam", "compatibilitytools.d");
         }
+        if (!Directory.Exists(commonFolder))
+            Directory.CreateDirectory(commonFolder);
+        if (!Directory.Exists(compatFolder))
+            Directory.CreateDirectory(compatFolder);
+        this.Runtime = new SteamRuntimeRelease(this.commonFolder);
+        
         Initialize();
     }
 
     private void Initialize()
     {
-        Version = new Dictionary<string, IToolRelease>();
+        Version = new Dictionary<string, IWineRelease>();
         
-        var protonStable = new ProtonStableRelease();
-        var protonStableNtsync = new ProtonStableNtsyncRelease();
-        var protonLatest = new ProtonLatestRelease();
-        var protonLatestNtsync = new ProtonLatestNtsyncRelease();
-        var protonLegacy = new ProtonLegacyRelease();
+        var protonStable = new ProtonStableRelease(compatFolder);
+        var protonStableNtsync = new ProtonStableNtsyncRelease(compatFolder);
+        var protonLatest = new ProtonLatestRelease(compatFolder);
+        var protonLatestNtsync = new ProtonLatestNtsyncRelease(compatFolder);
+        var protonLegacy = new ProtonLegacyRelease(compatFolder);
 
         this.DEFAULT = protonLatest.Name;
         this.LEGACY = protonLegacy.Name;
@@ -95,5 +103,5 @@ public class ProtonManager
         Initialize();
     }
 
-    
+
 }
