@@ -1,6 +1,6 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
-public class IWineRelease : IToolRelease
+public interface IWineRelease : IToolRelease
 {
     string Name { get; }
     string ParentFolder { get; }

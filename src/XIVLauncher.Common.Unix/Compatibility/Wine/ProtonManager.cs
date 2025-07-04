@@ -20,9 +20,11 @@ public class ProtonManager
 
     private string rootFolder { get; }
 
-    public string commonFolder { get; }
+    private string commonFolder { get; }
 
-    public string compatFolder { get; }
+    private string compatFolder { get; }
+
+    public DirectoryInfo SteamFolder { get; }
 
     public ProtonManager(string root)
     {
@@ -32,11 +34,13 @@ public class ProtonManager
         var steamfolder2 = Path.Combine(home, ".local", "share", "Steam", "steamapps", "common");
         if (Directory.Exists(steamfolder1))
         {
+            this.SteamFolder = new DirectoryInfo(Path.Combine(home, ".steam", "steam"));
             this.commonFolder = steamfolder1;
             this.compatFolder = Path.Combine(home, ".steam", "steam", "compatibilitytools.d");
         }
         else
         {
+            this.SteamFolder = new DirectoryInfo(Path.Combine(home, ".local", "share", "Steam"));
             this.commonFolder = steamfolder2;
             this.compatFolder = Path.Combine(home, ".local", "share", "Steam", "compatibilitytools.d");
         }
@@ -69,7 +73,7 @@ public class ProtonManager
         AddVersion(protonLegacy);
     }
 
-    private void AddVersion(IToolRelease proton)
+    private void AddVersion(IWineRelease proton)
     {
         Version.Add(proton.Name, proton);
     }
@@ -83,15 +87,6 @@ public class ProtonManager
         return DEFAULT;
     }
 
-    public string GetProtonPath(IToolRelease name)
-    {
-        if (File.Exists(Path.Combine(commonFolder, name.Name, "proton")))
-            return Path.Combine(commonFolder, name.Name);
-        if (File.Exists(Path.Combine(compatFolder, name.Name, "proton")))
-            return Path.Combine(commonFolder, name.Name);
-        return string.Empty;
-    }
-
     public IToolRelease GetProton(string? name)
     {
         return Version[GetVersionOrDefault(name)];
@@ -102,6 +97,4 @@ public class ProtonManager
         Version.Clear();
         Initialize();
     }
-
-
 }

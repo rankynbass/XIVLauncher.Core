@@ -11,9 +11,9 @@ using Serilog;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
-public class ToolSettingsEntry : SettingsEntry<string>
+public class WineSettingsEntry : SettingsEntry<string>
 {
-    public Dictionary<string, IToolRelease> Pairs;
+    public Dictionary<string, IWineRelease> Pairs;
 
     public string DefaultValue;
 
@@ -21,9 +21,9 @@ public class ToolSettingsEntry : SettingsEntry<string>
 
     public bool ShowItemDescription;
 
-    public ToolSettingsEntry(string name, string description, Func<string> load, Action<string?> save, Dictionary<string, IToolRelease> pairs, string defaultValue, bool showSelectedDesc = false, bool showItemDesc = true)
+    public WineSettingsEntry(string name, string description, Func<string> load, Action<string?> save, Dictionary<string, IWineRelease> pairs, string defaultValue, bool showSelectedDesc = false, bool showItemDesc = true)
         : base(name, description, load, save)
-    { 
+    {
         this.Pairs = pairs;
         this.DefaultValue = defaultValue;
         this.ShowDescription = showSelectedDesc;
@@ -43,6 +43,8 @@ public class ToolSettingsEntry : SettingsEntry<string>
         {
             Log.Warning($"Value \"{(string)this.InternalValue}\" from launcher.ini is not a valid compatibility tool. Using default \"{DefaultValue}\"");
             this.InternalValue = DefaultValue;
+            if (!Pairs.ContainsKey(DefaultValue))
+                this.InternalValue = Pairs.FirstOrDefault();
         }
 
         string idx = (string)this.InternalValue;
@@ -96,16 +98,9 @@ public class ToolSettingsEntry : SettingsEntry<string>
         }
     }
 
-    public void Reset(Dictionary<string, IToolRelease> pairs)
-    {
-        this.Pairs.Clear();
-        this.Pairs = pairs;
-    }
-
     public void Reset(Dictionary<string, IWineRelease> pairs)
     {
         this.Pairs.Clear();
-        foreach (var pair in pairs)
-            Pairs.Add(pair.Key, (IToolRelease)pair.Value);
+        this.Pairs = pairs;
     }
 }

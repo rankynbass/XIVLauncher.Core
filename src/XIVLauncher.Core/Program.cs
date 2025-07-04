@@ -25,7 +25,6 @@ using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
-using XIVLauncher.Common.Unix.Compatibility.Proton;
 using XIVLauncher.Common.Util;
 using XIVLauncher.Common.Windows;
 using XIVLauncher.Core.Accounts.Secrets;
@@ -381,18 +380,19 @@ sealed class Program
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
-        var winePrefix = storage.GetFolder("wineprefix");
+        var winePrefix = Config.RB_WineStartupType == RBWineStartupType.Proton ? storage.GetFolder("protonprefix") : storage.GetFolder("wineprefix");
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var wineRelease = (Config.RB_WineStartupType == RBWineStartupType.Custom)
-            ? new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", WineSettings.Haslsteamclient(Config.WineBinaryPath))
+            ? new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.Haslsteamclient(Config.WineBinaryPath))
             : WineManager.GetWine(Config.RB_WineVersion);
-        var wineFolder = toolsFolder.CreateSubdirectory("wine");
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
-        var wineSettings = new WineSettings(wineRelease, Config.WineDebugVars, wineLogFile, winePrefix, wineFolder, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, ProtonManager.SteamFolder);
+        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, wineRelease, ProtonManager.Runtime, paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
-        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache, toolsFolder, Config.GamePath);
+        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
     }
 
     public static void ShowWindow()

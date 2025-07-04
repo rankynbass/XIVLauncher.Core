@@ -29,7 +29,21 @@ public class CompatibilityTools
     private readonly DirectoryInfo dxvkDirectory;
     private readonly DirectoryInfo nvapiDirectory;
     private readonly DirectoryInfo gameDirectory;
+    private readonly DirectoryInfo configDirectory;
+    private readonly DirectoryInfo steamDirectory;
     private readonly StreamWriter logWriter;
+
+    // Wine64 will be wine64/wine for wine, proton for proton
+    private string Wine64Path => Settings.WinePath;
+    private string WineServerPath => Settings.WineServerPath;
+    private string RunInPrefixVerb => Settings.IsProton ? "runinprefix " : "";
+    private string RunVerb => Settings.IsProton ? "run " : "";
+
+    // Runtime will only be used with proton, and can be disabled. If not using runtime,
+    // RuntimePath will be the same as Wine64Path, and we extra args won't be needed, so will be empty.
+    private string RuntimePath => Settings.IsUsingRuntime ? Path.Combine(Settings.RuntimeRelease.Name, "_v2-entry-point") : Wine64Path;
+    private string RuntimeArgs => Settings.IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{Wine64Path}\" " : "";
+    private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
 
     private readonly IToolRelease dxvkVersion;
     private readonly DxvkHudType hudType;
@@ -38,12 +52,14 @@ public class CompatibilityTools
     private readonly bool gamemodeOn;
     private readonly bool dxvkAsyncOn;
     private readonly bool gplAsyncCacheOn;
-
+    private bool isDxvkEnabled => dxvkVersion.Label != "Disabled";
+    private bool isNvapiEnabled => isDxvkEnabled && (nvapiVersion.Label != "Disabled");
+    
     public bool IsToolReady { get; private set; }
     public WineSettings Settings { get; private set; }
-    public bool IsToolDownloaded => !string.IsNullOrEmpty(Wine64Path) && Settings.Prefix.Exists;
+    public bool IsToolDownloaded => File.Exists(RuntimePath) && File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn, DirectoryInfo toolsFolder, DirectoryInfo gameDirectory)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
@@ -54,10 +70,12 @@ public class CompatibilityTools
         this.dxvkAsyncOn = dxvkAsyncOn;
         this.gplAsyncCacheOn = gplAsyncCacheOn;
 
-        this.wineDirectory = new DirectoryInfo(Path.Combine(toolsFolder.FullName, "wine"));
-        this.dxvkDirectory = new DirectoryInfo(Path.Combine(toolsFolder.FullName, "dxvk"));
-        this.nvapiDirectory = new DirectoryInfo(Path.Combine(toolsFolder.FullName, "nvapi"));
-        this.gameDirectory = gameDirectory;
+        this.wineDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "wine"));
+        this.dxvkDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "dxvk"));
+        this.nvapiDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "nvapi"));
+        this.gameDirectory = Settings.Paths.GameFolder;
+        this.configDirectory = Settings.Paths.ConfigFolder;
+        this.steamDirectory = Settings.Paths.SteamFolder;
 
         // TODO: Replace these with a nicer way of preventing a pileup of compat tools,
         // This implementation is just a hack.
@@ -85,20 +103,67 @@ public class CompatibilityTools
             this.dxvkDirectory.Create();
         if (!this.nvapiDirectory.Exists)
             this.nvapiDirectory.Create();
-        if (!wineSettings.Prefix.Exists)
-            wineSettings.Prefix.Create();
+        if (!this.steamDirectory.Exists && this.Settings.IsUsingRuntime);
+        {
+            this.steamDirectory.Create();
+            this.steamDirectory.CreateSubdirectory(Path.Combine("steamapps", "common"));
+            this.steamDirectory.CreateSubdirectory(Path.Combine("compatibilitytools.d"));
+        }
+
+        var pfx = new FileInfo(Path.Combine(Settings.Prefix.FullName, "pfx"));
+
+        if (!Settings.Prefix.Exists)
+            Settings.Prefix.Create();
+
+        // Do proton prefixes like umu, with pfx symlinked back to prefix folder.
+        if (Settings.IsProton)
+        {
+            if (pfx.Exists)
+            {
+                if (pfx.ResolveLinkTarget(false) is null) // File exists, is not a symlink
+                    pfx.Delete();
+                if (pfx.ResolveLinkTarget(true).FullName != Settings.Prefix.FullName) // symlink is wrong
+                {
+                    pfx.Delete();
+                    pfx.CreateAsSymbolicLink(Settings.Prefix.FullName);
+                }
+            }
+            else if (!Directory.Exists(pfx.FullName)) // pfx is not a directory, does not exist
+            {
+                pfx.CreateAsSymbolicLink(Settings.Prefix.FullName);
+            }
+        }
     }
 
     public async Task EnsureTool(DirectoryInfo tempPath)
     {
-        if (Settings.IsUsingRuntime && !File.Exists(Settings.Command))
+        // Download sniper container if it's missing.
+        if (Settings.IsUsingRuntime && !File.Exists(RuntimePath))
         {
-            
+            if (string.IsNullOrEmpty(Settings.RuntimeRelease.DownloadUrl))
+                throw new ArgumentNullException("Steam runtime selected, but is not present, and no download url provided.");
+            Log.Information($"Steam Sniper runtime does not exist, downloading {Settings.RuntimeRelease.DownloadUrl}");
+            //await DownloadTool(DirectoryInfo tempPath, Settings.RuntimeRelease.ParentFolder).ConfigureAwait(false);
         }
-        if (string.IsNullOrEmpty(Wine64Path))
+
+        if (Settings.IsProton && !File.Exists(Wine64Path))
         {
-            Log.Information($"Compatibility tool does not exist, downloading {Settings.WineRelease.DownloadUrl}");
-            await DownloadTool(tempPath).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
+                throw new ArgumentNullException($"Proton not found at {Wine64Path}, and no download url provided.");
+            Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
+            //await DownloadTool(DirectoryInfo tempPath, Settings.WineRelease.ParentFolder).ConfigureAwait(false);
+            EnsurePrefix();
+            IsToolReady = true;
+            return;
+        }
+
+        if (!File.Exists(Wine64Path))
+        {
+            if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
+                throw new ArgumentNullException($"Wine not found at the given path: {Wine64Path}, and no download url provided.");
+            Log.Information($"Wine release \"{Settings.WineRelease.Label}\" does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
+            //await DownloadTool(DirectoryInfo tempPath, wineDirectory).ConfigureAwait(false);
+            Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
         if (!Settings.WineRelease.lsteamclient)
@@ -113,15 +178,18 @@ public class CompatibilityTools
 
         EnsurePrefix();
 
-        await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
-        await Nvapi.Nvapi.InstallNvapi(Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
-        if (nvapiVersion.Name != "DISABLED")
-            Nvapi.Nvapi.CopyNvngx(gameDirectory, Settings.Prefix);
+        if (isDxvkEnabled)
+            await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
+        if (isNvapiEnabled)
+        {
+            await Nvapi.Nvapi.InstallNvapi(Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
+            Nvapi.Nvapi.CopyNvngx(Settings.Paths.GameFolder, Settings.Prefix);
+        }
 
         IsToolReady = true;
     }
 
-    private async Task DownloadTool(DirectoryInfo tempPath)
+    private async Task DownloadTool(DirectoryInfo tempPath, DirectoryInfo targetPath)
     {
         using var client = new HttpClient();
         var tempFilePath = Path.Combine(tempPath.FullName, $"{Guid.NewGuid()}");
@@ -130,19 +198,58 @@ public class CompatibilityTools
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
-        PlatformHelpers.Untar(tempFilePath, this.wineDirectory.FullName);
-        Log.Information("Compatibility tool successfully extracted to {Path}", this.wineDirectory.FullName);
+        PlatformHelpers.Untar(tempFilePath, targetPath.FullName);
+        Log.Information("Compatibility tool {Name} successfully extracted to {Path}", Settings.WineRelease.Label, Settings.WineRelease.ParentFolder);
         File.Delete(tempFilePath);
     }
 
     public void EnsurePrefix()
     {
-        RunInPrefix("cmd /c dir %userprofile%/Documents > nul").WaitForExit();
+        Console.WriteLine("Ensuring Prefix");
+        Log.Information("Ensuring Prefix...  ...  ...  ...  ...");
+        bool runinprefix = true;
+        // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
+        // That will generate these files.
+        if (!File.Exists(Path.Combine(Settings.Prefix.FullName, "config_info")) &&
+            !File.Exists(Path.Combine(Settings.Prefix.FullName, "pfx.lock")) &&
+            !File.Exists(Path.Combine(Settings.Prefix.FullName, "tracked_files")) &&
+            !File.Exists(Path.Combine(Settings.Prefix.FullName, "version")))
+        {
+            runinprefix = false;
+        }
+        RunWithoutRuntime("wineboot -u", runinprefix, false).WaitForExit();
+
+        //RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", runinprefix, false).WaitForExit();
+    }
+
+    public Process RunWithoutRuntime(string command, bool runinprefix = true, bool redirect = true)
+    {
+        Console.WriteLine("Inside RunWithoutRuntime. Settings.IsProton = " + Settings.IsProton.ToString());
+        Console.WriteLine("command = " + command);
+        if (!Settings.IsProton)
+            return RunInPrefix(command, redirectOutput: redirect, writeLog: redirect);
+        var psi = new ProcessStartInfo(Wine64Path);
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.UseShellExecute = false;
+        // Need to set these or proton will refuse to run.
+        foreach (var kvp in Settings.EnvVars)
+            psi.Environment.Add(kvp);
+        psi.Environment.Add("WINEDLLOVERRIDES", WINEDLLOVERRIDES + (isDxvkEnabled ? "n,b;" : "b;") + ExtraWineDLLOverrides );
+       
+        psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
+        var quickRun = new Process();
+        quickRun.StartInfo = psi;
+        quickRun.Start();
+        Log.Verbose("Running without runtime: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+        return quickRun;
     }
 
     public Process RunInPrefix(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
-        var psi = new ProcessStartInfo(Wine64Path);
+        Console.WriteLine("Inside RunInPrefix");
+        Console.WriteLine($"Runtime path = {RuntimePath} \"{command}\"");
+        var psi = new ProcessStartInfo(RuntimePath);
         psi.Arguments = command;
 
         Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, command);
@@ -151,7 +258,8 @@ public class CompatibilityTools
 
     public Process RunInPrefix(string[] args, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
-        var psi = new ProcessStartInfo(Wine64Path);
+        Console.WriteLine("Inside RunInPrefixArray");
+        var psi = new ProcessStartInfo(RuntimePath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
@@ -167,10 +275,22 @@ public class CompatibilityTools
         foreach (var keyValuePair in b)
         {
             if (a.ContainsKey(keyValuePair.Key))
-                a[keyValuePair.Key] = keyValuePair.Value;
+            {
+                if (keyValuePair.Key == "LD_PRELOAD")
+                    a[keyValuePair.Key] = MergeLDPreload(a[keyValuePair.Key], keyValuePair.Value);
+                else
+                    a[keyValuePair.Key] = keyValuePair.Value;
+            }
             else
                 a.Add(keyValuePair.Key, keyValuePair.Value);
         }
+    }
+
+    private string MergeLDPreload(string a, string b)
+    {
+        a ??= "";
+        b ??= "";
+        return (a.Trim(':') + ":" + b.Trim(':')).Trim(':');
     }
 
     private Process RunInPrefix(ProcessStartInfo psi, string workingDirectory, IDictionary<string, string> environment, bool redirectOutput, bool writeLog, bool wineD3D)
@@ -180,15 +300,15 @@ public class CompatibilityTools
         psi.UseShellExecute = false;
         psi.WorkingDirectory = workingDirectory;
 
-        var ogl = wineD3D || this.dxvkVersion.Name == "DISABLED";
+        var ogl = wineD3D || !isDxvkEnabled;
 
         var wineEnvironmentVariables = new Dictionary<string, string>
         {
-            { "WINEPREFIX", Settings.Prefix.FullName },
-            { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" }
+            { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" },
+            { "WINEPREFIX", Settings.Prefix.FullName }
         };
 
-        if (!ogl && nvapiVersion.Name != "DISABLED")
+        if (!ogl && isNvapiEnabled && !Settings.IsProton)
             wineEnvironmentVariables.Add("DXVK_ENABLE_NVAPI", "1");
 
         if (!string.IsNullOrEmpty(Settings.DebugVars))

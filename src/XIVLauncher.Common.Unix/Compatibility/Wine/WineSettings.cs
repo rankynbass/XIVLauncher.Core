@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Collections.Generic;
 
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 
@@ -60,54 +61,51 @@ public class WineSettings
     public string DebugVars { get; }
     public FileInfo LogFile { get; }
     public DirectoryInfo Prefix { get; }
+    public XLCorePaths Paths { get; }
 
     public bool IsProton => StartupType == RBWineStartupType.Proton;
     public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
     private string parentPath { get; }
-    private string runtimePath => (RuntimeRelease != null) ? Path.Combine(RuntimeRelease.Name, "_v2-entry-point") : "";
-    private string runnerPath { get; private set; }
+    public string WinePath { get; private set; }
+    public string WineServerPath { get; private set; }
 
-    public string Command => IsUsingRuntime ? runtimePath : runnerPath;
-    public string AltCommand => runnerPath;
-    public string WineServer { get; private set; }
-    public string RunVerb => IsProton ? "run " : "";
-    public string RunInPrefixVerb => IsProton ? "runinprefix " : "";
-    public string RunInRuntimeArgs => IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{runnerPath}\" " : "";
-    public string RunInRuntimeArgsArray => IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", runnerPath ] : new string[] { };
+    public Dictionary<string, string> EnvVars { get; private set; }
+
+
 
     /*  
         The end result of the above variables is that we will build the process commands as follows:
         Process: Command
-        Arguements: RunInRuntimeArguments + RunnerPath + Run/RunInPrefix + command.
+        Arguements: RunInRuntimeArguments + WinePath + Run/RunInPrefix + command.
 
         If wine, that'll look like: /path/to/wine64 command
         If proton, it'll look like: /path/to/proton runinprefix command
         If steam runtime, it'll be: /path/to/runtime --verb=waitforexitandrun -- /path/to/proton runinprefix command
     */
 
-    public WineSettings(RBWineStartupType startupType, IWineRelease wineRelease, DirectoryInfo wineFolder, IToolRelease runtime, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool esyncOn, bool fsyncOn)
+    public WineSettings(RBWineStartupType startupType, IWineRelease wineRelease, IToolRelease runtime, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn)
     {
         this.WineRelease = wineRelease;
         switch (startupType)
         {
             case RBWineStartupType.Custom:
                 this.parentPath = wineRelease.Name;
-                this.runnerPath = SetWineOrWine64(parentPath);
-                this.WineServer = Path.Combine(parentPath, "wineserver");
+                this.SetWineOrWine64(parentPath);
+                this.WineServerPath = Path.Combine(parentPath, "wineserver");
                 this.RuntimeRelease = null;
                 break;
 
             case RBWineStartupType.Managed:
-                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
-                this.runnerPath = SetWineOrWine64(parentPath);
-                this.WineServer = Path.Combine(parentPath, "wineserver");
+                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
+                this.SetWineOrWine64(parentPath);
+                this.WineServerPath = Path.Combine(parentPath, "wineserver");
                 this.RuntimeRelease = null;
                 break;
 
             case RBWineStartupType.Proton:
                 this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
-                this.runnerPath = Path.Combine(parentPath, "proton");
-                this.WineServer = Path.Combine(parentPath, "files", "bin", "wineserver");
+                this.WinePath = Path.Combine(parentPath, "proton");
+                this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
                 this.RuntimeRelease = runtime;
                 break;
         }
@@ -115,20 +113,59 @@ public class WineSettings
         this.FsyncOn = fsyncOn;
         this.DebugVars = debugVars;
         this.LogFile = logFile;
-        this.Prefix = prefix;
+        this.Prefix = paths.Prefix;
+        this.Paths = paths;
+        this.EnvVars = new Dictionary<string, string>();
+        if (IsProton)
+        {
+            EnvVars.Add("STEAM_COMPAT_DATA_PATH", Prefix.FullName);
+            EnvVars.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Paths.SteamFolder.FullName);
+            if (!FsyncOn)
+            {
+                EnvVars.Add("PROTON_NO_FSYNC", "1");
+                if (!EsyncOn)
+                    EnvVars.Add("PROTON_NO_ESYNC", "1");
+            }
+            setSteamCompatMounts();
+        }
+        else
+        {
+            EnvVars.Add("WINEESYNC", EsyncOn ? "1" : "0");
+            EnvVars.Add("WINEFSYNC", FsyncOn ? "1" : "0");
+            EnvVars.Add("WINEPREFIX", Prefix.FullName);
+        }
+    }
+
+    private void setSteamCompatMounts()
+    {
+        var importantPaths = new System.Text.StringBuilder($"{Paths.GameFolder.FullName}:{Paths.ConfigFolder.FullName}");
+        var steamCompatMounts = System.Environment.GetEnvironmentVariable("STEAM_COMPAT_MOUNTS");
+        if (!string.IsNullOrEmpty(steamCompatMounts))
+            importantPaths.Append(":" + steamCompatMounts.Trim(':'));
+        
+        // These paths are for winediscordipcbridge.exe. Note that exact files are being passed, not directories.
+        // You can't pass the whole /run/user/<userid> directory; it will get ignored.
+        var runtimeDir = System.Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
+        if (!string.IsNullOrEmpty(runtimeDir))
+        {
+            for (int i = 0; i < 10; i++)
+                importantPaths.Append($":{runtimeDir}/discord-ipc-{i}");
+            importantPaths.Append($"{runtimeDir}/app/com.discordapp.Discord:{runtimeDir}/snap.discord-canary");
+        }       
+        EnvVars.Add("STEAM_COMPAT_MOUNTS", importantPaths.ToString());
     }
 
     // Some 64-bit wine releases, if 64-bit only, may contain a wine binary but not a wine64 binary.
     public void SetWineOrWine64(string parentPath)
     {
-        var wine64 = new FileInfo(parentPath, "wine64");
-        var wine = new FileInfo(parentPath, "wine");
+        var wine64 = new FileInfo(Path.Combine(parentPath, "wine64"));
+        var wine = new FileInfo(Path.Combine(parentPath, "wine"));
         if (wine64.Exists)
-            runnerPath = wine64.FullName;
+            WinePath = wine64.FullName;
         else if (wine.Exists)
-            runnerPath = wine.FullName;
+            WinePath = wine.FullName;
         else
-            runnerPath = wine64.FullName;
+            WinePath = wine64.FullName;
     }
 
     public static bool WineDLLOverrideIsValid(string dlls)

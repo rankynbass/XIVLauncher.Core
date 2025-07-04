@@ -6,7 +6,6 @@ using ImGuiNET;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
-using XIVLauncher.Common.Unix.Compatibility.Proton;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
@@ -15,7 +14,7 @@ public class SettingsTabWine : SettingsTab
 {
     private SettingsEntry<RBWineStartupType> startupTypeSetting;
 
-    private ToolSettingsEntry wineVersionSetting;
+    private WineSettingsEntry wineVersionSetting;
 
     private ToolSettingsEntry dxvkVersionSetting;
 
@@ -29,7 +28,7 @@ public class SettingsTabWine : SettingsTab
                 CheckValidity = x => x == RBWineStartupType.Proton ? "Proton not yet implemented" : null,
             },
 
-            wineVersionSetting = new ToolSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
+            wineVersionSetting = new WineSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
@@ -48,13 +47,13 @@ public class SettingsTabWine : SettingsTab
                 },
             },
 
-            new ToolSettingsEntry("Proton Version", "Choose which Proton version to use.", () => Program.Config.RB_ProtonVersion ?? Program.ProtonManager.DEFAULT,
+            new WineSettingsEntry("Proton Version", "Choose which Proton version to use.", () => Program.Config.RB_ProtonVersion ?? Program.ProtonManager.DEFAULT,
                 s => Program.Config.RB_ProtonVersion = s, Program.ProtonManager.Version, Program.ProtonManager.DEFAULT)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
             },
 
-            new SettingsEntry<bool>("Enable Sniper", "Use the Steam sniper runtime container (recommended)", () => Program.Config.RB_UseSniperRuntime ?? true, b => Program.Config.RB_UseSniperRuntime = b)
+            new SettingsEntry<bool>("Enable Steam Runtime", "Use the Steam sniper runtime container (recommended)", () => Program.Config.RB_UseSniperRuntime ?? true, b => Program.Config.RB_UseSniperRuntime = b)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
             },
