@@ -234,8 +234,6 @@ public class CompatibilityTools
             psi.Environment.Add(kvp);
         psi.Environment.Add("WINEDLLOVERRIDES", WINEDLLOVERRIDES + (isDxvkEnabled ? "n,b;" : "b;") + ExtraWineDLLOverrides );
         psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
-        Console.WriteLine($"Running without runtime: {psi.FileName} {psi.Arguments}");
-
         var quickRun = new Process();
         quickRun.StartInfo = psi;
         quickRun.Start();
@@ -247,8 +245,6 @@ public class CompatibilityTools
     {
         var psi = new ProcessStartInfo(RuntimePath);
         psi.Arguments = RuntimeArgs + RunInPrefixVerb + command;
-
-        Console.WriteLine($"Running in prefix: {psi.FileName} {psi.Arguments}");
         Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
@@ -266,7 +262,6 @@ public class CompatibilityTools
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        Console.WriteLine($"Running in prefix (array): {psi.FileName} {psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b)}");
         Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
@@ -397,12 +392,10 @@ public class CompatibilityTools
 
     public Int32 GetUnixProcessId(Int32 winePid)
     {
-        Console.WriteLine("Trying to get Unix Process Id");
         var wineDbg = RunInPrefix("winedbg --command \"info procmap\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         if (output.Contains("syntax error\n") || output.Contains("Exception c0000005")) // valve wine changed the error message
         {
-            Console.WriteLine("There was an error getting the process Id, trying fallback method.");
             var processName = GetProcessName(winePid);
             return GetUnixProcessIdByName(processName);
         }
@@ -414,13 +407,11 @@ public class CompatibilityTools
 
     private string GetProcessName(Int32 winePid)
     {
-        Console.WriteLine("Getting process name");
         var wineDbg = RunInPrefix("winedbg --command \"info proc\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var processNames = matchingLines.Select(l => l.Substring(20).Trim('\'')).ToArray();
-        Console.WriteLine($"Process name = {processNames.FirstOrDefault()}");
         return processNames.FirstOrDefault();
     }
 

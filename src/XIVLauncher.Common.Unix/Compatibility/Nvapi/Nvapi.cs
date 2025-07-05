@@ -46,7 +46,6 @@ public static class Nvapi
     // The prefix system32 folder will not work. If the dlls are only in system32, the game will hang on startup.
     public static void CopyNvngx(DirectoryInfo gameDirectory, DirectoryInfo prefix)
     {
-        Console.WriteLine("Copying nvngx dlls (should not see this on proton)");
         var nvngxPath = NvidiaWineDLLPath();
         if (string.IsNullOrEmpty(nvngxPath))
         {
