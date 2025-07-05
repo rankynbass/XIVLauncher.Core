@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Text;
+using System.Text.RegularExpressions;
 
 using Serilog;
 
@@ -12,16 +14,31 @@ using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
-public enum DxvkHudType
+public enum RBHudType
 {
     [SettingsDescription("None", "Show nothing")]
     None,
 
-    [SettingsDescription("FPS", "Only show FPS")]
+    [SettingsDescription("Dxvk Hud FPS", "Only show FPS")]
     Fps,
 
-    [SettingsDescription("Full", "Show everything")]
+    [SettingsDescription("Dxvk Hud Full", "Show everything")]
     Full,
+
+    [SettingsDescription("Dxvk Hud Custom String", "Specify a custom DXVK Hud string")]
+    Custom,
+
+    [SettingsDescription("MangoHud Default", "Default display. Uses no config file.")]
+    MHDefault,
+
+    [SettingsDescription("MangoHud Custom File", "Specify a custom config file")]
+    MHCustomFile,
+
+    [SettingsDescription("MangoHud Custom String", "Specify a config via string")]
+    MHCustomString,
+
+    [SettingsDescription("MangoHud Full", "Show (almost) everything")]
+    MHFull,
 }
 
 public static class Dxvk
@@ -67,6 +84,52 @@ public static class Dxvk
         PlatformHelpers.Untar(tempPath, installDirectory.FullName);
 
         File.Delete(tempPath);
+    }
+
+    private static bool? mangoHudFound = null;
+
+    public static bool IsMangoHudInstalled
+    {
+        get
+        {
+            if (mangoHudFound is null)
+            {
+                string[] libraryPaths = [ "/app/lib", "/usr/lib64", "/usr/lib", "/lib64", "/lib", "/var/lib/snapd/hostfs/usr/lib64", "/var/lib/snapd/hostfs/usr/lib" ];
+                mangoHudFound = false;
+                var options = new EnumerationOptions();
+                options.RecurseSubdirectories = true;
+                options.MaxRecursionDepth = 8;
+                foreach (var path in libraryPaths)
+                {
+                    if (!Directory.Exists(path))
+                        continue;
+
+                    if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
+                    {
+                        mangoHudFound = true;
+                        break;
+                    }
+                }
+            }
+            return mangoHudFound ?? false;
+        }
+    }
+
+    public const string MANGOHUD_DEFAULT_STRING = "ram,vram,resolution,vulkan_driver,engine_version,wine,frame_timing=1";
+
+    public static bool IsDxvkHudStringValid(string customHud)
+    {
+        var ALLOWED_CHARS = "^[0-9a-zA-Z,=.]+$";
+        var ALLOWED_WORDS = "^(?:devinfo|fps|frametimes|submissions|drawcalls|pipelines|descriptors|memory|gpuload|version|api|cs|compiler|samplers|scale=(?:[0-9])*(?:.(?:[0-9])+)?)$";
+
+        if (string.IsNullOrWhiteSpace(customHud)) return false;
+        if (customHud == "full") return true;
+        if (customHud == "1") return true;
+        if (!Regex.IsMatch(customHud, ALLOWED_CHARS)) return false;
+
+        string[] hudvars = customHud.Split(",");
+
+        return hudvars.All(hudvar => Regex.IsMatch(hudvar, ALLOWED_WORDS));        
     }
 }
 

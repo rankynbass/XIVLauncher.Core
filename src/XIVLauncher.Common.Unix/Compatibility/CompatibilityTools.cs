@@ -46,7 +46,8 @@ public class CompatibilityTools
     private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
 
     private readonly IToolRelease dxvkVersion;
-    private readonly DxvkHudType hudType;
+    private readonly RBHudType hudType;
+    private readonly string customHud;
     private readonly IToolRelease nvapiVersion;
     private readonly string ExtraWineDLLOverrides;
     private readonly bool gamemodeOn;
@@ -59,11 +60,12 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(RuntimePath) && File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, DxvkHudType hudType, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
         this.hudType = hudType;
+        this.customHud = customHud;
         this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", "");
         this.gamemodeOn = gamemodeOn;
         this.ExtraWineDLLOverrides = WineSettings.WineDLLOverrideIsValid(winedlloverrides) ? winedlloverrides : "";
@@ -337,20 +339,40 @@ public class CompatibilityTools
         wineEnvironmentVariables.Add("XL_WINEONLINUX", "true");
         string ldPreload = Environment.GetEnvironmentVariable("LD_PRELOAD") ?? "";
 
-        string dxvkHud = hudType switch
+        var dxvkHud = hudType switch
         {
-            DxvkHudType.None => "0",
-            DxvkHudType.Fps => "fps",
-            DxvkHudType.Full => "full",
-            _ => throw new ArgumentOutOfRangeException()
+            RBHudType.None => "",
+            RBHudType.Fps => "fps",
+            RBHudType.Full => "full",
+            RBHudType.Custom => customHud,
+            _ => "",
         };
+
+        var mangoHud = hudType switch
+        {
+            RBHudType.MHCustomFile => customHud,
+            RBHudType.MHCustomString => customHud,
+            RBHudType.MHDefault => "",
+            RBHudType.MHFull => "full",
+            _ => "0",
+        };
+
+        if (!string.IsNullOrEmpty(dxvkHud))
+            wineEnvironmentVariables.Add("DXVK_HUD", dxvkHud);
+        if (mangoHud != "0")
+        {
+            wineEnvironmentVariables.Add("MANGOHUD", "1");
+            if (hudType == RBHudType.MHCustomFile)
+                wineEnvironmentVariables.Add("MANGOHUD_CONFIGFILE", mangoHud);
+            else
+                wineEnvironmentVariables.Add("MANGOHUD_CONFIG", mangoHud);
+        }
 
         if (this.gamemodeOn == true && !ldPreload.Contains("libgamemodeauto.so.0"))
         {
             ldPreload = ldPreload.Equals("", StringComparison.OrdinalIgnoreCase) ? "libgamemodeauto.so.0" : ldPreload + ":libgamemodeauto.so.0";
         }
 
-        wineEnvironmentVariables.Add("DXVK_HUD", dxvkHud);
         if (dxvkAsyncOn)
         {
             wineEnvironmentVariables.Add("DXVK_ASYNC", "1");

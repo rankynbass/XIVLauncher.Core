@@ -76,7 +76,7 @@ public interface ILauncherConfig
 
     public bool? FSyncEnabled { get; set; }
 
-    public DxvkHudType DxvkHudType { get; set; }
+    // public DxvkHudType DxvkHudType { get; set; }
 
     // public NvapiVersion? NvapiVersion { get; set; }
 
@@ -115,6 +115,14 @@ public interface ILauncherConfig
     public bool? RB_NvapiEnabled { get; set; }
 
     public bool? RB_UseSniperRuntime { get; set; }
+
+    public RBHudType? RB_HudType { get; set; }
+    
+    public string? RB_DxvkHudCustom { get; set; }
+
+    public string? RB_MangoHudCustomFile { get; set; }
+
+    public string? RB_MangoHudCustomString { get; set; }
 
     #endregion
 

@@ -133,6 +133,7 @@ sealed class Program
         Config.GameModeEnabled ??= false;
         // Config.DxvkVersion ??= DxvkVersion.Stable;
         Config.DxvkAsyncEnabled ??= true;
+        // Config.DxvkHudType ??= DxvkHudType.None;
         // Config.NvapiVersion ??= NvapiVersion.Stable;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
@@ -159,6 +160,11 @@ sealed class Program
         Config.RB_DxvkVersion = DxvkManager.GetVersionOrDefault(Config.RB_DxvkVersion);
         Config.RB_NvapiVersion = NvapiManager.GetVersionOrDefault(Config.RB_NvapiVersion);
         Config.RB_GPLAsyncCacheEnabled ??= true;
+        Config.RB_HudType ??= RBHudType.None;
+        Config.RB_DxvkHudCustom ??= "1";
+        Config.RB_MangoHudCustomFile ??= "";
+        Config.RB_MangoHudCustomString ??= Dxvk.MANGOHUD_DEFAULT_STRING;
+
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -409,7 +415,20 @@ sealed class Program
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.DxvkHudType, nvapiRelease, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
+        var customHud = Config.RB_HudType switch
+        {
+            RBHudType.None => "0",
+            RBHudType.Fps => "fps",
+            RBHudType.Full => "full",
+            RBHudType.Custom => Config.RB_DxvkHudCustom ?? "1",
+            RBHudType.MHCustomFile => Config.RB_MangoHudCustomFile ?? "",
+            RBHudType.MHCustomString => Config.RB_MangoHudCustomString ?? "",
+            RBHudType.MHDefault => "",
+            RBHudType.MHFull => "full",
+            _ => throw new ArgumentOutOfRangeException(nameof(RBHudType), $"Not an expected RBHudType: {Config.RB_HudType}")
+
+        };
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
     }
 
     public static void ShowWindow()
