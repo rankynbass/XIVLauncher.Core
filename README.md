@@ -76,13 +76,6 @@ This is experimental, and may not be quite ready yet.
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-local.sh)"
 ```
 
-## Using the AppImage
-I've started creating AppImages as well. These have worked on the Steam Deck in my testing, although there are a couple of minor issues.
-1) Download the AppImage tarball and extract somewhere.
-2) Run the included `install.sh` script. This will move the AppImage to ~/Applications and create a .desktop entry in your menus.
-3) The desktop shortcut can now be added to steam the same way you'd do with the official Flatpak, without the need for the extra parameters. You will still need the `XL_SECRET_PROVIDER=file` if you want to save passwords in Game Mode.
-4) Do *not* hilight the AppImage file in your file browser and launch with the enter key. It launches multiple copies, for some unknown reason. Double-clicking on it, or launching from the terminal or desktop file all work fine, however.
-
 If you're having trouble, you can [join the XIVLauncher Discord server](https://discord.gg/3NMcUV5), grab the Steam Deck & Linux and join the #xlcore-questions channel. I'm online most days and can usually help out, and there are a number of other people who may also be willing. Please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher-RB.
 
 ## Environment Variables for troubleshooting
@@ -98,7 +91,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | `XL_APPID` | Set to a steam AppID number to hook that application instead of FFXIV or the free trial. Ignored when using XLM. |
 | `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
 | `XL_DISTRO` | Override the wine package to download. Valid values are `arch`, `fedora`, and `ubuntu`. |
-| **Removed in 1.2.x** | **Still available in 1.1.2.1 and earlier** |
+| **Removed in 1.2.x** | **Still available in 1.1.2.4 and earlier** |
 | `XL_FORCE_DLSS` | Skip DLSS checks and assume that the nvngx dlls are in the game folder. |
 | `XL_NVNGX_TO_PREFIX` | Set to 0 to prevent installing nvngx.dll to the prefix as well as the game folder. There's not usually a reason to do this. |
 | `XL_SCALE` | Set a custom scale factor for the UI. Accepts decimal values between 1 and 4 (e.g. 1.5). Overrides the desktop scale factor. Only for SDL X11 driver. |
