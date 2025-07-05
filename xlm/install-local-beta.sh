@@ -17,7 +17,7 @@ chmod +x ~/.local/share/xivlauncher-rb/xlm
 echo "[Step: 4] Create launcher script"
 cat > ~/.local/share/xivlauncher-rb/start.sh << EOL
 #!/bin/bash
-$HOME/.local/share/xivlauncher-rb/xlm launch --install-directory ~/.local/share/xivlauncher-rb/xlcore --xlcore-web-release-url="https://github.com/rankynbass/XIVLauncher.Core/releases/download/rb-v1.2.1.1-beta/"
+$HOME/.local/share/xivlauncher-rb/xlm launch --install-directory ~/.local/share/xivlauncher-rb/xlcore --xlcore-web-release-url-base="https://github.com/rankynbass/XIVLauncher.Core/releases/download/rb-v1.2.1.1-beta/"
 EOL
 chmod +x ~/.local/share/xivlauncher-rb/start.sh
 
