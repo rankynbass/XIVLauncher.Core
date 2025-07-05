@@ -1,16 +1,10 @@
-name: "Release XIVLauncher-RB"
+name: "Build XIVLauncher-RB tarball"
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "rb-v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
-
-permissions:
-  contents: write
 
 jobs:
-  Release:
+  MakeTarball:
     if: github.repository == 'rankynbass/XIVLauncher.Core'
     runs-on: ubuntu-22.04
     env:
@@ -31,6 +25,7 @@ jobs:
         working-directory: src/XIVLauncher.Core/
         run: |
           dotnet restore
+
           dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core -p:BuildHash=$(git rev-parse --short HEAD)
 
       - name: Make tarball
@@ -38,14 +33,11 @@ jobs:
           tar -czf XIVLauncher.Core.tar.gz -C src/XIVLauncher.Core/dist/XIVLauncher.Core .
           sha512sum XIVLauncher.Core.tar.gz > XIVLauncher.Core.sha512sum
 
-      - name: Release on GitHub
-        uses: softprops/action-gh-release@v2
+      - name: Archive the artifacts
+        uses: actions/upload-artifact@v4
         with:
-          generate_release_notes: false
-          fail_on_unmatched_files: true
-          draft: true
-          body_path: RELEASENOTES.md
-          files: |
+          name: XIVLauncher-RB
+          path: |
             XIVLauncher.Core.tar.gz
             XIVLauncher.Core.sha512sum
-   
+          compression-level: 0
