@@ -196,7 +196,7 @@ public class CompatibilityTools
 
     private async Task DownloadTool(DirectoryInfo targetPath)
     {
-        using var client = new HttpClient();
+        using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
         await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
         if (!CompatUtil.EnsureChecksumMatch(tempPath, Settings.WineRelease.Checksums))
@@ -211,7 +211,7 @@ public class CompatibilityTools
     private async Task DownloadRuntime()
     {
         var targetPath = new DirectoryInfo(Path.Combine(Settings.Paths.SteamFolder.FullName, "steamapps", "common"));
-        using var client = new HttpClient();
+        using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
         await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.RuntimeRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
         if (!CompatUtil.EnsureChecksumMatch(tempPath, [Settings.RuntimeRelease.Checksum]))

@@ -146,7 +146,7 @@ public static class Nvapi
         if (string.IsNullOrEmpty(url))
             throw new ArgumentOutOfRangeException("Download URL is null or empty");
 
-        using var client = new HttpClient();
+        using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(url).ConfigureAwait(false));
