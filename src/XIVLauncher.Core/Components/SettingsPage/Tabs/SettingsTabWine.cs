@@ -73,24 +73,10 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync") && startupTypeSetting.Value != RBWineStartupType.Proton
             },
 
-            new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use.", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
+            new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
                 s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && startupTypeSetting.Value != RBWineStartupType.Proton,
-                CheckWarning = x =>
-                {
-                    string warning = "";
-                    if (dxvkVersionSetting.Value == Program.DxvkManager.LEGACY)
-                        warning += "DLSS will not work with Legacy DXVK. Use Stable instead.\n";
-                    if (startupTypeSetting.Value == RBWineStartupType.Custom)
-                        warning += "DLSS may not work with custom wine versions. Make sure wine is >= 9.0";
-                    else if (wineVersionSetting.Value == Program.WineManager.LEGACY)
-                        warning += "DLSS will not work with Legacy Wine. Use Stable instead, or Custom Wine >= 9.0";
-
-                    warning = warning.Trim();
-                    
-                    return string.IsNullOrEmpty(warning) ? null : warning;
-                }
             },
 
             protonDxvkSetting = new SettingsEntry<bool>("Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b)
@@ -98,21 +84,17 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
             },
 
-            new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
+            new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
             {
-                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton && protonDxvkSetting.Value == true
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
-                CheckValidity = b =>
+                CheckWarning = b =>
                 {
-                    var handle = IntPtr.Zero;
-                    if (b == true && !NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle))
-                        return "GameMode was not detected on your system.";
-                    NativeLibrary.Free(handle);
-                    return null;
+                    return (Program.IsGameModeInstalled) ? null : "GameMode was not detected on your system.";
                 }
             },
 

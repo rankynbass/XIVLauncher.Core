@@ -73,6 +73,8 @@ sealed class Program
     public static NvapiManager NvapiManager { get; private set; }
     public static ProtonManager ProtonManager { get; private set; }
     public static bool GameHasClosed { get; set; } = false;
+    public static bool IsGameModeInstalled = CoreEnvironmentSettings.IsGameModeInstalled();
+    public static bool IsMangoHudInstalled = CoreEnvironmentSettings.IsMangoHudInstalled();
 
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?

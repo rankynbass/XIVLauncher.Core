@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace XIVLauncher.Core;
 
@@ -65,5 +67,52 @@ public static class CoreEnvironmentSettings
         proc.Start();
         var output = proc.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
         return Array.Find(output, s => s.ToUpper().StartsWith("C.")) ?? string.Empty;
+    }
+
+    static private bool? gameModeInstalled = null;
+
+    static public bool IsGameModeInstalled()
+    {
+        if (gameModeInstalled is not null)
+            return gameModeInstalled ?? false;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var handle = IntPtr.Zero;
+            gameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
+            NativeLibrary.Free(handle);
+        }
+        else
+            gameModeInstalled = false;
+        return gameModeInstalled ?? false;
+    }
+
+
+    private static bool? mangoHudFound = null;
+
+    public static bool IsMangoHudInstalled()
+    {
+        if (mangoHudFound is null)
+        {
+            mangoHudFound = false;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                string[] libraryPaths = [ "/app/lib", "/usr/lib64", "/usr/lib", "/lib64", "/lib", "/var/lib/snapd/hostfs/usr/lib64", "/var/lib/snapd/hostfs/usr/lib" ];
+                var options = new EnumerationOptions();
+                options.RecurseSubdirectories = true;
+                options.MaxRecursionDepth = 8;
+                foreach (var path in libraryPaths)
+                {
+                    if (!Directory.Exists(path))
+                        continue;
+
+                    if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
+                    {
+                        mangoHudFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return mangoHudFound ?? false;
     }
 }

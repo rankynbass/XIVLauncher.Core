@@ -86,35 +86,6 @@ public static class Dxvk
         File.Delete(tempPath);
     }
 
-    private static bool? mangoHudFound = null;
-
-    public static bool IsMangoHudInstalled
-    {
-        get
-        {
-            if (mangoHudFound is null)
-            {
-                string[] libraryPaths = [ "/app/lib", "/usr/lib64", "/usr/lib", "/lib64", "/lib", "/var/lib/snapd/hostfs/usr/lib64", "/var/lib/snapd/hostfs/usr/lib" ];
-                mangoHudFound = false;
-                var options = new EnumerationOptions();
-                options.RecurseSubdirectories = true;
-                options.MaxRecursionDepth = 8;
-                foreach (var path in libraryPaths)
-                {
-                    if (!Directory.Exists(path))
-                        continue;
-
-                    if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
-                    {
-                        mangoHudFound = true;
-                        break;
-                    }
-                }
-            }
-            return mangoHudFound ?? false;
-        }
-    }
-
     public const string MANGOHUD_DEFAULT_STRING = "ram,vram,resolution,vulkan_driver,engine_version,wine,frame_timing=1";
 
     public static bool IsDxvkHudStringValid(string customHud)
