@@ -311,8 +311,13 @@ public class CompatibilityTools
             { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" },
         };
 
-        if (!ogl && isNvapiEnabled && !Settings.IsProton)
-            wineEnvironmentVariables.Add("DXVK_ENABLE_NVAPI", "1");
+        if (!ogl)
+        {
+            if (!Settings.IsProton && isNvapiEnabled)
+                wineEnvironmentVariables.Add("DXVK_ENABLE_NVAPI", "1");
+            else if (Settings.IsProton && !isNvapiEnabled)
+                wineEnvironmentVariables.Add("PROTON_DISABLE_NVAPI", "1");
+        }
 
         if (!string.IsNullOrEmpty(Settings.DebugVars))
         {

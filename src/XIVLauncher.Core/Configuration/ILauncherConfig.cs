@@ -110,6 +110,10 @@ public interface ILauncherConfig
 
     public string? RB_ProtonVersion { get; set; }
 
+    public bool? RB_DxvkEnabled { get; set; }
+
+    public bool? RB_NvapiEnabled { get; set; }
+
     public bool? RB_UseSniperRuntime { get; set; }
 
     #endregion

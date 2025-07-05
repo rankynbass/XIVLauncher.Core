@@ -22,7 +22,9 @@ using XIVLauncher.Common.Support;
 using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
+using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
+using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Util;
@@ -151,6 +153,8 @@ sealed class Program
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
         Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
         Config.RB_ProtonVersion ??= "XIV-Proton10-4";
+        Config.RB_DxvkEnabled ??= true;
+        Config.RB_NvapiEnabled ??= true;
         Config.RB_UseSniperRuntime ??= true;
         Config.RB_DxvkVersion = DxvkManager.GetVersionOrDefault(Config.RB_DxvkVersion);
         Config.RB_NvapiVersion = NvapiManager.GetVersionOrDefault(Config.RB_NvapiVersion);
@@ -389,6 +393,12 @@ sealed class Program
             RBWineStartupType.Proton => ProtonManager.GetProton(Config.RB_ProtonVersion),
             _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
         };
+        var dxvkRelease = Config.RB_WineStartupType == RBWineStartupType.Proton ?
+            (Config.RB_DxvkEnabled == true ? new DxvkCustomRelease("Enabled", "Enabled", "", "") : DxvkManager.GetDxvk("DISABLED") ) :
+            DxvkManager.GetDxvk(Config.RB_DxvkVersion);
+        var nvapiRelease = Config.RB_WineStartupType == RBWineStartupType.Proton ?
+            (Config.RB_NvapiEnabled == true ? new NvapiCustomRelease("Enabled", "Enabled", "", "") : NvapiManager.GetNvapi("DISABLED") ) :
+            NvapiManager.GetNvapi(Config.RB_NvapiVersion);
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, ProtonManager.SteamFolder);
@@ -396,7 +406,7 @@ sealed class Program
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
-        CompatibilityTools = new CompatibilityTools(wineSettings, DxvkManager.GetDxvk(Config.RB_DxvkVersion), Config.DxvkHudType, NvapiManager.GetNvapi(Config.RB_NvapiVersion), Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.DxvkHudType, nvapiRelease, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
     }
 
     public static void ShowWindow()

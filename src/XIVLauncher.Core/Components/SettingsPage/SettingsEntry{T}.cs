@@ -93,7 +93,8 @@ public class SettingsEntry<T> : SettingsEntry
         }
 
         ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
-        ImGuiHelpers.TextWrapped(this.Description);
+        if (!string.IsNullOrEmpty(this.Description))
+            ImGuiHelpers.TextWrapped(this.Description);
         ImGui.PopStyleColor();
 
         if (this.CheckValidity != null)
