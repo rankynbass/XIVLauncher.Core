@@ -23,10 +23,7 @@ public class SettingsTabWine : SettingsTab
         Entries = new SettingsEntry[]
         {
             startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
-                () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x)
-            {
-                CheckValidity = x => x == RBWineStartupType.Proton ? "Proton not yet implemented" : null,
-            },
+                () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
             wineVersionSetting = new WineSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )

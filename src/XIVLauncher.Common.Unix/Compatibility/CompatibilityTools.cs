@@ -143,15 +143,18 @@ public class CompatibilityTools
             if (string.IsNullOrEmpty(Settings.RuntimeRelease.DownloadUrl))
                 throw new ArgumentNullException("Steam runtime selected, but is not present, and no download url provided.");
             Log.Information($"Steam Sniper runtime does not exist, downloading {Settings.RuntimeRelease.DownloadUrl}");
-            //await DownloadTool(DirectoryInfo tempPath, Settings.RuntimeRelease.ParentFolder).ConfigureAwait(false);
+            await DownloadTool(tempPath, new DirectoryInfo(Path.Combine(Settings.Paths.SteamFolder.FullName, "steamapps", "common"))).ConfigureAwait(false);
         }
 
-        if (Settings.IsProton && !File.Exists(Wine64Path))
+        if (Settings.IsProton)
         {
-            if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
-                throw new ArgumentNullException($"Proton not found at {Wine64Path}, and no download url provided.");
-            Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
-            //await DownloadTool(DirectoryInfo tempPath, Settings.WineRelease.ParentFolder).ConfigureAwait(false);
+            if (!File.Exists(Wine64Path))
+            {
+                if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
+                    throw new ArgumentNullException($"Proton not found at {Wine64Path}, and no download url provided.");
+                Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
+                await DownloadTool(tempPath, new DirectoryInfo(Settings.WineRelease.ParentFolder)).ConfigureAwait(false);
+            }
             EnsurePrefix();
             IsToolReady = true;
             return;
@@ -162,7 +165,7 @@ public class CompatibilityTools
             if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
                 throw new ArgumentNullException($"Wine not found at the given path: {Wine64Path}, and no download url provided.");
             Log.Information($"Wine release \"{Settings.WineRelease.Label}\" does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
-            //await DownloadTool(DirectoryInfo tempPath, wineDirectory).ConfigureAwait(false);
+            await DownloadTool(tempPath, wineDirectory).ConfigureAwait(false);
             Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
@@ -205,8 +208,6 @@ public class CompatibilityTools
 
     public void EnsurePrefix()
     {
-        Console.WriteLine("Ensuring Prefix");
-        Log.Information("Ensuring Prefix...  ...  ...  ...  ...");
         bool runinprefix = true;
         // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
         // That will generate these files.
@@ -217,15 +218,11 @@ public class CompatibilityTools
         {
             runinprefix = false;
         }
-        RunWithoutRuntime("wineboot -u", runinprefix, false).WaitForExit();
-
-        //RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", runinprefix, false).WaitForExit();
+        RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", runinprefix, false).WaitForExit();
     }
 
     public Process RunWithoutRuntime(string command, bool runinprefix = true, bool redirect = true)
     {
-        Console.WriteLine("Inside RunWithoutRuntime. Settings.IsProton = " + Settings.IsProton.ToString());
-        Console.WriteLine("command = " + command);
         if (!Settings.IsProton)
             return RunInPrefix(command, redirectOutput: redirect, writeLog: redirect);
         var psi = new ProcessStartInfo(Wine64Path);
@@ -236,8 +233,9 @@ public class CompatibilityTools
         foreach (var kvp in Settings.EnvVars)
             psi.Environment.Add(kvp);
         psi.Environment.Add("WINEDLLOVERRIDES", WINEDLLOVERRIDES + (isDxvkEnabled ? "n,b;" : "b;") + ExtraWineDLLOverrides );
-       
         psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
+        Console.WriteLine($"Running without runtime: {psi.FileName} {psi.Arguments}");
+
         var quickRun = new Process();
         quickRun.StartInfo = psi;
         quickRun.Start();
@@ -247,22 +245,28 @@ public class CompatibilityTools
 
     public Process RunInPrefix(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
-        Console.WriteLine("Inside RunInPrefix");
-        Console.WriteLine($"Runtime path = {RuntimePath} \"{command}\"");
         var psi = new ProcessStartInfo(RuntimePath);
-        psi.Arguments = command;
+        psi.Arguments = RuntimeArgs + RunInPrefixVerb + command;
 
-        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, command);
+        Console.WriteLine($"Running in prefix: {psi.FileName} {psi.Arguments}");
+        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
 
     public Process RunInPrefix(string[] args, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
-        Console.WriteLine("Inside RunInPrefixArray");
         var psi = new ProcessStartInfo(RuntimePath);
+        if (Settings.IsUsingRuntime)
+        {
+            foreach (var arg in RuntimeArgsArray)
+                psi.ArgumentList.Add(arg);
+        }
+        if (Settings.IsProton)
+            psi.ArgumentList.Add(RunInPrefixVerb.Trim());
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
+        Console.WriteLine($"Running in prefix (array): {psi.FileName} {psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b)}");
         Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
@@ -305,7 +309,6 @@ public class CompatibilityTools
         var wineEnvironmentVariables = new Dictionary<string, string>
         {
             { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" },
-            { "WINEPREFIX", Settings.Prefix.FullName }
         };
 
         if (!ogl && isNvapiEnabled && !Settings.IsProton)
@@ -338,12 +341,11 @@ public class CompatibilityTools
             wineEnvironmentVariables.Add("DXVK_ASYNC", "1");
             wineEnvironmentVariables.Add("DXVK_GPLASYNCCACHE", gplAsyncCacheOn ? "1" : "0");
         }
-        wineEnvironmentVariables.Add("WINEESYNC", Settings.EsyncOn ? "1" : "0");
-        wineEnvironmentVariables.Add("WINEFSYNC", Settings.FsyncOn ? "1" : "0");
 
         wineEnvironmentVariables.Add("LD_PRELOAD", ldPreload);
 
         MergeDictionaries(psi.EnvironmentVariables, wineEnvironmentVariables);
+        MergeDictionaries(psi.EnvironmentVariables, Settings.EnvVars);
         MergeDictionaries(psi.EnvironmentVariables, environment);
 
         Process helperProcess = new();
@@ -390,10 +392,12 @@ public class CompatibilityTools
 
     public Int32 GetUnixProcessId(Int32 winePid)
     {
+        Console.WriteLine("Trying to get Unix Process Id");
         var wineDbg = RunInPrefix("winedbg --command \"info procmap\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         if (output.Contains("syntax error\n") || output.Contains("Exception c0000005")) // valve wine changed the error message
         {
+            Console.WriteLine("There was an error getting the process Id, trying fallback method.");
             var processName = GetProcessName(winePid);
             return GetUnixProcessIdByName(processName);
         }
@@ -405,11 +409,13 @@ public class CompatibilityTools
 
     private string GetProcessName(Int32 winePid)
     {
+        Console.WriteLine("Getting process name");
         var wineDbg = RunInPrefix("winedbg --command \"info proc\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var processNames = matchingLines.Select(l => l.Substring(20).Trim('\'')).ToArray();
+        Console.WriteLine($"Process name = {processNames.FirstOrDefault()}");
         return processNames.FirstOrDefault();
     }
 
@@ -442,8 +448,8 @@ public class CompatibilityTools
 
     public string UnixToWinePath(string unixPath)
     {
-        var launchArguments = new string[] { "winepath", "--windows", unixPath };
-        var winePath = RunInPrefix(launchArguments, redirectOutput: true);
+        var launchArguments = $"winepath --windows \"{unixPath}\"";
+        var winePath = RunWithoutRuntime(launchArguments);
         var output = winePath.StandardOutput.ReadToEnd();
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }

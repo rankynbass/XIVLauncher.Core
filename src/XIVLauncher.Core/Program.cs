@@ -382,13 +382,17 @@ sealed class Program
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
         var winePrefix = Config.RB_WineStartupType == RBWineStartupType.Proton ? storage.GetFolder("protonprefix") : storage.GetFolder("wineprefix");
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var wineRelease = (Config.RB_WineStartupType == RBWineStartupType.Custom)
-            ? new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.Haslsteamclient(Config.WineBinaryPath))
-            : WineManager.GetWine(Config.RB_WineVersion);
+        var wineRelease = Config.RB_WineStartupType switch
+        {
+            RBWineStartupType.Custom => new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.Haslsteamclient(Config.WineBinaryPath)),
+            RBWineStartupType.Managed => WineManager.GetWine(Config.RB_WineVersion),
+            RBWineStartupType.Proton => ProtonManager.GetProton(Config.RB_ProtonVersion),
+            _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
+        };
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, ProtonManager.SteamFolder);
-        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, wineRelease, ProtonManager.Runtime, paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, wineRelease, Config.RB_UseSniperRuntime == true ? ProtonManager.Runtime : null, paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
@@ -452,6 +456,8 @@ sealed class Program
     {
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
+        storage.GetFolder("protonprefix").Delete(true);
+        storage.GetFolder("protonprefix");
     }
 
     public static void ClearPlugins(bool tsbutton = false)

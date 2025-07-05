@@ -87,7 +87,7 @@ public class ProtonManager
         return DEFAULT;
     }
 
-    public IToolRelease GetProton(string? name)
+    public IWineRelease GetProton(string? name)
     {
         return Version[GetVersionOrDefault(name)];
     }
