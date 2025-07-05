@@ -20,8 +20,6 @@ public class SettingsTabWine : SettingsTab
 
     private SettingsEntry<bool> protonDxvkSetting;
 
-    private SettingsEntry<RBHudType> hudTypeSetting;
-
     public SettingsTabWine()
     {
         Entries = new SettingsEntry[]
@@ -132,51 +130,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Set Windows version to 7", "Default for Wine 8.1+ is Windows 10, but this causes issues with some Dalamud plugins. Windows 7 is recommended for now.", () => Program.Config.SetWin7 ?? true, b => Program.Config.SetWin7 = b),
-
-            hudTypeSetting = new SettingsEntry<RBHudType>("DXVK Overlay", "Configure how much of the DXVK overlay is to be shown.", () => Program.Config.RB_HudType ?? RBHudType.None, type => Program.Config.RB_HudType = type)
-            {
-                CheckVisibility = () => (startupTypeSetting.Value == RBWineStartupType.Proton && protonDxvkSetting.Value == true) || (startupTypeSetting.Value != RBWineStartupType.Proton && dxvkVersionSetting.Value != "DISABLED")
-            },
-
-            new SettingsEntry<string>("DXVK Hud Custom String", "Custom string for Dxvk Hud", () => Program.Config.RB_DxvkHudCustom ?? "1", s => Program.Config.RB_DxvkHudCustom = s)
-            {
-                CheckVisibility = () => hudTypeSetting.IsVisible && hudTypeSetting.Value == RBHudType.Custom,
-                CheckValidity = s =>
-                {
-                    if (!Dxvk.IsDxvkHudStringValid(s))
-                        return "Dxvk string is invalid!";
-                    return null;
-                }
-            },
-
-            new SettingsEntry<string>("MangoHud Custom String", "Custom string for MangoHud", () => Program.Config.RB_MangoHudCustomString ?? "", s => Program.Config.RB_MangoHudCustomString = s)
-            {
-                CheckVisibility = () => hudTypeSetting.IsVisible && hudTypeSetting.Value == RBHudType.MHCustomString,
-                CheckWarning = s =>
-                {
-                    if (!Dxvk.IsMangoHudInstalled)
-                        return "Could not find MangoHud! This setting may not work.";
-                    return null;
-                }
-            },
-
-            new SettingsEntry<string>("MangoHud Custom File", "Custom config file for MangoHud", () => Program.Config.RB_MangoHudCustomFile ?? "", s => Program.Config.RB_MangoHudCustomFile = s)
-            {
-                CheckVisibility = () => hudTypeSetting.IsVisible && hudTypeSetting.Value == RBHudType.MHCustomFile,
-                CheckWarning = s =>
-                {
-                    if (!Dxvk.IsMangoHudInstalled)
-                        return "Could not find MangoHud! This setting may not work.";
-                    return null;
-                },
-                CheckValidity = s =>
-                {                   
-                    if (!File.Exists(s))
-                        return "Could not find config file! This setting will not work.";
-                    return null;
-                }
-            },
+            new SettingsEntry<bool>("Set Windows version to 7", "Default for Wine 8.1+ is Windows 10, but this causes issues with some Dalamud plugins. Windows 7 is recommended for Legacy Wine.", () => Program.Config.SetWin7 ?? true, b => Program.Config.SetWin7 = b),
 
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };
