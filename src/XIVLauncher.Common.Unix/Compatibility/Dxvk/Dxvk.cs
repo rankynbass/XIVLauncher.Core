@@ -28,7 +28,7 @@ public enum RBHudType
     [SettingsDescription("Dxvk Hud Custom String", "Specify a custom DXVK Hud string")]
     Custom,
 
-    [SettingsDescription("MangoHud Default", "Default display. Uses no config file.")]
+    [SettingsDescription("MangoHud Default", "Default display. Uses no config file or string.")]
     MHDefault,
 
     [SettingsDescription("MangoHud Custom File", "Specify a custom config file")]

@@ -2,7 +2,7 @@ namespace XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
 public sealed class DxvkStableRelease : IToolRelease
 {
-    public string Label { get; } = "Stable";
+    public string Label { get; } = "Stable 2.7";
     public string Description { get; } = "Dxvk 2.7. No Async patches. For most graphics cards.";
     public string Name { get; } = "dxvk-2.7";
     public string DownloadUrl { get; } = "https://github.com/doitsujin/dxvk/releases/download/v2.7/dxvk-2.7.tar.gz";

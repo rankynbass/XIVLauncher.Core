@@ -34,6 +34,7 @@ public class DxvkManager
         
         var dxvkStable = new DxvkStableRelease();
         var dxvkStableAsync = new DxvkStableAsyncRelease();
+        var dxvkStable22 = new DxvkStable22Release();
         var dxvkLegacy = new DxvkLegacyRelease();
 
         this.DEFAULT = dxvkStable.Name;
@@ -41,6 +42,7 @@ public class DxvkManager
 
         AddVersion(dxvkStable);
         AddVersion(dxvkStableAsync);
+        AddVersion(dxvkStable22);
         AddVersion(dxvkLegacy);
         AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "DISABLED", ""));
     }
