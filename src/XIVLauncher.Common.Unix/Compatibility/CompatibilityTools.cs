@@ -135,15 +135,15 @@ public class CompatibilityTools
         }
     }
 
-    public async Task EnsureTool(DirectoryInfo tempPath)
+    public async Task EnsureTool()
     {
         // Download sniper container if it's missing.
         if (Settings.IsUsingRuntime && !File.Exists(RuntimePath))
         {
             if (string.IsNullOrEmpty(Settings.RuntimeRelease.DownloadUrl))
                 throw new ArgumentNullException("Steam runtime selected, but is not present, and no download url provided.");
-            Log.Information($"Steam Sniper runtime does not exist, downloading {Settings.RuntimeRelease.DownloadUrl}");
-            await DownloadTool(tempPath, new DirectoryInfo(Path.Combine(Settings.Paths.SteamFolder.FullName, "steamapps", "common"))).ConfigureAwait(false);
+            Log.Information($"Steam Sniper runtime does not exist, downloading {Settings.RuntimeRelease.DownloadUrl} to {Settings.Paths.SteamFolder.FullName}/steamapps/common");
+            await DownloadRuntime().ConfigureAwait(false);
         }
 
         if (Settings.IsProton)
@@ -153,7 +153,7 @@ public class CompatibilityTools
                 if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
                     throw new ArgumentNullException($"Proton not found at {Wine64Path}, and no download url provided.");
                 Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
-                await DownloadTool(tempPath, new DirectoryInfo(Settings.WineRelease.ParentFolder)).ConfigureAwait(false);
+                await DownloadTool(new DirectoryInfo(Settings.WineRelease.ParentFolder)).ConfigureAwait(false);
             }
             EnsurePrefix();
             IsToolReady = true;
@@ -164,8 +164,8 @@ public class CompatibilityTools
         {
             if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
                 throw new ArgumentNullException($"Wine not found at the given path: {Wine64Path}, and no download url provided.");
-            Log.Information($"Wine release \"{Settings.WineRelease.Label}\" does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
-            await DownloadTool(tempPath, wineDirectory).ConfigureAwait(false);
+            Log.Information($"Wine release \"{Settings.WineRelease.Label}\" does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {wineDirectory.FullName}");
+            await DownloadTool(wineDirectory).ConfigureAwait(false);
             Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
@@ -192,18 +192,33 @@ public class CompatibilityTools
         IsToolReady = true;
     }
 
-    private async Task DownloadTool(DirectoryInfo tempPath, DirectoryInfo targetPath)
+    private async Task DownloadTool(DirectoryInfo targetPath)
     {
         using var client = new HttpClient();
-        var tempFilePath = Path.Combine(tempPath.FullName, $"{Guid.NewGuid()}");
-        await File.WriteAllBytesAsync(tempFilePath, await client.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.WineRelease.Checksums))
+        var tempPath = PlatformHelpers.GetTempFileName();
+        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempPath, Settings.WineRelease.Checksums))
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
-        PlatformHelpers.Untar(tempFilePath, targetPath.FullName);
-        Log.Information("Compatibility tool {Name} successfully extracted to {Path}", Settings.WineRelease.Label, Settings.WineRelease.ParentFolder);
-        File.Delete(tempFilePath);
+        PlatformHelpers.Untar(tempPath, targetPath.FullName);
+        Log.Information("Compatibility tool {Name} successfully extracted to {Path}", Settings.WineRelease.Label, targetPath.FullName);
+        File.Delete(tempPath);
+    }
+
+    private async Task DownloadRuntime()
+    {
+        var targetPath = new DirectoryInfo(Path.Combine(Settings.Paths.SteamFolder.FullName, "steamapps", "common"));
+        using var client = new HttpClient();
+        var tempPath = PlatformHelpers.GetTempFileName();
+        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.RuntimeRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempPath, [Settings.RuntimeRelease.Checksum]))
+        {
+            throw new InvalidDataException("SHA512 checksum verification failed");
+        }
+        PlatformHelpers.Untar(tempPath, targetPath.FullName);
+        Log.Information("Steam Sniper runtime successfully extracted to {Path}", targetPath.FullName);
+        File.Delete(tempPath);
     }
 
     public void EnsurePrefix()

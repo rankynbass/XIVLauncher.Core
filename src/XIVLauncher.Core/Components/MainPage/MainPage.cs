@@ -774,10 +774,9 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                var tempPath = App.Storage.GetFolder("temp");
                 var winver = (App.Settings.SetWin7 ?? true) ? "win7" : "win10";
 
-                await Program.CompatibilityTools.EnsureTool(tempPath).ConfigureAwait(false);
+                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
                 Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}").WaitForExit();
             }).ContinueWith(t =>
             {
