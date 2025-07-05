@@ -35,6 +35,7 @@ jobs:
 
       - name: Make tarball
         run: |
+          cp CHANGELOG.md README.md LICENSE MIT src/XIVLauncher.Core/dist/XIVLauncher.Core/
           tar -czf XIVLauncher.Core.tar.gz -C src/XIVLauncher.Core/dist/XIVLauncher.Core .
           sha512sum XIVLauncher.Core.tar.gz > XIVLauncher.Core.sha512sum
 
