@@ -18,12 +18,21 @@ public static class CompatUtil
 {
     private const string OS_RELEASE_PATH = "/etc/os-release";
 
+    private static string customdistro => (System.Environment.GetEnvironmentVariable("XL_DISTRO") ?? "").ToLower();
+
     public static WineReleaseDistro GetWineIdForDistro()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             throw new InvalidOperationException("GetWineIdForDistro can only be called on the Linux platform");
         }
+
+        if (customdistro == "ubunbu")
+            return WineReleaseDistro.ubuntu;
+        if (customdistro == "fedora")
+            return WineReleaseDistro.fedora;
+        if (customdistro == "arch")
+            return WineReleaseDistro.arch;
 
         try
         {

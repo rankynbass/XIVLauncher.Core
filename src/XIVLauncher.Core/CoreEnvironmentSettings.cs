@@ -10,6 +10,7 @@ public static class CoreEnvironmentSettings
     public static bool ClearSettings => CheckEnvBool("XL_CLEAR_SETTINGS");
     public static bool ClearPrefix => CheckEnvBool("XL_CLEAR_PREFIX");
     public static bool ClearPlugins => CheckEnvBool("XL_CLEAR_PLUGINS");
+    public static bool ClearDalamud => CheckEnvBool("XL_CLEAR_DALAMUD");
     public static bool ClearTools => CheckEnvBool("XL_CLEAR_TOOLS");
     public static bool ClearLogs => CheckEnvBool("XL_CLEAR_LOGS");
     public static bool ClearNvngx => CheckEnvBool("XL_CLEAR_NVNGX");
@@ -18,6 +19,8 @@ public static class CoreEnvironmentSettings
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static uint SteamAppId => GetAppId(Environment.GetEnvironmentVariable("SteamAppId"));
     public static uint AltAppID => GetAppId(Environment.GetEnvironmentVariable("XL_APPID"));
+    public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
+    public static string? ProtonPrefix => System.Environment.GetEnvironmentVariable("PROTONPREFIX");
 
     private static bool CheckEnvBool(string key)
     {
