@@ -26,7 +26,7 @@ public class SettingsTabHud : SettingsTab
 
             new SettingsEntry<string>("DXVK Hud Custom String", "Custom string for Dxvk Hud", () => Program.Config.RB_DxvkHudCustom ?? "1", s => Program.Config.RB_DxvkHudCustom = s)
             {
-                CheckValidity = s =>
+                CheckWarning = s =>
                 {
                     if (!Dxvk.IsDxvkHudStringValid(s))
                         return "Dxvk string is invalid!";
@@ -38,7 +38,7 @@ public class SettingsTabHud : SettingsTab
 
             new SettingsEntry<string>("MangoHud Custom File", "Custom config file for MangoHud", () => Program.Config.RB_MangoHudCustomFile ?? "", s => Program.Config.RB_MangoHudCustomFile = s)
             {
-                CheckValidity = s =>
+                CheckWarning = s =>
                 {                   
                     if (!File.Exists(s))
                         return "Could not find config file! This setting will not work.";
