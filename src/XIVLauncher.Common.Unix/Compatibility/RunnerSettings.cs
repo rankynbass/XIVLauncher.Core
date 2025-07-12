@@ -51,6 +51,8 @@ public class RunnerSettings
 {
     public bool IsProton { get; private set; }
 
+    public bool NTSyncOn { get; private set; }
+
     public bool IsUsingRuntime => !string.IsNullOrEmpty(RuntimePath);
 
     public string WineServerPath { get; private set; }
@@ -110,6 +112,7 @@ public class RunnerSettings
     public RunnerSettings(string runnerPath, string downloadUrl, string extraOverrides, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool? esyncOn, bool? fsyncOn)
     {
         IsProton = false;
+        NTSyncOn = false;
         ParentPath = WineCheck(runnerPath);
         RunnerPath = File.Exists(Path.Combine(ParentPath, "wine64")) ? Path.Combine(ParentPath, "wine64") : Path.Combine(ParentPath, "wine");
         WineServerPath = Path.Combine(ParentPath, "wineserver");
@@ -136,9 +139,10 @@ public class RunnerSettings
     }
 
     // Constructor for Proton
-    public RunnerSettings(string runnerPath, string downloadUrl, string runtimePath, string runtimeUrl, string extraOverrides, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool? esyncOn, bool? fsyncOn)
+    public RunnerSettings(string runnerPath, string downloadUrl, bool isNtsyncEnabled, string runtimePath, string runtimeUrl, string extraOverrides, string debugVars, FileInfo logFile, DirectoryInfo prefix, bool? esyncOn, bool? fsyncOn)
     {
         IsProton = true;
+        NTSyncOn = isNtsyncEnabled;
         ParentPath = runnerPath;
         RunnerPath = Path.Combine(ParentPath, "proton");
         WineServerPath = Path.Combine(ParentPath, "files", "bin", "wineserver");
@@ -157,7 +161,11 @@ public class RunnerSettings
             {"STEAM_COMPAT_DATA_PATH", Prefix.FullName},
             {"XL_WINEONLINUX", "true"}
         };
-        if (!FsyncOn)
+        if (NTSyncOn)
+        {
+            Environment.Add("PROTON_USE_NTSYNC", "1");
+        }
+        else if (!FsyncOn)
         {
             Environment.Add("PROTON_NO_FSYNC", "1");
             if (!EsyncOn)

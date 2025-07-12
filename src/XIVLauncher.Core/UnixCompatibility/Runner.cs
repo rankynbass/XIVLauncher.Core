@@ -23,6 +23,8 @@ public static class Runner
 
     public static bool IsProton => Program.Config.RunnerType == RunnerType.Proton;
 
+    public static bool IsProtonNTSyncEnabled => IsProton ? Program.Config.ProtonNTSyncEnabled ?? false : false;
+
     public static bool IsCustom => Program.Config.RunnerType == RunnerType.Custom;
 
     public static string FullName => Program.Config.RunnerType switch

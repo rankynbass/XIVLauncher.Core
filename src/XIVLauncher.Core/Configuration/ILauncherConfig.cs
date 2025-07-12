@@ -69,6 +69,8 @@ public interface ILauncherConfig
 
     public string? ProtonVersion { get; set; }
 
+    public bool? ProtonNTSyncEnabled { get; set; }
+
     public string? RuntimeVersion { get; set; }
 
     public bool? GameModeEnabled { get; set; }

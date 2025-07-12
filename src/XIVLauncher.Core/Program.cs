@@ -145,6 +145,7 @@ sealed class Program
         Config.WineVersion ??= Wine.DEFAULT;
         Config.WineBinaryPath ??= "/usr/bin";
         Config.ProtonVersion ??= Proton.DEFAULT;
+        Config.ProtonNTSyncEnabled ??= false;
         Config.RuntimeVersion ??= Runtime.DEFAULT;
         Config.WineDLLOverrides ??= "";
         Config.WineDebugVars ??= "-all";
@@ -490,7 +491,7 @@ sealed class Program
         DLSSSettings dlssSettings;
         if (Runner.IsProton)
         {
-            runnerSettings = new RunnerSettings(Runner.FullName, Runner.DownloadUrl, Runner.RuntimeFullName, Runner.RuntimeDownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
+            runnerSettings = new RunnerSettings(Runner.FullName, Runner.DownloadUrl, Runner.IsProtonNTSyncEnabled, Runner.RuntimeFullName, Runner.RuntimeDownloadUrl, Runner.WineDLLOverrides, Runner.DebugVars, Runner.LogFile, Runner.Prefix, Runner.ESyncEnabled, Runner.FSyncEnabled);
             dxvkSettings = new DxvkSettings(Dxvk.Enabled, storage.Root.FullName, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString);
             dlssSettings = new DLSSSettings(DLSS.IsDLSSAvailable);
         }

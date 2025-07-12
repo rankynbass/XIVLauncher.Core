@@ -1,4 +1,9 @@
 # Changelog
+### Fri Jul 11 2025 Rankyn Bass <rankyn@proton.me>
+1.1.2.5 - Final release of 1.1.2 series
+- update wine and dxvk
+- switch to GE-Proton10-9. There's only one XIVLauncher patch that is not in GE-Proton now, and that's the unix pid hack. It is only needed for consistant multiboxing, and only if you're not using the steam runtime (which you should).
+
 ### Sat Jun 21 2025 Rankyn Bass <rankyn@proton.me>
 1.1.2.4
 - Updated wine and dxvk

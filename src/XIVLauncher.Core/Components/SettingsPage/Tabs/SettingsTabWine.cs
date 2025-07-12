@@ -31,7 +31,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckWarning = x =>
                 {
-                    return "If you are using wine 9+, valvebe 9+, or Proton 9+, Dalamud with FFXIV 7.2+ *requires* a new patch.\nPlease update to at least Wine-XIV 10.4.1, ValveBE 9-20, or XIV-Proton 9-26.1. Wine 8.5 is still OK.";
+                    return "If you are using wine 9+, valvebe 9+, or Proton 9+, Dalamud with FFXIV 7.2+ *requires* a new patch.\nPlease update to at least Wine-XIV 10.4.1, ValveBE 9-20, or XIV-Proton 9-26.1. GE-Proton10-9 and later should also work.";
                 }
             },
 
@@ -54,9 +54,14 @@ public class SettingsTabWine : SettingsTab
                 {
                     var warning = "";
                     if (!protonVersionSetting.Value.ToUpper().Contains("XIV"))
-                        warning += "Non XIV-Proton versions may not work with Dalamud.\n";
+                        warning += "Non XIV-Proton versions may not work with Dalamud. GE-Proton9-x to 10-8 are broken, but 10-9 and later will work.\n";
                     return (string.IsNullOrEmpty(warning)) ? null : warning;
                 }
+            },
+
+            new SettingsEntry<bool>("Enable NTSync", "Enable NTSync for GE-Proton10-9 and later. Requires compatible kernel.", () => Program.Config.ProtonNTSyncEnabled ?? false, b => Program.Config.ProtonNTSyncEnabled = b)
+            {
+                CheckVisibility = () => RunnerTypeSetting.Value == RunnerType.Proton
             },
 
             runtimeVersionSetting = new DictionarySettingsEntry("Runtime Version", "Sniper runtime is recommeded for use with Proton.", Runtime.Versions, () => Program.Config.RuntimeVersion, s => Program.Config.RuntimeVersion = s, Runtime.GetDefaultVersion())
