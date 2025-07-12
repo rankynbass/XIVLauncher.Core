@@ -1,3 +1,3 @@
-**1.1.2.4**
-- Updated wine and dxvk
-- Updated the default version to the new official Wine-XIV 10.8 release
+**1.1.2.5**
+- update wine and dxvk
+- switch to GE-Proton10-9. There's only one XIVLauncher patch that is not in GE-Proton now, and that's the unix pid hack. It is only needed for consistant multiboxing, and only if you're not using the steam runtime (which you should).
