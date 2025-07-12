@@ -72,8 +72,15 @@ public static class Wine
 
         Versions.Add("wine-xiv-staging-fsync-git-10.8.r0.g47f77594", new Dictionary<string, string>()
         {
-            {"name", "Wine-XIV 10.8"}, {"desc","Patched version of Wine Staging 10.8. Default."},
+            {"name", "Wine-XIV 10.8 (Beta)"}, {"desc","Patched version of Wine Staging 10.8. \"Beta\" release with lsteamclient patches."},
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{distro}-10.8.r0.g47f77594.tar.xz"},
+            {"mark", "Download"}
+        });
+
+        Versions.Add("wine-xiv-staging-fsync-git-10.8.r0.g47f77594-nolsc", new Dictionary<string, string>()
+        {
+            {"name", "Wine-XIV 10.8 (Stable)"}, {"desc","Patched version of Wine Staging 10.8. \"Stable\" release without lsteamclient."},
+            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/10.8.r0.g47f77594/wine-xiv-staging-fsync-git-{distro}-10.8.r0.g47f77594-nolsc.tar.xz"},
             {"mark", "Download"}
         });
 
@@ -81,13 +88,6 @@ public static class Wine
         {
             {"name", "Wine-XIV 8.5"}, {"desc", "Patched version of Wine Staging 8.5. Change Windows version to 7 for best results."},
             {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/8.5.r4.g4211bac7/wine-xiv-staging-fsync-git-{distro}-8.5.r4.g4211bac7.tar.xz"},
-            {"mark", "Download"}
-        });
-
-        Versions.Add("wine-xiv-staging-fsync-git-7.10.r3.g560db77d", new Dictionary<string, string>()
-        {
-            {"name", "Wine-XIV 7.10"}, {"desc","Patched version of Wine Staging 7.10."},
-            {"label", "Official"}, {"url", $"https://github.com/goatcorp/wine-xiv-git/releases/download/7.10.r3.g560db77d/wine-xiv-staging-fsync-git-{distro}-7.10.r3.g560db77d.tar.xz"},
             {"mark", "Download"}
         });
 

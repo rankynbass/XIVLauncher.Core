@@ -115,6 +115,12 @@ public class CompatibilityTools
             Log.Information($"Compatibility tool (Wine) does not exist, downloading {Runner.DownloadUrl} to {wineDirectory.FullName}");
             await DownloadWine().ConfigureAwait(false);
         }
+
+        // Delete lsteamclient. It'll get replaced if the wine release has it. Fixes a bug with going from lsteamclient to non-lsteamclient wine.
+        var lsteamclient = new FileInfo(Path.Combine(Runner.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
+        if (lsteamclient.Exists)
+            lsteamclient.Delete();
+        
         EnsurePrefix();
         
         // Download and install DXVK if enabled
