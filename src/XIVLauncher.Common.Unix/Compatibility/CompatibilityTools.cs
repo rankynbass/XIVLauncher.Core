@@ -20,7 +20,6 @@ namespace XIVLauncher.Common.Unix.Compatibility;
 
 public class CompatibilityTools
 {
-    private const string WINEDLLOVERRIDES = "msquic=,mscoree=n,b;d3d9,d3d11,d3d10core,dxgi=";
     private const uint DXVK_CLEANUP_THRESHHOLD = 5;
     private const uint NVAPI_CLEANUP_THRESHHOLD = 5;
     private const uint WINE_CLEANUP_THRESHHOLD = 10;
@@ -49,7 +48,6 @@ public class CompatibilityTools
     private readonly RBHudType hudType;
     private readonly string customHud;
     private readonly IToolRelease nvapiVersion;
-    private readonly string ExtraWineDLLOverrides;
     private readonly bool gamemodeOn;
     private readonly bool dxvkAsyncOn;
     private readonly bool gplAsyncCacheOn;
@@ -60,7 +58,7 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(RuntimePath) && File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, string winedlloverrides, bool dxvkAsyncOn, bool gplAsyncCacheOn)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, bool dxvkAsyncOn, bool gplAsyncCacheOn)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
@@ -68,7 +66,6 @@ public class CompatibilityTools
         this.customHud = customHud;
         this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", "");
         this.gamemodeOn = gamemodeOn;
-        this.ExtraWineDLLOverrides = WineSettings.WineDLLOverrideIsValid(winedlloverrides) ? winedlloverrides : "";
         this.dxvkAsyncOn = dxvkAsyncOn;
         this.gplAsyncCacheOn = gplAsyncCacheOn;
 
@@ -171,7 +168,7 @@ public class CompatibilityTools
             Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
-        if (!Settings.WineRelease.lsteamclient)
+        if (!Settings.WineRelease.Lsteamclient)
         {
             var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
             if (lsteamclient.Exists)
@@ -249,7 +246,8 @@ public class CompatibilityTools
         // Need to set these or proton will refuse to run.
         foreach (var kvp in Settings.EnvVars)
             psi.Environment.Add(kvp);
-        psi.Environment.Add("WINEDLLOVERRIDES", WINEDLLOVERRIDES + (isDxvkEnabled ? "n,b;" : "b;") + ExtraWineDLLOverrides );
+        if (!isDxvkEnabled)
+            psi.Environment.Add("PROTON_USE_WINED3D", "1");
         psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
         var quickRun = new Process();
         quickRun.StartInfo = psi;
@@ -318,10 +316,15 @@ public class CompatibilityTools
 
         var ogl = wineD3D || !isDxvkEnabled;
 
-        var wineEnvironmentVariables = new Dictionary<string, string>
+        var wineEnvironmentVariables = new Dictionary<string, string>();
+
+        if (!Settings.IsProton)
+            wineEnvironmentVariables.Add("WINEDLLOVERRIDES", $"{Settings.WineDLLOverrides}{(ogl ? "b" : "n,b")}");
+        else
         {
-            { "WINEDLLOVERRIDES", $"{WINEDLLOVERRIDES}{(ogl ? "b" : "n,b")};{ExtraWineDLLOverrides}" },
-        };
+            if (ogl)
+                wineEnvironmentVariables.Add("PROTON_USE_WINED3D", "1");
+        }
 
         if (!ogl)
         {

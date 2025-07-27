@@ -108,8 +108,6 @@ public interface ILauncherConfig
 
     public bool? RB_GPLAsyncCacheEnabled { get; set; }
 
-    public string? RB_ProtonVersion { get; set; }
-
     public bool? RB_DxvkEnabled { get; set; }
 
     public bool? RB_NvapiEnabled { get; set; }

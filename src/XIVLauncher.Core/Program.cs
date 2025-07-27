@@ -71,7 +71,6 @@ sealed class Program
     public static WineManager WineManager { get; private set; }
     public static DxvkManager DxvkManager { get; private set; }
     public static NvapiManager NvapiManager { get; private set; }
-    public static ProtonManager ProtonManager { get; private set; }
     public static bool GameHasClosed { get; set; } = false;
     public static bool IsGameModeInstalled = CoreEnvironmentSettings.IsGameModeInstalled();
     public static bool IsMangoHudInstalled = CoreEnvironmentSettings.IsMangoHudInstalled();
@@ -155,7 +154,6 @@ sealed class Program
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
         Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
-        Config.RB_ProtonVersion ??= "XIV-Proton10-4";
         Config.RB_DxvkEnabled ??= true;
         Config.RB_NvapiEnabled ??= true;
         Config.RB_UseSniperRuntime ??= true;
@@ -226,7 +224,6 @@ sealed class Program
         WineManager = new WineManager(storage.Root.FullName);
         DxvkManager = new DxvkManager(storage.Root.FullName);
         NvapiManager = new NvapiManager(storage.Root.FullName);
-        ProtonManager = new ProtonManager(storage.Root.FullName);
         LoadConfig(storage);
 
 
@@ -393,27 +390,26 @@ sealed class Program
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
-        var winePrefix = Config.RB_WineStartupType == RBWineStartupType.Proton ?
-            (new DirectoryInfo(CoreEnvironmentSettings.ProtonPrefix ?? Path.Combine(storage.Root.FullName, "protonprefix"))) :
-            (new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(storage.Root.FullName, "wineprefix")));
+        var isProton = WineManager.IsProton(Config.RB_WineVersion);
+        var winePrefix = isProton ? (new DirectoryInfo(CoreEnvironmentSettings.ProtonPrefix ?? Path.Combine(storage.Root.FullName, "protonprefix"))) :
+                                    (new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(storage.Root.FullName, "wineprefix")));
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var wineRelease = Config.RB_WineStartupType switch
         {
-            RBWineStartupType.Custom => new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.Haslsteamclient(Config.WineBinaryPath)),
+            RBWineStartupType.Custom => new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.WineBinaryPath)),
             RBWineStartupType.Managed => WineManager.GetWine(Config.RB_WineVersion),
-            RBWineStartupType.Proton => ProtonManager.GetProton(Config.RB_ProtonVersion),
             _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
         };
-        var dxvkRelease = Config.RB_WineStartupType == RBWineStartupType.Proton ?
+        var dxvkRelease = isProton ?
             (Config.RB_DxvkEnabled == true ? new DxvkCustomRelease("Enabled", "Enabled", "", "") : DxvkManager.GetDxvk("DISABLED") ) :
             DxvkManager.GetDxvk(Config.RB_DxvkVersion);
-        var nvapiRelease = Config.RB_WineStartupType == RBWineStartupType.Proton ?
+        var nvapiRelease = isProton ?
             (Config.RB_NvapiEnabled == true ? new NvapiCustomRelease("Enabled", "Enabled", "", "") : NvapiManager.GetNvapi("DISABLED") ) :
             NvapiManager.GetNvapi(Config.RB_NvapiVersion);
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
-        var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, ProtonManager.SteamFolder);
-        var wineSettings = new WineSettings(Config.RB_WineStartupType ?? RBWineStartupType.Managed, wineRelease, Config.RB_UseSniperRuntime == true ? ProtonManager.Runtime : null, paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false);
+        var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
+        var wineSettings = new WineSettings(wineRelease, Config.RB_UseSniperRuntime == true ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false, false, false);
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
@@ -430,7 +426,7 @@ sealed class Program
             _ => throw new ArgumentOutOfRangeException(nameof(RBHudType), $"Not an expected RBHudType: {Config.RB_HudType}")
 
         };
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, Config.WineDLLOverrides ?? "", async, gplcache);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, async, gplcache);
     }
 
     public static void ShowWindow()

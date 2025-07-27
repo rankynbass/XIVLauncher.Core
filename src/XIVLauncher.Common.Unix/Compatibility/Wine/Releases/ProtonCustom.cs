@@ -9,7 +9,7 @@ public sealed class ProtonCustomRelease(string label, string desc, string name, 
     public string Name { get; } = name;
     public string ParentFolder { get; } = folder;
     public string DownloadUrl { get; } = url;
-    public bool lsteamclient { get; } = true;
     public string[] Checksums { get; } = [ checksum ];
-    public string Checksum { get; } = "";
+    public bool Lsteamclient { get; } = true;
+    public bool IsProton { get; } = true;
 }

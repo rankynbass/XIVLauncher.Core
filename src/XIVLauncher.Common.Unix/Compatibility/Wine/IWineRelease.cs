@@ -1,13 +1,13 @@
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
-public interface IWineRelease : IToolRelease
+public interface IWineRelease
 {
     string Name { get; }
     string ParentFolder { get; }
     string Label { get; }
     string Description { get; }
     string DownloadUrl { get; }
-    string Checksum { get; }
     string[] Checksums { get; }
-    bool lsteamclient { get; }
+    bool Lsteamclient { get; }
+    bool IsProton { get; }
 }

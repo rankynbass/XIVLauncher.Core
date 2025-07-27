@@ -10,14 +10,11 @@ namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public enum RBWineStartupType
 {
-    [SettingsDescription("Managed by XIVLauncher-RB", "Wine setup is managed by XIVLauncher - you can leave it up to us.")]
+    [SettingsDescription("Managed by XIVLauncher-RB", "Wine/Proton setup is managed by XIVLauncher-RB - you can leave it up to us.")]
     Managed,
 
-    [SettingsDescription("Custom", "Point XIVLauncher-RB to a custom location containing wine binaries to run the game with.")]
+    [SettingsDescription("Custom Wine/Proton", "Point XIVLauncher-RB to a custom location containing wine binaries to run the game with.")]
     Custom,
-
-    [SettingsDescription("Proton", "Use Steam sniper runtime and a patched Proton release.")]
-    Proton,
 }
 
 public class WineManager
@@ -28,14 +25,46 @@ public class WineManager
 
     public Dictionary<string, IWineRelease> Version { get; private set; }
 
+    public IToolRelease Runtime { get; }
+
     private string wineFolder { get; }
 
     private string rootFolder { get; }
 
+    private string commonFolder { get; }
+
+    private string compatFolder { get; }
+
+    public DirectoryInfo SteamFolder { get; }
+
     public WineManager(string root)
     {
         this.rootFolder = root;
+    
+        // Wine
         this.wineFolder = Path.Combine(root, "compatibilitytool", "wine");
+
+        // Proton
+        var home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        var steamfolder1 = Path.Combine(home, ".steam", "steam", "steamapps", "common");
+        var steamfolder2 = Path.Combine(home, ".local", "share", "Steam", "steamapps", "common");
+        if (Directory.Exists(steamfolder1))
+        {
+            this.SteamFolder = new DirectoryInfo(Path.Combine(home, ".steam", "steam"));
+            this.commonFolder = steamfolder1;
+            this.compatFolder = Path.Combine(home, ".steam", "steam", "compatibilitytools.d");
+        }
+        else
+        {
+            this.SteamFolder = new DirectoryInfo(Path.Combine(home, ".local", "share", "Steam"));
+            this.commonFolder = steamfolder2;
+            this.compatFolder = Path.Combine(home, ".local", "share", "Steam", "compatibilitytools.d");
+        }
+        if (!Directory.Exists(commonFolder))
+            Directory.CreateDirectory(commonFolder);
+        if (!Directory.Exists(compatFolder))
+            Directory.CreateDirectory(compatFolder);
+        this.Runtime = new SteamRuntimeRelease(this.commonFolder);
 
         Initialize();
     }
@@ -44,6 +73,7 @@ public class WineManager
     {
         Version = new Dictionary<string, IWineRelease>();
         
+        // Wine
         var wineDistroId = CompatUtil.GetWineIdForDistro();
         var wineStable = new WineStableRelease(wineDistroId, wineFolder);
         var wineBeta = new WineBetaRelease(wineDistroId, wineFolder);
@@ -65,6 +95,19 @@ public class WineManager
         AddVersion(wineStable);
         AddVersion(wineBeta);
         AddVersion(wineLegacy);
+
+        // Proton
+        var protonStable = new ProtonStableRelease(compatFolder);
+        var protonStableNtsync = new ProtonStableNtsyncRelease(compatFolder);
+        var protonLatest = new ProtonLatestRelease(compatFolder);
+        var protonLatestNtsync = new ProtonLatestNtsyncRelease(compatFolder);
+        var protonLegacy = new ProtonLegacyRelease(compatFolder);
+
+        AddVersion(protonLatest);
+        AddVersion(protonLatestNtsync);
+        AddVersion(protonStable);
+        AddVersion(protonStableNtsync);
+        AddVersion(protonLegacy);
     }
 
     private void AddVersion(IWineRelease wine)
@@ -84,6 +127,11 @@ public class WineManager
     public IWineRelease GetWine(string? name)
     {
         return Version[GetVersionOrDefault(name)];
+    }
+
+    public IsProton(string? name)
+    {
+        return Version[GetVersionOrDefault(name)].IsProton;
     }
 
     public void Reset()

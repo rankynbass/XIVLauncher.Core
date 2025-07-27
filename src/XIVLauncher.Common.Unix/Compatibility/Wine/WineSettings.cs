@@ -10,18 +10,22 @@ namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public class WineSettings
 {
-    public RBWineStartupType StartupType { get; private set; }
+    private const string WINEDLLOVERRIDES = "msquic=,mscoree=n,b;d3d9,d3d11,d3d10core,dxgi=";
+
     public IWineRelease WineRelease { get; private set; }
     public IToolRelease RuntimeRelease { get; private set; }
 
     public bool EsyncOn { get; }
     public bool FsyncOn { get; }
+    public bool NTSyncOn { get; }
+    public bool WaylandOn { get; }
+    public string WineDLLOverrides { get; private set; }
     public string DebugVars { get; }
     public FileInfo LogFile { get; }
     public DirectoryInfo Prefix { get; }
     public XLCorePaths Paths { get; }
 
-    public bool IsProton => StartupType == RBWineStartupType.Proton;
+    public bool IsProton => WineRelease.IsProton;
     public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
     private string parentPath { get; }
     public string WinePath { get; private set; }
@@ -41,57 +45,68 @@ public class WineSettings
         If steam runtime, it'll be: /path/to/runtime --verb=waitforexitandrun -- /path/to/proton runinprefix command
     */
 
-    public WineSettings(RBWineStartupType startupType, IWineRelease wineRelease, IToolRelease runtime, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn)
+    public WineSettings(IWineRelease wineRelease, IToolRelease runtime, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn, bool ntsyncOn, bool waylandOn)
     {
         this.WineRelease = wineRelease;
-        this.StartupType = startupType;
-        switch (startupType)
+        if (wineRelease.IsProton)
         {
-            case RBWineStartupType.Custom:
-                this.parentPath = wineRelease.Name;
-                this.SetWineOrWine64(parentPath);
-                this.WineServerPath = Path.Combine(parentPath, "wineserver");
-                this.RuntimeRelease = null;
-                break;
-
-            case RBWineStartupType.Managed:
-                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
-                this.SetWineOrWine64(parentPath);
-                this.WineServerPath = Path.Combine(parentPath, "wineserver");
-                this.RuntimeRelease = null;
-                break;
-
-            case RBWineStartupType.Proton:
-                this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
-                this.WinePath = Path.Combine(parentPath, "proton");
-                this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
-                this.RuntimeRelease = runtime;
-                break;
+            this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
+            this.WinePath = Path.Combine(parentPath, "proton");
+            this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
+            this.RuntimeRelease = runtime;
+        }
+        else if (wineRelease.Label == "CUSTOM")
+        {
+            this.parentPath = wineRelease.Name;
+            this.SetWineOrWine64(parentPath);
+            this.WineServerPath = Path.Combine(parentPath, "wineserver");
+            this.RuntimeRelease = null;
+        }
+        else
+        {
+            this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
+            this.SetWineOrWine64(parentPath);
+            this.WineServerPath = Path.Combine(parentPath, "wineserver");
+            this.RuntimeRelease = null;
         }
         this.EsyncOn = esyncOn;
         this.FsyncOn = fsyncOn;
+        this.NTSyncOn = ntsyncOn;
+        this.WaylandOn = waylandOn;
         this.DebugVars = debugVars;
         this.LogFile = logFile;
         this.Prefix = paths.Prefix;
         this.Paths = paths;
+        this.WineDLLOverrides = (WineSettings.WineDLLOverrideIsValid(dlloverrides) ? dlloverrides + ";" : "") +
+                                (WaylandOn ? "winex11.drv=d;winewayland.drv=b;" : "") + WINEDLLOVERRIDES;
         this.EnvVars = new Dictionary<string, string>();
         if (IsProton)
         {
             EnvVars.Add("STEAM_COMPAT_DATA_PATH", Prefix.FullName);
             EnvVars.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Paths.SteamFolder.FullName);
             EnvVars.Add("STORE", "none");
+            if (!NTSyncOn)
+                EnvVars.Add("PROTON_NO_NTSYNC", "1");
+            else if (WineRelease.Name == "GE-Proton10-9")
+                EnvVars.Add("PROTON_USE_NTSYNC", "1");
+
             if (!FsyncOn)
             {
                 EnvVars.Add("PROTON_NO_FSYNC", "1");
                 if (!EsyncOn)
                     EnvVars.Add("PROTON_NO_ESYNC", "1");
             }
+
+            if (WaylandOn)
+                EnvVars.Add("PROTON_USE_WAYLAND", "1");
+
             setSteamCompatMounts();
         }
         else
         {
             EnvVars.Add("WINEESYNC", EsyncOn ? "1" : "0");
             EnvVars.Add("WINEFSYNC", FsyncOn ? "1" : "0");
+            EnvVars.Add("WINENTSYNC", NTSyncOn ? "1", "0");
             EnvVars.Add("WINEPREFIX", Prefix.FullName);
         }
     }
@@ -104,7 +119,9 @@ public class WineSettings
             importantPaths.Append(":" + steamCompatMounts.Trim(':'));
         
         // These paths are for winediscordipcbridge.exe. Note that exact files are being passed, not directories.
-        // You can't pass the whole /run/user/<userid> directory; it will get ignored.
+        // You can't pass the whole /run/user/<userid> directory; it will get ignored, so we pass all 10 potential
+        // values for /run/user/<userid>/discord-ipc-{0-9}
+        // Flatpak and snap will both use /run/user/<userid> for their XDG_RUNTIME_DIR, so this will work inside flatpak/snap steam
         var runtimeDir = System.Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
         if (!string.IsNullOrEmpty(runtimeDir))
         {
@@ -140,7 +157,7 @@ public class WineSettings
         return false;
     }
 
-    public static bool Haslsteamclient(string? path)
+    public static bool HasLsteamclient(string? path)
     {
         if (string.IsNullOrEmpty(path))
             return false;
