@@ -79,6 +79,7 @@ public class WineSettings
         this.Paths = paths;
         this.WineDLLOverrides = (WineSettings.WineDLLOverrideIsValid(dlloverrides) ? dlloverrides + ";" : "") +
                                 (WaylandOn ? "winex11.drv=d;winewayland.drv=b;" : "") + WINEDLLOVERRIDES;
+        Console.WriteLine("WINEDLLOVERRIDES=" + WineDLLOverrides);
         this.EnvVars = new Dictionary<string, string>();
         if (IsProton)
         {
@@ -106,7 +107,7 @@ public class WineSettings
         {
             EnvVars.Add("WINEESYNC", EsyncOn ? "1" : "0");
             EnvVars.Add("WINEFSYNC", FsyncOn ? "1" : "0");
-            EnvVars.Add("WINENTSYNC", NTSyncOn ? "1", "0");
+            EnvVars.Add("WINENTSYNC", NTSyncOn ? "1" : "0");
             EnvVars.Add("WINEPREFIX", Prefix.FullName);
         }
     }

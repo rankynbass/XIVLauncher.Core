@@ -129,7 +129,7 @@ public class WineManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public IsProton(string? name)
+    public bool IsProton(string? name)
     {
         return Version[GetVersionOrDefault(name)].IsProton;
     }
