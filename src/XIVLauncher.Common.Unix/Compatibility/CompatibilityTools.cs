@@ -40,9 +40,14 @@ public class CompatibilityTools
 
     // Runtime will only be used with proton, and can be disabled. If not using runtime,
     // RuntimePath will be the same as Wine64Path, and we extra args won't be needed, so will be empty.
-    private string RuntimePath => Settings.IsUsingRuntime ? Path.Combine(Settings.RuntimeRelease.Name, "_v2-entry-point") : Wine64Path;
-    private string RuntimeArgs => Settings.IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{Wine64Path}\" " : "";
-    private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
+    // private string RuntimePath => Settings.IsUsingRuntime ? Path.Combine(Settings.RuntimeRelease.Name, "_v2-entry-point") : Wine64Path;
+    // private string RuntimeArgs => Settings.IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{Wine64Path}\" " : "";
+    // private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
+    private string RuntimePath => "/home/rankyn/.xlcore/compatibilitytool/umu/umu-run";
+    private string RuntimeArgs => "";
+    private string[] RuntimeArgsArray => [];
+
+
 
     private readonly IToolRelease dxvkVersion;
     private readonly RBHudType hudType;
@@ -174,7 +179,7 @@ public class CompatibilityTools
             if (lsteamclient.Exists)
             {
                 lsteamclient.Delete();
-                Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
+                Log.Information("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
             }
         }
 
@@ -247,36 +252,37 @@ public class CompatibilityTools
         foreach (var kvp in Settings.EnvVars)
             psi.Environment.Add(kvp);
         psi.Environment.Add("WINEDLLOVERRIDES", Settings.WineDLLOverrides + (isDxvkEnabled ? "n,b" : "b"));
+        psi.Environment.Add("STEAM_COMPAT_DATA_PATH", Settings.Prefix.FullName);
+        psi.Environment.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Settings.Paths.SteamFolder.FullName);
         psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
         var quickRun = new Process();
         quickRun.StartInfo = psi;
         quickRun.Start();
-        Log.Verbose("Running without runtime: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+        Log.Information("Running without runtime: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return quickRun;
     }
 
     public Process RunInPrefix(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
         var psi = new ProcessStartInfo(RuntimePath);
-        psi.Arguments = RuntimeArgs + RunInPrefixVerb + command;
-        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+        // 
+        if (!Settings.IsUsingRuntime && Settings.IsProton)
+            psi.Arguments = RunInPrefixVerb + command;
+        else
+            psi.Arguments = command;
+        Log.Information("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
 
     public Process RunInPrefix(string[] args, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
         var psi = new ProcessStartInfo(RuntimePath);
-        if (Settings.IsUsingRuntime)
-        {
-            foreach (var arg in RuntimeArgsArray)
-                psi.ArgumentList.Add(arg);
-        }
-        if (Settings.IsProton)
+        if (!Settings.IsUsingRuntime && Settings.IsProton)
             psi.ArgumentList.Add(RunInPrefixVerb.Trim());
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
+        Log.Information("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
 
@@ -476,7 +482,7 @@ public class CompatibilityTools
         }
         // Deal with rare edge-case where pid rollover causes the ffxiv pid to be lower than XLCore's.
         if (closest == 0 && early != 0) closest = early;
-        if (closest != 0) Log.Verbose($"Process for {executableName} found using fallback method: {closest}. XLCore pid: {currentProcess.Id}");
+        if (closest != 0) Log.Information($"Process for {executableName} found using fallback method: {closest}. XLCore pid: {currentProcess.Id}");
         return closest;
     }
 

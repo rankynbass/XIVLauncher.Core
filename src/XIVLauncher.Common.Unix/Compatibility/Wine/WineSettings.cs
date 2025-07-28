@@ -26,7 +26,7 @@ public class WineSettings
     public XLCorePaths Paths { get; }
 
     public bool IsProton => WineRelease.IsProton;
-    public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
+    public bool IsUsingRuntime => IsProton; //(RuntimeRelease != null) && IsProton;
     private string parentPath { get; }
     public string WinePath { get; private set; }
     public string WineServerPath { get; private set; }
@@ -74,9 +74,18 @@ public class WineSettings
         this.EnvVars = new Dictionary<string, string>();
         if (IsProton)
         {
-            EnvVars.Add("STEAM_COMPAT_DATA_PATH", Prefix.FullName);
-            EnvVars.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Paths.SteamFolder.FullName);
-            EnvVars.Add("STORE", "none");
+            if (!IsUsingRuntime)
+            {
+                EnvVars.Add("STEAM_COMPAT_DATA_PATH", Prefix.FullName);
+                EnvVars.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Paths.SteamFolder.FullName);
+            }
+            else
+            {
+                EnvVars.Add("WINEPREFIX", Paths.SteamFolder.FullName);
+                EnvVars.Add("PROTONPATH", parentPath);
+                EnvVars.Add("STORE", "none");
+                EnvVars.Add("PROTON_VERB", "runinprefix");
+            }
             if (!NTSyncOn)
                 EnvVars.Add("PROTON_NO_NTSYNC", "1");
             else if (WineRelease.Name == "GE-Proton10-9")
@@ -90,7 +99,7 @@ public class WineSettings
             }
 
             if (WaylandOn)
-                EnvVars.Add("PROTON_USE_WAYLAND", "1");
+                EnvVars.Add("PROTON_ENABLE_WAYLAND", "1");
 
             setSteamCompatMounts();
         }

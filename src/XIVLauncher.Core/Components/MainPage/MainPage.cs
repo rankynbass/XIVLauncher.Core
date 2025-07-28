@@ -777,7 +777,7 @@ public class MainPage : Page
                 var winver = (App.Settings.SetWin7 ?? true) ? "win7" : "win10";
 
                 await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
-                Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}").WaitForExit();
+                Program.CompatibilityTools.RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;
