@@ -105,6 +105,9 @@ public static class Nvapi
             Path.Combine("/", "usr", "lib", "x86_64-linux-gnu"),    // flatpak, debuntu
             Path.Combine("/", "usr", "lib64"),                      // fedora, opensuse
             Path.Combine("/", "usr", "lib"),                        // arch
+            Path.Combine("/", "run", "host", "lib", "x86_64-linux-gnu"), // distrobox container on debuntu
+            Path.Combine("/", "run", "host", "lib64"),              // distrobox container on fedora, opensuse
+            Path.Combine("/", "run", "host", "lib"),                // distrobox container on arch
         };
 
         if (!string.IsNullOrEmpty(PATH))

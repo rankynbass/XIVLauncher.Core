@@ -764,8 +764,8 @@ public class MainPage : Page
             {
                 if (App.Settings.WineBinaryPath == null)
                     throw new InvalidOperationException("Custom wine binary path wasn't set.");
-                else if (!WineSettings.IsValidWineBinaryPath(App.Settings.WineBinaryPath))
-                    throw new InvalidOperationException("Custom wine binary path is invalid: no wine or wine64 found at that location.\n" +
+                else if (!WineSettings.IsValidWineBinaryPath(App.Settings.WineBinaryPath) && !WineSettings.IsValidProtonBinaryPath(App.Settings.WineBinaryPath))
+                    throw new InvalidOperationException("Custom wine binary path is invalid: no wine, wine64, or proton found at that location.\n" +
                                                         "Check path carefully for typos: " + App.Settings.WineBinaryPath);
             }
 

@@ -52,13 +52,13 @@ public class WineSettingsEntry : SettingsEntry<string>
         ImGuiHelpers.TextWrapped(this.Name);
 
 
-        var label = Pairs[idx].Label + (ShowDescription ? " - " + Pairs[idx].Description : "");
+        var label = (Pairs[idx].IsProton ? "[Proton] " : "[Wine] ") + Pairs[idx].Label + (ShowDescription ? " - " + Pairs[idx].Description : "");
 
         if (ImGui.BeginCombo($"###{Id.ToString()}", label))
         {
-            foreach ( string key in Pairs.Keys)
+            foreach (string key in Pairs.Keys)
             {
-                var itemlabel = Pairs[key].Label + (ShowItemDescription ? " - " + Pairs[key].Description : "");
+                var itemlabel = (Pairs[key].IsProton ? "[Proton] " : "[Wine] ") + Pairs[key].Label + (ShowItemDescription ? " - " + Pairs[key].Description : "");
                 if (ImGui.Selectable(itemlabel, idx == key))
                 {
                     this.InternalValue = key;

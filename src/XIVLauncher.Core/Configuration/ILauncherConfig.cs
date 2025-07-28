@@ -76,6 +76,10 @@ public interface ILauncherConfig
 
     public bool? FSyncEnabled { get; set; }
 
+    public bool? NTSyncEnabled { get; set; }
+
+    public bool? WaylandEnabled { get; set; }
+
     // public DxvkHudType DxvkHudType { get; set; }
 
     // public NvapiVersion? NvapiVersion { get; set; }

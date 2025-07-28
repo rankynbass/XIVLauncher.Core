@@ -16,9 +16,13 @@ public class SettingsTabWine : SettingsTab
 
     private WineSettingsEntry wineVersionSetting;
 
+    private SettingsEntry<string> wineCustomBinaryPath;
+
     private ToolSettingsEntry dxvkVersionSetting;
 
     private SettingsEntry<bool> protonDxvkSetting;
+
+    private bool isProton => startupTypeSetting.Value == RBWineStartupType.Managed ? Program.WineManager.IsProton(wineVersionSetting.Value) : WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value);
 
     public SettingsTabWine()
     {
@@ -33,54 +37,56 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
             },
 
-            new SettingsEntry<string>("Wine Binary Path",
-                "Set the path XIVLauncher will use to run applications via wine.\nIt should be an absolute path to a folder containing wine and/or win64 and wineserver binaries.",
+            wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",
+                "Set the path XIVLauncher will use to run applications via Wine/Proton.\nIt should be an absolute path to a folder containing wine and/or win64 and wineserver binaries, or the proton binary.",
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom,
                 CheckValidity = s =>
                 {
-                    if (!WineSettings.IsValidWineBinaryPath(s))
-                        return "Invalid wine path.";
-                    return null;
+                    if (WineSettings.IsValidWineBinaryPath(s) || WineSettings.IsValidProtonBinaryPath(s))
+                    {
+                        return null;
+                    }
+                    return "Invalid wine or proton path.";
                 },
             },
 
             new SettingsEntry<bool>("Enable Steam Runtime", "Use the Steam sniper runtime container (recommended)", () => Program.Config.RB_UseSniperRuntime ?? true, b => Program.Config.RB_UseSniperRuntime = b)
             {
-                CheckVisibility = () => Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => isProton
             },
 
             dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,
             s => Program.Config.RB_DxvkVersion = s, Program.DxvkManager.Version, Program.DxvkManager.DEFAULT)
             {
-                CheckVisibility = () => !Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => !isProton
             },
 
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("async") && !Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("async") && !isProton
             },
 
             new SettingsEntry<bool>("Enable GPLAsync Cache", "Enable GPLASync Cache.", () => Program.Config.RB_GPLAsyncCacheEnabled ?? true, b => Program.Config.RB_GPLAsyncCacheEnabled = b)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync") && !Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync") && !isProton
             },
 
             new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
                 s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
             {
-                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && !Program.WineManager.IsProton(wineVersionSetting.Value),
+                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && !isProton,
             },
 
             protonDxvkSetting = new SettingsEntry<bool>("Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b)
             {
-                CheckVisibility = () => Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => isProton
             },
 
             new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
             {
-                CheckVisibility = () => Program.WineManager.IsProton(wineVersionSetting.Value)
+                CheckVisibility = () => isProton
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
@@ -97,16 +103,19 @@ public class SettingsTabWine : SettingsTab
             new SettingsEntry<bool>("Enable FSync", "Enable fast user mutex (futex2).", () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
-                CheckValidity = b =>
-                {
-                    if (b == true && (Environment.OSVersion.Version.Major < 5 && (Environment.OSVersion.Version.Minor < 16 || Environment.OSVersion.Version.Major < 6)))
-                        return "Linux kernel 5.16 or higher is required for FSync.";
-
-                    return null;
-                }
             },
 
-            new SettingsEntry<bool>("Set Windows version to 7", "Default for Wine 8.1+ is Windows 10, but this causes issues with some Dalamud plugins. Windows 7 is recommended for Legacy Wine.", () => Program.Config.SetWin7 ?? true, b => Program.Config.SetWin7 = b),
+            new SettingsEntry<bool>("Enable NTSync", "Enable NTSync. Requires a compatible kernel.", () => Program.Config.NTSyncEnabled ?? false, b => Program.Config.NTSyncEnabled = b)
+            {
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            },
+
+            new SettingsEntry<bool>("Enable Wayland Driver", "Enable Wine's experimental Wayland Driver.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b)
+            {
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            },
+
+            new SettingsEntry<bool>("Set Windows version to 7", "Default for Wine 8.1+ is Windows 10, but this causes issues with some Dalamud plugins. Windows 7 is recommended for Legacy Wine.", () => Program.Config.SetWin7 ?? false, b => Program.Config.SetWin7 = b),
 
             new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };

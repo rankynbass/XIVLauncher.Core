@@ -246,8 +246,7 @@ public class CompatibilityTools
         // Need to set these or proton will refuse to run.
         foreach (var kvp in Settings.EnvVars)
             psi.Environment.Add(kvp);
-        if (!isDxvkEnabled)
-            psi.Environment.Add("PROTON_USE_WINED3D", "1");
+        psi.Environment.Add("WINEDLLOVERRIDES", Settings.WineDLLOverrides + (isDxvkEnabled ? "n,b" : "b"));
         psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
         var quickRun = new Process();
         quickRun.StartInfo = psi;
@@ -318,13 +317,7 @@ public class CompatibilityTools
 
         var wineEnvironmentVariables = new Dictionary<string, string>();
 
-        if (!Settings.IsProton)
-            wineEnvironmentVariables.Add("WINEDLLOVERRIDES", $"{Settings.WineDLLOverrides}{(ogl ? "b" : "n,b")}");
-        else
-        {
-            if (ogl)
-                wineEnvironmentVariables.Add("PROTON_USE_WINED3D", "1");
-        }
+        wineEnvironmentVariables.Add("WINEDLLOVERRIDES", Settings.WineDLLOverrides + (ogl ? "b" : "n,b"));
 
         if (!ogl)
         {

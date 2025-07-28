@@ -50,21 +50,14 @@ public class WineSettings
         this.WineRelease = wineRelease;
         if (wineRelease.IsProton)
         {
-            this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
+            this.parentPath = (wineRelease.Label == "CUSTOM") ? wineRelease.Name : Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
             this.WinePath = Path.Combine(parentPath, "proton");
             this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
             this.RuntimeRelease = runtime;
         }
-        else if (wineRelease.Label == "CUSTOM")
-        {
-            this.parentPath = wineRelease.Name;
-            this.SetWineOrWine64(parentPath);
-            this.WineServerPath = Path.Combine(parentPath, "wineserver");
-            this.RuntimeRelease = null;
-        }
         else
         {
-            this.parentPath = Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
+            this.parentPath = (wineRelease.Label == "CUSTOM") ? wineRelease.Name : Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
             this.SetWineOrWine64(parentPath);
             this.WineServerPath = Path.Combine(parentPath, "wineserver");
             this.RuntimeRelease = null;
@@ -77,9 +70,7 @@ public class WineSettings
         this.LogFile = logFile;
         this.Prefix = paths.Prefix;
         this.Paths = paths;
-        this.WineDLLOverrides = (WineSettings.WineDLLOverrideIsValid(dlloverrides) ? dlloverrides + ";" : "") +
-                                (WaylandOn ? "winex11.drv=d;winewayland.drv=b;" : "") + WINEDLLOVERRIDES;
-        Console.WriteLine("WINEDLLOVERRIDES=" + WineDLLOverrides);
+        this.WineDLLOverrides = (WineSettings.WineDLLOverrideIsValid(dlloverrides) && !string.IsNullOrEmpty(dlloverrides) ? dlloverrides + ";" : "") + WINEDLLOVERRIDES;
         this.EnvVars = new Dictionary<string, string>();
         if (IsProton)
         {
@@ -109,6 +100,8 @@ public class WineSettings
             EnvVars.Add("WINEFSYNC", FsyncOn ? "1" : "0");
             EnvVars.Add("WINENTSYNC", NTSyncOn ? "1" : "0");
             EnvVars.Add("WINEPREFIX", Prefix.FullName);
+            if (WaylandOn)
+                EnvVars.Add("DISPLAY", null);
         }
     }
 
@@ -182,6 +175,15 @@ public class WineSettings
         if (File.Exists(Path.Combine(path, "wine64")))
             return true;
         if (File.Exists(Path.Combine(path, "wine")))
+            return true;
+        return false;
+    }
+
+    public static bool IsValidProtonBinaryPath(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+        if (File.Exists(Path.Combine(path, "proton")))
             return true;
         return false;
     }

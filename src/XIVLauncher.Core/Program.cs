@@ -137,8 +137,10 @@ sealed class Program
         // Config.DxvkHudType ??= DxvkHudType.None;
         // Config.NvapiVersion ??= NvapiVersion.Stable;
         Config.ESyncEnabled ??= true;
-        Config.FSyncEnabled ??= false;
-        Config.SetWin7 ??= true;
+        Config.FSyncEnabled ??= true;
+        Config.NTSyncEnabled ??= false;
+        Config.WaylandEnabled ??= false;
+        Config.SetWin7 ??= false;
 
         // Config.WineStartupType ??= WineStartupType.Managed;
         // Config.WineManagedVersion ??= WineManagedVersion.Stable;
@@ -396,7 +398,9 @@ sealed class Program
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var wineRelease = Config.RB_WineStartupType switch
         {
-            RBWineStartupType.Custom => new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.WineBinaryPath)),
+            RBWineStartupType.Custom => WineSettings.IsValidWineBinaryPath(Config.WineBinaryPath) ? 
+                new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.WineBinaryPath)) :
+                new ProtonCustomRelease("CUSTOM", "Custom Proton", Config.WineBinaryPath, "", ""),
             RBWineStartupType.Managed => WineManager.GetWine(Config.RB_WineVersion),
             _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
         };
@@ -409,7 +413,7 @@ sealed class Program
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
-        var wineSettings = new WineSettings(wineRelease, Config.RB_UseSniperRuntime == true ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? false, false, false);
+        var wineSettings = new WineSettings(wineRelease, Config.RB_UseSniperRuntime == true ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? true, Config.NTSyncEnabled ?? false, Config.WaylandEnabled ?? false);
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");
