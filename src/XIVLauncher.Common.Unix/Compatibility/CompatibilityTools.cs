@@ -425,6 +425,11 @@ public class CompatibilityTools
 
     public Int32 GetUnixProcessId(Int32 winePid)
     {
+        if (Settings.IsProton && !Settings.WineRelease.Name.Contains("XIV"))
+        {
+            var processName = GetProcessName(winePid);
+            return GetUnixProcessIdByName(processName);
+        }
         var wineDbg = RunInPrefix("winedbg --command \"info procmap\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         if (output.Contains("syntax error\n") || output.Contains("Exception c0000005")) // valve wine changed the error message
