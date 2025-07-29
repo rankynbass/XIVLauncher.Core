@@ -52,7 +52,7 @@ public class SettingsTabWine : SettingsTab
                 },
             },
 
-            new SettingsEntry<bool>("Enable Steam Runtime", "Use the Steam sniper runtime container (recommended)", () => Program.Config.RB_UseSniperRuntime ?? true, b => Program.Config.RB_UseSniperRuntime = b)
+            new SettingsEntry<bool>("Use Umu Launcher", "Use Umu Launcher to run Proton (recommended). System umu will be used, if found.", () => Program.Config.RB_UseUmu ?? true, b => Program.Config.RB_UseUmu = b)
             {
                 CheckVisibility = () => isProton
             },

@@ -27,6 +27,7 @@ public class CompatibilityTools
     private readonly DirectoryInfo wineDirectory;
     private readonly DirectoryInfo dxvkDirectory;
     private readonly DirectoryInfo nvapiDirectory;
+    private readonly DirectoryInfo umuDirectory;
     private readonly DirectoryInfo gameDirectory;
     private readonly DirectoryInfo configDirectory;
     private readonly DirectoryInfo steamDirectory;
@@ -43,11 +44,7 @@ public class CompatibilityTools
     // private string RuntimePath => Settings.IsUsingRuntime ? Path.Combine(Settings.RuntimeRelease.Name, "_v2-entry-point") : Wine64Path;
     // private string RuntimeArgs => Settings.IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{Wine64Path}\" " : "";
     // private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
-    private string RuntimePath => "/home/rankyn/.xlcore/compatibilitytool/umu/umu-run";
-    private string RuntimeArgs => "";
-    private string[] RuntimeArgsArray => [];
-
-
+    private string RuntimePath => Settings.RuntimeRelease.Name;
 
     private readonly IToolRelease dxvkVersion;
     private readonly RBHudType hudType;
@@ -77,6 +74,7 @@ public class CompatibilityTools
         this.wineDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "wine"));
         this.dxvkDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "dxvk"));
         this.nvapiDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "nvapi"));
+        this.umuDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "umu"));
         this.gameDirectory = Settings.Paths.GameFolder;
         this.configDirectory = Settings.Paths.ConfigFolder;
         this.steamDirectory = Settings.Paths.SteamFolder;
@@ -107,10 +105,11 @@ public class CompatibilityTools
             this.dxvkDirectory.Create();
         if (!this.nvapiDirectory.Exists)
             this.nvapiDirectory.Create();
+        if (!this.umuDirectory.Exists)
+            this.umuDirectory.Create();
         if (!this.steamDirectory.Exists && this.Settings.IsUsingRuntime);
         {
             this.steamDirectory.Create();
-            this.steamDirectory.CreateSubdirectory(Path.Combine("steamapps", "common"));
             this.steamDirectory.CreateSubdirectory(Path.Combine("compatibilitytools.d"));
         }
 
@@ -125,7 +124,10 @@ public class CompatibilityTools
             if (pfx.Exists)
             {
                 if (pfx.ResolveLinkTarget(false) is null) // File exists, is not a symlink
+                {
                     pfx.Delete();
+                    pfx.CreateAsSymbolicLink(Settings.Prefix.FullName);
+                }
                 if (pfx.ResolveLinkTarget(true).FullName != Settings.Prefix.FullName) // symlink is wrong
                 {
                     pfx.Delete();
@@ -141,12 +143,12 @@ public class CompatibilityTools
 
     public async Task EnsureTool()
     {
-        // Download sniper container if it's missing.
+        // Download Umu Launcher if it's missing.
         if (Settings.IsUsingRuntime && !File.Exists(RuntimePath))
         {
             if (string.IsNullOrEmpty(Settings.RuntimeRelease.DownloadUrl))
-                throw new ArgumentNullException("Steam runtime selected, but is not present, and no download url provided.");
-            Log.Information($"Steam Sniper runtime does not exist, downloading {Settings.RuntimeRelease.DownloadUrl} to {Settings.Paths.SteamFolder.FullName}/steamapps/common");
+                throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
+            Log.Information($"umu-run is not in $PATH, downloading {Settings.RuntimeRelease.DownloadUrl} to {umuDirectory.FullName}");
             await DownloadRuntime().ConfigureAwait(false);
         }
 
@@ -212,7 +214,6 @@ public class CompatibilityTools
 
     private async Task DownloadRuntime()
     {
-        var targetPath = new DirectoryInfo(Path.Combine(Settings.Paths.SteamFolder.FullName, "steamapps", "common"));
         using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
         await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.RuntimeRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
@@ -220,8 +221,8 @@ public class CompatibilityTools
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
-        PlatformHelpers.Untar(tempPath, targetPath.FullName);
-        Log.Information("Steam Sniper runtime successfully extracted to {Path}", targetPath.FullName);
+        PlatformHelpers.Untar(tempPath, umuDirectory.FullName);
+        Log.Information("Umu Launcher successfully extracted to {Path}", umuDirectory.FullName);
         File.Delete(tempPath);
     }
 
@@ -493,6 +494,11 @@ public class CompatibilityTools
         var output = winePath.StandardOutput.ReadToEnd();
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
+
+    // public string UnixToWinePath(string unixPath)
+    // {
+    //     return "Z:\" + unixPath.Replace("/", "\");
+    // }
 
     public void AddRegistryKey(string key, string value, string data)
     {

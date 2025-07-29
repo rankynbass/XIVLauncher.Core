@@ -116,7 +116,7 @@ public interface ILauncherConfig
 
     public bool? RB_NvapiEnabled { get; set; }
 
-    public bool? RB_UseSniperRuntime { get; set; }
+    public bool? RB_UseUmu { get; set; }
 
     public RBHudType? RB_HudType { get; set; }
     

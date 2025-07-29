@@ -29,6 +29,8 @@ public class WineManager
 
     private string wineFolder { get; }
 
+    private string umuFolder { get; }
+
     private string rootFolder { get; }
 
     private string commonFolder { get; }
@@ -64,7 +66,12 @@ public class WineManager
             Directory.CreateDirectory(commonFolder);
         if (!Directory.Exists(compatFolder))
             Directory.CreateDirectory(compatFolder);
-        this.Runtime = new SteamRuntimeRelease(this.commonFolder);
+
+        // Umu Launcher
+        this.umuFolder = Path.Combine(root, "compatibilitytool", "umu");
+        var umuPath = findUmuLauncher();
+        Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), true) : new UmuLauncherRelease(umuPath, false);
+        Console.WriteLine(Runtime.Name);
 
         Initialize();
     }
@@ -138,5 +145,19 @@ public class WineManager
     {
         Version.Clear();
         Initialize();
+    }
+
+    private string? findUmuLauncher()
+    {
+        var pathArray = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
+        foreach (string test in pathArray)
+        {
+            if (string.IsNullOrEmpty(test.Trim()))
+                continue;
+            string umu = Path.Combine(test.Trim(), "umu-run");
+            if (File.Exists(umu))
+                return Path.GetFullPath(umu);
+        }
+        return null;
     }
 }

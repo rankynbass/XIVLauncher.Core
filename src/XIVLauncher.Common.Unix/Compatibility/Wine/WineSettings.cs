@@ -26,7 +26,7 @@ public class WineSettings
     public XLCorePaths Paths { get; }
 
     public bool IsProton => WineRelease.IsProton;
-    public bool IsUsingRuntime => IsProton; //(RuntimeRelease != null) && IsProton;
+    public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
     private string parentPath { get; }
     public string WinePath { get; private set; }
     public string WineServerPath { get; private set; }
