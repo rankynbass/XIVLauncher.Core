@@ -17,6 +17,17 @@ public enum RBWineStartupType
     Custom,
 }
 
+public enum RBUmuLauncherType
+{
+    [SettingsDescription("System", "Use system Umu Launcher if available. This will fall back to builtin Umu if it is not installed.")]
+    System,
+
+    [SettingsDescription("Built-in", "Use the built-in Umu Launcher, even if Umu is installed on the system.")]
+    Builtin,
+
+    [SettingsDescription("Disabled", "Don't use Umu-launcher with proton")]
+    Disabled,
+}
 public class WineManager
 {
     public string DEFAULT { get; private set; }
@@ -25,7 +36,7 @@ public class WineManager
 
     public Dictionary<string, IWineRelease> Version { get; private set; }
 
-    public IToolRelease Runtime { get; }
+    public IToolRelease Runtime { get; private set; }
 
     private string wineFolder { get; }
 
@@ -69,11 +80,14 @@ public class WineManager
 
         // Umu Launcher
         this.umuFolder = Path.Combine(root, "compatibilitytool", "umu");
-        var umuPath = findUmuLauncher();
-        Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), true) : new UmuLauncherRelease(umuPath, false);
-        Console.WriteLine(Runtime.Name);
 
         Initialize();
+    }
+
+    public void SetUmuLauncher(bool useBuiltinUmu)
+    {
+        var umuPath = findUmuLauncher(useBuiltinUmu);
+        Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), true) : new UmuLauncherRelease(umuPath, false);
     }
 
     private void Initialize()
@@ -147,8 +161,10 @@ public class WineManager
         Initialize();
     }
 
-    private string? findUmuLauncher()
+    private string? findUmuLauncher(bool useBuiltinUmu)
     {
+        if (useBuiltinUmu)
+            return null;
         var pathArray = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
         foreach (string test in pathArray)
         {

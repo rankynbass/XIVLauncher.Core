@@ -36,15 +36,10 @@ public class CompatibilityTools
     // Wine64 will be wine64/wine for wine, proton for proton
     private string Wine64Path => Settings.WinePath;
     private string WineServerPath => Settings.WineServerPath;
-    private string RunInPrefixVerb => Settings.IsProton ? "runinprefix " : "";
-    private string RunVerb => Settings.IsProton ? "run " : "";
 
-    // Runtime will only be used with proton, and can be disabled. If not using runtime,
-    // RuntimePath will be the same as Wine64Path, and we extra args won't be needed, so will be empty.
-    // private string RuntimePath => Settings.IsUsingRuntime ? Path.Combine(Settings.RuntimeRelease.Name, "_v2-entry-point") : Wine64Path;
-    // private string RuntimeArgs => Settings.IsUsingRuntime ? $"--verb=waitforexitandrun -- \"{Wine64Path}\" " : "";
-    // private string[] RuntimeArgsArray => Settings.IsUsingRuntime ? [ "--verb=waitforexitandrun", "--", Wine64Path] : new string [] { };
-    private string RuntimePath => Settings.RuntimeRelease.Name;
+    // Umu Launcher will only be used with proton, and can be disabled. If not using runtime,
+    // RuntimePath will be the same as Wine64Path.
+    private string RuntimePath => Settings.IsUsingUmu ? Settings.UmuLauncher.Name : Wine64Path;
 
     private readonly IToolRelease dxvkVersion;
     private readonly RBHudType hudType;
@@ -107,7 +102,7 @@ public class CompatibilityTools
             this.nvapiDirectory.Create();
         if (!this.umuDirectory.Exists)
             this.umuDirectory.Create();
-        if (!this.steamDirectory.Exists && this.Settings.IsUsingRuntime);
+        if (!this.steamDirectory.Exists && this.Settings.IsUsingUmu);
         {
             this.steamDirectory.Create();
             this.steamDirectory.CreateSubdirectory(Path.Combine("compatibilitytools.d"));
@@ -144,11 +139,11 @@ public class CompatibilityTools
     public async Task EnsureTool()
     {
         // Download Umu Launcher if it's missing.
-        if (Settings.IsUsingRuntime && !File.Exists(RuntimePath))
+        if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
         {
-            if (string.IsNullOrEmpty(Settings.RuntimeRelease.DownloadUrl))
+            if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
                 throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
-            Log.Information($"umu-run is not in $PATH, downloading {Settings.RuntimeRelease.DownloadUrl} to {umuDirectory.FullName}");
+            Log.Information($"umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
             await DownloadRuntime().ConfigureAwait(false);
         }
 
@@ -216,19 +211,19 @@ public class CompatibilityTools
     {
         using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
-        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.RuntimeRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempPath, [Settings.RuntimeRelease.Checksum]))
+        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempPath, [Settings.UmuLauncher.Checksum]))
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
-        PlatformHelpers.Untar(tempPath, umuDirectory.FullName);
+        PlatformHelpers.Untar(tempPath, umuDirectory.Parent.FullName);
         Log.Information("Umu Launcher successfully extracted to {Path}", umuDirectory.FullName);
         File.Delete(tempPath);
     }
 
     public void EnsurePrefix()
     {
-        bool runinprefix = true;
+        var verb = "runinprefix";
         // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
         // That will generate these files.
         if (!File.Exists(Path.Combine(Settings.Prefix.FullName, "config_info")) &&
@@ -236,12 +231,12 @@ public class CompatibilityTools
             !File.Exists(Path.Combine(Settings.Prefix.FullName, "tracked_files")) &&
             !File.Exists(Path.Combine(Settings.Prefix.FullName, "version")))
         {
-            runinprefix = false;
+            verb = "run";
         }
-        RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", runinprefix, false).WaitForExit();
+        RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExit();
     }
 
-    public Process RunWithoutRuntime(string command, bool runinprefix = true, bool redirect = true)
+    public Process RunWithoutRuntime(string command, string verb = "runinprefix", bool redirect = true)
     {
         if (!Settings.IsProton)
             return RunInPrefix(command, redirectOutput: redirect, writeLog: redirect);
@@ -255,7 +250,7 @@ public class CompatibilityTools
         psi.Environment.Add("WINEDLLOVERRIDES", Settings.WineDLLOverrides + (isDxvkEnabled ? "n,b" : "b"));
         psi.Environment.Add("STEAM_COMPAT_DATA_PATH", Settings.Prefix.FullName);
         psi.Environment.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Settings.Paths.SteamFolder.FullName);
-        psi.Arguments = runinprefix ? RunInPrefixVerb + command : RunVerb + command;
+        psi.Arguments = verb + " " + command;
         var quickRun = new Process();
         quickRun.StartInfo = psi;
         quickRun.Start();
@@ -267,8 +262,8 @@ public class CompatibilityTools
     {
         var psi = new ProcessStartInfo(RuntimePath);
         // 
-        if (!Settings.IsUsingRuntime && Settings.IsProton)
-            psi.Arguments = RunInPrefixVerb + command;
+        if (!Settings.IsUsingUmu && Settings.IsProton)
+            psi.Arguments = "runinprefix " + command;
         else
             psi.Arguments = command;
         Log.Information("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
@@ -278,8 +273,8 @@ public class CompatibilityTools
     public Process RunInPrefix(string[] args, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
         var psi = new ProcessStartInfo(RuntimePath);
-        if (!Settings.IsUsingRuntime && Settings.IsProton)
-            psi.ArgumentList.Add(RunInPrefixVerb.Trim());
+        if (!Settings.IsUsingUmu && Settings.IsProton)
+            psi.ArgumentList.Add("runinprefix");
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
@@ -489,16 +484,11 @@ public class CompatibilityTools
 
     public string UnixToWinePath(string unixPath)
     {
-        var launchArguments = $"winepath --windows \"{unixPath}\"";
-        var winePath = RunWithoutRuntime(launchArguments);
+        var launchArguments = (Settings.IsProton) ? $"\"{unixPath}\"" : $"winepath --windows \"{unixPath}\"";
+        var winePath = RunWithoutRuntime(launchArguments, "getcompatpath");
         var output = winePath.StandardOutput.ReadToEnd();
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
-
-    // public string UnixToWinePath(string unixPath)
-    // {
-    //     return "Z:\" + unixPath.Replace("/", "\");
-    // }
 
     public void AddRegistryKey(string key, string value, string data)
     {

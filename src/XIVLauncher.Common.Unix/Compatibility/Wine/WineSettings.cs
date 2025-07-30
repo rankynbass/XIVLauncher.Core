@@ -13,7 +13,7 @@ public class WineSettings
     private const string WINEDLLOVERRIDES = "msquic=,mscoree=n,b;d3d9,d3d11,d3d10core,dxgi=";
 
     public IWineRelease WineRelease { get; private set; }
-    public IToolRelease RuntimeRelease { get; private set; }
+    public IToolRelease UmuLauncher { get; private set; }
 
     public bool EsyncOn { get; }
     public bool FsyncOn { get; }
@@ -26,26 +26,14 @@ public class WineSettings
     public XLCorePaths Paths { get; }
 
     public bool IsProton => WineRelease.IsProton;
-    public bool IsUsingRuntime => (RuntimeRelease != null) && IsProton;
+    public bool IsUsingUmu => (UmuLauncher != null) && IsProton;
     private string parentPath { get; }
     public string WinePath { get; private set; }
     public string WineServerPath { get; private set; }
 
     public Dictionary<string, string> EnvVars { get; private set; }
 
-
-
-    /*  
-        The end result of the above variables is that we will build the process commands as follows:
-        Process: Command
-        Arguements: RunInRuntimeArguments + WinePath + Run/RunInPrefix + command.
-
-        If wine, that'll look like: /path/to/wine64 command
-        If proton, it'll look like: /path/to/proton runinprefix command
-        If steam runtime, it'll be: /path/to/runtime --verb=waitforexitandrun -- /path/to/proton runinprefix command
-    */
-
-    public WineSettings(IWineRelease wineRelease, IToolRelease runtime, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn, bool ntsyncOn, bool waylandOn)
+    public WineSettings(IWineRelease wineRelease, IToolRelease umuLauncher, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn, bool ntsyncOn, bool waylandOn)
     {
         this.WineRelease = wineRelease;
         if (wineRelease.IsProton)
@@ -53,14 +41,14 @@ public class WineSettings
             this.parentPath = (wineRelease.Label == "CUSTOM") ? wineRelease.Name : Path.Combine(wineRelease.ParentFolder, wineRelease.Name);
             this.WinePath = Path.Combine(parentPath, "proton");
             this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
-            this.RuntimeRelease = runtime;
+            this.UmuLauncher = umuLauncher;
         }
         else
         {
             this.parentPath = (wineRelease.Label == "CUSTOM") ? wineRelease.Name : Path.Combine(wineRelease.ParentFolder, wineRelease.Name, "bin");
             this.SetWineOrWine64(parentPath);
             this.WineServerPath = Path.Combine(parentPath, "wineserver");
-            this.RuntimeRelease = null;
+            this.UmuLauncher = null;
         }
         this.EsyncOn = esyncOn;
         this.FsyncOn = fsyncOn;
@@ -74,7 +62,7 @@ public class WineSettings
         this.EnvVars = new Dictionary<string, string>();
         if (IsProton)
         {
-            if (!IsUsingRuntime)
+            if (!IsUsingUmu)
             {
                 EnvVars.Add("STEAM_COMPAT_DATA_PATH", Prefix.FullName);
                 EnvVars.Add("STEAM_COMPAT_CLIENT_INSTALL_PATH", Paths.SteamFolder.FullName);

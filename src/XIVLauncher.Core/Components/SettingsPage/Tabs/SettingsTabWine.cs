@@ -52,7 +52,7 @@ public class SettingsTabWine : SettingsTab
                 },
             },
 
-            new SettingsEntry<bool>("Use Umu Launcher", "Use Umu Launcher to run Proton (recommended). System umu will be used, if found.", () => Program.Config.RB_UseUmu ?? true, b => Program.Config.RB_UseUmu = b)
+            new SettingsEntry<RBUmuLauncherType>("Umu Launcher", "Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).", () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
             {
                 CheckVisibility = () => isProton
             },
