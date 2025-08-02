@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
+using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Dxvk;
 
@@ -16,6 +19,11 @@ public class DxvkManager
     public string LEGACY { get; private set; }
 
     public Dictionary<string, IToolRelease> Version { get; private set; }
+
+    public bool IsListUpdated { get; private set; } = false;
+
+    private const string DXVKLIST_URL = "https://raw.githubusercontent.com/rankynbass/XIV-compatibilitytools/refs/heads/main/RB-dxvklist.json";
+
 
     private string dxvkFolder { get; }
 
@@ -56,11 +64,18 @@ public class DxvkManager
     {
         Version = new Dictionary<string, IToolRelease>();
         DateTime releaseDate;
-        Console.WriteLine("RB-dxvklist.json found!");
         DxvkList dxvkList;
         using (StreamReader file = new StreamReader(dxvkJson.OpenRead()))
         {
-            dxvkList = JsonConvert.DeserializeObject<DxvkList>(file.ReadToEnd());
+            try
+            {
+                dxvkList = JsonConvert.DeserializeObject<DxvkList>(file.ReadToEnd());
+            }
+            catch
+            {
+                Initialize();
+                return;
+            }
         }
         foreach (var dxvkRelease in dxvkList.DxvkVersions)
         {
@@ -95,5 +110,43 @@ public class DxvkManager
     {
         Version.Clear();
         Initialize();
+    }
+
+    public async Task DownloadDxvkList()
+    {
+        // Uncomment for testing
+        // await Task.Delay(5000);
+
+        using var client = HappyEyeballsHttp.CreateHttpClient();
+        var tempPath = PlatformHelpers.GetTempFileName();
+        var dxvkList = Path.Combine(rootFolder, "RB-dxvklist.json");
+
+        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(DXVKLIST_URL).ConfigureAwait(false));
+
+        if (!File.Exists(dxvkList))
+        {
+            File.Move(tempPath, dxvkList);
+            IsListUpdated = true;
+            InitializeJson(new FileInfo(dxvkList));
+            return;
+        }
+
+        using var sha512 = SHA512.Create();
+        using var tempPathStream = File.OpenRead(tempPath);
+        using var dxvkListStream = File.OpenRead(dxvkList);
+        var tempPathHash = Convert.ToHexString(sha512.ComputeHash(tempPathStream)).ToLowerInvariant();
+        var dxvkListHash = Convert.ToHexString(sha512.ComputeHash(dxvkListStream)).ToLowerInvariant();
+        if (tempPathHash != dxvkListHash)
+        {
+            File.Delete(dxvkList);
+            File.Move(tempPath, dxvkList);
+            IsListUpdated = true;
+            InitializeJson(new FileInfo(dxvkList));
+        }
+    }
+
+    public void DoneUpdatingDxvkList()
+    {
+        IsListUpdated = false;
     }
 }

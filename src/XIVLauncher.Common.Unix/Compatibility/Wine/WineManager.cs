@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
+
 using Newtonsoft.Json;
 using Serilog;
 
+using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
@@ -39,6 +44,10 @@ public class WineManager
     public Dictionary<string, IWineRelease> Version { get; private set; }
 
     public IToolRelease Runtime { get; private set; }
+
+    public bool IsListUpdated { get; private set; } = false;
+
+    private const string WINELIST_URL = "https://raw.githubusercontent.com/rankynbass/XIV-compatibilitytools/refs/heads/main/RB-winelist.json";
 
     private WineReleaseDistro wineDistroId { get; }
 
@@ -146,7 +155,6 @@ public class WineManager
         Version = new Dictionary<string, IWineRelease>();
         string umuLauncherUrl;
         DateTime releaseDate;
-        Console.WriteLine("RB-winelist.json fould!");
         WineList wineList;
         using (StreamReader file = new StreamReader(wineJson.OpenRead()))
         {
@@ -156,7 +164,15 @@ public class WineManager
         {
             if (wineRelease.IsProton)
             {
-                AddVersion(new ProtonCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.compatFolder, wineRelease.DownloadUrl, wineRelease.Checksums[0]));
+                try
+                {
+                    AddVersion(new ProtonCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.compatFolder, wineRelease.DownloadUrl, wineRelease.Checksums[0]));
+                }
+                catch
+                {
+                    Initialize();
+                    return;
+                }
             }
             else
             {
@@ -212,5 +228,43 @@ public class WineManager
                 return Path.GetFullPath(umu);
         }
         return null;
+    }
+
+    public async Task DownloadWineList()
+    {
+        // Uncomment for testing
+        // await Task.Delay(5000);
+
+        using var client = HappyEyeballsHttp.CreateHttpClient();
+        var tempPath = PlatformHelpers.GetTempFileName();
+        var wineList = Path.Combine(rootFolder, "RB-winelist.json");
+
+        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(WINELIST_URL).ConfigureAwait(false));
+
+        if (!File.Exists(wineList))
+        {
+            File.Move(tempPath, wineList);
+            IsListUpdated = true;
+            InitializeJson(new FileInfo(wineList));
+            return;
+        }
+
+        using var sha512 = SHA512.Create();
+        using var tempPathStream = File.OpenRead(tempPath);
+        using var wineListStream = File.OpenRead(wineList);
+        var tempPathHash = Convert.ToHexString(sha512.ComputeHash(tempPathStream)).ToLowerInvariant();
+        var wineListHash = Convert.ToHexString(sha512.ComputeHash(wineListStream)).ToLowerInvariant();
+        if (tempPathHash != wineListHash)
+        {
+            File.Delete(wineList);
+            File.Move(tempPath, wineList);
+            IsListUpdated = true;
+            InitializeJson(new FileInfo(wineList));
+        }        
+    }
+
+    public void DoneUpdatingWineList()
+    {
+        IsListUpdated = false;
     }
 }

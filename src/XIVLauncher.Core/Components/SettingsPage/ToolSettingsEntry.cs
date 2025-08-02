@@ -96,16 +96,10 @@ public class ToolSettingsEntry : SettingsEntry<string>
         }
     }
 
-    public void Reset(Dictionary<string, IToolRelease> pairs)
+    public void Reset(Dictionary<string, IToolRelease> pairs, string newDefault)
     {
         this.Pairs.Clear();
         this.Pairs = pairs;
-    }
-
-    public void Reset(Dictionary<string, IWineRelease> pairs)
-    {
-        this.Pairs.Clear();
-        foreach (var pair in pairs)
-            Pairs.Add(pair.Key, (IToolRelease)pair.Value);
+        this.DefaultValue = newDefault;
     }
 }

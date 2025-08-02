@@ -20,6 +20,8 @@ public class SettingsTabWine : SettingsTab
 
     private ToolSettingsEntry dxvkVersionSetting;
 
+    private ToolSettingsEntry nvapiVersionSetting;
+
     private SettingsEntry<bool> protonDxvkSetting;
 
     private bool isProton => startupTypeSetting.Value == RBWineStartupType.Managed ? Program.WineManager.IsProton(wineVersionSetting.Value) : WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value);
@@ -73,7 +75,7 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync") && !isProton
             },
 
-            new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
+            nvapiVersionSetting = new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
                 s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && !isProton,
@@ -129,6 +131,26 @@ public class SettingsTabWine : SettingsTab
 
     public override void Draw()
     {
+        if (Program.WineManager.IsListUpdated)
+        {
+            Console.WriteLine("Wine List updated!");
+            Program.WineManager.DoneUpdatingWineList();
+            wineVersionSetting.Reset(Program.WineManager.Version, Program.WineManager.DEFAULT);
+        }
+
+        if (Program.DxvkManager.IsListUpdated)
+        {
+            Console.WriteLine("Dxvk List updated!");
+            Program.DxvkManager.DoneUpdatingDxvkList();
+            dxvkVersionSetting.Reset(Program.DxvkManager.Version, Program.DxvkManager.DEFAULT);
+        }
+
+        if (Program.NvapiManager.IsListUpdated)
+        {
+            Console.WriteLine("Nvapi List updated!");
+            Program.NvapiManager.DoneUpdatingNvapiList();
+            nvapiVersionSetting.Reset(Program.NvapiManager.Version, Program.NvapiManager.DEFAULT);
+        }
         base.Draw();
 
         if (!Program.CompatibilityTools.IsToolDownloaded)

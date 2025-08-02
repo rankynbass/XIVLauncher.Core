@@ -98,9 +98,10 @@ public class WineSettingsEntry : SettingsEntry<string>
         }
     }
 
-    public void Reset(Dictionary<string, IWineRelease> pairs)
+    public void Reset(Dictionary<string, IWineRelease> pairs, string newDefault)
     {
         this.Pairs.Clear();
         this.Pairs = pairs;
+        this.DefaultValue = newDefault;
     }
 }

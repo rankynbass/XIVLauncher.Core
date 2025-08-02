@@ -223,11 +223,19 @@ sealed class Program
 
         SetupLogging(mainArgs);
         // This needs to be above LoadConfig so it can properly set defaults.
-        WineManager = new WineManager(storage.Root.FullName);
-        DxvkManager = new DxvkManager(storage.Root.FullName);
-        NvapiManager = new NvapiManager(storage.Root.FullName);
-        LoadConfig(storage);
-        WineManager.SetUmuLauncher(CoreEnvironmentSettings.UseBuiltinUmu || Config.RB_UmuLauncher == RBUmuLauncherType.Builtin);
+        if (Environment.OSVersion.Platform == PlatformID.Unix)
+        {
+            WineManager = new WineManager(storage.Root.FullName);
+            DxvkManager = new DxvkManager(storage.Root.FullName);
+            NvapiManager = new NvapiManager(storage.Root.FullName);
+            LoadConfig(storage);
+            WineManager.SetUmuLauncher(CoreEnvironmentSettings.UseBuiltinUmu || Config.RB_UmuLauncher == RBUmuLauncherType.Builtin);
+            WineManager.DownloadWineList();
+            DxvkManager.DownloadDxvkList();
+            NvapiManager.DownloadNvapiList();
+        }
+        else
+            LoadConfig(storage);
 
         if (badxlpath)
         {
