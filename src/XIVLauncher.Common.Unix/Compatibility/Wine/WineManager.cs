@@ -40,9 +40,13 @@ public class WineManager
 
     public IToolRelease Runtime { get; private set; }
 
+    private WineReleaseDistro wineDistroId { get; }
+
     private string wineFolder { get; }
 
     private string umuFolder { get; }
+
+    private string umuLauncherUrl { get; set; }
 
     private string rootFolder { get; }
 
@@ -58,6 +62,7 @@ public class WineManager
     
         // Wine
         this.wineFolder = Path.Combine(root, "compatibilitytool", "wine");
+        this.wineDistroId = CompatUtil.GetWineIdForDistro();
 
         // Proton
         var home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
@@ -83,7 +88,7 @@ public class WineManager
         // Umu Launcher
         this.umuFolder = Path.Combine(root, "compatibilitytool", "umu");
 
-        var wineJson = new FileInfo(Path.Combine(rootFolder, "RB-WineVersions.json"));
+        var wineJson = new FileInfo(Path.Combine(rootFolder, "RB-winelist.json"));
         if (wineJson.Exists)
             InitializeJson(wineJson);
         else
@@ -93,7 +98,7 @@ public class WineManager
     public void SetUmuLauncher(bool useBuiltinUmu)
     {
         var umuPath = findUmuLauncher(useBuiltinUmu);
-        Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), true) : new UmuLauncherRelease(umuPath, false);
+        Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), this.umuLauncherUrl) : new UmuLauncherRelease(umuPath, "");
     }
 
     private void Initialize()
@@ -101,7 +106,6 @@ public class WineManager
         Version = new Dictionary<string, IWineRelease>();
         
         // Wine
-        var wineDistroId = CompatUtil.GetWineIdForDistro();
         var wineStable = new WineStableRelease(wineDistroId, wineFolder);
         var wineBeta = new WineBetaRelease(wineDistroId, wineFolder);
         var wineLegacy = new WineLegacyRelease(wineDistroId, wineFolder);
@@ -140,15 +144,15 @@ public class WineManager
     private void InitializeJson(FileInfo wineJson)
     {
         Version = new Dictionary<string, IWineRelease>();
-        Console.WriteLine("RB-WineVersions.json fould!");
-        var fileStream = wineJson.OpenRead();
-        List<DeserializedWine> wineList;
-        using (StreamReader file = new StreamReader(fileStream))
+        string umuLauncherUrl;
+        DateTime releaseDate;
+        Console.WriteLine("RB-winelist.json fould!");
+        WineList wineList;
+        using (StreamReader file = new StreamReader(wineJson.OpenRead()))
         {
-            wineList = JsonConvert.DeserializeObject<List<DeserializedWine>>(file.ReadToEnd());
+            wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
         }
-        Console.WriteLine("Loading Wine Versions from file:");
-        foreach (var wineRelease in wineList)
+        foreach (var wineRelease in wineList.WineVersions)
         {
             if (wineRelease.IsProton)
             {
@@ -156,17 +160,12 @@ public class WineManager
             }
             else
             {
-                AddVersion(new WineCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.wineFolder, wineRelease.DownloadUrl, wineRelease.Lsteamclient, wineRelease.Checksums));
+                AddVersion(new WineCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.wineFolder, wineRelease.DownloadUrl.Replace("{wineDistroId}", wineDistroId.ToString()), wineRelease.Lsteamclient, wineRelease.Checksums));
             }
-            Console.WriteLine($"{wineRelease.Label} - {wineRelease.Description} ({(wineRelease.IsProton ? "Proton" : "Wine")})");
         }
-        this.LEGACY = "wine-xiv-staging-fsync-git-8.5.r4.g4211bac7";
-        this.DEFAULT = Version.FirstOrDefault().Key;
-
-        foreach (var name in Version)
-        {
-            Console.WriteLine(name.Key + " - IsProton: " + name.Value.IsProton.ToString());
-        }
+        this.LEGACY = wineList.Legacy;
+        this.DEFAULT = wineList.Latest;
+        this.umuLauncherUrl = wineList.UmuLauncherUrl;
     }
 
     private void AddVersion(IWineRelease wine)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Newtonsoft.Json;
 
 using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 
@@ -25,7 +26,11 @@ public class NvapiManager
         this.rootFolder = root;
         this.nvapiFolder = Path.Combine(root, "compatibilitytool", "nvapi");
 
-        Initialize();
+        var nvapiJson = new FileInfo(Path.Combine(rootFolder, "RB-nvapilist.json"));
+        if (nvapiJson.Exists)
+            InitializeJson(nvapiJson);
+        else
+            Initialize();
     }
 
     private void Initialize()
@@ -38,6 +43,26 @@ public class NvapiManager
 
         AddVersion(nvapiStable);
         AddVersion(new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", ""));
+    }
+
+    private void InitializeJson(FileInfo nvapiJson)
+    {
+        Version = new Dictionary<string, IToolRelease>();
+        DateTime releaseDate;
+        Console.WriteLine("RB-nvapilist.json found!");
+        NvapiList nvapiList;
+        using (StreamReader file = new StreamReader(nvapiJson.OpenRead()))
+        {
+            nvapiList = JsonConvert.DeserializeObject<NvapiList>(file.ReadToEnd());
+        }
+        foreach (var nvapiRelease in nvapiList.NvapiVersions)
+        {
+            AddVersion(new NvapiCustomRelease(nvapiRelease.Label, nvapiRelease.Description, nvapiRelease.Name, nvapiRelease.DownloadUrl, nvapiRelease.Checksum));
+        }
+        AddVersion(new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", ""));
+
+        this.LEGACY = nvapiList.Legacy;
+        this.DEFAULT = nvapiList.Latest;
     }
 
     private void AddVersion(IToolRelease nvapi)

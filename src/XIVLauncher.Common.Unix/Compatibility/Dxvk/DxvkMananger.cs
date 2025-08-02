@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Newtonsoft.Json;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 
@@ -25,7 +26,11 @@ public class DxvkManager
         this.rootFolder = root;
         this.dxvkFolder = Path.Combine(root, "compatibilitytool", "dxvk");
 
-        Initialize();
+        var dxvkJson = new FileInfo(Path.Combine(rootFolder, "RB-dxvklist.json"));
+        if (dxvkJson.Exists)
+            InitializeJson(dxvkJson);
+        else
+            Initialize();
     }
 
     private void Initialize()
@@ -45,6 +50,26 @@ public class DxvkManager
         AddVersion(dxvkStable22);
         AddVersion(dxvkLegacy);
         AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "DISABLED", ""));
+    }
+
+    private void InitializeJson(FileInfo dxvkJson)
+    {
+        Version = new Dictionary<string, IToolRelease>();
+        DateTime releaseDate;
+        Console.WriteLine("RB-dxvklist.json found!");
+        DxvkList dxvkList;
+        using (StreamReader file = new StreamReader(dxvkJson.OpenRead()))
+        {
+            dxvkList = JsonConvert.DeserializeObject<DxvkList>(file.ReadToEnd());
+        }
+        foreach (var dxvkRelease in dxvkList.DxvkVersions)
+        {
+            AddVersion(new DxvkCustomRelease(dxvkRelease.Label, dxvkRelease.Description, dxvkRelease.Name, dxvkRelease.DownloadUrl, dxvkRelease.Checksum));
+        }
+        AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "DISABLED", ""));
+
+        this.LEGACY = dxvkList.Legacy;
+        this.DEFAULT = dxvkList.Latest;
     }
 
     private void AddVersion(IToolRelease dxvk)
