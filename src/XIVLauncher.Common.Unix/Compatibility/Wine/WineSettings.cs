@@ -69,7 +69,7 @@ public class WineSettings
             }
             else
             {
-                EnvVars.Add("WINEPREFIX", Paths.SteamFolder.FullName);
+                EnvVars.Add("WINEPREFIX", Prefix.FullName);
                 EnvVars.Add("PROTONPATH", parentPath);
                 EnvVars.Add("STORE", "none");
                 EnvVars.Add("PROTON_VERB", "runinprefix");
