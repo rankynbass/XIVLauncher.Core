@@ -148,6 +148,9 @@ public class WineManager
         AddVersion(protonStable);
         AddVersion(protonStableNtsync);
         AddVersion(protonLegacy);
+        
+        InitializeLocalWine();
+        InitializeLocalProton();
     }
 
     private void InitializeJson(FileInfo wineJson)
@@ -182,6 +185,30 @@ public class WineManager
         this.LEGACY = wineList.Legacy;
         this.DEFAULT = wineList.Latest;
         this.umuLauncherUrl = wineList.UmuLauncherUrl;
+        InitializeLocalWine();
+        InitializeLocalProton();
+    }
+
+    private void InitializeLocalWine()
+    {
+        var wineToolDir = new DirectoryInfo(wineFolder);
+        foreach (var wineDir in wineToolDir.EnumerateDirectories().OrderBy(x => x.Name))
+        {
+            if (File.Exists(Path.Combine(wineDir.FullName, "bin", "wine64")) ||
+                File.Exists(Path.Combine(wineDir.FullName, "bin", "wine")))
+            {
+                if (Version.ContainsKey(wineDir.Name))
+                {
+                    continue;
+                }
+                AddVersion(new WineCustomRelease(wineDir.Name, $"Custom wine at {wineFolder}", wineDir.Name, wineFolder, "", WineSettings.HasLsteamclient(Path.Combine(wineFolder, wineDir.Name))));
+            }
+        }
+    }
+
+    private void InitializeLocalProton()
+    {
+
     }
 
     private void AddVersion(IWineRelease wine)

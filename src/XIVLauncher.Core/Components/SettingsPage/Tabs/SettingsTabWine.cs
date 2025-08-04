@@ -32,10 +32,10 @@ public class SettingsTabWine : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine Install", "Choose how XIVLauncher will start and manage your wine installation.",
+            startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine/Proton Install", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
-            wineVersionSetting = new WineSettingsEntry("Wine Version", "Choose which Wine version to use.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
+            wineVersionSetting = new WineSettingsEntry("Wine/Proton Version", "Choose which Wine version to use. Scroll down in menu to see custom versions.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
