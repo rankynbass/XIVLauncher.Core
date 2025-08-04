@@ -90,11 +90,12 @@ public class SettingsTabWine : SettingsTab
 
             new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
             {
-                CheckVisibility = () => isProton
+                CheckVisibility = () => isProton && protonDxvkSetting.Value == true
             },
 
             frameRateSetting = new NumericSettingsEntry("Frame Rate Limit (DXVK Only)", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 for unlimited.", () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000)
             {
+                CheckVisibility = () => (isProton && protonDxvkSetting.Value == true) || (!isProton && dxvkVersionSetting.Value != "DISABLED"),
                 CheckValidity = i =>
                 {
                     if (i < 30 && i > 0)
