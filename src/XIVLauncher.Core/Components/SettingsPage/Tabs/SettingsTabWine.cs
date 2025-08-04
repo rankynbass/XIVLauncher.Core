@@ -24,6 +24,8 @@ public class SettingsTabWine : SettingsTab
 
     private SettingsEntry<bool> protonDxvkSetting;
 
+    private NumericSettingsEntry frameRateSetting;
+
     private bool isProton => startupTypeSetting.Value == RBWineStartupType.Managed ? Program.WineManager.IsProton(wineVersionSetting.Value) : WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value);
 
     public SettingsTabWine()
@@ -41,7 +43,7 @@ public class SettingsTabWine : SettingsTab
 
             wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",
                 "Set the path XIVLauncher will use to run applications via Wine/Proton.\nIt should be an absolute path to a folder containing wine and/or win64 and wineserver binaries, or the proton binary.",
-                () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
+                () => Program.Config.RB_WineBinaryPath, s => Program.Config.RB_WineBinaryPath = s)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom,
                 CheckValidity = s =>
@@ -89,6 +91,16 @@ public class SettingsTabWine : SettingsTab
             new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
             {
                 CheckVisibility = () => isProton
+            },
+
+            frameRateSetting = new NumericSettingsEntry("Frame Rate Limit (DXVK Only)", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 for unlimited.", () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000)
+            {
+                CheckValidity = i =>
+                {
+                    if (i < 30 && i > 0)
+                        return "Frame rate limit must be >= 30, or 0 (unlimited)";
+                    return null;
+                }
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)

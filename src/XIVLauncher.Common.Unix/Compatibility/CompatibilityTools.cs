@@ -45,6 +45,7 @@ public class CompatibilityTools
     private readonly RBHudType hudType;
     private readonly string customHud;
     private readonly IToolRelease nvapiVersion;
+    private readonly int dxvkFrameRate;
     private readonly bool gamemodeOn;
     private readonly bool dxvkAsyncOn;
     private readonly bool gplAsyncCacheOn;
@@ -55,10 +56,11 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(RuntimePath) && File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, bool dxvkAsyncOn, bool gplAsyncCacheOn)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, int frameRate, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, bool dxvkAsyncOn, bool gplAsyncCacheOn)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
+        this.dxvkFrameRate = (frameRate == 0 || frameRate >= 30) ? frameRate : 0;
         this.hudType = hudType;
         this.customHud = customHud;
         this.nvapiVersion = dxvkVersion.Name != "DISABLED" ? nvapiVersion : new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", "");
@@ -323,6 +325,7 @@ public class CompatibilityTools
 
         if (!ogl)
         {
+            wineEnvironmentVariables.Add("DXVK_FRAME_RATE", dxvkFrameRate.ToString());
             if (!Settings.IsProton && isNvapiEnabled)
                 wineEnvironmentVariables.Add("DXVK_ENABLE_NVAPI", "1");
             else if (Settings.IsProton && !isNvapiEnabled)

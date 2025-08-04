@@ -144,7 +144,7 @@ sealed class Program
 
         // Config.WineStartupType ??= WineStartupType.Managed;
         // Config.WineManagedVersion ??= WineManagedVersion.Stable;
-        Config.WineBinaryPath ??= "/usr/bin";
+        Config.RB_WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
         Config.WineDLLOverrides = WineSettings.WineDLLOverrideIsValid(Config.WineDLLOverrides) ? Config.WineDLLOverrides : "";
 
@@ -166,7 +166,7 @@ sealed class Program
         Config.RB_DxvkHudCustom ??= "1";
         Config.RB_MangoHudCustomFile ??= "";
         Config.RB_MangoHudCustomString ??= Dxvk.MANGOHUD_DEFAULT_STRING;
-
+        Config.RB_DxvkFrameRate ??= 0;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -405,9 +405,9 @@ sealed class Program
         var toolsFolder = storage.GetFolder("compatibilitytool");
         var wineRelease = Config.RB_WineStartupType switch
         {
-            RBWineStartupType.Custom => WineSettings.IsValidWineBinaryPath(Config.WineBinaryPath) ? 
-                new WineCustomRelease("CUSTOM", "Custom Wine", Config.WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.WineBinaryPath)) :
-                new ProtonCustomRelease("CUSTOM", "Custom Proton", Config.WineBinaryPath, "", ""),
+            RBWineStartupType.Custom => WineSettings.IsValidWineBinaryPath(Config.RB_WineBinaryPath) ? 
+                new WineCustomRelease("CUSTOM", "Custom Wine", Config.RB_WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.RB_WineBinaryPath)) :
+                new ProtonCustomRelease("CUSTOM", "Custom Proton", Config.RB_WineBinaryPath, "", ""),
             RBWineStartupType.Managed => WineManager.GetWine(Config.RB_WineVersion),
             _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
         };
@@ -437,7 +437,7 @@ sealed class Program
             _ => throw new ArgumentOutOfRangeException(nameof(RBHudType), $"Not an expected RBHudType: {Config.RB_HudType}")
 
         };
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, async, gplcache);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_DxvkFrameRate ?? 0, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, async, gplcache);
     }
 
     public static void ShowWindow()
@@ -495,6 +495,7 @@ sealed class Program
 
     public static void ClearPrefix()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
         storage.GetFolder("protonprefix").Delete(true);
@@ -527,10 +528,12 @@ sealed class Program
 
     public static void ClearTools(bool tsbutton = false)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         storage.GetFolder("compatibilitytool").Delete(true);
         storage.GetFolder("compatibilitytool/wine");
         storage.GetFolder("compatibilitytool/dxvk");
         storage.GetFolder("compatibilitytool/nvapi");
+        storage.GetFolder("compatibilitytool/umu");
         if (tsbutton) CreateCompatToolsInstance();
     }
 
@@ -548,6 +551,7 @@ sealed class Program
 
     public static void ClearNvngx()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         var nvngx = new FileInfo(Path.Combine(Config.GamePath.FullName, "game", "nvngx.dll"));
         var _nvngx = new FileInfo(Path.Combine(Config.GamePath.FullName, "game", "_nvngx.dll"));
         var nvngxdlssg = new FileInfo(Path.Combine(Config.GamePath.FullName, "game", "nvngx_dlssg.dll"));

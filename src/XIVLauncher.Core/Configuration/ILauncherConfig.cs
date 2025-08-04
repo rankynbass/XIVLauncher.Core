@@ -64,7 +64,7 @@ public interface ILauncherConfig
 
     // public WineManagedVersion? WineManagedVersion { get; set; }
 
-    public string? WineBinaryPath { get; set; }
+    // public string? WineBinaryPath { get; set; }
 
     public bool? GameModeEnabled { get; set; }
 
@@ -106,6 +106,8 @@ public interface ILauncherConfig
 
     public string? RB_WineVersion { get; set; }
 
+    public string? RB_WineBinaryPath { get; set; }
+
     public string? RB_DxvkVersion { get; set; }
 
     public string? RB_NvapiVersion { get; set; }
@@ -125,6 +127,8 @@ public interface ILauncherConfig
     public string? RB_MangoHudCustomFile { get; set; }
 
     public string? RB_MangoHudCustomString { get; set; }
+
+    public int? RB_DxvkFrameRate { get; set; }
 
     #endregion
 

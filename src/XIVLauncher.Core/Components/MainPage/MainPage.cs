@@ -762,11 +762,11 @@ public class MainPage : Page
         {
             if (App.Settings.RB_WineStartupType == RBWineStartupType.Custom)
             {
-                if (App.Settings.WineBinaryPath == null)
+                if (App.Settings.RB_WineBinaryPath == null)
                     throw new InvalidOperationException("Custom wine binary path wasn't set.");
-                else if (!WineSettings.IsValidWineBinaryPath(App.Settings.WineBinaryPath) && !WineSettings.IsValidProtonBinaryPath(App.Settings.WineBinaryPath))
+                else if (!WineSettings.IsValidWineBinaryPath(App.Settings.RB_WineBinaryPath) && !WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath))
                     throw new InvalidOperationException("Custom wine binary path is invalid: no wine, wine64, or proton found at that location.\n" +
-                                                        "Check path carefully for typos: " + App.Settings.WineBinaryPath);
+                                                        "Check path carefully for typos: " + App.Settings.RB_WineBinaryPath);
             }
 
             var signal = new ManualResetEvent(false);
