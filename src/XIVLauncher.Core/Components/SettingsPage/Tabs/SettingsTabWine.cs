@@ -38,7 +38,11 @@ public class SettingsTabWine : SettingsTab
             wineVersionSetting = new WineSettingsEntry("Wine/Proton Version", "Choose which Wine version to use. Scroll down in menu to see custom versions.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
             {
-                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed,
+                CheckWarning = s =>
+                {
+                    return "Warning! Unpatched wine between 9.0 and 10.7, and most Proton 9 and 10 releases are incompatibile with Dalamud.\nUse Unofficial Wine-XIV or XIV-Proton instead. Proton Experimental and GE-Proton 10-9 and later are okay.";
+                }
             },
 
             wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",

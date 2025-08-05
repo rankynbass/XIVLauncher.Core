@@ -194,21 +194,57 @@ public class WineManager
         var wineToolDir = new DirectoryInfo(wineFolder);
         foreach (var wineDir in wineToolDir.EnumerateDirectories().OrderBy(x => x.Name))
         {
+            if (Version.ContainsKey(wineDir.Name))
+                continue;
             if (File.Exists(Path.Combine(wineDir.FullName, "bin", "wine64")) ||
                 File.Exists(Path.Combine(wineDir.FullName, "bin", "wine")))
             {
-                if (Version.ContainsKey(wineDir.Name))
-                {
-                    continue;
-                }
-                AddVersion(new WineCustomRelease(wineDir.Name, $"Custom wine at {wineFolder}", wineDir.Name, wineFolder, "", WineSettings.HasLsteamclient(Path.Combine(wineFolder, wineDir.Name))));
+                AddVersion(new WineCustomRelease(wineDir.Name, $"Custom wine in {wineFolder}", wineDir.Name, wineFolder, "", WineSettings.HasLsteamclient(Path.Combine(wineFolder, wineDir.Name))));
             }
         }
     }
 
     private void InitializeLocalProton()
     {
+        var compatibilitytoolsd = new DirectoryInfo(compatFolder);
+        foreach (var protonDir in compatibilitytoolsd.EnumerateDirectories().OrderBy(x => x.Name))
+        {
+            if (Version.ContainsKey(protonDir.Name))
+                continue;
+            if (File.Exists(Path.Combine(protonDir.FullName, "proton")))
+            {
+                string name;
+                if (protonDir.Name.Contains("GE-"))
+                    name = "GE Proton";
+                else if (protonDir.Name.Contains("XIV-"))
+                    name = "XIV-Proton";
+                else if (protonDir.Name.ToLowerInvariant().Contains("cachyos"))
+                    name = "CachyOS Proton";
+                else
+                    name = "Proton";
+                AddVersion(new ProtonCustomRelease(protonDir.Name, $"{name} in {compatFolder}", protonDir.Name, compatFolder, ""));
+            }
+        }
 
+        var steamappsCommon = new DirectoryInfo(commonFolder);
+        foreach (var protonDir in steamappsCommon.EnumerateDirectories().OrderBy(x => x.Name))
+        {
+            if (Version.ContainsKey(protonDir.Name))
+                continue;
+            if (File.Exists(Path.Combine(protonDir.FullName, "proton")))
+            {
+                string name;
+                if (protonDir.Name.Contains("GE-"))
+                    name = "GE Proton";
+                else if (protonDir.Name.Contains("XIV-"))
+                    name = "XIV-Proton";
+                else if (protonDir.Name.ToLowerInvariant().Contains("cachyos"))
+                    name = "CachyOS Proton";
+                else
+                    name = "Proton";
+                AddVersion(new ProtonCustomRelease(protonDir.Name, $"{name} in {commonFolder}", protonDir.Name, commonFolder, ""));
+            }
+        }
     }
 
     private void AddVersion(IWineRelease wine)
