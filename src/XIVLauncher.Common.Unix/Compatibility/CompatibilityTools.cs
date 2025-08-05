@@ -510,4 +510,23 @@ public class CompatibilityTools
 
         Process.Start(psi);
     }
+
+    public void SetWindowsVersion(bool IsWin7)
+    {
+        var winver = IsWin7 ? "win7" : "win10";
+        var versionFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_winversion.txt"));
+        if (versionFile.Exists)
+        {
+            Console.WriteLine("Versionfile xl_winversion.txt found");
+            var currentver = File.ReadAllText(versionFile.FullName);
+            if (currentver.Trim() == winver)
+            {
+                Log.Information($"[WINEPREFIX] Windows version is {winver}.");
+                return;
+            }
+        }
+        Log.Information($"[WINEPREFIX] Changing windows version to {winver}");
+        File.WriteAllText(versionFile.FullName, winver);
+        RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
+    }
 }

@@ -774,10 +774,10 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                var winver = (App.Settings.SetWin7 ?? true) ? "win7" : "win10";
+                var tempPath = App.Storage.GetFolder("temp");
 
                 await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
-                Program.CompatibilityTools.RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
+                Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;
