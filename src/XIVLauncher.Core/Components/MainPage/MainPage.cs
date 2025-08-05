@@ -167,6 +167,7 @@ public class MainPage : Page
     {
         if (action == LoginAction.Fake)
         {
+            Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
             IGameRunner gameRunner;
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 gameRunner = new WindowsGameRunner(null, false, Program.DalamudUpdater.Runtime);
@@ -778,10 +779,9 @@ public class MainPage : Page
             var _ = Task.Run(async () =>
             {
                 var tempPath = App.Storage.GetFolder("temp");
-                var winver = (App.Settings.SetWin7 ?? true) ? "win7" : "win10";
 
                 await Program.CompatibilityTools.EnsureTool(tempPath).ConfigureAwait(false);
-                Program.CompatibilityTools.RunInPrefix($"winecfg /v {winver}");
+                Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;
