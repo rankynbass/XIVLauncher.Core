@@ -286,6 +286,6 @@ public class CompatibilityTools
         }
         Log.Information($"[WINEPREFIX] Changing windows version to {winver}");
         File.WriteAllText(versionFile.FullName, winver);
-        RunInPrefix($"winecfg /v {winver}");
+        RunInPrefix($"winecfg /v {winver}").WaitForExit();
     }
 }
