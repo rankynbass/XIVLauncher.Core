@@ -167,7 +167,6 @@ public class MainPage : Page
     {
         if (action == LoginAction.Fake)
         {
-            Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
             IGameRunner gameRunner;
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 gameRunner = new WindowsGameRunner(null, false, Program.DalamudUpdater.Runtime);

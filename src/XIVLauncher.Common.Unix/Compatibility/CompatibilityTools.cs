@@ -272,7 +272,6 @@ public class CompatibilityTools
 
     public void SetWindowsVersion(bool IsWin7)
     {
-        Console.WriteLine("Setting Windows Version");
         var winver = IsWin7 ? "win7" : "win10";
         var versionFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_winversion.txt"));
         if (versionFile.Exists)
@@ -281,13 +280,11 @@ public class CompatibilityTools
             var currentver = File.ReadAllText(versionFile.FullName);
             if (currentver.Trim() == winver)
             {
-                Console.WriteLine($"Windows version is alread set to {winver}");
-                Log.Information($"Windows version is already set to {winver}.");
+                Log.Information($"[WINEPREFIX] Windows version is {winver}.");
                 return;
             }
         }
-        Console.WriteLine($"Changing windows version to {winver}");
-        Log.Information($"Changing windows version to {winver}");
+        Log.Information($"[WINEPREFIX] Changing windows version to {winver}");
         File.WriteAllText(versionFile.FullName, winver);
         RunInPrefix($"winecfg /v {winver}");
     }
