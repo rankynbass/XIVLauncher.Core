@@ -63,11 +63,14 @@ public class WineManager
 
     private string compatFolder { get; }
 
+    private FileInfo wineJson { get; }
+
     public DirectoryInfo SteamFolder { get; }
 
     public WineManager(string root)
     {
         this.rootFolder = root;
+        this.wineJson = new FileInfo(Path.Combine(rootFolder, "RB-winelist.json"));
     
         // Wine
         this.wineFolder = Path.Combine(root, "compatibilitytool", "wine");
@@ -97,11 +100,7 @@ public class WineManager
         // Umu Launcher
         this.umuFolder = Path.Combine(root, "compatibilitytool", "umu");
 
-        var wineJson = new FileInfo(Path.Combine(rootFolder, "RB-winelist.json"));
-        if (wineJson.Exists)
-            InitializeJson(wineJson);
-        else
-            Initialize();
+        Load();
     }
 
     public void SetUmuLauncher(bool useBuiltinUmu)
@@ -110,7 +109,24 @@ public class WineManager
         Runtime = umuPath is null ? new UmuLauncherRelease(Path.Combine(umuFolder, "umu-run"), this.umuLauncherUrl) : new UmuLauncherRelease(umuPath, "");
     }
 
-    private void Initialize()
+    private void Load()
+    {
+        if (wineJson.Exists)
+            InitializeJson();
+        else
+            InitializeDefault();
+
+        InitializeLocalWine();
+        InitializeLocalProton();
+    }
+
+    public void Reload()
+    {
+        this.IsListUpdated = true;
+        Load();
+    }
+
+    private void InitializeDefault()
     {
         Version = new Dictionary<string, IWineRelease>();
         
@@ -148,12 +164,9 @@ public class WineManager
         AddVersion(protonStable);
         AddVersion(protonStableNtsync);
         AddVersion(protonLegacy);
-        
-        InitializeLocalWine();
-        InitializeLocalProton();
     }
 
-    private void InitializeJson(FileInfo wineJson)
+    private void InitializeJson()
     {
         Version = new Dictionary<string, IWineRelease>();
         string umuLauncherUrl;
@@ -161,21 +174,22 @@ public class WineManager
         WineList wineList;
         using (StreamReader file = new StreamReader(wineJson.OpenRead()))
         {
-            wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
+            try
+            {
+                wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
+            }
+            catch
+            {
+                InitializeDefault();
+                IsListUpdated = true; // Just to be safe, in case of bad download.
+                return;
+            }
         }
         foreach (var wineRelease in wineList.WineVersions)
         {
             if (wineRelease.IsProton)
             {
-                try
-                {
-                    AddVersion(new ProtonCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.compatFolder, wineRelease.DownloadUrl, wineRelease.Checksums[0]));
-                }
-                catch
-                {
-                    Initialize();
-                    return;
-                }
+                AddVersion(new ProtonCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.compatFolder, wineRelease.DownloadUrl, wineRelease.Checksums[0]));
             }
             else
             {
@@ -185,8 +199,6 @@ public class WineManager
         this.LEGACY = wineList.Legacy;
         this.DEFAULT = wineList.Latest;
         this.umuLauncherUrl = wineList.UmuLauncherUrl;
-        InitializeLocalWine();
-        InitializeLocalProton();
     }
 
     private void InitializeLocalWine()
@@ -271,12 +283,6 @@ public class WineManager
         return Version[GetVersionOrDefault(name)].IsProton;
     }
 
-    public void Reset()
-    {
-        Version.Clear();
-        Initialize();
-    }
-
     private string? findUmuLauncher(bool useBuiltinUmu)
     {
         if (useBuiltinUmu)
@@ -300,29 +306,26 @@ public class WineManager
 
         using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
-        var wineList = Path.Combine(rootFolder, "RB-winelist.json");
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(WINELIST_URL).ConfigureAwait(false));
 
-        if (!File.Exists(wineList))
+        if (!wineJson.Exists)
         {
-            File.Move(tempPath, wineList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(wineList));
+            File.Move(tempPath, wineJson.FullName);
+            Reload();
             return;
         }
 
         using var sha512 = SHA512.Create();
         using var tempPathStream = File.OpenRead(tempPath);
-        using var wineListStream = File.OpenRead(wineList);
+        using var wineListStream = wineJson.OpenRead();
         var tempPathHash = Convert.ToHexString(sha512.ComputeHash(tempPathStream)).ToLowerInvariant();
         var wineListHash = Convert.ToHexString(sha512.ComputeHash(wineListStream)).ToLowerInvariant();
         if (tempPathHash != wineListHash)
         {
-            File.Delete(wineList);
-            File.Move(tempPath, wineList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(wineList));
+            wineJson.Delete();
+            File.Move(tempPath, wineJson.FullName);
+            Reload();
         }        
     }
 

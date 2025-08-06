@@ -43,6 +43,9 @@ public class SettingsTabTroubleshooting : SettingsTab
         if (ImGui.Button("Clear Wine & DXVK"))
         {
             Program.ClearTools(true);
+            Program.WineManager.Reload();
+            Program.DxvkManager.Reload();
+            Program.NvapiManager.Reload();
         }
 
         ImGui.Text("\nClear nvngx dlls from game folder");

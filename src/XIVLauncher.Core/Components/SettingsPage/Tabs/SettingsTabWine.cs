@@ -150,24 +150,22 @@ public class SettingsTabWine : SettingsTab
     {
         if (Program.WineManager.IsListUpdated)
         {
-            Console.WriteLine("Wine List updated!");
             Program.WineManager.DoneUpdatingWineList();
             wineVersionSetting.Reset(Program.WineManager.Version, Program.WineManager.DEFAULT);
         }
 
         if (Program.DxvkManager.IsListUpdated)
         {
-            Console.WriteLine("Dxvk List updated!");
             Program.DxvkManager.DoneUpdatingDxvkList();
             dxvkVersionSetting.Reset(Program.DxvkManager.Version, Program.DxvkManager.DEFAULT);
         }
 
         if (Program.NvapiManager.IsListUpdated)
         {
-            Console.WriteLine("Nvapi List updated!");
             Program.NvapiManager.DoneUpdatingNvapiList();
             nvapiVersionSetting.Reset(Program.NvapiManager.Version, Program.NvapiManager.DEFAULT);
         }
+        
         base.Draw();
 
         if (!Program.CompatibilityTools.IsToolDownloaded)

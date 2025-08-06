@@ -29,19 +29,32 @@ public class DxvkManager
 
     private string rootFolder { get; }
 
+    private FileInfo dxvkJson { get; }
+
     public DxvkManager(string root)
     {
         this.rootFolder = root;
         this.dxvkFolder = Path.Combine(root, "compatibilitytool", "dxvk");
-
-        var dxvkJson = new FileInfo(Path.Combine(rootFolder, "RB-dxvklist.json"));
-        if (dxvkJson.Exists)
-            InitializeJson(dxvkJson);
-        else
-            Initialize();
+        this.dxvkJson = new FileInfo(Path.Combine(rootFolder, "RB-dxvklist.json"));
+        Load();
     }
 
-    private void Initialize()
+    private void Load()
+    {
+        if (dxvkJson.Exists)
+            InitializeJson();
+        else
+            InitializeDefault();
+        InitializeLocalDxvk();
+    }
+
+    public void Reload()
+    {
+        this.IsListUpdated = true;
+        Load();
+    }
+
+    private void InitializeDefault()
     {
         Version = new Dictionary<string, IToolRelease>();
         
@@ -60,7 +73,7 @@ public class DxvkManager
         AddVersion(new DxvkCustomRelease("Disabled", "Use WineD3D instead", "DISABLED", ""));
     }
 
-    private void InitializeJson(FileInfo dxvkJson)
+    private void InitializeJson()
     {
         Version = new Dictionary<string, IToolRelease>();
         DateTime releaseDate;
@@ -73,7 +86,7 @@ public class DxvkManager
             }
             catch
             {
-                Initialize();
+                InitializeDefault();
                 return;
             }
         }
@@ -85,6 +98,18 @@ public class DxvkManager
 
         this.LEGACY = dxvkList.Legacy;
         this.DEFAULT = dxvkList.Latest;
+    }
+
+    private void InitializeLocalDxvk()
+    {
+        var dxvkToolDir = new DirectoryInfo(dxvkFolder);
+        foreach (var dxvkDir in dxvkToolDir.EnumerateDirectories().OrderBy(x => x.Name))
+        {
+            if (Version.ContainsKey(dxvkDir.Name))
+                continue;
+            if (Directory.Exists(Path.Combine(dxvkDir.FullName, "x64")))
+                AddVersion(new DxvkCustomRelease(dxvkDir.Name, $"Custom dxvk in {dxvkFolder}", dxvkDir.Name, ""));
+        }
     }
 
     private void AddVersion(IToolRelease dxvk)
@@ -106,12 +131,6 @@ public class DxvkManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public void Reset()
-    {
-        Version.Clear();
-        Initialize();
-    }
-
     public async Task DownloadDxvkList()
     {
         // Uncomment for testing
@@ -119,29 +138,26 @@ public class DxvkManager
 
         using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
-        var dxvkList = Path.Combine(rootFolder, "RB-dxvklist.json");
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(DXVKLIST_URL).ConfigureAwait(false));
 
-        if (!File.Exists(dxvkList))
+        if (!dxvkJson.Exists)
         {
-            File.Move(tempPath, dxvkList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(dxvkList));
+            File.Move(tempPath, dxvkJson.FullName);
+            Reload();
             return;
         }
 
         using var sha512 = SHA512.Create();
         using var tempPathStream = File.OpenRead(tempPath);
-        using var dxvkListStream = File.OpenRead(dxvkList);
+        using var dxvkListStream = dxvkJson.OpenRead();
         var tempPathHash = Convert.ToHexString(sha512.ComputeHash(tempPathStream)).ToLowerInvariant();
         var dxvkListHash = Convert.ToHexString(sha512.ComputeHash(dxvkListStream)).ToLowerInvariant();
         if (tempPathHash != dxvkListHash)
         {
-            File.Delete(dxvkList);
-            File.Move(tempPath, dxvkList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(dxvkList));
+            dxvkJson.Delete();
+            File.Move(tempPath, dxvkJson.FullName);
+            Reload();
         }
     }
 

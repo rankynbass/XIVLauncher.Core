@@ -28,19 +28,32 @@ public class NvapiManager
 
     private string rootFolder { get; }
 
+    private FileInfo nvapiJson { get; }
+
     public NvapiManager(string root)
     {
         this.rootFolder = root;
         this.nvapiFolder = Path.Combine(root, "compatibilitytool", "nvapi");
 
-        var nvapiJson = new FileInfo(Path.Combine(rootFolder, "RB-nvapilist.json"));
-        if (nvapiJson.Exists)
-            InitializeJson(nvapiJson);
-        else
-            Initialize();
+        this.nvapiJson = new FileInfo(Path.Combine(rootFolder, "RB-nvapilist.json"));
+        Load();
     }
 
-    private void Initialize()
+    private void Load()
+    {
+        if (nvapiJson.Exists)
+            InitializeJson();
+        else
+            InitializeDefault();
+    }
+
+    public void Reload()
+    {
+        this.IsListUpdated = true;
+        Load();
+    }
+
+    private void InitializeDefault()
     {
         Version = new Dictionary<string, IToolRelease>();
         
@@ -52,7 +65,7 @@ public class NvapiManager
         AddVersion(new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", ""));
     }
 
-    private void InitializeJson(FileInfo nvapiJson)
+    private void InitializeJson()
     {
         Version = new Dictionary<string, IToolRelease>();
         DateTime releaseDate;
@@ -65,7 +78,7 @@ public class NvapiManager
             }
             catch
             {
-                Initialize();
+                InitializeDefault();
                 return;
             }
         }
@@ -77,6 +90,18 @@ public class NvapiManager
 
         this.LEGACY = nvapiList.Legacy;
         this.DEFAULT = nvapiList.Latest;
+    }
+
+    private void InitializeLocalNvapi()
+    {
+        var nvapiToolDir = new DirectoryInfo(nvapiFolder);
+        foreach (var nvapiDir in nvapiToolDir.EnumerateDirectories().OrderBy(x => x.Name))
+        {
+            if (Version.ContainsKey(nvapiDir.Name))
+                continue;
+            if (Directory.Exists(Path.Combine(nvapiDir.FullName, "x64")))
+                AddVersion(new NvapiCustomRelease(nvapiDir.Name, $"Custom nvapi in {nvapiFolder}", nvapiDir.Name, ""));
+        }
     }
 
     private void AddVersion(IToolRelease nvapi)
@@ -98,12 +123,6 @@ public class NvapiManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public void Reset()
-    {
-        Version.Clear();
-        Initialize();
-    }
-
     public async Task DownloadNvapiList()
     {
         // Uncomment for testing
@@ -111,31 +130,27 @@ public class NvapiManager
         
         using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
-        var nvapiList = Path.Combine(rootFolder, "RB-nvapilist.json");
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(NVAPILIST_URL).ConfigureAwait(false));
 
-        if (!File.Exists(nvapiList))
+        if (!nvapiJson.Exists)
         {
-            File.Move(tempPath, nvapiList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(nvapiList));
+            File.Move(tempPath, nvapiJson.FullName);
+            Reload();
             return;
         }
 
         using var sha512 = SHA512.Create();
         using var tempPathStream = File.OpenRead(tempPath);
-        using var nvapiListStream = File.OpenRead(nvapiList);
+        using var nvapiListStream = nvapiJson.OpenRead();
         var tempPathHash = Convert.ToHexString(sha512.ComputeHash(tempPathStream)).ToLowerInvariant();
         var nvapiListHash = Convert.ToHexString(sha512.ComputeHash(nvapiListStream)).ToLowerInvariant();
         if (tempPathHash != nvapiListHash)
         {
-            File.Delete(nvapiList);
-            File.Move(tempPath, nvapiList);
-            IsListUpdated = true;
-            InitializeJson(new FileInfo(nvapiList));
+            nvapiJson.Delete();
+            File.Move(tempPath, nvapiJson.FullName);
+            Reload();
         }
-       
     }
 
     public void DoneUpdatingNvapiList()
