@@ -87,6 +87,7 @@ public class DxvkManager
             catch
             {
                 InitializeDefault();
+                IsListUpdated = true; // Just to be safe, in case of bad download.
                 return;
             }
         }
