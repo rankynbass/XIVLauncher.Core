@@ -167,6 +167,20 @@ sealed class Program
         Config.RB_MangoHudCustomFile ??= "";
         Config.RB_MangoHudCustomString ??= Dxvk.MANGOHUD_DEFAULT_STRING;
         Config.RB_DxvkFrameRate ??= 0;
+
+        // RB-patched App launcher
+        Config.RB_App1 ??= "";
+        Config.RB_App1Enabled ??= false;
+        Config.RB_App1Args ??= "";
+        Config.RB_App1WineD3D ??= false;
+        Config.RB_App2 ??= "";
+        Config.RB_App2Enabled ??= false;
+        Config.RB_App2Args ??= "";
+        Config.RB_App2WineD3D ??= false;
+        Config.RB_App3 ??= "";
+        Config.RB_App3Enabled ??= false;
+        Config.RB_App3Args ??= "";
+        Config.RB_App3WineD3D ??= false;
     }
 
     public const uint STEAM_APP_ID = 39210;

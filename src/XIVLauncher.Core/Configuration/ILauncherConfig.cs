@@ -132,6 +132,34 @@ public interface ILauncherConfig
 
     #endregion
 
+    #region RBpatchedApps
+    
+    public string? RB_App1 { get; set; }
+
+    public bool? RB_App1Enabled { get; set; }
+
+    public string? RB_App1Args { get; set; }
+
+    public bool? RB_App1WineD3D { get; set; }
+
+    public string? RB_App2 { get; set; }
+
+    public bool? RB_App2Enabled { get; set; }
+
+    public string? RB_App2Args { get; set; }
+
+    public bool? RB_App2WineD3D { get; set; }
+
+    public string? RB_App3 { get; set; }
+
+    public bool? RB_App3Enabled { get; set; }
+
+    public string? RB_App3Args { get; set; }
+
+    public bool? RB_App3WineD3D { get; set; }
+
+    #endregion
+
     #region Dalamud
 
     public bool? DalamudEnabled { get; set; }
