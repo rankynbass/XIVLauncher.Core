@@ -86,12 +86,15 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | `WINEPREFIX`<br>`PROTONPREFIX` | Set a custom wine or proton prefix. **DO NOT SHARE PREFIXES** between wine and proton. It will probably permanently corrupt the prefixes. |
 | `XL_DECK` | Force XIVLauncher-RB to pretend it's Steam Deck. Does not enable the Steam keyboard. |
 | `XL_GAMEMODE` | Forces XIVLauncher-RB to pretend it's in Steam Deck Game Mode. Also does not enable the Steam keyboard. |
-| `XL_FIRSTRUN` | Set to 0 or 1 to force the launcher to skip or activate the Steam Deck First Run screen. |
 | `XL_USE_STEAM` | Set to 0 or 1 to enable or disable steam API checks. |
 | `XL_APPID` | Set to a steam AppID number to hook that application instead of FFXIV or the free trial. Ignored when using XLM. |
 | `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
 | `XL_DISTRO` | Override the wine package to download. Valid values are `arch`, `fedora`, and `ubuntu`. |
-| **Removed in 1.2.x** | **Still available in 1.1.2.4 and earlier** |
+| `XL_USE_BUILTIN_UMU` | Force the use of built-in Umu Launcher instead of the system version. This can also be set in the Settings menu. |
+
+### Older Variables (Removed in 1.2.1.x)
+| Variable | Description |
+| -------- | ----------- |
 | `XL_FORCE_DLSS` | Skip DLSS checks and assume that the nvngx dlls are in the game folder. |
 | `XL_NVNGX_TO_PREFIX` | Set to 0 to prevent installing nvngx.dll to the prefix as well as the game folder. There's not usually a reason to do this. |
 | `XL_SCALE` | Set a custom scale factor for the UI. Accepts decimal values between 1 and 4 (e.g. 1.5). Overrides the desktop scale factor. Only for SDL X11 driver. |
