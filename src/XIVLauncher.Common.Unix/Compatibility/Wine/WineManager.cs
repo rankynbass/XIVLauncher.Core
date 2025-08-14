@@ -63,7 +63,7 @@ public class WineManager
 
     private string compatFolder { get; }
 
-    private FileInfo wineJson { get; }
+    private FileInfo wineJson { get; set; }
 
     public DirectoryInfo SteamFolder { get; }
 
@@ -172,8 +172,10 @@ public class WineManager
         string umuLauncherUrl;
         DateTime releaseDate;
         WineList wineList;
+        Console.WriteLine($"Wine JSON file exists? {(wineJson.Exists.ToString())}");
         using (StreamReader file = new StreamReader(wineJson.OpenRead()))
         {
+            Console.WriteLine("Reading JSON");
             try
             {
                 wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
@@ -185,6 +187,7 @@ public class WineManager
                 return;
             }
         }
+
         foreach (var wineRelease in wineList.WineVersions)
         {
             if (wineRelease.IsProton)
@@ -312,6 +315,7 @@ public class WineManager
         if (!wineJson.Exists)
         {
             File.Move(tempPath, wineJson.FullName);
+            wineJson = new FileInfo(wineJson.FullName);
             Reload();
             return;
         }

@@ -44,7 +44,7 @@ public class WineSettingsEntry : SettingsEntry<string>
             Log.Warning($"Value \"{(string)this.InternalValue}\" from launcher.ini is not a valid compatibility tool. Using default \"{DefaultValue}\"");
             this.InternalValue = DefaultValue;
             if (!Pairs.ContainsKey(DefaultValue))
-                this.InternalValue = Pairs.FirstOrDefault();
+                this.InternalValue = Pairs.FirstOrDefault().Key;
         }
 
         string idx = (string)this.InternalValue;
@@ -100,7 +100,6 @@ public class WineSettingsEntry : SettingsEntry<string>
 
     public void Reset(Dictionary<string, IWineRelease> pairs, string newDefault)
     {
-        this.Pairs.Clear();
         this.Pairs = pairs;
         this.DefaultValue = newDefault;
     }

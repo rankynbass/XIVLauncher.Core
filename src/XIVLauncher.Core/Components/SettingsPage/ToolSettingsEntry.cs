@@ -43,6 +43,8 @@ public class ToolSettingsEntry : SettingsEntry<string>
         {
             Log.Warning($"Value \"{(string)this.InternalValue}\" from launcher.ini is not a valid compatibility tool. Using default \"{DefaultValue}\"");
             this.InternalValue = DefaultValue;
+            if (!Pairs.ContainsKey(DefaultValue))
+                this.InternalValue = Pairs.FirstOrDefault().Key;
         }
 
         string idx = (string)this.InternalValue;
@@ -98,7 +100,6 @@ public class ToolSettingsEntry : SettingsEntry<string>
 
     public void Reset(Dictionary<string, IToolRelease> pairs, string newDefault)
     {
-        this.Pairs.Clear();
         this.Pairs = pairs;
         this.DefaultValue = newDefault;
     }
