@@ -82,6 +82,8 @@ public class WineManager
     
         // Wine
         this.wineFolder = Path.Combine(root, "compatibilitytool", "wine");
+        if (!Directory.Exists(wineFolder))
+            Directory.CreateDirectory(wineFolder);
         this.wineDistroId = CompatUtil.GetWineIdForDistro();
 
         // Proton
@@ -215,6 +217,8 @@ public class WineManager
     private void InitializeLocalWine()
     {
         var wineToolDir = new DirectoryInfo(wineFolder);
+        if (!wineToolDir.Exists)
+            return;
         foreach (var wineDir in wineToolDir.EnumerateDirectories().OrderBy(x => x.Name))
         {
             if (WineVersion.ContainsKey(wineDir.Name))

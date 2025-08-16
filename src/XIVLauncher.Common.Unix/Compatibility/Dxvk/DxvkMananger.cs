@@ -35,6 +35,8 @@ public class DxvkManager
     {
         this.rootFolder = root;
         this.dxvkFolder = Path.Combine(root, "compatibilitytool", "dxvk");
+        if (!Directory.Exists(dxvkFolder))
+            Directory.CreateDirectory(dxvkFolder);
         this.dxvkJson = new FileInfo(Path.Combine(rootFolder, "RB-dxvklist.json"));
         Load();
     }

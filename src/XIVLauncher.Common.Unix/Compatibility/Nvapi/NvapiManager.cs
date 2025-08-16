@@ -34,6 +34,8 @@ public class NvapiManager
     {
         this.rootFolder = root;
         this.nvapiFolder = Path.Combine(root, "compatibilitytool", "nvapi");
+        if (!Directory.Exists(nvapiFolder))
+            Directory.CreateDirectory(nvapiFolder);
 
         this.nvapiJson = new FileInfo(Path.Combine(rootFolder, "RB-nvapilist.json"));
         Load();
