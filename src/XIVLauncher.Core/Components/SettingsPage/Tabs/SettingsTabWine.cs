@@ -16,6 +16,8 @@ public class SettingsTabWine : SettingsTab
 
     private WineSettingsEntry wineVersionSetting;
 
+    private WineSettingsEntry protonVersionSetting;
+
     private SettingsEntry<string> wineCustomBinaryPath;
 
     private ToolSettingsEntry dxvkVersionSetting;
@@ -26,7 +28,7 @@ public class SettingsTabWine : SettingsTab
 
     private NumericSettingsEntry frameRateSetting;
 
-    private bool isProton => startupTypeSetting.Value == RBWineStartupType.Managed ? Program.WineManager.IsProton(wineVersionSetting.Value) : WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value);
+    private bool isProton => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value));
 
     public SettingsTabWine()
     {
@@ -35,14 +37,24 @@ public class SettingsTabWine : SettingsTab
             startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine/Proton Install", "Choose how XIVLauncher will start and manage your wine installation.",
                 () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
-            wineVersionSetting = new WineSettingsEntry("Wine/Proton Version", "Choose which Wine version to use. Scroll down in menu to see custom versions.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULT,
-                s => Program.Config.RB_WineVersion = s, Program.WineManager.Version, Program.WineManager.DEFAULT )
+            wineVersionSetting = new WineSettingsEntry("Wine Version", "Choose which Wine version to use. You may need to scroll down in menu to see custom versions.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULTWINE,
+                s => Program.Config.RB_WineVersion = s, Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed,
                 CheckWarning = s =>
                 {
-                    return "Warning! Unpatched wine between 9.0 and 10.7, and most Proton 9 and 10 releases are incompatibile with Dalamud.\nUse Unofficial Wine-XIV or XIV-Proton instead. Proton Experimental and GE-Proton 10-9 and later are okay.";
+                    return "Warning! Unpatched wine between 9.0 and 10.7 are incompatible with Dalamud.";
                 }
+            },
+
+            protonVersionSetting = new WineSettingsEntry("Proton Version", "Choose which Proton version to use. You may need to scroll down in menu to see custom versions.", () => Program.Config.RB_ProtonVersion ?? Program.WineManager.DEFAULTPROTON,
+                s => Program.Config.RB_ProtonVersion = s, Program.WineManager.ProtonVersion, Program.WineManager.DEFAULTPROTON)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton,
+                CheckWarning = s =>
+                {
+                    return "Warning! Unpatched Proton between 9.0 and GE-Proton 10-8 may be incompatible with Dalamud.";
+                },
             },
 
             wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",
@@ -151,7 +163,8 @@ public class SettingsTabWine : SettingsTab
         if (Program.WineManager.IsListUpdated)
         {
             Program.WineManager.DoneUpdatingWineList();
-            wineVersionSetting.Reset(Program.WineManager.Version, Program.WineManager.DEFAULT);
+            wineVersionSetting.Reset(Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE);
+            protonVersionSetting.Reset(Program.WineManager.ProtonVersion, Program.WineManager.DEFAULTPROTON);
         }
 
         if (Program.DxvkManager.IsListUpdated)

@@ -106,6 +106,8 @@ public interface ILauncherConfig
 
     public string? RB_WineVersion { get; set; }
 
+    public string? RB_ProtonVersion { get; set; }
+
     public string? RB_WineBinaryPath { get; set; }
 
     public string? RB_DxvkVersion { get; set; }

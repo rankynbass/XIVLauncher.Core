@@ -32,11 +32,13 @@ internal class WineList()
 
     public List<RemoteWine> WineVersions { get; set; }
 
+    public List<RemoteWine> ProtonVersions { get; set; }
+
     public string UmuLauncherUrl { get; set; }
 
-    public string Latest { get; set; }
+    public string DefaultWine { get; set; }
 
-    public string Legacy { get; set; }
+    public string DefaultProton { get; set; }
 }
 
 internal class DxvkList()

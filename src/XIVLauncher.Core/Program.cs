@@ -144,7 +144,7 @@ sealed class Program
 
         // Config.WineStartupType ??= WineStartupType.Managed;
         // Config.WineManagedVersion ??= WineManagedVersion.Stable;
-        Config.RB_WineBinaryPath ??= "/usr/bin";
+        // Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
         Config.WineDLLOverrides = WineSettings.WineDLLOverrideIsValid(Config.WineDLLOverrides) ? Config.WineDLLOverrides : "";
 
@@ -155,7 +155,9 @@ sealed class Program
 
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
-        Config.RB_WineVersion = WineManager.GetVersionOrDefault(Config.RB_WineVersion);
+        Config.RB_WineVersion = WineManager.GetWineVersionOrDefault(Config.RB_WineVersion);
+        Config.RB_WineBinaryPath ??= "/usr/bin";
+        Config.RB_ProtonVersion = WineManager.GetProtonVersionOrDefault(Config.RB_ProtonVersion);
         Config.RB_DxvkEnabled ??= true;
         Config.RB_NvapiEnabled ??= true;
         Config.RB_UmuLauncher ??= RBUmuLauncherType.System;
@@ -236,14 +238,13 @@ sealed class Program
         }
 
         SetupLogging(mainArgs);
-        // This needs to be above LoadConfig so it can properly set defaults.
         if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
+            // This needs to be above LoadConfig so it can properly set defaults.
             WineManager = new WineManager(storage.Root.FullName);
             DxvkManager = new DxvkManager(storage.Root.FullName);
             NvapiManager = new NvapiManager(storage.Root.FullName);
             LoadConfig(storage);
-            WineManager.SetUmuLauncher(CoreEnvironmentSettings.UseBuiltinUmu || Config.RB_UmuLauncher == RBUmuLauncherType.Builtin);
             WineManager.DownloadWineList();
             DxvkManager.DownloadDxvkList();
             NvapiManager.DownloadNvapiList();
@@ -412,8 +413,10 @@ sealed class Program
     public static void CreateCompatToolsInstance()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        WineManager.SetUmuLauncher(CoreEnvironmentSettings.UseBuiltinUmu || Config.RB_UmuLauncher == RBUmuLauncherType.Builtin);
         var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
-        var isProton = WineManager.IsProton(Config.RB_WineVersion);
+        var isProton = (Config.RB_WineStartupType == RBWineStartupType.Proton) ||
+                        (Config.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(Config.RB_WineBinaryPath));
         var winePrefix = isProton ? (new DirectoryInfo(CoreEnvironmentSettings.ProtonPrefix ?? Path.Combine(storage.Root.FullName, "protonprefix"))) :
                                     (new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(storage.Root.FullName, "wineprefix")));
         var toolsFolder = storage.GetFolder("compatibilitytool");
@@ -423,6 +426,7 @@ sealed class Program
                 new WineCustomRelease("CUSTOM", "Custom Wine", Config.RB_WineBinaryPath, "", "", WineSettings.HasLsteamclient(Config.RB_WineBinaryPath)) :
                 new ProtonCustomRelease("CUSTOM", "Custom Proton", Config.RB_WineBinaryPath, "", ""),
             RBWineStartupType.Managed => WineManager.GetWine(Config.RB_WineVersion),
+            RBWineStartupType.Proton => WineManager.GetProton(Config.RB_ProtonVersion),
             _ => throw new ArgumentOutOfRangeException(nameof(RBWineStartupType), $"Not an expected RBWineStartupType: {Config.RB_WineStartupType}")
         };
         var dxvkRelease = isProton ?
