@@ -517,7 +517,6 @@ public class CompatibilityTools
         var versionFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_winversion.txt"));
         if (versionFile.Exists)
         {
-            Console.WriteLine("Versionfile xl_winversion.txt found");
             var currentver = File.ReadAllText(versionFile.FullName);
             if (currentver.Trim() == winver)
             {

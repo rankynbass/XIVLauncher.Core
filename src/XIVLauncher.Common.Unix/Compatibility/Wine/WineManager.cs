@@ -119,9 +119,9 @@ public class WineManager
 
     private void Load()
     {
-        // if (wineJson.Exists)
-        //     InitializeJson();
-        // else
+        if (wineJson.Exists)
+            InitializeJson();
+        else
             InitializeDefault();
 
         InitializeLocalWine();
