@@ -1,5 +1,5 @@
 # Changelog
-### Sat August 07 2025 Rankyn Bass <rankyn@proton.me>
+### Sat August 16 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.1
 Changes and Added Features
 - Refactored against 1.2.1
