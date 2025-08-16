@@ -169,6 +169,8 @@ sealed class Program
         Config.RB_MangoHudCustomFile ??= "";
         Config.RB_MangoHudCustomString ??= Dxvk.MANGOHUD_DEFAULT_STRING;
         Config.RB_DxvkFrameRate ??= 0;
+        Config.RB_UseVulkanWineD3D ??= false;
+        Config.RB_ProtonUseVulkanWineD3D ??= false;
 
         // RB-patched App launcher
         Config.RB_App1 ??= "";

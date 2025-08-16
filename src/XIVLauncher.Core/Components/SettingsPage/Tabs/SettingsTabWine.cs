@@ -20,13 +20,7 @@ public class SettingsTabWine : SettingsTab
 
     private SettingsEntry<string> wineCustomBinaryPath;
 
-    private ToolSettingsEntry dxvkVersionSetting;
-
-    private ToolSettingsEntry nvapiVersionSetting;
-
     private SettingsEntry<bool> protonDxvkSetting;
-
-    private NumericSettingsEntry frameRateSetting;
 
     private bool isProton => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value));
 
@@ -77,47 +71,19 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => isProton
             },
 
-            dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,
-            s => Program.Config.RB_DxvkVersion = s, Program.DxvkManager.Version, Program.DxvkManager.DEFAULT)
-            {
-                CheckVisibility = () => !isProton
-            },
-
-            new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("async") && !isProton
-            },
-
-            new SettingsEntry<bool>("Enable GPLAsync Cache", "Enable GPLASync Cache.", () => Program.Config.RB_GPLAsyncCacheEnabled ?? true, b => Program.Config.RB_GPLAsyncCacheEnabled = b)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync") && !isProton
-            },
-
-            nvapiVersionSetting = new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
-                s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
-            {
-                CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED" && !isProton,
-            },
-
-            protonDxvkSetting = new SettingsEntry<bool>("Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b)
+            protonDxvkSetting = new SettingsEntry<bool>("Proton: Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b)
             {
                 CheckVisibility = () => isProton
             },
 
-            new SettingsEntry<bool>("Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
+            new SettingsEntry<bool>("Proton: Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
             {
                 CheckVisibility = () => isProton && protonDxvkSetting.Value == true
             },
 
-            frameRateSetting = new NumericSettingsEntry("Frame Rate Limit (DXVK Only)", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 for unlimited.", () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000)
+            new SettingsEntry<bool>("Proton: Use WineD3D Vulkan renderer", "Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only used if Dxvk is disabled.", () => Program.Config.RB_ProtonUseVulkanWineD3D ?? false, b => Program.Config.RB_ProtonUseVulkanWineD3D = b)
             {
-                CheckVisibility = () => (isProton && protonDxvkSetting.Value == true) || (!isProton && dxvkVersionSetting.Value != "DISABLED"),
-                CheckValidity = i =>
-                {
-                    if (i < 30 && i > 0)
-                        return "Frame rate limit must be >= 30, or 0 (unlimited)";
-                    return null;
-                }
+                CheckVisibility = () => isProton && protonDxvkSetting.Value == false
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
@@ -166,19 +132,7 @@ public class SettingsTabWine : SettingsTab
             wineVersionSetting.Reset(Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE);
             protonVersionSetting.Reset(Program.WineManager.ProtonVersion, Program.WineManager.DEFAULTPROTON);
         }
-
-        if (Program.DxvkManager.IsListUpdated)
-        {
-            Program.DxvkManager.DoneUpdatingDxvkList();
-            dxvkVersionSetting.Reset(Program.DxvkManager.Version, Program.DxvkManager.DEFAULT);
-        }
-
-        if (Program.NvapiManager.IsListUpdated)
-        {
-            Program.NvapiManager.DoneUpdatingNvapiList();
-            nvapiVersionSetting.Reset(Program.NvapiManager.Version, Program.NvapiManager.DEFAULT);
-        }
-        
+       
         base.Draw();
 
         if (!Program.CompatibilityTools.IsToolDownloaded)

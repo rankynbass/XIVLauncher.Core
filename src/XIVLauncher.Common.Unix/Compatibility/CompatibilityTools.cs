@@ -495,8 +495,8 @@ public class CompatibilityTools
 
     public void AddRegistryKey(string key, string value, string data)
     {
-        var args = new string[] { "reg", "add", key, "/v", value, "/d", data, "/f" };
-        var wineProcess = RunInPrefix(args);
+        var args = $"reg add \"{key}\" /v \"{value}\" /d \"{data}\" /f";
+        var wineProcess = RunWithoutRuntime(args);
         wineProcess.WaitForExit();
     }
 
@@ -527,5 +527,23 @@ public class CompatibilityTools
         Log.Information($"[WINEPREFIX] Changing windows version to {winver}");
         File.WriteAllText(versionFile.FullName, winver);
         RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
+    }
+
+    public void SetWineD3DVulkan(bool useVulkan)
+    {
+        var renderer = useVulkan ? "vulkan" : "gl";
+        var wined3dFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_wined3d.txt"));
+        if (wined3dFile.Exists)
+        {
+            var current = File.ReadAllText(wined3dFile.FullName);
+            if (current.Trim() == renderer)
+            {
+                Log.Information($"[WINEPREFIX] WineD3D renderer is already set to {renderer}");
+                return;
+            }
+        }
+        Log.Information($"[WINEPREFIX] WineD3D renderer changed to {renderer}");
+        File.WriteAllText(wined3dFile.FullName, renderer);
+        AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D", "renderer", renderer);
     }
 }

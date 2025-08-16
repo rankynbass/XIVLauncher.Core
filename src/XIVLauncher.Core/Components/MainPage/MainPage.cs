@@ -778,6 +778,10 @@ public class MainPage : Page
 
                 await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
                 Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
+                if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))
+                    Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
+                else
+                    Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

@@ -120,6 +120,10 @@ public interface ILauncherConfig
 
     public bool? RB_NvapiEnabled { get; set; }
 
+    public bool? RB_UseVulkanWineD3D { get; set; }
+
+    public bool? RB_ProtonUseVulkanWineD3D { get; set; }
+
     public RBUmuLauncherType? RB_UmuLauncher { get; set; }
 
     public RBHudType? RB_HudType { get; set; }
