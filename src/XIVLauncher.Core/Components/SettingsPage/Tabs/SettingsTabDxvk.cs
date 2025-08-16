@@ -14,11 +14,13 @@ public class SettingsTabDxvk : SettingsTab
 
     private ToolSettingsEntry nvapiVersionSetting;
 
+    private SettingsEntry<bool> protonDxvkSetting;
+
     public SettingsTabDxvk()
     {
         Entries = new SettingsEntry[]
         {
-            dxvkVersionSetting = new ToolSettingsEntry("Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,
+            dxvkVersionSetting = new ToolSettingsEntry("Wine: Dxvk Version", "Choose which Dxvk version to use.", () => Program.Config.RB_DxvkVersion ?? Program.DxvkManager.DEFAULT,
             s => Program.Config.RB_DxvkVersion = s, Program.DxvkManager.Version, Program.DxvkManager.DEFAULT),
 
             new SettingsEntry<bool>("Enable DXVK ASYNC", "Enable DXVK ASYNC patch.", () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
@@ -31,15 +33,27 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => dxvkVersionSetting.Value.Contains("gplasync")
             },
 
-            nvapiVersionSetting = new ToolSettingsEntry("Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
+            nvapiVersionSetting = new ToolSettingsEntry("Wine: Dxvk-Nvapi Version (Needed for DLSS)", "Choose which version of Dxvk-Nvapi to use. Needs Wine 9.0+ and Dxvk 2.0+", () => Program.Config.RB_NvapiVersion ?? Program.NvapiManager.DEFAULT,
                 s => Program.Config.RB_NvapiVersion = s, Program.NvapiManager.Version, Program.NvapiManager.DEFAULT)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value != "DISABLED"
             },
 
-            new SettingsEntry<bool>("Enable WineD3D Vulkan Renderer", "Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only used if Dxvk is disabled.", () => Program.Config.RB_UseVulkanWineD3D ?? false, b => Program.Config.RB_UseVulkanWineD3D = b)
+            new SettingsEntry<bool>("Wine: Enable WineD3D Vulkan Renderer", "Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only used if Dxvk is disabled.", () => Program.Config.RB_UseVulkanWineD3D ?? false, b => Program.Config.RB_UseVulkanWineD3D = b)
             {
                 CheckVisibility = () => dxvkVersionSetting.Value == "DISABLED"
+            },
+
+            protonDxvkSetting = new SettingsEntry<bool>("Proton: Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b),
+
+            new SettingsEntry<bool>("Proton: Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
+            {
+                CheckVisibility = () => protonDxvkSetting.Value == true
+            },
+
+            new SettingsEntry<bool>("Proton: Use WineD3D Vulkan renderer", "Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only used if Dxvk is disabled.", () => Program.Config.RB_ProtonUseVulkanWineD3D ?? false, b => Program.Config.RB_ProtonUseVulkanWineD3D = b)
+            {
+                CheckVisibility = () => protonDxvkSetting.Value == false
             },
 
             new NumericSettingsEntry("Frame Rate Limit (DXVK Only)", "Set a frame rate limit, and DXVK will try not exceed it. Use 0 for unlimited.", () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000)

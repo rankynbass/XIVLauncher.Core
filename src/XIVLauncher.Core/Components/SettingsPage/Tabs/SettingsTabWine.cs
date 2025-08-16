@@ -20,10 +20,6 @@ public class SettingsTabWine : SettingsTab
 
     private SettingsEntry<string> wineCustomBinaryPath;
 
-    private SettingsEntry<bool> protonDxvkSetting;
-
-    private bool isProton => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value));
-
     public SettingsTabWine()
     {
         Entries = new SettingsEntry[]
@@ -68,22 +64,7 @@ public class SettingsTabWine : SettingsTab
 
             new SettingsEntry<RBUmuLauncherType>("Umu Launcher", "Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).", () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
             {
-                CheckVisibility = () => isProton
-            },
-
-            protonDxvkSetting = new SettingsEntry<bool>("Proton: Enable Dxvk", "Disable to use WineD3D", () => Program.Config.RB_DxvkEnabled ?? true, b => Program.Config.RB_DxvkEnabled = b)
-            {
-                CheckVisibility = () => isProton
-            },
-
-            new SettingsEntry<bool>("Proton: Enable Dxvk-Nvapi (DLSS)", "Requires Dxvk and compatible GPU to work.", () => Program.Config.RB_NvapiEnabled ?? true, b => Program.Config.RB_NvapiEnabled = b)
-            {
-                CheckVisibility = () => isProton && protonDxvkSetting.Value == true
-            },
-
-            new SettingsEntry<bool>("Proton: Use WineD3D Vulkan renderer", "Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only used if Dxvk is disabled.", () => Program.Config.RB_ProtonUseVulkanWineD3D ?? false, b => Program.Config.RB_ProtonUseVulkanWineD3D = b)
-            {
-                CheckVisibility = () => isProton && protonDxvkSetting.Value == false
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value))
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
