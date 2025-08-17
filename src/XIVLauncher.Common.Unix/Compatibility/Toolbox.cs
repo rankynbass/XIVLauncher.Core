@@ -48,8 +48,6 @@ internal class DxvkList()
     public List<RemoteTool> DxvkVersions { get; set; }
 
     public string Latest { get; set; }
-
-    public string Legacy { get; set; }
 }
 
 internal class NvapiList()
@@ -59,6 +57,4 @@ internal class NvapiList()
     public List<RemoteTool> NvapiVersions {get; set; }
 
     public string Latest { get; set; }
-
-    public string Legacy { get; set; }
 }

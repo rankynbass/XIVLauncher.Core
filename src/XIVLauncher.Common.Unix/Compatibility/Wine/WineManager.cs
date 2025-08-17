@@ -54,6 +54,8 @@ public class WineManager
     public bool IsListUpdated { get; private set; } = false;
 
     private const string WINELIST_URL = "https://raw.githubusercontent.com/rankynbass/XIV-compatibilitytools/refs/heads/main/RB-runnerlist.json";
+
+    private const string JSON_NAME = "RB-runnerlist.json";
     
     private const string UMULAUNCHER_URL = "https://github.com/Open-Wine-Components/umu-launcher/releases/download/1.2.9/umu-launcher-1.2.9-zipapp.tar";
 
@@ -180,27 +182,44 @@ public class WineManager
         this.umuLauncherUrl = UMULAUNCHER_URL;
     }
 
+    private WineList? ReadJsonFile(FileInfo jsonFile)
+    {
+        WineList wineList;
+        using (var file = new StreamReader(jsonFile.OpenRead()))
+        {
+            try
+            {
+                wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
+                if (string.IsNullOrEmpty(wineList.UmuLauncherUrl) || string.IsNullOrEmpty(wineList.DefaultWine) || string.IsNullOrEmpty(wineList.DefaultProton))
+                    throw new JsonSerializationException("JSON file is invalid: missing entries");
+                if (wineList.WineVersions.Count == 0)
+                    throw new JsonSerializationException("JSON file is invalid: wine list empty");
+                if (wineList.ProtonVersions.Count == 0)
+                    throw new JsonSerializationException("JSON file is invalid: proton list empty");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{jsonFile.FullName} is invalid.");
+                wineList = null;
+            }                
+        }
+        return wineList;
+    }
+
     private void InitializeJson()
     {
         WineVersion = new Dictionary<string, IWineRelease>();
         ProtonVersion = new Dictionary<string, IWineRelease>();
         string umuLauncherUrl;
         DateTime releaseDate;
-        WineList wineList;
-        using (StreamReader file = new StreamReader(wineJson.OpenRead()))
+        WineList wineList = ReadJsonFile(wineJson);
+        if (wineList is null)
         {
-            try
-            {
-                wineList = JsonConvert.DeserializeObject<WineList>(file.ReadToEnd());
-            }
-            catch
-            {
-                InitializeDefault();
-                IsListUpdated = true; // Just to be safe, in case of bad download.
-                return;
-            }
+            InitializeDefault();
+            IsListUpdated = true;
+            return;
         }
-
+        
         foreach (var wineRelease in wineList.WineVersions)
         {
             AddVersion(new WineCustomRelease(wineRelease.Label, wineRelease.Description, wineRelease.Name, this.wineFolder, wineRelease.DownloadUrl.Replace("{wineDistroId}", wineDistroId.ToString()), wineRelease.Lsteamclient, wineRelease.Checksums));
@@ -209,6 +228,7 @@ public class WineManager
         {
             AddVersion(new ProtonCustomRelease(protonRelease.Label, protonRelease.Description, protonRelease.Name, this.compatFolder, protonRelease.DownloadUrl, protonRelease.Checksums[0]));
         }
+        
         this.DEFAULTWINE = wineList.DefaultWine;
         this.DEFAULTPROTON = wineList.DefaultProton;
         this.umuLauncherUrl = wineList.UmuLauncherUrl;
@@ -332,9 +352,13 @@ public class WineManager
         // await Task.Delay(5000);
 
         using var client = HappyEyeballsHttp.CreateHttpClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(WINELIST_URL).ConfigureAwait(false));
+
+        if (ReadJsonFile(new FileInfo(tempPath)) is null)
+            return;
 
         if (!wineJson.Exists)
         {

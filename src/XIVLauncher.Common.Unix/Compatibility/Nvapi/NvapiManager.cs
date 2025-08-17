@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
+using Serilog;
 
 using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Util;
@@ -16,13 +17,13 @@ public class NvapiManager
 {
     public string DEFAULT { get; private set; }
 
-    public string LEGACY { get; private set; }
-
     public Dictionary<string, IToolRelease> Version { get; private set; }
 
     public bool IsListUpdated { get; set; } = false;
 
     private const string NVAPILIST_URL = "https://raw.githubusercontent.com/rankynbass/XIV-compatibilitytools/refs/heads/main/RB-nvapilist.json";
+
+    private const string JSON_NAME = "RB-nvapilist.json";
 
     private string nvapiFolder { get; }
 
@@ -37,7 +38,7 @@ public class NvapiManager
         if (!Directory.Exists(nvapiFolder))
             Directory.CreateDirectory(nvapiFolder);
 
-        this.nvapiJson = new FileInfo(Path.Combine(rootFolder, "RB-nvapilist.json"));
+        this.nvapiJson = new FileInfo(Path.Combine(rootFolder, JSON_NAME));
         Load();
     }
 
@@ -67,31 +68,46 @@ public class NvapiManager
         AddVersion(new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", ""));
     }
 
-    private void InitializeJson()
+    private NvapiList? ReadJsonFile(FileInfo jsonFile)
     {
-        Version = new Dictionary<string, IToolRelease>();
-        DateTime releaseDate;
         NvapiList nvapiList;
-        using (StreamReader file = new StreamReader(nvapiJson.OpenRead()))
+        using (var file = new StreamReader(jsonFile.OpenRead()))
         {
             try
             {
                 nvapiList = JsonConvert.DeserializeObject<NvapiList>(file.ReadToEnd());
+                if (string.IsNullOrEmpty(nvapiList.Latest))
+                    throw new JsonSerializationException("JSON file is invalid: nvapi list is missing entries");
+                if (nvapiList.NvapiVersions.Count == 0)
+                    throw new JsonSerializationException("JSON file is invalid: nvapi version list empty");
             }
-            catch
+            catch (Exception ex)
             {
-                InitializeDefault();
-                IsListUpdated = true; // Just to be safe, in case of bad download.
-                return;
-            }
+                Log.Error(ex, $"{jsonFile.FullName} is invalid.");
+                nvapiList = null;
+            }                
         }
+        return nvapiList;
+    }
+
+    private void InitializeJson()
+    {
+        Version = new Dictionary<string, IToolRelease>();
+        DateTime releaseDate;
+        NvapiList nvapiList = ReadJsonFile(nvapiJson);
+        if (nvapiList is null)
+        {
+            InitializeDefault();
+            IsListUpdated = true;
+            return;
+        }
+
         foreach (var nvapiRelease in nvapiList.NvapiVersions)
         {
             AddVersion(new NvapiCustomRelease(nvapiRelease.Label, nvapiRelease.Description, nvapiRelease.Name, nvapiRelease.DownloadUrl, nvapiRelease.Checksum));
         }
         AddVersion(new NvapiCustomRelease("Disabled", "Do not use Nvapi", "DISABLED", ""));
 
-        this.LEGACY = nvapiList.Legacy;
         this.DEFAULT = nvapiList.Latest;
     }
 
@@ -135,6 +151,9 @@ public class NvapiManager
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(NVAPILIST_URL).ConfigureAwait(false));
+
+        if (ReadJsonFile(new FileInfo(tempPath)) is null)
+            return;
 
         if (!nvapiJson.Exists)
         {
