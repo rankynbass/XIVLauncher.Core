@@ -774,19 +774,12 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                var tempPath = App.Storage.GetFolder("temp");
+                var win7 = App.Settings.SetWin7 ?? false;
+                var vulkan = (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath))) ?
+                    App.Settings.RB_ProtonUseVulkanWineD3D ?? false : App.Settings.RB_UseVulkanWineD3D ?? false;
+                var hide = App.Settings.FixHideWineExports ?? true;
 
-                if (!Program.CompatibilityTools.Settings.Prefix.Exists)
-                    Program.CompatibilityTools.Settings.Prefix.Create();
-
-                Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
-                if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))
-                    Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
-                else
-                    Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
-                Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
-
-                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
+                await Program.CompatibilityTools.EnsureTool(win7, vulkan, hide).ConfigureAwait(false);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

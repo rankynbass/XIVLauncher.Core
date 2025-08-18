@@ -138,7 +138,7 @@ public class CompatibilityTools
         }
     }
 
-    public async Task EnsureTool()
+    public async Task EnsureTool(bool win7, bool vulkan, bool hide)
     {
         // Download Umu Launcher if it's missing.
         if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
@@ -158,7 +158,7 @@ public class CompatibilityTools
                 Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
                 await DownloadTool(new DirectoryInfo(Settings.WineRelease.ParentFolder)).ConfigureAwait(false);
             }
-            EnsurePrefix();
+            await EnsurePrefix(win7, vulkan, hide).ConfigureAwait(false);
             IsToolReady = true;
             return;
         }
@@ -182,7 +182,7 @@ public class CompatibilityTools
             }
         }
 
-        EnsurePrefix();
+        await EnsurePrefix(win7, vulkan, hide).ConfigureAwait(false);
 
         if (isDxvkEnabled)
             await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
@@ -223,7 +223,7 @@ public class CompatibilityTools
         File.Delete(tempPath);
     }
 
-    public void EnsurePrefix()
+    public async Task EnsurePrefix(bool win7, bool vulkan, bool hide)
     {
         var verb = "runinprefix";
         // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
@@ -235,7 +235,10 @@ public class CompatibilityTools
         {
             verb = "run";
         }
-        RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExit();
+        await SetWindowsVersion(win7).ConfigureAwait(false);
+        await SetWineD3DVulkan(vulkan).ConfigureAwait(false);
+        await SetHideWineExports(hide).ConfigureAwait(false);
+        await RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExitAsync().ConfigureAwait(false);
     }
 
     public Process RunWithoutRuntime(string command, string verb = "runinprefix", bool redirect = true)
@@ -493,11 +496,11 @@ public class CompatibilityTools
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
 
-    public void AddRegistryKey(string key, string value, string data)
+    public async Task AddRegistryKey(string key, string value, string data)
     {
         var args = $"reg add \"{key}\" /v \"{value}\" /d \"{data}\" /f";
         var wineProcess = RunWithoutRuntime(args);
-        wineProcess.WaitForExit();
+        await wineProcess.WaitForExitAsync().ConfigureAwait(false);
     }
 
     public void Kill()
@@ -511,7 +514,7 @@ public class CompatibilityTools
         Process.Start(psi);
     }
 
-    public void SetWindowsVersion(bool IsWin7)
+    public async Task SetWindowsVersion(bool IsWin7)
     {
         var winver = IsWin7 ? "win7" : "win10";
         var versionFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_winversion.txt"));
@@ -526,10 +529,10 @@ public class CompatibilityTools
         }
         Log.Verbose($"[WINEPREFIX] Changing windows version to {winver}");
         File.WriteAllText(versionFile.FullName, winver);
-        RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
+        await RunWithoutRuntime($"winecfg /v {winver}").WaitForExitAsync().ConfigureAwait(false);
     }
 
-    public void SetWineD3DVulkan(bool useVulkan)
+    public async Task SetWineD3DVulkan(bool useVulkan)
     {
         var renderer = useVulkan ? "vulkan" : "gl";
         var wined3dFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_wined3d.txt"));
@@ -544,10 +547,10 @@ public class CompatibilityTools
         }
         Log.Verbose($"[WINEPREFIX] WineD3D renderer changed to {renderer}");
         File.WriteAllText(wined3dFile.FullName, renderer);
-        AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D", "renderer", renderer);
+        await AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D", "renderer", renderer).ConfigureAwait(false);
     }
 
-    public void SetHideWineExports(bool hide)
+    public async Task SetHideWineExports(bool hide)
     {
         var hidden = hide ? "Y" : "N";
         var hideExportsFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_hidewineexports.txt"));
@@ -562,6 +565,6 @@ public class CompatibilityTools
         }
         Log.Verbose($"[WINEPREFIX] HideWineExports changed to {hidden}.");
         File.WriteAllText(hideExportsFile.FullName, hidden);
-        AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\AppDefaults", "HideWineExports", hidden);
+        await AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\AppDefaults", "HideWineExports", hidden).ConfigureAwait(false);
     }
 }
