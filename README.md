@@ -91,6 +91,8 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 | `XL_NVNGXPATH` | Set a custom path for the folder containing nvngx.dll and _nvngx.dll. Most useful for NixOS, which has unusual paths. |
 | `XL_DISTRO` | Override the wine package to download. Valid values are `arch`, `fedora`, and `ubuntu`. |
 | `XL_USE_BUILTIN_UMU` | Force the use of built-in Umu Launcher instead of the system version. This can also be set in the Settings menu. |
+| `XL_DISABLE_LIST_UPDATE` | Don't download new lists for dxvk, nvapi, wine and proton. |
+| `XL_IGNORE_LISTS` | Ignore the tool list updates. Use the built-in values. In case of bad update list download. |
 
 ### Older Variables (Removed in 1.2.1.x)
 | Variable | Description |

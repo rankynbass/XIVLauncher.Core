@@ -31,9 +31,15 @@ public class DxvkManager
 
     private FileInfo dxvkJson { get; }
 
-    public DxvkManager(string root)
+    private bool ignoreList { get; }
+
+    private bool disableUpdate { get; }
+
+    public DxvkManager(string root, bool ignoreList, bool disableUpdate)
     {
         this.rootFolder = root;
+        this.ignoreList = ignoreList;
+        this.disableUpdate = disableUpdate;
         this.dxvkFolder = Path.Combine(root, "compatibilitytool", "dxvk");
         if (!Directory.Exists(dxvkFolder))
             Directory.CreateDirectory(dxvkFolder);
@@ -43,8 +49,7 @@ public class DxvkManager
 
     private void Load()
     {
-        var ignore = (System.Environment.GetEnvironmentVariable("XL_IGNORE_JSON") ?? string.Empty).ToLowerInvariant();
-        if (dxvkJson.Exists && !(ignore == "y" || ignore == "true" || ignore == "yes" || ignore == "on" || ignore == "1"))
+        if (dxvkJson.Exists && !ignoreList)
             InitializeJson();
         else
             InitializeDefault();
@@ -149,8 +154,11 @@ public class DxvkManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public async Task DownloadDxvkList()
+    public async Task DownloadDxvkList(bool keepUpdated)
     {
+        if (disableUpdate || !keepUpdated)
+            return;
+
         // Uncomment for testing
         // await Task.Delay(5000);
 

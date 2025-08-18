@@ -77,9 +77,15 @@ public class WineManager
 
     public DirectoryInfo SteamFolder { get; }
 
-    public WineManager(string root)
+    private bool ignoreList { get; }
+
+    private bool disableUpdate { get; }
+
+    public WineManager(string root, bool ignoreList, bool disableUpdate)
     {
         this.rootFolder = root;
+        this.ignoreList = ignoreList;
+        this.disableUpdate = disableUpdate;
         this.wineJson = new FileInfo(Path.Combine(rootFolder, "RB-runnerlist.json"));
     
         // Wine
@@ -123,8 +129,7 @@ public class WineManager
 
     private void Load()
     {
-        var ignore = (System.Environment.GetEnvironmentVariable("XL_IGNORE_JSON") ?? string.Empty).ToLowerInvariant();
-        if (wineJson.Exists && !(ignore == "y" || ignore == "true" || ignore == "yes" || ignore == "on" || ignore == "1"))
+        if (wineJson.Exists && !ignoreList)
             InitializeJson();
         else
             InitializeDefault();
@@ -347,8 +352,11 @@ public class WineManager
         return null;
     }
 
-    public async Task DownloadWineList()
+    public async Task DownloadWineList(bool keepUpdated)
     {
+        if (disableUpdate || !keepUpdated)
+            return;
+            
         // Uncomment for testing
         // await Task.Delay(5000);
 

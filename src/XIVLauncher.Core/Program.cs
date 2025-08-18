@@ -245,16 +245,13 @@ sealed class Program
         if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
             // This needs to be above LoadConfig so it can properly set defaults.
-            WineManager = new WineManager(storage.Root.FullName);
-            DxvkManager = new DxvkManager(storage.Root.FullName);
-            NvapiManager = new NvapiManager(storage.Root.FullName);
+            WineManager = new WineManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
+            DxvkManager = new DxvkManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
+            NvapiManager = new NvapiManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
             LoadConfig(storage);
-            if (!CoreEnvironmentSettings.DisableToolUpdate && (Config.RB_KeepToolsUpdated ?? true))
-            {
-                WineManager.DownloadWineList();
-                DxvkManager.DownloadDxvkList();
-                NvapiManager.DownloadNvapiList();
-            }
+            WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true);
+            DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true);
+            NvapiManager.DownloadNvapiList(Config.RB_KeepToolsUpdated ?? true);
         }
         else
             LoadConfig(storage);

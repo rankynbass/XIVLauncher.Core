@@ -31,9 +31,15 @@ public class NvapiManager
 
     private FileInfo nvapiJson { get; }
 
-    public NvapiManager(string root)
+    private bool ignoreList { get; }
+
+    private bool disableUpdate { get; }
+
+    public NvapiManager(string root, bool ignoreList, bool disableUpdate)
     {
         this.rootFolder = root;
+        this.ignoreList = ignoreList;
+        this.disableUpdate = disableUpdate;
         this.nvapiFolder = Path.Combine(root, "compatibilitytool", "nvapi");
         if (!Directory.Exists(nvapiFolder))
             Directory.CreateDirectory(nvapiFolder);
@@ -44,8 +50,7 @@ public class NvapiManager
 
     private void Load()
     {
-        var ignore = (System.Environment.GetEnvironmentVariable("XL_IGNORE_JSON") ?? string.Empty).ToLowerInvariant();
-        if (nvapiJson.Exists && !(ignore == "y" || ignore == "true" || ignore == "yes" || ignore == "on" || ignore == "1"))
+        if (nvapiJson.Exists && !ignoreList)
             InitializeJson();
         else
             InitializeDefault();
@@ -143,8 +148,11 @@ public class NvapiManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public async Task DownloadNvapiList()
+    public async Task DownloadNvapiList(bool keepUpdated)
     {
+        if (disableUpdate || !keepUpdated)
+            return;
+
         // Uncomment for testing
         // await Task.Delay(5000);
         

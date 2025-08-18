@@ -1,4 +1,11 @@
 # Changelog
+### Mon August 18 2025 Rankyn Bass <rankyn@proton.me>
+1.2.1.3
+- Added a fix for a crashing issue with wine-staging 10.12 and later
+- Added toggle for hiding wine exports (enabled by default) in Troubleshooting tab
+- Added ability to disable downloading compatibility tool lists. This does not delete existing lists.
+- Added environment variable `XL_IGNORE_LISTS` to ignore tool lists and use the built-in compatibility tools.
+
 ### Sat August 16 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.1
 Changes and Added Features
