@@ -20,6 +20,7 @@ public static class CoreEnvironmentSettings
     public static bool? UseSteam => CheckEnvBoolOrNull("XL_USE_STEAM"); // Fix for Steam Deck users who lock themselves out
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static bool UseBuiltinUmu => CheckEnvBool("XL_USE_BUILTIN_UMU");
+    public static bool DisableToolUpdate => CheckEnvBool("XL_DISABLE_TOOL_UPDATE");
     public static uint SteamAppId => GetAppId(Environment.GetEnvironmentVariable("SteamAppId"));
     public static uint AltAppID => GetAppId(Environment.GetEnvironmentVariable("XL_APPID"));
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");

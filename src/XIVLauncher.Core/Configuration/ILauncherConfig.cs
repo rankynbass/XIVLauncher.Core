@@ -138,6 +138,8 @@ public interface ILauncherConfig
 
     public int? RB_DxvkFrameRate { get; set; }
 
+    public bool? RB_KeepToolsUpdated { get; set; }
+
     #endregion
 
     #region RBpatchedApps

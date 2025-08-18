@@ -172,6 +172,7 @@ sealed class Program
         Config.RB_DxvkFrameRate ??= 0;
         Config.RB_UseVulkanWineD3D ??= false;
         Config.RB_ProtonUseVulkanWineD3D ??= false;
+        Config.RB_KeepToolsUpdated ??= true;
 
         // RB-patched App launcher
         Config.RB_App1 ??= "";
@@ -248,9 +249,12 @@ sealed class Program
             DxvkManager = new DxvkManager(storage.Root.FullName);
             NvapiManager = new NvapiManager(storage.Root.FullName);
             LoadConfig(storage);
-            WineManager.DownloadWineList();
-            DxvkManager.DownloadDxvkList();
-            NvapiManager.DownloadNvapiList();
+            if (!CoreEnvironmentSettings.DisableToolUpdate && (Config.RB_KeepToolsUpdated ?? true))
+            {
+                WineManager.DownloadWineList();
+                DxvkManager.DownloadDxvkList();
+                NvapiManager.DownloadNvapiList();
+            }
         }
         else
             LoadConfig(storage);

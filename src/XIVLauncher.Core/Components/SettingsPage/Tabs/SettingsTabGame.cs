@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using ImGuiNET;
 
 using XIVLauncher.Common;
@@ -34,6 +36,7 @@ public class SettingsTabGame : SettingsTab
         new SettingsEntry<string>("Additional Game Arguments", "Follows Steam conventions: VAR1=value VAR2=value %command% -arg1 -arg2. Can't pass programs \n(like gamescope -- %command%). Does not accept flatpak args (--parent-pid=1, etc.) or WINEDLLOVERRIDES", () => Program.Config.AdditionalArgs, x => Program.Config.AdditionalArgs = x),
         new SettingsEntry<string>("Extra WINEDLLOVERRIDES", "Add extra WINEDLLOVERRIDES. No spaces, semicolon separated.\nDo not use msquic, mscoree, d3d9, d3d10core, d3d11, or dxgi. These are already set.", () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
         {
+            CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             CheckValidity = s =>
             {
                 if (!WineSettings.WineDLLOverrideIsValid(s))
@@ -48,6 +51,10 @@ public class SettingsTabGame : SettingsTab
         new SettingsEntry<bool>("Ignore Steam", "Check this if you do not want XIVLauncher to communicate with Steam (Requires Restart).", () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
         {
             CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
+        },
+        new SettingsEntry<bool>("Keep Compatibility tools up-to-date", "Download updated lists for Wine, Dxvk, etc.", () => Program.Config.RB_KeepToolsUpdated ?? true, b => Program.Config.RB_KeepToolsUpdated = b)
+        {
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
         },
         new SettingsEntry<bool>("Use Experimental UID Cache", "Tries to save your login token for the next start. Can result in launching with expired sessions.", () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
     };

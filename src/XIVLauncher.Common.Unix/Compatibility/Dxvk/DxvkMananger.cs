@@ -43,7 +43,8 @@ public class DxvkManager
 
     private void Load()
     {
-        if (dxvkJson.Exists)
+        var ignore = (System.Environment.GetEnvironmentVariable("XL_IGNORE_JSON") ?? string.Empty).ToLowerInvariant();
+        if (dxvkJson.Exists && !(ignore == "y" || ignore == "true" || ignore == "yes" || ignore == "on" || ignore == "1"))
             InitializeJson();
         else
             InitializeDefault();
