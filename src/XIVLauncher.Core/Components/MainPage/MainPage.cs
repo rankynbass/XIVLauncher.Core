@@ -776,13 +776,17 @@ public class MainPage : Page
             {
                 var tempPath = App.Storage.GetFolder("temp");
 
-                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
+                if (!Program.CompatibilityTools.Settings.Prefix.Exists)
+                    Program.CompatibilityTools.Settings.Prefix.Create();
+
                 Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
                 if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
                 else
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
                 Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
+
+                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

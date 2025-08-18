@@ -178,7 +178,7 @@ public class CompatibilityTools
             if (lsteamclient.Exists)
             {
                 lsteamclient.Delete();
-                Log.Information("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
+                Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
             }
         }
 
@@ -256,7 +256,7 @@ public class CompatibilityTools
         var quickRun = new Process();
         quickRun.StartInfo = psi;
         quickRun.Start();
-        Log.Information("Running without runtime: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+        Log.Verbose("Running without runtime: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return quickRun;
     }
 
@@ -268,7 +268,7 @@ public class CompatibilityTools
             psi.Arguments = "runinprefix " + command;
         else
             psi.Arguments = command;
-        Log.Information("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
+        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.Arguments);
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
 
@@ -280,7 +280,7 @@ public class CompatibilityTools
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        Log.Information("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
+        Log.Verbose("Running in prefix: {FileName} {Arguments}", psi.FileName, psi.ArgumentList.Aggregate(string.Empty, (a, b) => a + " " + b));
         return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
     }
 
@@ -520,11 +520,11 @@ public class CompatibilityTools
             var currentver = File.ReadAllText(versionFile.FullName);
             if (currentver.Trim() == winver)
             {
-                Log.Information($"[WINEPREFIX] Windows version is {winver}.");
+                Log.Verbose($"[WINEPREFIX] Windows version is {winver}.");
                 return;
             }
         }
-        Log.Information($"[WINEPREFIX] Changing windows version to {winver}");
+        Log.Verbose($"[WINEPREFIX] Changing windows version to {winver}");
         File.WriteAllText(versionFile.FullName, winver);
         RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
     }
@@ -538,11 +538,11 @@ public class CompatibilityTools
             var current = File.ReadAllText(wined3dFile.FullName);
             if (current.Trim() == renderer)
             {
-                Log.Information($"[WINEPREFIX] WineD3D renderer is already set to {renderer}");
+                Log.Verbose($"[WINEPREFIX] WineD3D renderer is already set to {renderer}");
                 return;
             }
         }
-        Log.Information($"[WINEPREFIX] WineD3D renderer changed to {renderer}");
+        Log.Verbose($"[WINEPREFIX] WineD3D renderer changed to {renderer}");
         File.WriteAllText(wined3dFile.FullName, renderer);
         AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D", "renderer", renderer);
     }
@@ -556,11 +556,11 @@ public class CompatibilityTools
             var current = File.ReadAllText(hideExportsFile.FullName);
             if (current.Trim() == hidden)
             {
-                Log.Information($"[WINEPREFIX] HideWineExports currently set to {hidden}.");
+                Log.Verbose($"[WINEPREFIX] HideWineExports currently set to {hidden}.");
                 return;
             }
         }
-        Log.Information($"[WINEPREFIX] HideWineExports changed to {hidden}.");
+        Log.Verbose($"[WINEPREFIX] HideWineExports changed to {hidden}.");
         File.WriteAllText(hideExportsFile.FullName, hidden);
         AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\AppDefaults", "HideWineExports", hidden);
     }
