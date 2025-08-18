@@ -73,6 +73,8 @@ public class WineManager
 
     private string compatFolder { get; }
 
+    private string usrCompatFolder { get; }
+
     private FileInfo wineJson { get; set; }
 
     public DirectoryInfo SteamFolder { get; }
@@ -110,6 +112,7 @@ public class WineManager
             this.commonFolder = steamfolder2;
             this.compatFolder = Path.Combine(home, ".local", "share", "Steam", "compatibilitytools.d");
         }
+        this.usrCompatFolder = Path.Combine("/", "usr", "share", "steam", "compatibilitytools.d");
         if (!Directory.Exists(commonFolder))
             Directory.CreateDirectory(commonFolder);
         if (!Directory.Exists(compatFolder))
@@ -267,8 +270,8 @@ public class WineManager
             if (File.Exists(Path.Combine(protonDir.FullName, "proton")))
             {
                 string name;
-                if (protonDir.Name.Contains("GE-"))
-                    name = "GE Proton";
+                if (protonDir.Name.Contains("GE-Proton") || protonDir.Name.Contains("Proton-GE"))
+                    name = "GE-Proton";
                 else if (protonDir.Name.Contains("XIV-"))
                     name = "XIV-Proton";
                 else if (protonDir.Name.ToLowerInvariant().Contains("cachyos"))
@@ -276,6 +279,29 @@ public class WineManager
                 else
                     name = "Proton";
                 AddVersion(new ProtonCustomRelease(protonDir.Name, $"{name} in {compatFolder}", protonDir.Name, compatFolder, ""));
+            }
+        }
+
+        var usrCompatibilitytoolsd = new DirectoryInfo(usrCompatFolder);
+        if (usrCompatibilitytoolsd.Exists)
+        {
+            foreach (var protonDir in usrCompatibilitytoolsd.EnumerateDirectories().OrderBy(x => x.Name))
+            {
+                if (ProtonVersion.ContainsKey(protonDir.Name))
+                    continue;
+                if (File.Exists(Path.Combine(protonDir.FullName, "proton")))
+                {
+                    string name;
+                    if (protonDir.Name.Contains("GE-Proton") || protonDir.Name.Contains("Proton-GE"))
+                        name = "GE-Proton";
+                    else if (protonDir.Name.Contains("XIV-"))
+                        name = "XIV-Proton";
+                    else if (protonDir.Name.ToLowerInvariant().Contains("cachyos"))
+                        name = "CachyOS Proton";
+                    else
+                        name = "Proton";
+                    AddVersion(new ProtonCustomRelease(protonDir.Name, $"{name} in {compatFolder}", protonDir.Name, compatFolder, ""));
+                }
             }
         }
 
