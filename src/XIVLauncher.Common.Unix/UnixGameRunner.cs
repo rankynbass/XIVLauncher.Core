@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using XIVLauncher.Common.Dalamud;
 using XIVLauncher.Common.PlatformAbstractions;
@@ -38,7 +39,14 @@ public class UnixGameRunner : IGameRunner
         }
         else
         {
-            return compatibility.RunInPrefix($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
+            var process = compatibility.RunInPrefix($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
+            if (process is null)
+            {
+                System.Console.WriteLine("Process was null");
+                Thread.Sleep(1000);
+                process = compatibility.RunInPrefix($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
+            }
+            return process;
         }
     }
 }

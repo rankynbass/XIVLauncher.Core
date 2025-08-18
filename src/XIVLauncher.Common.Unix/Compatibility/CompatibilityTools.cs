@@ -546,4 +546,22 @@ public class CompatibilityTools
         File.WriteAllText(wined3dFile.FullName, renderer);
         AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\Direct3D", "renderer", renderer);
     }
+
+    public void SetHideWineExports(bool hide)
+    {
+        var hidden = hide ? "Y" : "N";
+        var hideExportsFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_hidewineexports.txt"));
+        if (hideExportsFile.Exists)
+        {
+            var current = File.ReadAllText(hideExportsFile.FullName);
+            if (current.Trim() == hidden)
+            {
+                Log.Information($"[WINEPREFIX] HideWineExports currently set to {hidden}.");
+                return;
+            }
+        }
+        Log.Information($"[WINEPREFIX] HideWineExports changed to {hidden}.");
+        File.WriteAllText(hideExportsFile.FullName, hidden);
+        AddRegistryKey("HKEY_CURRENT_USER\\Software\\Wine\\AppDefaults", "HideWineExports", hidden);
+    }
 }

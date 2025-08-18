@@ -152,6 +152,7 @@ sealed class Program
         Config.FixIM ??= false;
         Config.FixLocale ??= false;
         Config.FixError127 ??= false;
+        Config.FixHideWineExports ??= true;
 
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;

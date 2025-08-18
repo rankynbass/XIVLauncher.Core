@@ -24,6 +24,7 @@ public class SettingsTabTroubleshooting : SettingsTab
                 return null;
             }
         },
+        new SettingsEntry<bool>("Hack: Hide Wine Exports", "Default is True. Disabling this may allow certain wine versions to work with steam.", () => Program.Config.FixHideWineExports ?? true, b => Program.Config.FixHideWineExports = b),
     };
     public override string Title => "Troubleshooting";
 

@@ -782,6 +782,7 @@ public class MainPage : Page
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
                 else
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
+                Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

@@ -94,6 +94,8 @@ public interface ILauncherConfig
 
     public bool? FixError127 { get; set; }
 
+    public bool? FixHideWineExports { get; set; }
+
     public bool? SetWin7 { get; set; }
 
     public string? WineDLLOverrides { get; set; }
