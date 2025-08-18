@@ -774,11 +774,11 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                var tempPath = App.Storage.GetFolder("temp");
-
                 if (!Program.CompatibilityTools.Settings.Prefix.Exists)
                     Program.CompatibilityTools.Settings.Prefix.Create();
 
+                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
+ 
                 Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
                 if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
@@ -786,7 +786,9 @@ public class MainPage : Page
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
                 Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
 
-                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
+                // Hack to make wine staging 10.12+ work with steam (no idea why it's needed).
+                await Program.CompatibilityTools.EnsureTool(false).ConfigureAwait(false);
+
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

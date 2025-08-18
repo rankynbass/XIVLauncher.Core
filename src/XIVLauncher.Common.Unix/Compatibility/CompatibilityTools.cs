@@ -138,7 +138,7 @@ public class CompatibilityTools
         }
     }
 
-    public async Task EnsureTool()
+    public async Task EnsureTool(bool realLaunch = true)
     {
         // Download Umu Launcher if it's missing.
         if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
@@ -183,6 +183,13 @@ public class CompatibilityTools
         }
 
         EnsurePrefix();
+
+        // Part of a hack to make wine-staging 10.12+ work without crashing first time. Don't know why it's needed. 
+        if (!realLaunch)
+        {
+            IsToolReady = true;
+            return;
+        }
 
         if (isDxvkEnabled)
             await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
