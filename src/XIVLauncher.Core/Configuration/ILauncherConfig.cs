@@ -96,6 +96,8 @@ public interface ILauncherConfig
 
     public bool? FixHideWineExports { get; set; }
 
+    public bool? FixBrokenLsteamclient { get; set; }
+
     public bool? SetWin7 { get; set; }
 
     public string? WineDLLOverrides { get; set; }

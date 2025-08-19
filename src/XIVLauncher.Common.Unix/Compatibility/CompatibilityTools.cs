@@ -245,6 +245,20 @@ public class CompatibilityTools
         RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExit();
     }
 
+    public void FixBrokenWine()
+    {
+        if (Settings.IsProton)
+        {
+            return;
+        }
+        var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
+        if (lsteamclient.Exists)
+        {
+            lsteamclient.Delete();
+            EnsurePrefix();
+        }
+    }
+
     public Process RunWithoutRuntime(string command, string verb = "runinprefix", bool redirect = true)
     {
         if (!Settings.IsProton)

@@ -774,9 +774,6 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                if (!Program.CompatibilityTools.Settings.Prefix.Exists)
-                    Program.CompatibilityTools.Settings.Prefix.Create();
-
                 await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
  
                 Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
@@ -785,10 +782,8 @@ public class MainPage : Page
                 else
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
                 Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
-
-                // Hack to make wine staging 10.12+ work with steam (no idea why it's needed).
-                await Program.CompatibilityTools.EnsureTool(false).ConfigureAwait(false);
-
+                if (App.Settings.FixBrokenLsteamclient ?? false)
+                    Program.CompatibilityTools.FixBrokenWine();
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

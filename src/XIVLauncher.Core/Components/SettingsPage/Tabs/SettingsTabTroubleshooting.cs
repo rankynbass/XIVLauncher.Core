@@ -25,6 +25,7 @@ public class SettingsTabTroubleshooting : SettingsTab
             }
         },
         new SettingsEntry<bool>("Hack: Hide Wine Exports", "Default is True. Disabling this may allow certain wine versions to work with steam.", () => Program.Config.FixHideWineExports ?? true, b => Program.Config.FixHideWineExports = b),
+        new SettingsEntry<bool>("Hack: Disable lsteamclient", "Fix for certain cases of \"An internal Dalamud error has occurred.\"", () => Program.Config.FixBrokenLsteamclient ?? false, b => Program.Config.FixBrokenLsteamclient = b),
     };
     public override string Title => "Troubleshooting";
 

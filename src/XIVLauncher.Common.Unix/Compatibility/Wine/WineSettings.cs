@@ -152,7 +152,9 @@ public class WineSettings
     {
         if (string.IsNullOrEmpty(path))
             return false;
-        var parent = new FileInfo(path).Directory.FullName;
+        var name = new DirectoryInfo(path).Name;
+        var parent = name == "bin" ? new DirectoryInfo(path).Parent.FullName : path;
+        Console.WriteLine($"path is {path}, parent-path is {parent}");
         // Arch
         if (File.Exists(Path.Combine(parent, "lib", "wine", "x86_64-windows", "lsteamclient.dll")))
             return true;

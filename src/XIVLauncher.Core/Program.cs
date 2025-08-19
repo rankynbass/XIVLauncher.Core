@@ -153,6 +153,7 @@ sealed class Program
         Config.FixLocale ??= false;
         Config.FixError127 ??= false;
         Config.FixHideWineExports ??= true;
+        Config.FixBrokenLsteamclient ??= false;
 
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
