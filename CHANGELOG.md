@@ -1,4 +1,8 @@
 # Changelog
+### Sun August 24 2025 Rankyn Bass <rankyn@proton.me>
+1.2.1.4
+- Fixed searching /usr/share/steam/compatibilitytools.d for proton releases. Previously, they were found, but accidentally given the wrong location in ~/.steam/steam/compatibilitytools.d instead.
+
 ### Mon August 18 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.3
 - Added toggle for hiding wine exports in Troubleshooting tab. Enabled by default.

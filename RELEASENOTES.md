@@ -1,5 +1,2 @@
-**1.2.1.3**
-- Added toggle for hiding wine exports in Troubleshooting tab. Enabled by default.
-- Added hack to disable lsteamclient in Troubleshooting tab. Fixes Internal Dalamud error with some wine versions.
-- Added ability to disable downloading compatibility tool lists. This does not delete existing lists.
-- Added environment variable `XL_IGNORE_LISTS` to ignore tool lists and use the built-in compatibility tools.
+**1.2.1.4**
+- Fixed searching /usr/share/steam/compatibilitytools.d for proton releases. Previously, they were found, but accidentally given the wrong location in ~/.steam/steam/compatibilitytools.d instead.
