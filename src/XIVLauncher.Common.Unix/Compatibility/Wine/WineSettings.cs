@@ -74,10 +74,8 @@ public class WineSettings
                 EnvVars.Add("STORE", "none");
                 EnvVars.Add("PROTON_VERB", "runinprefix");
             }
-            if (!NTSyncOn)
-                EnvVars.Add("PROTON_NO_NTSYNC", "1");
-            else if (WineRelease.Name == "GE-Proton10-9")
-                EnvVars.Add("PROTON_USE_NTSYNC", "1");
+            EnvVars.Add("PROTON_NO_NTSYNC", NTSyncOn ? "0" : "1");
+            EnvVars.Add("PROTON_USE_NTSYNC", NTSyncOn ? "1" : "0");
 
             if (!FsyncOn)
             {
