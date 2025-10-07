@@ -230,8 +230,9 @@ sealed class Program
 
         bool badxlpath = false;
         var badxlpathex = new Exception();
-        string? useAltPath = Environment.GetEnvironmentVariable("XL_USERDIR");
-        try 
+        string? useAltPath = CoreEnvironmentSettings.GetAltUserDir();
+        
+        try
         {
             storage = new Storage(APP_NAME, useAltPath);
         }

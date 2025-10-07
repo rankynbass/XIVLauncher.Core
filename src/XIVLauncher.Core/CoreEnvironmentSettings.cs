@@ -57,6 +57,14 @@ public static class CoreEnvironmentSettings
         return result;
     }
 
+    public static string? GetAltUserDir()
+    {
+        var alt1 = Environment.GetEnvironmentVariable("XL_USERDIR");
+        var alt2 = Environment.GetEnvironmentVariable("XL_PATH");
+        if (alt1 is not null) return alt1;
+        return alt2;
+    }
+
     public static string GetCType()
     {
         if (OperatingSystem.IsWindows())
