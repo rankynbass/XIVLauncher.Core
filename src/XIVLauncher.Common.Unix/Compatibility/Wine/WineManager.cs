@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
@@ -9,7 +8,6 @@ using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Serilog;
 
-using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
 using XIVLauncher.Common.Util;
 

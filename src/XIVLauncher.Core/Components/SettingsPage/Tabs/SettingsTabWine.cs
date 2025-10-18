@@ -56,8 +56,13 @@ public class SettingsTabWine : SettingsTab
 
             new SettingsEntry<RBUmuLauncherType>("Umu Launcher", "Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).", () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
             {
-                CheckVisibility = () => !CoreEnvironmentSettings.IsAppImage &&
-                                        (startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)))
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
+                CheckWarning = x =>
+                {
+                    if (x != RBUmuLauncherType.Disabled && CoreEnvironmentSettings.IsAppImage)
+                        return "AppImage Users: If you have issues with your system hanging while using Proton, set this to Disabled.";
+                    return null;
+                }
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)

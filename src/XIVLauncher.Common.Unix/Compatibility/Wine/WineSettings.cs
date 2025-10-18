@@ -4,8 +4,6 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
 
-using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
-
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public class WineSettings
@@ -106,7 +104,7 @@ public class WineSettings
         var steamCompatMounts = System.Environment.GetEnvironmentVariable("STEAM_COMPAT_MOUNTS");
         if (!string.IsNullOrEmpty(steamCompatMounts))
             importantPaths.Append(":" + steamCompatMounts.Trim(':'));
-        
+
         // These paths are for winediscordipcbridge.exe. Note that exact files are being passed, not directories.
         // You can't pass the whole /run/user/<userid> directory; it will get ignored, so we pass all 10 potential
         // values for /run/user/<userid>/discord-ipc-{0-9}
@@ -117,7 +115,7 @@ public class WineSettings
             for (int i = 0; i < 10; i++)
                 importantPaths.Append($":{runtimeDir}/discord-ipc-{i}");
             importantPaths.Append($"{runtimeDir}/app/com.discordapp.Discord:{runtimeDir}/snap.discord-canary");
-        }       
+        }
         EnvVars.Add("STEAM_COMPAT_MOUNTS", importantPaths.ToString());
     }
 
