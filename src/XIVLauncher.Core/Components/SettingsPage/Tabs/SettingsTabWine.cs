@@ -31,20 +31,12 @@ public class SettingsTabWine : SettingsTab
                 s => Program.Config.RB_WineVersion = s, Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed,
-                CheckWarning = s =>
-                {
-                    return "Warning! Unpatched wine between 9.0 and 10.7 are incompatible with Dalamud.";
-                }
             },
 
             protonVersionSetting = new WineSettingsEntry("Proton Version", "Choose which Proton version to use. You may need to scroll down in menu to see custom versions.", () => Program.Config.RB_ProtonVersion ?? Program.WineManager.DEFAULTPROTON,
                 s => Program.Config.RB_ProtonVersion = s, Program.WineManager.ProtonVersion, Program.WineManager.DEFAULTPROTON)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton,
-                CheckWarning = s =>
-                {
-                    return "Warning! Unpatched Proton between 9.0 and GE-Proton 10-8 may be incompatible with Dalamud.";
-                },
             },
 
             wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",
@@ -64,7 +56,8 @@ public class SettingsTabWine : SettingsTab
 
             new SettingsEntry<RBUmuLauncherType>("Umu Launcher", "Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).", () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
             {
-                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value))
+                CheckVisibility = () => !CoreEnvironmentSettings.IsAppImage &&
+                                        (startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)))
             },
 
             new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)

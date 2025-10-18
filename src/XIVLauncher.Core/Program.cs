@@ -444,7 +444,8 @@ sealed class Program
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
-        var wineSettings = new WineSettings(wineRelease, Config.RB_UmuLauncher != RBUmuLauncherType.Disabled ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? true, Config.NTSyncEnabled ?? false, Config.WaylandEnabled ?? false);
+        var useUmu = !CoreEnvironmentSettings.IsAppImage;
+        var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? true, Config.NTSyncEnabled ?? false, Config.WaylandEnabled ?? false);
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");

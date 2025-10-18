@@ -26,6 +26,7 @@ public static class CoreEnvironmentSettings
     public static uint AltAppID => GetAppId(Environment.GetEnvironmentVariable("XL_APPID"));
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
     public static string? ProtonPrefix => System.Environment.GetEnvironmentVariable("PROTONPREFIX");
+    public static bool IsAppImage => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPIMAGE_ROOT"));
 
     private static bool CheckEnvBool(string key)
     {
