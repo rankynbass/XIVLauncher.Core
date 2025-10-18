@@ -1,4 +1,10 @@
 # Changelog
+### Sat October 18 2025 Rankyn Bass <rankyn@proton.me>
+1.2.1.5
+- NTsync toggle now works with cachyos-proton
+- XL_PATH can be used as an alias for XL_USERDIR
+- Added a workaround for AppImage builds. Umu-launcher causes a memory overflow and cpu usage spike which can hang the system.
+
 ### Sun August 24 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.4
 - Fixed searching /usr/share/steam/compatibilitytools.d for proton releases. Previously, they were found, but accidentally given the wrong location in ~/.steam/steam/compatibilitytools.d instead.
