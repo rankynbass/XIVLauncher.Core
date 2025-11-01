@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.InteropServices.Marshalling;
 
 using CheapLoc;
 
@@ -767,8 +768,21 @@ public class MainPage : Page
                 else if (!WineSettings.IsValidWineBinaryPath(App.Settings.RB_WineBinaryPath) && !WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath))
                     throw new InvalidOperationException("Custom wine binary path is invalid: no wine, wine64, or proton found at that location.\n" +
                                                         "Check path carefully for typos: " + App.Settings.RB_WineBinaryPath);
+                Log.Information($"[WINE] Using Custom Wine/Proton: {App.Settings.RB_WineBinaryPath}");
+                Log.Information($"[DXVK] Using Dxvk: {App.Settings.RB_DxvkVersion}");
+                Log.Information($"[DXVK] Dxvk Enabled (Proton): {App.Settings.RB_DxvkEnabled.ToString()}");
             }
-
+            else if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton)
+            {
+                Log.Information($"[WINE] Using Proton: {App.Settings.RB_ProtonVersion}");
+                Log.Information($"[DXVK] Dxvk Enabled: {App.Settings.RB_DxvkEnabled.ToString()}");
+            }
+            else
+            {
+                Log.Information($"[WINE] Using Managed Wine: {App.Settings.RB_WineVersion}");
+                Log.Information($"[DXVK] Using Dxvk: {App.Settings.RB_DxvkVersion}");
+            }
+            
             var signal = new ManualResetEvent(false);
             var isFailed = false;
 
