@@ -1,4 +1,12 @@
 # Changelog
+### Sun December 21 2025 Rankyn Bass <rankyn@proton.me>
+1.2.1.7
+- Fix for latest Proton-GE and Proton-CachyOS.
+
+### Sun December 21 2025 Rankyn Bass <rankyn@proton.me>
+1.2.1.6
+- Fixed launching with Dalamud. You don't need the DOTNET_ROOT environment variable any more.
+
 ### Sat October 18 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.5
 - NTsync toggle now works with cachyos-proton
