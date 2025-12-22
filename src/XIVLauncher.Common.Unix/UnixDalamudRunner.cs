@@ -39,8 +39,11 @@ public class UnixDalamudRunner : IDalamudRunner
         );
 
         var prevDalamudRuntime = Environment.GetEnvironmentVariable("DALAMUD_RUNTIME");
-        if (string.IsNullOrWhiteSpace(prevDalamudRuntime))
-            environment.Add("DALAMUD_RUNTIME", dotnetRuntimePath);
+        if (!string.IsNullOrWhiteSpace(prevDalamudRuntime))
+            dotnetRuntimePath = prevDalamudRuntime;
+
+        environment.Add("DALAMUD_RUNTIME", dotnetRuntimePath);
+        environment.Add("DOTNET_ROOT", dotnetRuntimePath);
 
         var launchArguments = new List<string>
         {
