@@ -1319,5 +1319,48 @@ namespace XIVLauncher.Core.Resources.Localization {
                 return ResourceManager.GetString("MangoHudFileNotFound", resourceCulture);
             }
         }
+
+        /* Troubleshooting Tab */
+        internal static string HideWineExportsHack {
+            get {
+                return ResourceManager.GetString("HideWineExportsHack", resourceCulture);
+            }
+        }
+
+        internal static string HideWineExportsHackDescription {
+            get {
+                return ResourceManager.GetString("HideWineExportsHackDescription", resourceCulture);
+            }
+        }
+
+        internal static string ClearDalamudFilesTroubleshooting {
+            get {
+                return ResourceManager.GetString("ClearDalamudFilesTroubleshooting", resourceCulture);
+            }
+        }
+
+        internal static string ClearDalamudPluginsTroubleshooting {
+            get {
+                return ResourceManager.GetString("ClearDalamudPluginsTroubleshooting", resourceCulture);
+            }
+        }
+
+        internal static string ClearDalamudPluginsTroubleshootingButton {
+            get {
+                return ResourceManager.GetString("ClearDalamudPluginsTroubleshootingButton", resourceCulture);
+            }
+        }
+
+        internal static string ClearNvngxTroubleshooting {
+            get {
+                return ResourceManager.GetString("ClearNvngxTroubleshooting", resourceCulture);
+            }
+        }
+
+        internal static string ClearNvngxTroubleshootingButton {
+            get {
+                return ResourceManager.GetString("ClearNvngxTroubleshootingButton", resourceCulture);
+            }
+        }
     }
 }

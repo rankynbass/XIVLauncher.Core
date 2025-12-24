@@ -702,4 +702,25 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
     <data name="MangoHudFileNotFound" xml:space="preserve">
         <value>Could not find MangoHud! MangoHud options may not work.</value>
     </data>
+    <data name="HideWineExportsHack" xml:space="preserve">
+        <value>Hack: Hide Wine Exports</value>
+    </data>
+    <data name="HideWineExportsHackDescription" xml:space="preserve">
+        <value>Default is True. Disabling this may allow certain wine versions to work with steam.</value>
+    </data>
+    <data name="ClearDalamudFilesTroubleshooting" xml:space="preserve">
+        <value>Clear all the files and folders related to Dalamud. This will not uninstall your plugins or their configurations.</value>
+    </data>
+    <data name="ClearDalamudPluginsTroubleshooting" xml:space="preserve">
+        <value>Clear all the files and folders related to Dalamud. Your settings will not be touched, but all your plugins will be uninstalled, including custom repos.</value>
+    </data>
+    <data name="ClearDalamudPluginsTroubleshootingButton" xml:space="preserve">
+        <value>Clear Plugins</value>
+    </data>
+    <data name="ClearNvngxTroubleshooting" xml:space="preserve">
+        <value>Clear the nvngx files from your game folder.</value>
+    </data>
+    <data name="ClearNvngxTroubleshootingButton" xml:space="preserve">
+        <value>Clear Nvngx</value>
+    </data>
 </root>

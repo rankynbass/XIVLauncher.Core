@@ -35,7 +35,7 @@ public class SettingsTabTroubleshooting : SettingsTab
                 return null;
             },
         },
-        new SettingsEntry<bool>("Hack: Hide Wine Exports", "Default is True. Disabling this may allow certain wine versions to work with steam.", () => Program.Config.FixHideWineExports ?? true, b => Program.Config.FixHideWineExports = b),
+        new SettingsEntry<bool>(Strings.HideWineExportsHack, Strings.HideWineExportsHackDescription, () => Program.Config.FixHideWineExports ?? true, b => Program.Config.FixHideWineExports = b),
         new SettingsEntry<bool>(Strings.ForceDontUseSystemTZ, Strings.ForceDontUseSystemDescription, () => Program.Config.DontUseSystemTz ?? true, x => Program.Config.DontUseSystemTz = x)
         {
             CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix
@@ -79,23 +79,23 @@ public class SettingsTabTroubleshooting : SettingsTab
         }
         ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearManagedCompatToolsTroubleshooting);
 
-        ImGui.Text("\nClear nvngx dlls from game folder");
-        if (ImGui.Button("Clear Nvngx"))
+        if (ImGui.Button(Strings.ClearNvngxTroubleshootingButton))
         {
             Program.ClearNvngx();
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearNvngxTroubleshooting);
 
-        ImGui.Text("\nClear all the files and folders related to Dalamud. This will not uninstall your plugins or their configurations.");
-        if (ImGui.Button("Clear Dalamud"))
+        if (ImGui.Button(Strings.ClearDalamudTroubleshootingButton))
         {
             Program.ClearDalamud(true);
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearDalamudFilesTroubleshooting);
 
-        ImGui.Text("\nClear the installedPlugins folder. This will uninstall your plugins, but will not remove their configurations.");
-        if (ImGui.Button("Clear Plugins"))
+        if (ImGui.Button(Strings.ClearDalamudPluginsTroubleshootingButton))
         {
             Program.ClearPlugins();
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearDalamudPluginsTroubleshooting);
 
         if (ImGui.Button(Strings.ClearAllLogsTroubleshootingButton))
         {
