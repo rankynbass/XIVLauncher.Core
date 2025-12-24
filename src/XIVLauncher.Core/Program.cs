@@ -1,13 +1,13 @@
-using CheapLoc;
+using System.Globalization;
+using System.Numerics;
+using System.Resources;
+using System.Runtime.InteropServices;
 
 using Config.Net;
 
 using ImGuiNET;
 
 using Serilog;
-
-using System.Numerics;
-using System.Runtime.InteropServices;
 
 using Veldrid;
 using Veldrid.Sdl2;
@@ -17,6 +17,7 @@ using XIVLauncher.Common;
 using XIVLauncher.Common.Dalamud;
 using XIVLauncher.Common.Game.Patch;
 using XIVLauncher.Common.Game.Patch.Acquisition;
+using XIVLauncher.Common.Game.Patch.Acquisition.Aria;
 using XIVLauncher.Common.PlatformAbstractions;
 using XIVLauncher.Common.Support;
 using XIVLauncher.Common.Unix;
@@ -34,6 +35,7 @@ using XIVLauncher.Core.Accounts.Secrets.Providers;
 using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
+using XIVLauncher.Core.Resources.Localization;
 using XIVLauncher.Core.Style;
 
 namespace XIVLauncher.Core;
@@ -105,9 +107,13 @@ sealed class Program
 
         if (Config.GamePath == null)
         {
-            var envPath = Environment.GetEnvironmentVariable("STEAM_COMPAT_INSTALL_PATH"); // auto-set when using compat tool
-            Config.GamePath = !string.IsNullOrWhiteSpace(envPath)
-                ? new DirectoryInfo(envPath)
+            var compatGamePath = Environment.GetEnvironmentVariable("STEAM_COMPAT_INSTALL_PATH"); // auto-set when using compat tool
+            var compatGameId = Environment.GetEnvironmentVariable("STEAM_COMPAT_APP_ID"); // auto-set when using compat tool
+            // Set the game path to the game's installation directory if its either the full game or free trial.
+            Config.GamePath = !string.IsNullOrWhiteSpace(compatGamePath) &&
+                              int.TryParse(compatGameId, out int compatGameIdParsed) &&
+                              (compatGameIdParsed == STEAM_APP_ID || compatGameIdParsed == STEAM_APP_ID_FT)
+                ? new DirectoryInfo(compatGamePath)
                 : storage.GetFolder("ffxiv");
         }
 
@@ -116,7 +122,6 @@ sealed class Program
         Config.DpiAwareness ??= DpiAwareness.Unaware;
         Config.IsAutologin ??= false;
         Config.CompletedFts ??= false;
-        Config.DoVersionCheck ??= true;
         Config.FontPxSize ??= 22.0f;
 
         Config.IsEncryptArgs ??= true;
@@ -154,6 +159,7 @@ sealed class Program
         Config.FixError127 ??= false;
         Config.FixHideWineExports ??= true;
         Config.FixBrokenLsteamclient ??= false;
+        Config.DontUseSystemTz ??= false;
 
         // RB-patched replacement vars
         Config.RB_WineStartupType ??= RBWineStartupType.Managed;
@@ -217,7 +223,7 @@ sealed class Program
         {
             runnerOverride = new FileInfo(Path.Combine(Config.DalamudManualInjectPath.FullName, DALAMUD_INJECTOR_NAME));
         }
-        return new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), storage.Root, null, null)
+        return new DalamudUpdater(storage.GetFolder("dalamud"), storage.GetFolder("runtime"), storage.GetFolder("dalamudAssets"), null, null)
         {
             Overlay = DalamudLoadInfo,
             RunnerOverride = runnerOverride
@@ -280,20 +286,23 @@ sealed class Program
 
         Secrets = GetSecretProvider(storage);
 
-        Loc.SetupWithFallbacks();
-
         Dictionary<uint, string> apps = [];
-        uint[] ignoredIds = [0, STEAM_APP_ID, STEAM_APP_ID_FT];
-        if (!ignoredIds.Contains(CoreEnvironmentSettings.SteamAppId))
+        if (CoreEnvironmentSettings.SteamAppId != 0)
         {
             apps.Add(CoreEnvironmentSettings.SteamAppId, "XLM");
         }
-        if (!ignoredIds.Contains(CoreEnvironmentSettings.AltAppID))
+        if (CoreEnvironmentSettings.AltAppID != 0)
         {
             apps.Add(CoreEnvironmentSettings.AltAppID, "XL_APPID");
         }
-        apps.Add(STEAM_APP_ID, "FFXIV Retail");
-        apps.Add(STEAM_APP_ID_FT, "FFXIV Free Trial");
+        if (!apps.ContainsKey(STEAM_APP_ID))
+        {
+            apps.Add(STEAM_APP_ID, "FFXIV Retail");
+        }
+        if (!apps.ContainsKey(STEAM_APP_ID_FT))
+        {
+            apps.Add(STEAM_APP_ID_FT, "FFXIV Free Trial");
+        }
         try
         {
             switch (Environment.OSVersion.Platform)
@@ -334,7 +343,7 @@ sealed class Program
         // Manual or auto injection setup.
         DalamudLoadInfo = new DalamudOverlayInfoProxy();
         DalamudUpdater = CreateDalamudUpdater();
-        DalamudUpdater.Run();
+        DalamudUpdater.Run(Config.DalamudBetaKind, Config.DalamudBetaKey);
 
         CreateCompatToolsInstance();
 
@@ -404,15 +413,19 @@ sealed class Program
             graphicsDevice.Dispose();
 
         HttpClient.Dispose();
-
         if (Patcher is not null)
         {
-            Patcher.CancelAllDownloads();
-            Task.Run(async () =>
+            Patcher.StartCancellation();
+            // PatchManager.UnInitializeAcquisition() is private but the function bellow is the only call that is in the method and is public accessible
+            try
             {
-                await PatchManager.UnInitializeAcquisition().ConfigureAwait(false);
+                AriaHttpPatchAcquisition.UnInitializeAsync().ConfigureAwait(false);
                 Environment.Exit(0);
-            });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Could not uninitialize patch acquisition.");
+            }
         }
     }
 
@@ -540,7 +553,7 @@ sealed class Program
         {
             DalamudLoadInfo = new DalamudOverlayInfoProxy();
             DalamudUpdater = CreateDalamudUpdater();
-            DalamudUpdater.Run();
+            DalamudUpdater.Run(Config.DalamudBetaKind, Config.DalamudBetaKey);
         }
     }
 

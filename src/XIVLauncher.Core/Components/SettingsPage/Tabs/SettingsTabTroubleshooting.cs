@@ -1,6 +1,7 @@
 using ImGuiNET;
 
 using XIVLauncher.Common.Util;
+using XIVLauncher.Core.Resources.Localization;
 using XIVLauncher.Core.Support;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
@@ -9,46 +10,75 @@ public class SettingsTabTroubleshooting : SettingsTab
 {
     public override SettingsEntry[] Entries { get; } =
     {
-        new SettingsEntry<bool>("Hack: Disable gameoverlayrenderer.so", "May fix black screen on launch (Steam Deck) and some stuttering issues after 40+ minutes.", () => Program.Config.FixLDP ?? false, x => Program.Config.FixLDP = x),
-        new SettingsEntry<bool>("Hack: XMODIFIERS=\"@im=null\"", "Fixes some mouse-related issues, some stuttering issues", () => Program.Config.FixIM ?? false, x => Program.Config.FixIM = x),
-        new SettingsEntry<bool>("Hack: Fix libicuuc Dalamud error", "Fixes a specific \"an internal Dalamud error has occurred.\" In the terminal you will see this text:\n\"Cannot get symbol u_charsToUChars from libicuuc Error: 127\"", () => Program.Config.FixError127 ?? false, x => Program.Config.FixError127 = x),
-        new SettingsEntry<bool>($"Hack: Force locale to {(!string.IsNullOrEmpty(Program.CType) ? Program.CType : "C.UTF-8 (exact value depends on distro)")}",
-                                !string.IsNullOrEmpty(Program.CType) ? $"Sets LC_ALL and LC_CTYPE to \"{Program.CType}\". This can fix some issues with non-Latin unicode characters in file paths if LANG is not a UTF-8 type" : "Hack Disabled. Could not find a UTF-8 C locale. You may have to set LC_ALL manually if LANG is not a UTF-8 type.",
+        new SettingsEntry<bool>(Strings.DisableGameoverlayRendererHack, Strings.DisableGameoverlayRendererHackDescription, () => Program.Config.FixLDP ?? false, x => Program.Config.FixLDP = x)
+        {
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix
+        },
+        new SettingsEntry<bool>(Strings.XModifiersHack, Strings.XModifiersHackDescription, () => Program.Config.FixIM ?? false, x => Program.Config.FixIM = x)
+        {
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix
+        },
+        new SettingsEntry<bool>(Strings.FixLibICUUCErrorHack, Strings.FixLibICUUCErrorHackDescription, () => Program.Config.FixError127 ?? false, x => Program.Config.FixError127 = x)
+        {
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix
+        },
+        new SettingsEntry<bool>(string.Format(Strings.ForceLocaleHack, (!string.IsNullOrEmpty(Program.CType) ? Program.CType : Strings.ForceLocaleHackCUTF8)),
+                                !string.IsNullOrEmpty(Program.CType) ? string.Format(Strings.ForceLocaleHackDescription, Program.CType) : "Hack Disabled. Could not find a UTF-8 C locale. You may have to set LC_ALL manually if LANG is not a UTF-8 type.",
                                 () => Program.Config.FixLocale ?? false, b => Program.Config.FixLocale = b)
         {
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
             CheckWarning = b =>
             {
                 var lang = CoreEnvironmentSettings.GetCleanEnvironmentVariable("LANG");
                 if (lang.ToUpper().Contains("UTF") && b)
-                    return $"Your locale is \"{lang}\". You probably don't need this hack.";
+                    return string.Format(Strings.ForceLocaleHackUTFValidation, lang);
                 return null;
-            }
+            },
         },
         new SettingsEntry<bool>("Hack: Hide Wine Exports", "Default is True. Disabling this may allow certain wine versions to work with steam.", () => Program.Config.FixHideWineExports ?? true, b => Program.Config.FixHideWineExports = b),
         new SettingsEntry<bool>("Hack: Disable lsteamclient", "Fix for certain cases of \"An internal Dalamud error has occurred.\"", () => Program.Config.FixBrokenLsteamclient ?? false, b => Program.Config.FixBrokenLsteamclient = b),
+        new SettingsEntry<bool>(Strings.ForceDontUseSystemTZ, Strings.ForceDontUseSystemDescription, () => Program.Config.DontUseSystemTz ?? true, x => Program.Config.DontUseSystemTz = x)
+        {
+            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix
+        }
     };
-    public override string Title => "Troubleshooting";
+    public override string Title => Strings.TroubleshootingTitle;
 
     public override void Draw()
     {
+        ImGui.TextDisabled("Fixes");
+        ImGui.Spacing();
         base.Draw();
 
         ImGui.Separator();
+        ImGui.TextDisabled("Logs");
+        ImGui.Spacing();
+        if (ImGui.Button(Strings.GenerateTSPackTroubleshootingButton))
+        {
+            PackGenerator.SavePack(Program.storage);
+            PlatformHelpers.OpenBrowser(Program.storage.GetFolder("logs").FullName);
+        }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.GenerateTSPackTroubleshooting);
 
-        ImGui.Text("\nClear the Wine and Proton Prefixes - delete the ~/.xlcore/wineprefix and ~/.xlcore/protonprefix folders");
-        if (ImGui.Button("Clear Prefix"))
+        ImGui.Separator();
+        ImGui.TextDisabled("Cleanup");
+        ImGui.TextColored(ImGuiColors.DalamudRed, Strings.TroubleshootingDestructiveActionWarning);
+        ImGui.Spacing();
+
+        if (ImGui.Button(Strings.ClearWINEPrefixTroubleshootingButton))
         {
             Program.ClearPrefix();
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearWINEPrefixTroubleshooting);
 
-        ImGui.Text("\nClear the managed Wine install and DXVK");
-        if (ImGui.Button("Clear Wine & DXVK"))
+        if (ImGui.Button(Strings.ClearManagedCompatToolsTroubleshootingButton))
         {
             Program.ClearTools(true);
             Program.WineManager.Reload();
             Program.DxvkManager.Reload();
             Program.NvapiManager.Reload();
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearManagedCompatToolsTroubleshooting);
 
         ImGui.Text("\nClear nvngx dlls from game folder");
         if (ImGui.Button("Clear Nvngx"))
@@ -68,29 +98,22 @@ public class SettingsTabTroubleshooting : SettingsTab
             Program.ClearPlugins();
         }
 
-        ImGui.Text("\nClear all the log files.");
-        if (ImGui.Button("Clear Logs"))
+        if (ImGui.Button(Strings.ClearAllLogsTroubleshootingButton))
         {
             Program.ClearLogs(true);
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ClearAllLogsTroubleshooting);
 
-        ImGui.Text("\nReset settings to default.");
-        if (ImGui.Button("Clear Settings"))
+        if (ImGui.Button(Strings.ResetSettingsTroubleshootingButton))
         {
             Program.ClearSettings(true);
         }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ResetSettingsTroubleshooting);
 
-        ImGui.Text("\nDo all of the above.");
-        if (ImGui.Button("Clear Everything"))
+        if (ImGui.Button(Strings.ResetAllTroubleshootingButton))
         {
             Program.ClearAll(true);
         }
-
-        ImGui.Text("\nGenerate a troubleshooting pack to upload to the official Discord channel");
-        if (ImGui.Button("Generate tspack"))
-        {
-            PackGenerator.SavePack(Program.storage);
-            PlatformHelpers.OpenBrowser(Program.storage.GetFolder("logs").FullName);
-        }
+        ImGui.TextColored(ImGuiColors.DalamudGrey, Strings.ResetAllTroubleshooting);
     }
 }

@@ -7,6 +7,7 @@ using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
 using XIVLauncher.Common.Unix.Compatibility.Wine;
 using XIVLauncher.Common.Util;
+using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -24,11 +25,11 @@ public class SettingsTabWine : SettingsTab
     {
         Entries = new SettingsEntry[]
         {
-            startupTypeSetting = new SettingsEntry<RBWineStartupType>("Wine/Proton Install", "Choose how XIVLauncher will start and manage your wine installation.",
+            startupTypeSetting = new SettingsEntry<RBWineStartupType>(Strings.WineInstallSetting, Strings.WineInstallSettingDescription,
                 () => Program.Config.RB_WineStartupType ?? RBWineStartupType.Managed, x => Program.Config.RB_WineStartupType = x),
 
-            wineVersionSetting = new WineSettingsEntry("Wine Version", "Choose which Wine version to use. You may need to scroll down in menu to see custom versions.", () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULTWINE,
-                s => Program.Config.RB_WineVersion = s, Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE )
+            wineVersionSetting = new WineSettingsEntry(Strings.WineVersionSetting, Strings.WineVersionSettingDescription, () => Program.Config.RB_WineVersion ?? Program.WineManager.DEFAULTWINE,
+                x => Program.Config.RB_WineVersion = x, Program.WineManager.WineVersion, Program.WineManager.DEFAULTWINE )
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed,
             },
@@ -65,20 +66,28 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable Feral's GameMode", "Enable launching with Feral Interactive's GameMode CPU optimizations.", () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
+            new SettingsEntry<bool>(Strings.EnableFeralGameModeSetting, Strings.EnableFeralGameModeSettingDescription, () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
                 CheckWarning = b =>
                 {
-                    return (Program.IsGameModeInstalled) ? null : "GameMode was not detected on your system.";
+                    if (b == true && FeralGameModeFound == false)
+                        return Strings.EnableFeralGameModeNotFoundValidation;
+                    return null;
                 }
             },
 
-            new SettingsEntry<bool>("Enable ESync", "Enable eventfd-based synchronization.", () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
-            
-            new SettingsEntry<bool>("Enable FSync", "Enable fast user mutex (futex2).", () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
+            new SettingsEntry<bool>(Strings.EnableESyncSetting, Strings.EnableESyncSettingDescription, () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
+            new SettingsEntry<bool>(Strings.EnableFSyncSetting, Strings.EnableFSyncSettingDescription, () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+                CheckValidity = b =>
+                {
+                    if (b == true && (Environment.OSVersion.Version.Major < 5 && (Environment.OSVersion.Version.Minor < 16 || Environment.OSVersion.Version.Major < 6)))
+                        return Strings.EnableFSyncSettingMinKernelValidation;
+
+                    return null;
+                }
             },
 
             new SettingsEntry<bool>("Enable NTSync", "Enable NTSync. Requires a compatible kernel.", () => Program.Config.NTSyncEnabled ?? false, b => Program.Config.NTSyncEnabled = b)
@@ -91,9 +100,9 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
-            new SettingsEntry<bool>("Set Windows version to 7", "Default for Wine 8.1+ is Windows 10, but this causes issues with some Dalamud plugins. Windows 7 is recommended for Legacy Wine.", () => Program.Config.SetWin7 ?? false, b => Program.Config.SetWin7 = b),
+            new SettingsEntry<bool>(Strings.SetWindows7Setting, Strings.SetWindows7SettingDescription, () => Program.Config.SetWin7 ?? true, b => Program.Config.SetWin7 = b),
 
-            new SettingsEntry<string>("WINEDEBUG Variables", "Configure debug logging for wine. Useful for troubleshooting.", () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
+            new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };
     }
 
@@ -101,7 +110,22 @@ public class SettingsTabWine : SettingsTab
 
     public override bool IsUnixExclusive => true;
 
-    public override string Title => "Wine";
+    public override string Title => Strings.WineTitle;
+
+    private bool? feralGameModeFound = null;
+
+    private bool FeralGameModeFound
+    { 
+        get
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
+            if (feralGameModeFound != null) return feralGameModeFound ?? false;
+            var handle = IntPtr.Zero;
+            feralGameModeFound = (NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle));
+            NativeLibrary.Free(handle);
+            return feralGameModeFound ?? false;            
+        }
+    }
 
     public override void Draw()
     {
@@ -117,31 +141,31 @@ public class SettingsTabWine : SettingsTab
         if (!Program.CompatibilityTools.IsToolDownloaded)
         {
             ImGui.BeginDisabled();
-            ImGui.Text("Compatibility tool isn't set up. Please start the game at least once.");
+            ImGui.Text(Strings.CompatibilityToolNotSetup);
 
             ImGui.Dummy(new Vector2(10));
         }
 
-        if (ImGui.Button("Open prefix"))
+        if (ImGui.Button(Strings.OpenWINEPrefix))
         {
             PlatformHelpers.OpenBrowser(Program.CompatibilityTools.Settings.Prefix.FullName);
         }
 
         ImGui.SameLine();
 
-        if (ImGui.Button("Open Wine configuration"))
+        if (ImGui.Button(Strings.OpenWINEConfiguration))
         {
             Program.CompatibilityTools.RunInPrefix("winecfg");
         }
 
         ImGui.SameLine();
 
-        if (ImGui.Button("Open Wine explorer (run apps in prefix)"))
+        if (ImGui.Button(Strings.OpenWINEExplorer))
         {
             Program.CompatibilityTools.RunInPrefix("explorer");
         }
 
-        if (ImGui.Button("Kill all wine processes"))
+        if (ImGui.Button(Strings.KillAllWINEProcesses))
         {
             Program.CompatibilityTools.Kill();
         }
