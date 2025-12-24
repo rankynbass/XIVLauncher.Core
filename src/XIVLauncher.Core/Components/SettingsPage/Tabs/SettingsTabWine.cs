@@ -34,14 +34,13 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Managed,
             },
 
-            protonVersionSetting = new WineSettingsEntry("Proton Version", "Choose which Proton version to use. You may need to scroll down in menu to see custom versions.", () => Program.Config.RB_ProtonVersion ?? Program.WineManager.DEFAULTPROTON,
+            protonVersionSetting = new WineSettingsEntry(Strings.ProtonVersionSetting, Strings.ProtonVersionSettingDescription, () => Program.Config.RB_ProtonVersion ?? Program.WineManager.DEFAULTPROTON,
                 s => Program.Config.RB_ProtonVersion = s, Program.WineManager.ProtonVersion, Program.WineManager.DEFAULTPROTON)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton,
             },
 
-            wineCustomBinaryPath = new SettingsEntry<string>("Wine or Proton Binary Path",
-                "Set the path XIVLauncher will use to run applications via Wine/Proton.\nIt should be an absolute path to a folder containing wine and/or win64 and wineserver binaries, or the proton binary.",
+            wineCustomBinaryPath = new SettingsEntry<string>(Strings.CustomWineOrProtonSetting, Strings.CustomWineOrProtonSetting,
                 () => Program.Config.RB_WineBinaryPath, s => Program.Config.RB_WineBinaryPath = s)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Custom,
@@ -51,17 +50,17 @@ public class SettingsTabWine : SettingsTab
                     {
                         return null;
                     }
-                    return "Invalid wine or proton path.";
+                    return Strings.CustomWineOrProtonInvalid;
                 },
             },
 
-            new SettingsEntry<RBUmuLauncherType>("Umu Launcher", "Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).", () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
+            new SettingsEntry<RBUmuLauncherType>(Strings.UmuLauncherSetting, Strings.UmuLauncherSettingDescription, () => Program.Config.RB_UmuLauncher ?? RBUmuLauncherType.System, x => Program.Config.RB_UmuLauncher = x)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
                 CheckWarning = x =>
                 {
                     if (x != RBUmuLauncherType.Disabled && CoreEnvironmentSettings.IsAppImage)
-                        return "AppImage Users: If you have issues with your system hanging while using Proton, set this to Disabled.";
+                        return Strings.UmuLauncherWarning;
                     return null;
                 }
             },
@@ -90,12 +89,12 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>("Enable NTSync", "Enable NTSync. Requires a compatible kernel.", () => Program.Config.NTSyncEnabled ?? false, b => Program.Config.NTSyncEnabled = b)
+            new SettingsEntry<bool>(Strings.NTSyncSetting, Strings.NTSyncSettingDescription, () => Program.Config.NTSyncEnabled ?? false, b => Program.Config.NTSyncEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
-            new SettingsEntry<bool>("Enable Wayland Driver", "Enable Wine's experimental Wayland Driver.", () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b)
+            new SettingsEntry<bool>(Strings.WaylandSetting, Strings.WaylandSettingDescription, () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },

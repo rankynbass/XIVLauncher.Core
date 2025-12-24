@@ -582,4 +582,124 @@ Please try again later.</value>
         <value>An error occurred while repairing the game files.
 You may have to reinstall the game.</value>
     </data>
+<!-- RB-patched strings -->
+    <data name="ExtraWineDLLOverridesSetting" xml:space="preserve">
+        <value>Extra WINEDLLOVERRIDES</value>
+    </data>
+    <data name="ExtraWineDLLOverridesSettingDescription" xml:space="preserve">
+        <value>Add extra WINEDLLOVERRIDES. No spaces, semicolon separated.
+Do not use msquic, mscoree, d3d9, d3d10core, d3d11 or dxgi. These are already set.</value>
+    </data>
+    <data name="ExtraWineDLLOverridesInvalid" xml:space="preserve">
+        <value>Not a valid WINEDLOVERRIDE string</value>
+    </data>
+    <data name="ProtonVersionSetting" xml:space="preserve">
+        <value>Proton Version</value>
+    </data>
+    <data name="ProtonVersionSettingDescription" xml:space="preserve">
+        <value>Choose which Proton version to use. You may need to scroll down in menu to see custom versions.</value>
+    </data>
+    <data name="CustomWineOrProtonSetting" xml:space="preserve">
+        <value>Wine or Proton Binary Path</value>
+    </data>
+    <data name="CustomWineOrProtonSettingDescription" xml:space="preserve">
+        <value>Set the path XIVLauncher will use to run applications via Wine/Proton.
+It should be an absolute path to a folder containing wine and/or win64 and wineserver binaries, or the proton binary.</value>
+    </data>
+    <data name="CustomWineOrProtonInvalid" xml:space="preserve">
+        <value>Invalid wine or proton path.</value>
+    </data>
+    <data name="UmuLauncherSetting" xml:space="preserve">
+        <value>Umu Launcher</value>
+    </data>
+    <data name="UmuLauncherSettingDescription" xml:space="preserve">
+        <value>Use Umu Launcher to run Proton inside the Steam Runtime container (recommended).</value>
+    </data>
+    <data name="UmuLauncherWarning" xml:space="preserve">
+        <value>AppImage Users: If you have issues with your system hanging while using Proton, set this to Disabled.</value>
+    </data>
+    <data name="NTSyncSetting" xml:space="preserve">
+        <value>Enable NTSync</value>
+    </data>
+    <data name="NTSyncSettingDescription" xml:space="preserve">
+        <value>Proton only. Requires the NTSync kernel module. (Linux kernel 6.14+)</value>
+    </data>
+    <data name="WaylandSetting" xml:space="preserve">
+        <value>Enable Wayland Driver</value>
+    </data>
+    <data name="WaylandSettingDescription" xml:space="preserve">
+        <value>Enable Wine's experimental Wayland Driver.</value>
+    </data>
+    <data name="GPLAsyncSetting" xml:space="preserve">
+        <value>Enable GPLAsync Cache</value>
+    </data>
+    <data name="GPLAsyncSettingDescription" xml:space="preserve">
+        <value>Enable GPLAsync Cache. Only for dxvk-gplasync 2.6.x and earlier.</value>
+    </data>
+    <data name="NvapiVersionSetting" xml:space="preserve">
+        <value>DXVK-Nvapi Version (Needed for DLSS)</value>
+    </data>
+    <data name="NvapiVersionSettingDescription" xml:space="preserve">
+        <value>Choose which version of DXVK-Nvapi to use. Needs Wine 9.0+ and DXVK 2.0+</value>
+    </data>
+    <data name="WineD3DSetting" xml:space="preserve">
+        <value>Enable WineD3D Vulkan Renderer</value>
+    </data>
+    <data name="WineD3DSettingDescription" xml:space="preserve">
+        <value>Use WineD3D's experimental Vulkan renderer. May be buggy or unstable. Only works if DXVK is disabled.</value>
+    </data>
+    <data name="ProtonDXVKSetting" xml:space="preserve">
+        <value>Enable DXVK</value>
+    </data>
+    <data name="ProtonDXVKSettingDescription" xml:space="preserve">
+        <value>Disable to use WineD3D instead</value>
+    </data>
+    <data name="ProtonNvapiSetting" xml:space="preserve">
+        <value>Enable DXVK-Nvapi (Needed for DLSS)</value>
+    </data>
+    <data name="ProtonNvapiSettingDescription" xml:space="preserve">
+        <value>Requires DXVK and compatible NVIDIA GPU to work.</value>
+    </data>
+    <data name="FrameRateSetting" xml:space="preserve">
+        <value>Frame Rate Limit (DXVK only)</value>
+    </data>
+    <data name="FrameRateSettingDescription" xml:space="preserve">
+        <value>Set a frame rate limit of 30 or higher. Use 0 for unlimited.</value>
+    </data>
+    <data name="FrameRateInvalid" xml:space="preserve">
+        <value>Invalid frame rate. It must be 0 (unlimited) or 30+</value>
+    </data>
+    <data name="DXVKOverlaySetting" xml:space="preserve">
+        <value>DXVK Overlay</value>
+    </data>
+    <data name="DXVKOverlayDescription" xml:space="preserve">
+        <value>Choose an overlay. DXVK Hud and MangoHud are supported.</value>
+    </data>
+    <data name="MangoHudNotFound" xml:space="preserve">
+        <value>Could not find MangoHud! MangoHud options may not work.</value>
+    </data>
+    <data name="DXVKHudCustomSetting" xml:space="preserve">
+        <value>DXVK Hud Custom String</value>
+    </data>
+    <data name="DXVKHudCustomDescription" xml:space="preserve">
+        <value>Custom string for DXVK Hud.</value>
+    </data>
+    <data name="DXVKHudCustomInvalid" xml:space="preserve">
+        <value>DXVK Hud string is invalid.</value>
+    </data>
+    <data name="MangoHudStringSetting" xml:space="preserve">
+        <value>MangoHud config string</value>
+    </data>
+    <data name="MangoHudStringSettingDescription" xml:space="preserve">
+        <value>Use a string to define MangoHud settings.</value>
+    </data>
+    <data name="MangoHudFileSetting" xml:space="preserve">
+        <value>MangoHud config file</value>
+    </data>
+    <data name="MangoHudFileSettingDescription" xml:space="preserve">
+        <value>Use a file to define MangoHud settings.</value>
+    </data>
+    <data name="MangoHudFileNotFound" xml:space="preserve">
+        <value>Could not find MangoHud! MangoHud options may not work.</value>
+    </data>
 </root>

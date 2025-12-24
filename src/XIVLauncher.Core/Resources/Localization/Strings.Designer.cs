@@ -1082,5 +1082,242 @@ namespace XIVLauncher.Core.Resources.Localization {
                 return ResourceManager.GetString("RepairFailureError", resourceCulture);
             }
         }
+
+        /* RB-patched strings. */
+        /* Game tab */
+        internal static string ExtraWineDLLOverridesSetting {
+            get {
+                return ResourceManager.GetString("ExtraWineDLLOverridesSetting", resourceCulture);
+            }
+        }
+
+        internal static string ExtraWineDLLOverridesSettingDescription {
+            get {
+                return ResourceManager.GetString("ExtraWineDLLOverridesSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string ExtraWineDLLOverridesInvalid {
+            get {
+                return ResourceManager.GetString("ExtraWineDLLOverridesInvalid", resourceCulture);
+            }
+        }
+
+        /* Wine Tab */
+        internal static string ProtonVersionSetting {
+            get {
+                return ResourceManager.GetString("ProtonVersionSetting", resourceCulture);
+            }
+        }
+
+        internal static string ProtonVersionSettingDescription {
+            get {
+                return ResourceManager.GetString("ProtonVersionSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string CustomWineOrProtonSetting {
+            get {
+                return ResourceManager.GetString("CustomWineOrProtonSetting", resourceCulture);
+            }
+        }
+
+        internal static string CustomWineOrProtonSettingDescription {
+            get {
+                return ResourceManager.GetString("CustomWineOrProtonSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string CustomWineOrProtonInvalid {
+            get {
+                return ResourceManager.GetString("CustomWineOrProtonInvalid", resourceCulture);
+            }
+        }
+
+        internal static string UmuLauncherSetting {
+            get {
+                return ResourceManager.GetString("UmuLauncherSetting", resourceCulture);
+            }
+        }
+
+        internal static string UmuLauncherSettingDescription {
+            get {
+                return ResourceManager.GetString("UmuLauncherSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string UmuLauncherWarning {
+            get {
+                return ResourceManager.GetString("UmuLauncherWarning", resourceCulture);
+            }
+        }
+
+        internal static string NTSyncSetting {
+            get {
+                return ResourceManager.GetString("NTSyncSetting", resourceCulture);
+            }
+        }
+
+        internal static string NTSyncSettingDescription {
+            get {
+                return ResourceManager.GetString("NTSyncSettingDescription", resourceCulture);
+            }
+        }
+        internal static string WaylandSetting {
+            get {
+                return ResourceManager.GetString("WaylandSetting", resourceCulture);
+            }
+        }
+
+        internal static string WaylandSettingDescription {
+            get {
+                return ResourceManager.GetString("WaylandSettingDescription", resourceCulture);
+            }
+        }
+
+        /* DXVK Tab */
+        internal static string GPLAsyncSetting {
+            get {
+                return ResourceManager.GetString("GPLAsyncSetting", resourceCulture);
+            }
+        }
+
+        internal static string GPLAsyncSettingDescription {
+            get {
+                return ResourceManager.GetString("GPLAsyncSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string NvapiVersionSetting {
+            get {
+                return ResourceManager.GetString("NvapiVersionSetting", resourceCulture);
+            }
+        }
+
+        internal static string NvapiVersionSettingDescription {
+            get {
+                return ResourceManager.GetString("NvapiVersionSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string WineD3DSetting {
+            get {
+                return ResourceManager.GetString("WineD3DSetting", resourceCulture);
+            }
+        }
+
+        internal static string WineD3DSettingDescription {
+            get {
+                return ResourceManager.GetString("WineD3DSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string ProtonDXVKSetting {
+            get {
+                return ResourceManager.GetString("ProtonDXVKSetting", resourceCulture);
+            }
+        }
+
+        internal static string ProtonDXVKSettingDescription {
+            get {
+                return ResourceManager.GetString("ProtonDXVKSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string ProtonNvapiSetting {
+            get {
+                return ResourceManager.GetString("ProtonDXVKSetting", resourceCulture);
+            }
+        }
+
+        internal static string ProtonNvapiSettingDescription {
+            get {
+                return ResourceManager.GetString("ProtonDXVKSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string FrameRateSetting {
+            get {
+                return ResourceManager.GetString("FrameRateSetting", resourceCulture);
+            }
+        }
+
+        internal static string FrameRateSettingDescription {
+            get {
+                return ResourceManager.GetString("FrameRateSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string FrameRateInvalid {
+            get {
+                return ResourceManager.GetString("FrameRateInvalid", resourceCulture);
+            }
+        }
+
+        internal static string DXVKOverlaySetting {
+            get {
+                return ResourceManager.GetString("DXVKOverlaySetting", resourceCulture);
+            }
+        }
+
+        internal static string DXVKOverlaySettingDescription {
+            get {
+                return ResourceManager.GetString("DXVKOverlaySettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudNotFound {
+            get {
+                return ResourceManager.GetString("MangoHudNotFound", resourceCulture);
+            }
+        }
+
+        internal static string DXVKHudCustomSetting {
+            get {
+                return ResourceManager.GetString("DXVKHudCustomSetting", resourceCulture);
+            }
+        }
+
+        internal static string DXVKHudCustomSettingDescription {
+            get {
+                return ResourceManager.GetString("DXVKHudCustomSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string DXVKCustomInvalid {
+            get {
+                return ResourceManager.GetString("DXVKHudCustomInvalid", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudStringSetting {
+            get {
+                return ResourceManager.GetString("MangoHudStringSetting", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudStringSettingDescription {
+            get {
+                return ResourceManager.GetString("MangoHudStringSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudFileSetting {
+            get {
+                return ResourceManager.GetString("MangoHudFileSetting", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudFileSettingDescription {
+            get {
+                return ResourceManager.GetString("MangoHudFileSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudFileNotFound {
+            get {
+                return ResourceManager.GetString("MangoHudFileNotFound", resourceCulture);
+            }
+        }
     }
 }
