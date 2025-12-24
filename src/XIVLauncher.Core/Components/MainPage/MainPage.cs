@@ -707,8 +707,6 @@ public class MainPage : Page
                 else
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_UseVulkanWineD3D ?? false);
                 Program.CompatibilityTools.SetHideWineExports(App.Settings.FixHideWineExports ?? true);
-                if (App.Settings.FixBrokenLsteamclient ?? false)
-                    Program.CompatibilityTools.FixBrokenWine();
             }).ContinueWith(t =>
             {
                 isFailed = t.IsFaulted || t.IsCanceled;

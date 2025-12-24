@@ -138,7 +138,7 @@ public class CompatibilityTools
         }
     }
 
-    public async Task EnsureTool(bool realLaunch = true)
+    public async Task EnsureTool()
     {
         // Download Umu Launcher if it's missing.
         if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
@@ -172,24 +172,7 @@ public class CompatibilityTools
             Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
-        if (!Settings.WineRelease.Lsteamclient)
-        {
-            var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
-            if (lsteamclient.Exists)
-            {
-                lsteamclient.Delete();
-                Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
-            }
-        }
-
         EnsurePrefix();
-
-        // Part of a hack to make wine-staging 10.12+ work without crashing first time. Don't know why it's needed. 
-        if (!realLaunch)
-        {
-            IsToolReady = true;
-            return;
-        }
 
         if (isDxvkEnabled)
             await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
@@ -232,6 +215,13 @@ public class CompatibilityTools
 
     public void EnsurePrefix()
     {
+        // There are too many versions of lsteamclient floating around. Always delete before ensuring prefix to prevent crashes.
+        var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
+        if (lsteamclient.Exists)
+        {
+            lsteamclient.Delete();
+            Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
+        }
         var verb = "runinprefix";
         // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
         // That will generate these files.
@@ -243,20 +233,6 @@ public class CompatibilityTools
             verb = "run";
         }
         RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExit();
-    }
-
-    public void FixBrokenWine()
-    {
-        if (Settings.IsProton)
-        {
-            return;
-        }
-        var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
-        if (lsteamclient.Exists)
-        {
-            lsteamclient.Delete();
-            EnsurePrefix();
-        }
     }
 
     public Process RunWithoutRuntime(string command, string verb = "runinprefix", bool redirect = true)
