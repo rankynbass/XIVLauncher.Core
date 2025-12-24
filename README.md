@@ -20,7 +20,7 @@ For an up-to-date changelog, see: [CHANGELOG.md](CHANGELOG.md)
 
 **Before using any of these scripts, run Steam at least once!**
 
-Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed.
+Run one of the following commands to install XIVLauncher-RB as a Steam compatibility tool using XLM. What command you need to run depends on how you have Steam installed. As of 1.2.1.7, it will now install to a different folder than official launcher instead of replacing it.
 
 **Steamdeck**:
 
@@ -48,24 +48,14 @@ After the auto-installer has finished running, follow these steps to use it in S
 2) Navigate to your library and select "FINAL FANTASY XIV Online" or "FINAL FANTASY XIV Online Free Trial" (trial and non-steam users).**&midast;**
 3) Open the game properties menu and switch to the "compatibility" tab.
 4) Enable the "Force the use of a specific Steam Play compatibility tool" checkbox.
-5) From the dropdown that appears select "XLCore [XLM]" (if this does not show, please make sure you restarted Steam first).
+5) From the dropdown that appears select "XLCore-RB [XLM]" (if this does not show, please make sure you restarted Steam first).
 6) You can now launch the game. XIVLauncher-RB will be automatically installed to the compatibilitytools.d directory and start as usual. When you close the game, Steam will recognise this.
 
 **&midast;** If FFXIV or the FFXIV free trial are not available on Steam in your region, you can technically use *any* game. Download a free game from steam and set up the controls how you like for FFXIV, and then set up the compatibility tool as above from step 3.
 
-## Installing as a compatibility tool from the launcher
-Instead of downloading scripts, you can install directly from the launcher. XLM will still keep itself and it's own copy of XIVLauncher-RB up to date.
-1) You'll want to switch to desktop mode and download the latest flatpak file. From the terminal (Konsole) install with `flatpak install --user xivlauncher-rb-v1.1.0.2.flatpak` (or whatever the latest flatpak file is).
-2) Run `XL_USE_STEAM=0 flatpak run dev.rankyn.xivlauncher --deck-install`
-3) Restart Steam. This is necessary to get the compatibility tool to register.
-3) In Steam, do the initial install of FFXIV or FFXIV free trial. You do not have to run the official launcher, you just need to have it installed in your steam library.
-4) Go into the FFXIV properties, and go to Compatibility. Check "Force the use of a specific Steam Play compatibility tool", and select "XLCore [XLM]".
-5) You can now launch the game from desktop mode *or* game mode. Both should work.
-
 ## Deleting the old compatibility tool
-XIVLauncher-RB v1.1.0.13 and earlier contained a different compatibility tool that was not self-updating. You can use the following methods to remove it.
-* From the command line, run the launcher with `XL_USE_STEAM flatpak run dev.rankyn.xivlauncher --delete-old` (flatpak) or `xivlauncher-rb --delete-old` (native install, AppImage).
-* Alternately, find your steam compatibility tool path at `~/.steam/root/compatibilitytools.d` and delete the `xlcore` folder. For the flatpak, it'll be at `~/.var/app/com.valvesoftware/Steam/data/Steam/compatibilitytools.d`.
+Earlier versions of XIVLauncher-RB used a different compatibility tool that was not self-updating. You can use the following methods to remove it.
+* Find your steam compatibility tool path at `~/.steam/root/compatibilitytools.d` and delete the `xlcore` folder. For the flatpak, it'll be at `~/.var/app/com.valvesoftware/Steam/data/Steam/compatibilitytools.d`.
 
 ## Installing Locally (Experimental)
 The vast majority of desktop linux distributions will already have all the dependencies of XIVLauncher already installed. I've checked this on HoloIso, official Steam Deck, Bazzite, Ubuntu 22.04, and Fedora KDE spin, and all of them can launch XIVLauncher out of the box. As such, I've created a local install script which will create a .desktop entry in your application menu. This will use [XLM](https://github.com/Blooym/xlm) to keep XIVLauncher-RB up-to-date and launch the game.
