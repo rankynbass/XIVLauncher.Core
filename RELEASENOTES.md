@@ -1,2 +1,3 @@
-**1.2.1.6**
-- Fixed launching with Dalamud. You don't need the DOTNET_ROOT environment variable any more.
+**1.3.1.1-beta1**
+- merged goatcorp/1.3.1 back into RB-patched
+- Updated localization for new entries in RB-patched

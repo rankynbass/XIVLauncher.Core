@@ -1,4 +1,9 @@
 # Changelog
+### Wed December 25 2025 Rankyn Bass <rankyn@proton.me>
+1.3.1.1-beta1
+- merged goatcorp/1.3.1 back into RB-patched
+- Updated localization for new entries in RB-patched
+
 ### Sun December 21 2025 Rankyn Bass <rankyn@proton.me>
 1.2.1.7
 - Fix for latest Proton-GE and Proton-CachyOS.
