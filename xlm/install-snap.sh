@@ -6,9 +6,15 @@ echo ""
 echo "[Step: 1] Downloading XLM"
 curl -L https://github.com/Blooym/xlm/releases/latest/download/xlm-x86_64-unknown-linux-gnu > /tmp/xlm
 
-echo "[Step: 2] Configuring XLM as a Steam Tool"
+echo "[Step: 2] Configuring XLM as a Steam Tool using XIVLauncher-RB"
 chmod +x /tmp/xlm
-/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-repo-owner rankynbass" --steam-compat-path ~/snap/steam/common/.steam/root/compatibilitytools.d/
+mkdir -p /tmp/xlm-rb
+/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-repo-owner rankynbass" --steam-compat-path /tmp/xlm-rb
+sed -i 's/XLCore/XLCore-RB/' /tmp/xlm-rb/XLM/compatibilitytool.vdf
+sed -i 's/"xlm"/"xlm-rb"/' /tmp/xlm-rb/XLM/compatibilitytool.vdf
+sed -i 's/"xlm"/"xlm-rb"/' /tmp/xlm-rb/XLM/toolmanifest.vdf
+mkdir -p ~/snap/steam/common/.steam/root/compatibilitytools.d/XLM-RB
+mv /tmp/xlm-rb/XLM/* ~/snap/steam/common/.steam/root/compatibilitytools.d/XLM-RB/
 
 echo "[Step: 3] Cleanup XLM binary"
 rm /tmp/xlm
