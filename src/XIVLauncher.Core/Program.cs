@@ -431,6 +431,8 @@ sealed class Program
                     Log.Error(ex, "Could not uninitialize patch acquisition.");
                 }
             }
+            else
+                Environment.Exit(0);
         }
     }
 
