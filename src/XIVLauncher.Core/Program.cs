@@ -412,11 +412,13 @@ sealed class Program
                 guiBindings.Render();
             }
             guiBindings.Dispose();
+            HttpClient.Dispose();
 
             SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
             SDL.DestroyGPUDevice(gpuDevice);
             SDL.DestroyWindow(window);
             SDL.Quit();
+
 
             if (Patcher is not null)
             {
