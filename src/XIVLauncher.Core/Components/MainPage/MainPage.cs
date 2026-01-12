@@ -154,7 +154,12 @@ public class MainPage : Page
                 {
                     Type = (int)SDLEventType.Quit
                 };
-                SDL.PushEvent(ref sdlEvent);
+                if (SDL.PushEvent(ref sdlEvent))
+                {
+                    Log.Error($"Failed to push event to SDL queue: {SDL.GetErrorS()}\n\tRequesting hard shutoff outside of SDL systems.");
+                    Program.Shutdown();
+                    Program.HardRequestStop = true;
+                }
             }
             else
             {
