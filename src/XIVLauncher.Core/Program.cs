@@ -401,7 +401,7 @@ sealed class Program
                     done = true;
                 }
 
-                if ((SDL.GetWindowFlags(window) & SDLWindowFlags.Minimized) != 0)
+                if ((SDL.GetWindowFlags(window) & (SDLWindowFlags.Minimized | SDLWindowFlags.Hidden)) != 0)
                 {
                     SDL.Delay(10);
                     continue;
