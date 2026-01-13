@@ -61,7 +61,6 @@ sealed class Program
     public static Storage storage = null!;
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
     public static string CType = CoreEnvironmentSettings.GetCType();
-    public static bool HardRequestStop { get; set; } = false;
 
     // RB-specific properties
     public static WineManager WineManager { get; private set; }
@@ -393,12 +392,9 @@ sealed class Program
             var launcherClientConfig = LauncherClientConfig.GetAsync().GetAwaiter().GetResult();
             launcherApp = new LauncherApp(storage, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
             SDL.ShowWindow(window);
-        }
 
-        var done = false;
-        while (!done)
-        {
-            unsafe
+            var done = false;
+            while (!done)
             {
                 if (guiBindings.ProcessExit())
                 {
@@ -415,38 +411,30 @@ sealed class Program
                 launcherApp.Draw();
                 guiBindings.Render();
             }
-        }
-
-        if (!HardRequestStop)
-            Shutdown();
-    }
-
-    public static void Shutdown()
-    {
-        HttpClient.Dispose();
-        
-        unsafe
-        {
             guiBindings.Dispose();
+            HttpClient.Dispose();
 
             SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
             SDL.DestroyGPUDevice(gpuDevice);
             SDL.DestroyWindow(window);
             SDL.Quit();
-        }
 
-        if (Patcher is not null)
-        {
-            Patcher.StartCancellation();
-            // PatchManager.UnInitializeAcquisition() is private but the function bellow is the only call that is in the method and is public accessible
-            try
+
+            if (Patcher is not null)
             {
+                Patcher.StartCancellation();
+                // PatchManager.UnInitializeAcquisition() is private but the function bellow is the only call that is in the method and is public accessible
+                try
+                {
+                    Environment.Exit(0);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Could not uninitialize patch acquisition.");
+                }
+            }
+            else
                 Environment.Exit(0);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Could not uninitialize patch acquisition.");
-            }
         }
     }
 
