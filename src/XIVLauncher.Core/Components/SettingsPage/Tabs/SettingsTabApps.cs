@@ -26,7 +26,7 @@ public class SettingsTabApps : SettingsTab
                 CheckValidity = b =>
                 {
                     // Dirty hack to get a separator line
-                    ImGui.Dummy(new Vector2(10));
+                    ImGuiHelpers.ScaleDummy(10);
                     ImGui.Separator();
                     return null;
                 }
@@ -48,7 +48,7 @@ public class SettingsTabApps : SettingsTab
                 CheckValidity = b =>
                 {
                     // Dirty hack to get a separator line
-                    ImGui.Dummy(new Vector2(10));
+                    ImGuiHelpers.ScaleDummy(10);
                     ImGui.Separator();
                     return null;
                 }
