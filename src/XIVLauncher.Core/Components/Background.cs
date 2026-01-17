@@ -15,8 +15,8 @@ public class Background : Component
 
     public override void Draw()
     {
-        ImGui.SetCursorPos(new Vector2(0, ImGuiHelpers.ViewportSize.Y - bgTexture.Height));
-        ImGui.Image(bgTexture.ImGuiHandle, new Vector2(bgTexture.Width, bgTexture.Height));
+        ImGui.SetCursorPos(new Vector2(0, ImGuiHelpers.ViewportSize.Y / ImGuiHelpers.GlobalScale - bgTexture.Height));
+        ImGui.Image(bgTexture.ImGuiHandle, ImGuiHelpers.ScaleVector2(bgTexture.Width, bgTexture.Height));
         base.Draw();
     }
 }

@@ -22,7 +22,7 @@ public class SettingsTabAbout : SettingsTab
 
     public override void Draw()
     {
-        ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
+        ImGui.Image(this.logoTexture.ImGuiHandle, ImGuiHelpers.ScaleVector2(256));
 
         ImGui.Text($"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
 
@@ -30,7 +30,7 @@ public class SettingsTabAbout : SettingsTab
         if (ImGui.Selectable(contribText, false, default, ImGui.CalcTextSize(contribText)))
             AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core/graphs/contributors");
 
-        ImGui.Dummy(new Vector2(20));
+        ImGuiHelpers.ScaleDummy(20);
 
         if (ImGui.Button(Strings.OpenRepositoryButton))
         {

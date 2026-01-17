@@ -385,6 +385,12 @@ sealed class Program
             guiBindings = new ImGuiBindings(window, gpuDevice, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f, mainScale);
             Log.Debug("ImGui OK!");
 
+            // X11 does not behave correctly. We need to set a special scale factor for x11, and use that to multiply/divide a bunch of hard-coded values and a few other things.
+            if (SDL.GetCurrentVideoDriverS() == "x11")
+            {
+                ImGuiHelpers.SetX11Scale(mainScale);
+            }
+
             StyleModelV1.DalamudStandard.Apply();
 
             var launcherClientConfig = LauncherClientConfig.GetAsync().GetAwaiter().GetResult();

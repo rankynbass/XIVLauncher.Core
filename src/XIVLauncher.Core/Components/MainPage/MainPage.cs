@@ -48,8 +48,7 @@ public class MainPage : Page
         this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
         this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
-
-        this.Padding = new Vector2(32f, 32f);
+        this.Padding = ImGuiHelpers.ScaleVector2(32f, 32f);
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -75,7 +74,7 @@ public class MainPage : Page
     {
         base.Draw();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImGuiHelpers.ScaleVector2(32f, 32f));
         this.newsFrame.Draw();
 
         ImGui.SameLine();

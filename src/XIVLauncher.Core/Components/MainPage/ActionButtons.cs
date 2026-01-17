@@ -14,7 +14,7 @@ public class ActionButtons : Component
 
     public override void Draw()
     {
-        var btnSize = new Vector2(80) * ImGuiHelpers.GlobalScale;
+        var btnSize = ImGuiHelpers.ScaleVector2(80);
 
         ImGui.PushFont(FontManager.IconFont, 0.0f);
         ImGui.BeginDisabled(this.OnAccountButtonClicked == null);

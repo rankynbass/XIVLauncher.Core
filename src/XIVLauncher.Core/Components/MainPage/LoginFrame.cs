@@ -69,10 +69,10 @@ public class LoginFrame : Component
             this.OnLogin?.Invoke(LoginAction.Game);
         }
 
-        this.loginInput = new Input(Strings.UsernameInput, Strings.UsernameInputHint, new Vector2(12f, 0f), 128);
+        this.loginInput = new Input(Strings.UsernameInput, Strings.UsernameInputHint, ImGuiHelpers.ScaleVector2(12f, 0f), 128);
         this.loginInput.Enter += TriggerLogin;
 
-        this.passwordInput = new Input(Strings.PasswordInput, Strings.PasswordInputHint, new Vector2(12f, 0f), 128, flags: ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo);
+        this.passwordInput = new Input(Strings.PasswordInput, Strings.PasswordInputHint, ImGuiHelpers.ScaleVector2(12f, 0f), 128, flags: ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo);
         this.passwordInput.Enter += TriggerLogin;
 
         this.oneTimePasswordCheckbox = new Checkbox(Strings.UseOneTimePasswordCheckbox);
@@ -87,14 +87,14 @@ public class LoginFrame : Component
     private Vector2 GetSize()
     {
         var vp = ImGuiHelpers.ViewportSize;
-        return new Vector2(-1, vp.Y - 128f);
+        return new Vector2(-1, vp.Y - ImGuiHelpers.ScaleFloat(128f));
     }
 
     public override void Draw()
     {
         if (ImGui.BeginChild("###loginFrame", this.GetSize()))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImGuiHelpers.ScaleVector2(32f, 32f));
             this.loginInput.Draw();
             this.passwordInput.Draw();
 
@@ -103,7 +103,7 @@ public class LoginFrame : Component
             this.freeTrialCheckbox.Draw();
             this.autoLoginCheckbox.Draw();
 
-            ImGui.Dummy(new Vector2(10));
+            ImGuiHelpers.ScaleDummy(10);
 
             this.loginButton.Draw();
 
@@ -171,12 +171,12 @@ public class LoginFrame : Component
                 ImGui.TextWrapped(Strings.NoSecretsProviderWarning);
                 ImGui.PopStyleColor();
 
-                ImGui.Dummy(new Vector2(15));
+                ImGuiHelpers.ScaleDummy(15);
             }
 
             ImGui.PushFont(FontManager.IconFont, 0.0f);
 
-            var extraButtonSize = new Vector2(45) * ImGuiHelpers.GlobalScale;
+            var extraButtonSize = ImGuiHelpers.ScaleVector2(45);
 
             if (ImGui.Button(FontAwesomeIcon.CaretDown.ToIconString(), extraButtonSize))
             {
