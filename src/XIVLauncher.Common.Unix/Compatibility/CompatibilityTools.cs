@@ -104,7 +104,7 @@ public class CompatibilityTools
             this.nvapiDirectory.Create();
         if (!this.umuDirectory.Exists)
             this.umuDirectory.Create();
-        if (!this.steamDirectory.Exists && this.Settings.IsUsingUmu);
+        if (!this.steamDirectory.Exists && this.Settings.IsUsingUmu)
         {
             this.steamDirectory.Create();
             this.steamDirectory.CreateSubdirectory(Path.Combine("compatibilitytools.d"));
@@ -138,7 +138,7 @@ public class CompatibilityTools
         }
     }
 
-    public async Task EnsureTool()
+    public async Task EnsureTool(HttpClient httpClient, DirectoryInfo tempPath)
     {
         // Download Umu Launcher if it's missing.
         if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
@@ -156,7 +156,7 @@ public class CompatibilityTools
                 if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
                     throw new ArgumentNullException($"Proton not found at {Wine64Path}, and no download url provided.");
                 Log.Information($"{Settings.WineRelease.Label} does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {Settings.WineRelease.ParentFolder}");
-                await DownloadTool(new DirectoryInfo(Settings.WineRelease.ParentFolder)).ConfigureAwait(false);
+                await DownloadTool(httpClient, new DirectoryInfo(Settings.WineRelease.ParentFolder), tempPath).ConfigureAwait(false);
             }
             EnsurePrefix();
             IsToolReady = true;
@@ -168,35 +168,33 @@ public class CompatibilityTools
             if (string.IsNullOrEmpty(Settings.WineRelease.DownloadUrl))
                 throw new ArgumentNullException($"Wine not found at the given path: {Wine64Path}, and no download url provided.");
             Log.Information($"Wine release \"{Settings.WineRelease.Label}\" does not exist. Downloading {Settings.WineRelease.DownloadUrl} to {wineDirectory.FullName}");
-            await DownloadTool(wineDirectory).ConfigureAwait(false);
+            await DownloadTool(httpClient, wineDirectory, tempPath).ConfigureAwait(false);
             Settings.SetWineOrWine64(new FileInfo(Wine64Path).Directory.FullName);
         }
 
         EnsurePrefix();
 
         if (isDxvkEnabled)
-            await Dxvk.Dxvk.InstallDxvk(Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
+            await Dxvk.Dxvk.InstallDxvk(httpClient, Settings.Prefix, dxvkDirectory, dxvkVersion).ConfigureAwait(false);
         if (isNvapiEnabled)
         {
-            await Nvapi.Nvapi.InstallNvapi(Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
+            await Nvapi.Nvapi.InstallNvapi(httpClient, Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
             Nvapi.Nvapi.CopyNvngx(Settings.Paths.GameFolder, Settings.Prefix);
         }
-
         IsToolReady = true;
     }
 
-    private async Task DownloadTool(DirectoryInfo targetPath)
+    private async Task DownloadTool(HttpClient httpClient, DirectoryInfo targetPath, DirectoryInfo tempPath)
     {
-        using var client = HappyEyeballsHttp.CreateHttpClient();
-        var tempPath = PlatformHelpers.GetTempFileName();
-        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempPath, Settings.WineRelease.Checksums))
+        var tempFilePath = Path.Combine(tempPath.FullName, $"{Guid.NewGuid()}");
+        await File.WriteAllBytesAsync(tempFilePath, await httpClient.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.WineRelease.Checksums))
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
-        PlatformHelpers.Untar(tempPath, targetPath.FullName);
+        PlatformHelpers.Untar(tempFilePath, targetPath.FullName);
         Log.Information("Compatibility tool {Name} successfully extracted to {Path}", Settings.WineRelease.Label, targetPath.FullName);
-        File.Delete(tempPath);
+        File.Delete(tempFilePath);
     }
 
     private async Task DownloadRuntime()

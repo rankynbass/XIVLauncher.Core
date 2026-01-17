@@ -1,10 +1,10 @@
+using System.Diagnostics;
+using System.Numerics;
+
 using Hexa.NET.ImGui;
 using Hexa.NET.SDL3;
 
 using Serilog;
-
-using System.Diagnostics;
-using System.Numerics;
 
 using XIVLauncher.Common;
 using XIVLauncher.Common.Addon;
@@ -705,7 +705,8 @@ public class MainPage : Page
 
             var _ = Task.Run(async () =>
             {
-                await Program.CompatibilityTools.EnsureTool().ConfigureAwait(false);
+                var tempPath = App.Storage.GetFolder("temp");
+                await Program.CompatibilityTools.EnsureTool(Program.HttpClient, tempPath).ConfigureAwait(false);
  
                 Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
                 if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))

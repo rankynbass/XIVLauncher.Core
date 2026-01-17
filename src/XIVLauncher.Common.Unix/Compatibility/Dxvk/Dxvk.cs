@@ -43,7 +43,7 @@ public enum RBHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(DirectoryInfo prefix, DirectoryInfo installDirectory, IToolRelease release)
+    public static async Task InstallDxvk(HttpClient httpClient, DirectoryInfo prefix, DirectoryInfo installDirectory, DxvkVersion version)
     {
         if (release.Name == "DISABLED")
         {
@@ -54,7 +54,7 @@ public static class Dxvk
         if (!Directory.Exists(dxvkPath))
         {
             Log.Information("DXVK does not exist, downloading");
-            await DownloadDxvk(installDirectory, release.DownloadUrl, release.Checksum).ConfigureAwait(false);
+            await DownloadDxvk(httpClient, installDirectory, release.DownloadUrl, release.Checksum).ConfigureAwait(false);
         }
 
         var system32 = Path.Combine(prefix.FullName, "drive_c", "windows", "system32");
@@ -66,15 +66,14 @@ public static class Dxvk
         }
     }
 
-    private static async Task DownloadDxvk(DirectoryInfo installDirectory, string url, string checksum)
+    private static async Task DownloadDxvk(HttpClient httpClient, DirectoryInfo installDirectory, string url, string checksum)
     {
         if (string.IsNullOrEmpty(url))
             throw new ArgumentOutOfRangeException("Download URL is null or empty");
         
-        using var client = HappyEyeballsHttp.CreateHttpClient();
         var tempPath = PlatformHelpers.GetTempFileName();
 
-        File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(url).ConfigureAwait(false));
+        File.WriteAllBytes(tempPath, await httpClient.GetByteArrayAsync(url).ConfigureAwait(false));
 
         if (!CompatUtil.EnsureChecksumMatch(tempPath, [checksum]))
         {

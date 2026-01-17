@@ -1,11 +1,11 @@
+using System.Numerics;
+using System.Runtime.InteropServices;
+
 using Config.Net;
 
 using Hexa.NET.SDL3;
 
 using Serilog;
-
-using System.Numerics;
-using System.Runtime.InteropServices;
 
 using XIVLauncher.Common;
 using XIVLauncher.Common.Dalamud;
@@ -27,6 +27,7 @@ using XIVLauncher.Core.Accounts.Secrets.Providers;
 using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
+using XIVLauncher.Core.Net;
 using XIVLauncher.Core.Style;
 
 using SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice;
@@ -53,10 +54,7 @@ sealed class Program
     public static DalamudOverlayInfoProxy DalamudLoadInfo { get; private set; } = null!;
     public static CompatibilityTools CompatibilityTools { get; private set; } = null!;
     public static ISecretProvider Secrets { get; private set; } = null!;
-    public static HttpClient HttpClient { get; private set; } = new()
-    {
-        Timeout = TimeSpan.FromSeconds(5)
-    };
+    public static HttpClient HttpClient { get; private set; } = HappyEyeballsHttp.CreateHttpClient();
     public static PatchManager? Patcher { get; set; } = null;
     public static Storage storage = null!;
     public static DirectoryInfo DotnetRuntime => storage.GetFolder("runtime");
@@ -396,10 +394,7 @@ sealed class Program
             var done = false;
             while (!done)
             {
-                if (guiBindings.ProcessExit())
-                {
-                    done = true;
-                }
+                done = guiBindings.ProcessExit();
 
                 if ((SDL.GetWindowFlags(window) & (SDLWindowFlags.Minimized | SDLWindowFlags.Hidden)) != 0)
                 {
@@ -418,7 +413,6 @@ sealed class Program
             SDL.DestroyGPUDevice(gpuDevice);
             SDL.DestroyWindow(window);
             SDL.Quit();
-
 
             if (Patcher is not null)
             {
@@ -517,6 +511,7 @@ sealed class Program
 
             case "KEYRING":
                 {
+                    Log.Information("Loading keyring secret provider...");
                     var keyChain = new KeychainSecretProvider();
 
                     if (!keyChain.IsAvailable)
