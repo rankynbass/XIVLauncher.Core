@@ -29,7 +29,7 @@ public class AccountSwitcher : Component
 
     public override void Draw()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(5));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImGuiHelpers.ScaleVector2(5, 5));
 
         if (ImGui.BeginPopupContextItem(ACCOUNT_SWITCHER_POPUP_ID))
         {
@@ -53,7 +53,7 @@ public class AccountSwitcher : Component
 
                 var textLength = ImGui.CalcTextSize(name).X;
 
-                if (ImGui.Button(name + $"###{account.Id}", new Vector2(textLength + 15, 40)))
+                if (ImGui.Button(name + $"###{account.Id}", new Vector2(textLength + ImGuiHelpers.ScaleFloat(15), ImGuiHelpers.ScaleFloat(40))))
                 {
                     this.AccountChanged?.Invoke(this, account);
                 }

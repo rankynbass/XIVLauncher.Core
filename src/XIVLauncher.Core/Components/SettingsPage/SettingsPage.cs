@@ -54,7 +54,7 @@ public class SettingsPage : Page
                     if (ImGui.BeginTabItem(settingsTab.Title))
                     {
 
-                        if (ImGui.BeginChild($"###settings_scrolling_{settingsTab.Title}", new Vector2(-1, -1)))
+                        if (ImGui.BeginChild($"###settings_scrolling_{settingsTab.Title}", ImGuiHelpers.ScaleVector2(-1, -1)))
                         {
                             settingsTab.Draw();
                         }
@@ -88,7 +88,7 @@ public class SettingsPage : Page
                         if (ImGui.BeginChild("SearchResults"))
                         {
                             ImGui.TextColored(ImGuiColors.DalamudGrey, settingsTab.Title);
-                            ImGui.Dummy(new Vector2(5));
+                            ImGuiHelpers.ScaleDummy(5);
 
                             foreach (SettingsEntry settingsTabEntry in eligible)
                             {
@@ -100,7 +100,7 @@ public class SettingsPage : Page
 
                             ImGui.Separator();
 
-                            ImGui.Dummy(new Vector2(10));
+                            ImGuiHelpers.ScaleDummy(10);
                         }
                         ImGui.EndChild();
                     }
@@ -115,11 +115,11 @@ public class SettingsPage : Page
         }
 
 
-        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - new Vector2(60));
+        ImGui.SetCursorPos(ImGuiHelpers.ViewportSize - ImGuiHelpers.ScaleVector2(65));
 
         if (ImGui.BeginChild("###settingsFinishButton", ImGuiChildFlags.NavFlattened))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, ImGuiHelpers.ScaleFloat(100f));
             ImGui.PushFont(FontManager.IconFont, 0.0f);
 
             var invalid = this.tabs.Any(x => x.Entries.Any(y => y.IsVisible && !y.IsValid));
@@ -127,13 +127,13 @@ public class SettingsPage : Page
             {
                 ImGui.BeginDisabled();
                 ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), new Vector2(40));
+                ImGui.Button(FontAwesomeIcon.Ban.ToIconString(), ImGuiHelpers.ScaleVector2(40));
                 ImGui.PopStyleColor();
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), new Vector2(40)))
+                if (ImGui.Button(FontAwesomeIcon.Check.ToIconString(), ImGuiHelpers.ScaleVector2(40)))
                 {
                     foreach (var settingsTab in this.tabs)
                     {
@@ -151,8 +151,8 @@ public class SettingsPage : Page
         ImGui.EndChild();
 
         var vpSize = ImGuiHelpers.ViewportSize;
-        ImGui.SetCursorPos(new Vector2(vpSize.X - 260, 4));
-        ImGui.SetNextItemWidth(250);
+        ImGui.SetCursorPos(new Vector2(vpSize.X - ImGuiHelpers.ScaleFloat(260), ImGuiHelpers.ScaleFloat(4)));
+        ImGui.SetNextItemWidth(ImGuiHelpers.ScaleFloat(250));
         ImGui.InputTextWithHint("###searchInput", Strings.SearchForSettings, ref this.searchInput, 100);
 
         base.Draw();

@@ -104,7 +104,7 @@ public class SettingsTabWine : SettingsTab
             ImGui.BeginDisabled();
             ImGui.Text(Strings.CompatibilityToolNotSetup);
 
-            ImGui.Dummy(new Vector2(10));
+            ImGuiHelpers.ScaleDummy(10);
         }
 
         if (ImGui.Button(Strings.OpenWINEPrefix))

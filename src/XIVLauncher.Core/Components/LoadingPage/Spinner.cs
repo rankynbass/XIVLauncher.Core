@@ -7,10 +7,10 @@ namespace XIVLauncher.Core.Components.LoadingPage;
 public class Spinner : Component
 {
     private readonly float radius;
-    private readonly int thickness;
+    private readonly float thickness;
     private readonly uint color;
 
-    public Spinner(float radius, int thickness, uint color)
+    public Spinner(float radius, float thickness, uint color)
     {
         this.radius = radius;
         this.thickness = thickness;
@@ -23,7 +23,7 @@ public class Spinner : Component
 
         var pos = ImGui.GetCursorPos();
 
-        ImGui.Dummy(new Vector2(this.radius * 2) + (framePadding * 2));
+        ImGuiHelpers.ScaleDummy(new Vector2(this.radius * 2) + (framePadding * 2));
 
         var time = ImGui.GetTime() / 1.2;
 

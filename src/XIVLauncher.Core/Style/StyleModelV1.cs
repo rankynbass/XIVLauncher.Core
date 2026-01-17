@@ -382,33 +382,33 @@ public class StyleModelV1 : StyleModel
         var style = ImGui.GetStyle();
 
         style.Alpha = this.Alpha;
-        style.WindowPadding = this.WindowPadding;
-        style.WindowRounding = this.WindowRounding;
-        style.WindowBorderSize = this.WindowBorderSize;
+        style.WindowPadding = ImGuiHelpers.ScaleVector2(this.WindowPadding);
+        style.WindowRounding = ImGuiHelpers.ScaleFloat(this.WindowRounding);
+        style.WindowBorderSize = ImGuiHelpers.ScaleFloat(this.WindowBorderSize);
         style.WindowTitleAlign = this.WindowTitleAlign;
         style.WindowMenuButtonPosition = this.WindowMenuButtonPosition;
-        style.ChildRounding = this.ChildRounding;
-        style.ChildBorderSize = this.ChildBorderSize;
-        style.PopupRounding = this.PopupRounding;
-        style.PopupBorderSize = this.PopupBorderSize;
-        style.FramePadding = this.FramePadding;
-        style.FrameRounding = this.FrameRounding;
-        style.FrameBorderSize = this.FrameBorderSize;
-        style.ItemSpacing = this.ItemSpacing;
-        style.ItemInnerSpacing = this.ItemInnerSpacing;
-        style.CellPadding = this.CellPadding;
-        style.TouchExtraPadding = this.TouchExtraPadding;
-        style.IndentSpacing = this.IndentSpacing;
-        style.ScrollbarSize = this.ScrollbarSize;
-        style.ScrollbarRounding = this.ScrollbarRounding;
-        style.GrabMinSize = this.GrabMinSize;
-        style.GrabRounding = this.GrabRounding;
-        style.LogSliderDeadzone = this.LogSliderDeadzone;
-        style.TabRounding = this.TabRounding;
-        style.TabBorderSize = this.TabBorderSize;
+        style.ChildRounding = ImGuiHelpers.ScaleFloat(this.ChildRounding);
+        style.ChildBorderSize = ImGuiHelpers.ScaleFloat(this.ChildBorderSize);
+        style.PopupRounding = ImGuiHelpers.ScaleFloat(this.PopupRounding);
+        style.PopupBorderSize = ImGuiHelpers.ScaleFloat(this.PopupBorderSize);
+        style.FramePadding = ImGuiHelpers.ScaleVector2(this.FramePadding);
+        style.FrameRounding = ImGuiHelpers.ScaleFloat(this.FrameRounding);
+        style.FrameBorderSize = ImGuiHelpers.ScaleFloat(this.FrameBorderSize);
+        style.ItemSpacing = ImGuiHelpers.ScaleVector2(this.ItemSpacing);
+        style.ItemInnerSpacing = ImGuiHelpers.ScaleVector2(this.ItemInnerSpacing);
+        style.CellPadding = ImGuiHelpers.ScaleVector2(this.CellPadding);
+        style.TouchExtraPadding = ImGuiHelpers.ScaleVector2(this.TouchExtraPadding);
+        style.IndentSpacing = ImGuiHelpers.ScaleFloat(this.IndentSpacing);
+        style.ScrollbarSize = ImGuiHelpers.ScaleFloat(this.ScrollbarSize);
+        style.ScrollbarRounding = ImGuiHelpers.ScaleFloat(this.ScrollbarRounding);
+        style.GrabMinSize = ImGuiHelpers.ScaleFloat(this.GrabMinSize);
+        style.GrabRounding = ImGuiHelpers.ScaleFloat(this.GrabRounding);
+        style.LogSliderDeadzone = ImGuiHelpers.ScaleFloat(this.LogSliderDeadzone);
+        style.TabRounding = ImGuiHelpers.ScaleFloat(this.TabRounding);
+        style.TabBorderSize = ImGuiHelpers.ScaleFloat(this.TabBorderSize);
         style.ButtonTextAlign = this.ButtonTextAlign;
         style.SelectableTextAlign = this.SelectableTextAlign;
-        style.DisplaySafeAreaPadding = this.DisplaySafeAreaPadding;
+        style.DisplaySafeAreaPadding = ImGuiHelpers.ScaleVector2(this.DisplaySafeAreaPadding);
 
         foreach (var imGuiCol in Enum.GetValues<ImGuiCol>())
         {
