@@ -1,7 +1,7 @@
+using Hexa.NET.ImGui;
+
 using System.Numerics;
 using System.Runtime.InteropServices;
-
-using ImGuiNET;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Core.Resources.Localization;
