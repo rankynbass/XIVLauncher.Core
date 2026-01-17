@@ -43,7 +43,7 @@ public enum RBHudType
 
 public static class Dxvk
 {
-    public static async Task InstallDxvk(HttpClient httpClient, DirectoryInfo prefix, DirectoryInfo installDirectory, DxvkVersion version)
+    public static async Task InstallDxvk(HttpClient httpClient, DirectoryInfo prefix, DirectoryInfo installDirectory, IToolRelease release)
     {
         if (release.Name == "DISABLED")
         {
