@@ -338,7 +338,7 @@ sealed class Program
 
         Log.Debug("Creating SDL3 devices...");
 
-        var version = AppUtil.GetGitHash();
+        var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
         unsafe
         {
             if (!SDL.Init(SDLInitFlags.Video | SDLInitFlags.Gamepad))
@@ -350,7 +350,7 @@ sealed class Program
             var mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
             var windowFlags = SDLWindowFlags.Resizable | SDLWindowFlags.Hidden | SDLWindowFlags.HighPixelDensity;
             window = SDL.CreateWindow(
-                $"XIVLauncher {version}",
+                $"XIVLauncher-RB {version}",
                 (int)(1280 * mainScale),
                 (int)(800 * mainScale),
                 windowFlags);
