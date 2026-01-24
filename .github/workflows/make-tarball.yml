@@ -19,14 +19,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x # Set this to be the same as the projects required dotnet version.
+          dotnet-version: 9.0.x # Set this to be the same as the projects required dotnet version.
 
       - name: Dotnet Build
         working-directory: src/XIVLauncher.Core/
         run: |
           dotnet restore
-
           dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core -p:BuildHash=$(git rev-parse --short HEAD)
+          sudo apt install patchelf -y
+          patchelf --remove-rpath dist/XIVLauncher.Core/libSDL3_image.so
+
 
       - name: Make tarball
         run: |
