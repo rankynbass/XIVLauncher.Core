@@ -622,7 +622,7 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
         <value>Enable NTSync</value>
     </data>
     <data name="NTSyncSettingDescription" xml:space="preserve">
-        <value>Proton only. Requires the NTSync kernel module. (Linux kernel 6.14+)</value>
+        <value>Proton and Valve wine only. Requires the NTSync kernel module. (Linux kernel 6.14+)</value>
     </data>
     <data name="WaylandSetting" xml:space="preserve">
         <value>Enable Wayland Driver</value>
