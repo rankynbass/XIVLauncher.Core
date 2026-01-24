@@ -255,7 +255,7 @@ sealed class Program
 
         if (badxlpath)
         {
-            Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
+            Log.Error(badxlpathex, $"Bad value for XL_USERDIR or XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
         }
 
         if (CoreEnvironmentSettings.ClearAll)
