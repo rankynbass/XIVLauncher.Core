@@ -66,8 +66,10 @@ jobs:
 
       - name: Compress release files
         run: |
-          sudo apt install zip -y
+          sudo apt install zip patchelf -y
           mkdir -p ./dist
+          # fix Hexa.NET's broken libSDL3_image.so
+          patchelf --remove-rpath ./src/XIVLauncher.Core/dist/XIVLauncher.Core/libSDL3_image.so
           # remove leading directories
           tar -czf ./dist/XIVLauncher.Core.tar.gz -C ./src/XIVLauncher.Core/dist/XIVLauncher.Core .
           zip -r ./dist/XIVLauncher.Core-win10x64.zip ./src/XIVLauncher.Core/dist/XIVLauncher.Core-win10x64
