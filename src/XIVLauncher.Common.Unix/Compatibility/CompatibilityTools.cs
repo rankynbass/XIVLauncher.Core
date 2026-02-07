@@ -482,8 +482,8 @@ public class CompatibilityTools
 
     public string UnixToWinePath(string unixPath)
     {
-        var launchArguments = (Settings.IsProton) ? $"\"{unixPath}\"" : $"winepath --windows \"{unixPath}\"";
-        var winePath = RunWithoutRuntime(launchArguments, "getcompatpath");
+        var launchArguments = $"winepath --windows \"{unixPath}\"";
+        var winePath = RunWithoutRuntime(launchArguments);
         var output = winePath.StandardOutput.ReadToEnd();
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
