@@ -1,5 +1,9 @@
 # Changelog
-### Sat January 24 2025 Rankyn Bass <rankyn@proton.me>
+### Sat Feb 07 2026 Rankyn Bass <rankyn@proton.me>
+1.3.1.2
+- Added WINEDOTNET_ROOT to dalamud initialization, in addition to DOTNET_ROOT_X64. This should allow dalamud to initialize even if proton unsets DOTNET_ROOT and DOTNET_ROOT_X64. May fix bleeding edge proton-cachyos and ge-proton.
+
+### Sat January 24 2026 Rankyn Bass <rankyn@proton.me>
 1.3.1.1
 - merged goatcorp/1.3.1 back into RB-patched
 - Updated localization for new entries in RB-patched (no crowdin yet, so it uses English fallback for RB-specific options)

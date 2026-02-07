@@ -46,6 +46,8 @@ public class UnixDalamudRunner : IDalamudRunner
         environment.Add("DOTNET_ROOT", dotnetRuntimePath);
         // Fix for GE-Wayland patches after Nov 26 2025.
         environment.Add("DOTNET_ROOT_X64", dotnetRuntimePath);
+        // Another fix for newer proton releases
+        environment.Add("WINEDOTNET_ROOT", dotnetRuntimePath);
 
         var launchArguments = new List<string>
         {
