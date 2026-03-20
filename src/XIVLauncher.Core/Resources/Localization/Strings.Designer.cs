@@ -1226,13 +1226,13 @@ namespace XIVLauncher.Core.Resources.Localization {
 
         internal static string ProtonNvapiSetting {
             get {
-                return ResourceManager.GetString("ProtonDXVKSetting", resourceCulture);
+                return ResourceManager.GetString("ProtonNvapiSetting", resourceCulture);
             }
         }
 
         internal static string ProtonNvapiSettingDescription {
             get {
-                return ResourceManager.GetString("ProtonDXVKSettingDescription", resourceCulture);
+                return ResourceManager.GetString("ProtonNvapiSettingDescription", resourceCulture);
             }
         }
 
