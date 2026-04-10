@@ -1,3 +1,4 @@
-**1.3.1.2**
-- Added WINEDOTNET_ROOT to dalamud initialization, in addition to DOTNET_ROOT_X64. This should allow dalamud to initialize even if proton unsets DOTNET_ROOT and DOTNET_ROOT_X64. May fix future edge proton-cachyos and ge-proton releases.
-- Changed the UnixToWine() function to always use winepath instead of using getcompatpath for proton. Fixes Internal Dalamud error with cachy proton 20260203.
+**1.4.0.1**
+- Merged in latest 1.4.0 master from goatcorp repo
+- Fixed a typo which made the wrong translation string show up in one of the Proton: Dxvk options.
+- Now uses a dropdown menu for esync/fsync/ntsync. No way to disable, it will always fall back NTSync -> Fsync -> Esync.
