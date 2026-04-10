@@ -564,6 +564,15 @@ Please try again later.</value>
         <value>An error occurred while repairing the game files.
 You may have to reinstall the game.</value>
     </data>
+    <data name="WineSyncMethodSetting" xml:space="preserve">
+        <value>WINE Sync Method</value>
+    </data>
+    <data name="WineSyncMethodSettingDescription" xml:space="preserve">
+        <value>How Wine synchronizes multi-threaded operations.</value>
+    </data>
+    <data name="EnableFsyncSettingUnsupportedPlatformValidation" xml:space="preserve">
+        <value>FSync is only available on Linux</value>
+    </data>
 <!-- RB-patched strings -->
     <data name="ExtraWineDLLOverridesSetting" xml:space="preserve">
         <value>Extra WINEDLLOVERRIDES</value>
@@ -704,13 +713,5 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
     </data>
     <data name="ClearNvngxTroubleshootingButton" xml:space="preserve">
         <value>Clear Nvngx</value>
-    <data name="WineSyncMethodSetting" xml:space="preserve">
-        <value>WINE Sync Method</value>
-    </data>
-    <data name="WineSyncMethodSettingDescription" xml:space="preserve">
-        <value>How Wine synchronizes multi-threaded operations.</value>
-    </data>
-    <data name="EnableFsyncSettingUnsupportedPlatformValidation" xml:space="preserve">
-        <value>FSync is only available on Linux</value>
     </data>
 </root>
