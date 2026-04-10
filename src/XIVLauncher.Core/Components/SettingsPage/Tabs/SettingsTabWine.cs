@@ -1,7 +1,7 @@
+using Hexa.NET.ImGui;
+
 using System.Numerics;
 using System.Runtime.InteropServices;
-
-using Hexa.NET.ImGui;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
@@ -39,23 +39,6 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton,
             },
-            new SettingsEntry<WineSyncType>(Strings.WineSyncMethodSetting, Strings.WineSyncMethodSettingDescription, () => Program.Config.WineSyncType ?? WineSyncType.FSync, x => Program.Config.WineSyncType = x)
-            {
-                CheckValidity = b =>
-                {
-                    switch (WineUtility.SystemFsyncSupport())
-                    {
-                        case FsyncSupport.UnsupportedPlatform:
-                            return Strings.EnableFsyncSettingUnsupportedPlatformValidation;
-                        case FsyncSupport.OutdatedKernel:
-                            return Strings.EnableFSyncSettingMinKernelValidation;
-                        case FsyncSupport.Supported:
-                        default:
-                            return null;
-                    }
-                }
-            },
-            new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
 
             wineCustomBinaryPath = new SettingsEntry<string>(Strings.CustomWineOrProtonSetting, Strings.CustomWineOrProtonSetting,
                 () => Program.Config.RB_WineBinaryPath, s => Program.Config.RB_WineBinaryPath = s)
@@ -82,7 +65,6 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            // GameMode
             new SettingsEntry<bool>(Strings.EnableFeralGameModeSetting, Strings.EnableFeralGameModeSettingDescription, () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
@@ -94,30 +76,27 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
-            new SettingsEntry<bool>(Strings.EnableESyncSetting, Strings.EnableESyncSettingDescription, () => Program.Config.ESyncEnabled ?? true, b => Program.Config.ESyncEnabled = b),
-            new SettingsEntry<bool>(Strings.EnableFSyncSetting, Strings.EnableFSyncSettingDescription, () => Program.Config.FSyncEnabled ?? true, b => Program.Config.FSyncEnabled = b)
+            new SettingsEntry<RBWineSyncType>(Strings.WineSyncMethodSetting, Strings.WineSyncMethodSettingDescription, () => Program.Config.RB_WineSync ?? RBWineSyncType.FSync, x => Program.Config.RB_WineSync = x)
             {
-                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
                 CheckValidity = b =>
                 {
-                    if (b == true && (Environment.OSVersion.Version.Major < 5 && (Environment.OSVersion.Version.Minor < 16 || Environment.OSVersion.Version.Major < 6)))
-                        return Strings.EnableFSyncSettingMinKernelValidation;
-
-                    return null;
+                    switch (WineUtility.SystemFsyncSupport())
+                    {
+                        case FsyncSupport.UnsupportedPlatform:
+                            return Strings.EnableFsyncSettingUnsupportedPlatformValidation;
+                        case FsyncSupport.OutdatedKernel:
+                            return Strings.EnableFSyncSettingMinKernelValidation;
+                        case FsyncSupport.Supported:
+                        default:
+                            return null;
+                    }
                 }
-            },
-
-            new SettingsEntry<bool>(Strings.NTSyncSetting, Strings.NTSyncSettingDescription, () => Program.Config.NTSyncEnabled ?? false, b => Program.Config.NTSyncEnabled = b)
-            {
-                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
             new SettingsEntry<bool>(Strings.WaylandSetting, Strings.WaylandSettingDescription, () => Program.Config.WaylandEnabled ?? false, b => Program.Config.WaylandEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
-
-            new SettingsEntry<bool>(Strings.SetWindows7Setting, Strings.SetWindows7SettingDescription, () => Program.Config.SetWin7 ?? true, b => Program.Config.SetWin7 = b),
 
             new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
         };

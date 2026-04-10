@@ -37,6 +37,17 @@ public enum RBUmuLauncherType
     [SettingsDescription("Disabled", "Don't use Umu-launcher with proton")]
     Disabled,
 }
+
+public enum RBWineSyncType
+{
+    [SettingsDescription("ESync", "Eventfd-based synchronization - recommended for older systems.")]
+    ESync,
+    [SettingsDescription("FSync", "Fast user mutex (futex2)-based synchronization, requires Linux Kernel 5.16+ - recommended for most users.")]
+    FSync,
+    [SettingsDescription("NTSync", "NT synchronization primitive driver, requires Linux Kernel 6.14+ and ntsync module loaded.")]
+    NTSync,
+}
+
 public class WineManager
 {
     public string DEFAULTWINE { get; private set; }

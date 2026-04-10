@@ -67,12 +67,6 @@ public interface ILauncherConfig
 
     public bool? DxvkAsyncEnabled { get; set; }
 
-    public bool? ESyncEnabled { get; set; }
-
-    public bool? FSyncEnabled { get; set; }
-
-    public bool? NTSyncEnabled { get; set; }
-
     public bool? WaylandEnabled { get; set; }
 
     // public DxvkHudType DxvkHudType { get; set; }
@@ -91,8 +85,6 @@ public interface ILauncherConfig
 
     public bool? FixHideWineExports { get; set; }
 
-    public bool? SetWin7 { get; set; }
-
     public bool? DontUseSystemTz { get; set; }
 
     public string? WineDLLOverrides { get; set; }
@@ -108,6 +100,8 @@ public interface ILauncherConfig
     public string? RB_ProtonVersion { get; set; }
 
     public string? RB_WineBinaryPath { get; set; }
+
+    public RBWineSyncType? RB_WineSync { get; set; }
 
     public string? RB_DxvkVersion { get; set; }
 

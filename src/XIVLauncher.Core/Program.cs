@@ -144,11 +144,7 @@ sealed class Program
         Config.DxvkAsyncEnabled ??= true;
         // Config.DxvkHudType ??= DxvkHudType.None;
         // Config.NvapiVersion ??= NvapiVersion.Stable;
-        Config.ESyncEnabled ??= true;
-        Config.FSyncEnabled ??= true;
-        Config.NTSyncEnabled ??= false;
         Config.WaylandEnabled ??= false;
-        Config.SetWin7 ??= false;
 
         // Config.WineStartupType ??= WineStartupType.Managed;
         // Config.WineManagedVersion ??= WineManagedVersion.Stable;
@@ -168,6 +164,7 @@ sealed class Program
         Config.RB_WineVersion = WineManager.GetWineVersionOrDefault(Config.RB_WineVersion);
         Config.RB_WineBinaryPath ??= "/usr/bin";
         Config.RB_ProtonVersion = WineManager.GetProtonVersionOrDefault(Config.RB_ProtonVersion);
+        Config.RB_WineSync ??= RBWineSyncType.FSync;
         Config.RB_DxvkEnabled ??= true;
         Config.RB_NvapiEnabled ??= true;
         Config.RB_UmuLauncher ??= RBUmuLauncherType.System;
@@ -480,7 +477,7 @@ sealed class Program
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
         var useUmu = Config.RB_UmuLauncher != RBUmuLauncherType.Disabled;
-        var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.ESyncEnabled ?? true, Config.FSyncEnabled ?? true, Config.NTSyncEnabled ?? false, Config.WaylandEnabled ?? false);
+        var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.RB_WineSync ?? RBWineSyncType.FSync, Config.WaylandEnabled ?? false);
         toolsFolder.CreateSubdirectory("wine");
         toolsFolder.CreateSubdirectory("dxvk");
         toolsFolder.CreateSubdirectory("nvapi");

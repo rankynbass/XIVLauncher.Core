@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Collections.Generic;
 
+using XIVLauncher.Common.Unix.Compatibility.Wine.Releases;
+
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
 public class WineSettings
@@ -13,7 +15,6 @@ public class WineSettings
     public IWineRelease WineRelease { get; private set; }
     public IToolRelease UmuLauncher { get; private set; }
 
-    public bool EsyncOn { get; }
     public bool FsyncOn { get; }
     public bool NTSyncOn { get; }
     public bool WaylandOn { get; }
@@ -31,7 +32,7 @@ public class WineSettings
 
     public Dictionary<string, string> EnvVars { get; private set; }
 
-    public WineSettings(IWineRelease wineRelease, IToolRelease umuLauncher, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, bool esyncOn, bool fsyncOn, bool ntsyncOn, bool waylandOn)
+    public WineSettings(IWineRelease wineRelease, IToolRelease umuLauncher, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, RBWineSyncType wineSync, bool waylandOn)
     {
         this.WineRelease = wineRelease;
         if (wineRelease.IsProton)
@@ -48,9 +49,8 @@ public class WineSettings
             this.WineServerPath = Path.Combine(parentPath, "wineserver");
             this.UmuLauncher = null;
         }
-        this.EsyncOn = esyncOn;
-        this.FsyncOn = fsyncOn;
-        this.NTSyncOn = ntsyncOn;
+        this.FsyncOn = wineSync == RBWineSyncType.FSync || wineSync == RBWineSyncType.NTSync;
+        this.NTSyncOn = wineSync == RBWineSyncType.NTSync;
         this.WaylandOn = waylandOn;
         this.DebugVars = debugVars;
         this.LogFile = logFile;
@@ -78,8 +78,6 @@ public class WineSettings
             if (!FsyncOn)
             {
                 EnvVars.Add("PROTON_NO_FSYNC", "1");
-                if (!EsyncOn)
-                    EnvVars.Add("PROTON_NO_ESYNC", "1");
             }
 
             if (WaylandOn)
@@ -89,7 +87,7 @@ public class WineSettings
         }
         else
         {
-            EnvVars.Add("WINEESYNC", EsyncOn ? "1" : "0");
+            EnvVars.Add("WINEESYNC", "1");
             EnvVars.Add("WINEFSYNC", FsyncOn ? "1" : "0");
             EnvVars.Add("WINENTSYNC", NTSyncOn ? "1" : "0");
             EnvVars.Add("WINEPREFIX", Prefix.FullName);

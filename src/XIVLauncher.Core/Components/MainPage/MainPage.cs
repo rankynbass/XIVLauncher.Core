@@ -707,7 +707,6 @@ public class MainPage : Page
                 var tempPath = App.Storage.GetFolder("temp");
                 await Program.CompatibilityTools.EnsureTool(Program.HttpClient, tempPath).ConfigureAwait(false);
  
-                Program.CompatibilityTools.SetWindowsVersion(App.Settings.SetWin7 ?? true);
                 if (App.Settings.RB_WineStartupType == RBWineStartupType.Proton || (App.Settings.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(App.Settings.RB_WineBinaryPath)))
                     Program.CompatibilityTools.SetWineD3DVulkan(App.Settings.RB_ProtonUseVulkanWineD3D ?? false);
                 else

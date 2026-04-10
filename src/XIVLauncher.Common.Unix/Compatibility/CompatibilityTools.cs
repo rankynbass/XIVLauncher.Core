@@ -187,8 +187,8 @@ public class CompatibilityTools
     private async Task DownloadTool(HttpClient httpClient, DirectoryInfo targetPath, DirectoryInfo tempPath)
     {
         var tempFilePath = Path.Combine(tempPath.FullName, $"{Guid.NewGuid()}");
-        await File.WriteAllBytesAsync(tempFilePath, await httpClient.GetByteArrayAsync(Settings.Release.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.Release.Checksums))
+        await File.WriteAllBytesAsync(tempFilePath, await httpClient.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.WineRelease.Checksums))
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }
@@ -504,24 +504,6 @@ public class CompatibilityTools
         psi.EnvironmentVariables.Add("WINEPREFIX", Settings.Prefix.FullName);
 
         Process.Start(psi);
-    }
-
-    public void SetWindowsVersion(bool IsWin7)
-    {
-        var winver = IsWin7 ? "win7" : "win10";
-        var versionFile = new FileInfo(Path.Combine(Settings.Prefix.FullName, "xl_winversion.txt"));
-        if (versionFile.Exists)
-        {
-            var currentver = File.ReadAllText(versionFile.FullName);
-            if (currentver.Trim() == winver)
-            {
-                Log.Verbose($"[WINEPREFIX] Windows version is {winver}.");
-                return;
-            }
-        }
-        Log.Verbose($"[WINEPREFIX] Changing windows version to {winver}");
-        File.WriteAllText(versionFile.FullName, winver);
-        RunWithoutRuntime($"winecfg /v {winver}").WaitForExit();
     }
 
     public void SetWineD3DVulkan(bool useVulkan)
