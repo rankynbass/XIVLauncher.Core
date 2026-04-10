@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -187,8 +187,8 @@ public class CompatibilityTools
     private async Task DownloadTool(HttpClient httpClient, DirectoryInfo targetPath, DirectoryInfo tempPath)
     {
         var tempFilePath = Path.Combine(tempPath.FullName, $"{Guid.NewGuid()}");
-        await File.WriteAllBytesAsync(tempFilePath, await httpClient.GetByteArrayAsync(Settings.WineRelease.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.WineRelease.Checksums))
+        await File.WriteAllBytesAsync(tempFilePath, await httpClient.GetByteArrayAsync(Settings.Release.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
+        if (!CompatUtil.EnsureChecksumMatch(tempFilePath, Settings.Release.Checksums))
         {
             throw new InvalidDataException("SHA512 checksum verification failed");
         }

@@ -1,7 +1,7 @@
-using Hexa.NET.ImGui;
-
 using System.Numerics;
 using System.Runtime.InteropServices;
+
+using Hexa.NET.ImGui;
 
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi;
@@ -39,6 +39,23 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton,
             },
+            new SettingsEntry<WineSyncType>(Strings.WineSyncMethodSetting, Strings.WineSyncMethodSettingDescription, () => Program.Config.WineSyncType ?? WineSyncType.FSync, x => Program.Config.WineSyncType = x)
+            {
+                CheckValidity = b =>
+                {
+                    switch (WineUtility.SystemFsyncSupport())
+                    {
+                        case FsyncSupport.UnsupportedPlatform:
+                            return Strings.EnableFsyncSettingUnsupportedPlatformValidation;
+                        case FsyncSupport.OutdatedKernel:
+                            return Strings.EnableFSyncSettingMinKernelValidation;
+                        case FsyncSupport.Supported:
+                        default:
+                            return null;
+                    }
+                }
+            },
+            new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
 
             wineCustomBinaryPath = new SettingsEntry<string>(Strings.CustomWineOrProtonSetting, Strings.CustomWineOrProtonSetting,
                 () => Program.Config.RB_WineBinaryPath, s => Program.Config.RB_WineBinaryPath = s)
@@ -65,6 +82,7 @@ public class SettingsTabWine : SettingsTab
                 }
             },
 
+            // GameMode
             new SettingsEntry<bool>(Strings.EnableFeralGameModeSetting, Strings.EnableFeralGameModeSettingDescription, () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
