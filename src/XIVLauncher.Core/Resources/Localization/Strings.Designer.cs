@@ -1302,6 +1302,18 @@ namespace XIVLauncher.Core.Resources.Localization {
             }
         }
 
+        internal static string MangoHudExtraArgs {
+            get {
+                return ResourceManager.GetString("MangoHudExtraArgs", resourceCulture);
+            }
+        }
+
+        internal static string MangoHudExtraArgsDescription {
+            get {
+                return ResourceManager.GetString("MangoHudExtraArgsDescription", resourceCulture);
+            }
+        }
+
         /* Troubleshooting Tab */
         internal static string HideWineExportsHack {
             get {

@@ -81,6 +81,8 @@ sealed class Program
     public static bool IsGameModeInstalled = CoreEnvironmentSettings.IsGameModeInstalled();
     public static bool IsMangoHudInstalled = CoreEnvironmentSettings.IsMangoHudInstalled();
 
+    public static bool IsGamescopeInstalled = CoreEnvironmentSettings.IsGamescopeInstalled();
+
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
         CoreEnvironmentSettings.IsDeck.Value :
@@ -504,12 +506,12 @@ sealed class Program
     private static List<ExtraCommand>? GetExtraCommands()
     {
         var commands = new List<ExtraCommand>();
-        if (Config.RB_GamescopeEnabled ?? false && CoreEnvironmentSettings.IsGamescopeInstalled())
+        if (Config.RB_GamescopeEnabled ?? false && IsGamescopeInstalled)
         {
             commands.Add(new ExtraCommand("gamescope", ((Config.RB_GamescopeArguments ?? string.Empty) + " --").Trim()));
         }
 
-        if (CoreEnvironmentSettings.IsMangoHudInstalled())
+        if (IsMangoHudInstalled)
         {
             switch (Config.RB_HudType)
             {

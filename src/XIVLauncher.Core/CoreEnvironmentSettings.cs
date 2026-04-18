@@ -122,7 +122,6 @@ public static class CoreEnvironmentSettings
                     if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
                     {
                         mangoHudFound = true;
-                        Console.WriteLine("MangoHud found");
                         break;
                     }
                 }
@@ -153,7 +152,6 @@ public static class CoreEnvironmentSettings
                     if (Directory.GetFiles(path, "gamescope", options).Length > 0)
                     {
                         gamescopeFound = true;
-                        Console.WriteLine("Gamescope found");
                         break;
                     }
                 }

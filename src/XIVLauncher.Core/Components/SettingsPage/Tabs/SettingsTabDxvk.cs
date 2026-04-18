@@ -98,6 +98,8 @@ public class SettingsTabDxvk : SettingsTab
                     return null;
                 }
             },
+
+            new SettingsEntry<string>(Strings.MangoHudExtraArgs, Strings.MangoHudExtraArgsDescription, () => Program.Config.RB_MangoHudArguments ?? "", s => Program.Config.RB_MangoHudArguments = s),
         };
     }
 
