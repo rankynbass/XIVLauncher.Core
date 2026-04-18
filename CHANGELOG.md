@@ -1,4 +1,11 @@
 # Changelog
+### Sat Apr 18 2026 Rankyn Bass <rankyn@proton.me>
+1.4.0.2
+- Added handling for extra commands. Only gamescope and mangohud supported so far
+- Switched MangoHud to use extra command path instead of environment variable
+- MangoHud can now be used with WineD3D. Needs --dlsym option for OpenGL, though.
+- Added support for gamescope. Only seems to work with Proton, but it may be an nVidia issue. It may work fine with wine and AMD GPU.
+
 ### Thu Apr 09 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.1
 - Merged in latest 1.4.0 master from goatcorp repo
