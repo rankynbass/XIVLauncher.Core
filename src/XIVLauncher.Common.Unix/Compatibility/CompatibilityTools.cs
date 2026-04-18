@@ -41,6 +41,8 @@ public class CompatibilityTools
     // RuntimePath will be the same as Wine64Path.
     private string RuntimePath => Settings.IsUsingUmu ? Settings.UmuLauncher.Name : Wine64Path;
 
+    private List<ExtraCommand> extraCommands;
+
     private readonly IToolRelease dxvkVersion;
     private readonly RBHudType hudType;
     private readonly string customHud;
@@ -56,7 +58,7 @@ public class CompatibilityTools
     public WineSettings Settings { get; private set; }
     public bool IsToolDownloaded => File.Exists(RuntimePath) && File.Exists(Wine64Path) && Settings.Prefix.Exists;
 
-    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, int frameRate, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, bool dxvkAsyncOn, bool gplAsyncCacheOn)
+    public CompatibilityTools(WineSettings wineSettings, IToolRelease dxvkVersion, int frameRate, RBHudType hudType, string customHud, IToolRelease nvapiVersion, bool gamemodeOn, bool dxvkAsyncOn, bool gplAsyncCacheOn, List<ExtraCommand> commands = null)
     {
         this.Settings = wineSettings;
         this.dxvkVersion = dxvkVersion;
@@ -67,7 +69,7 @@ public class CompatibilityTools
         this.gamemodeOn = gamemodeOn;
         this.dxvkAsyncOn = dxvkAsyncOn;
         this.gplAsyncCacheOn = gplAsyncCacheOn;
-
+        this.extraCommands = commands;
         this.wineDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "wine"));
         this.dxvkDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "dxvk"));
         this.nvapiDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "nvapi"));
@@ -255,6 +257,36 @@ public class CompatibilityTools
         return quickRun;
     }
 
+    public Process RunTheGame(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
+    {
+        var leadProcess = "";
+        var extraArgs = "";
+        var first = true;
+        if (this.extraCommands is null)
+            return RunInPrefix(command, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
+
+        foreach (var extra in this.extraCommands)
+        {
+            if (first)
+            {
+                leadProcess = extra.Command;
+                first = false;
+            }
+            else
+                extraArgs += extra.Command + " ";
+            extraArgs += extra.Arguments + " ";
+            Log.Information($"Using extra command {extra.Command} with arguments \"{extra.Arguments}\"");
+        }           
+
+        var psi = new ProcessStartInfo(leadProcess);
+        extraArgs += RuntimePath + " ";
+        if (!Settings.IsUsingUmu && Settings.IsProton)
+            psi.Arguments = extraArgs + "runinprefix " + command;
+        else
+            psi.Arguments = extraArgs + command;
+        return RunInPrefix(psi, workingDirectory, environment, redirectOutput, writeLog, wineD3D);
+    }
+
     public Process RunInPrefix(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
         var psi = new ProcessStartInfo(RuntimePath);
@@ -357,7 +389,6 @@ public class CompatibilityTools
             wineEnvironmentVariables.Add("DXVK_HUD", dxvkHud);
         if (mangoHud != "0")
         {
-            wineEnvironmentVariables.Add("MANGOHUD", "1");
             if (hudType == RBHudType.MHCustomFile)
                 wineEnvironmentVariables.Add("MANGOHUD_CONFIGFILE", mangoHud);
             else

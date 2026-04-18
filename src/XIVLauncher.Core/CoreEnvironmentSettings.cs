@@ -99,7 +99,7 @@ public static class CoreEnvironmentSettings
     }
 
 
-    private static bool? mangoHudFound = null;
+    private static bool? mangoHudFound =  null;
 
     public static bool IsMangoHudInstalled()
     {
@@ -109,9 +109,11 @@ public static class CoreEnvironmentSettings
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 string[] libraryPaths = [ "/app/lib", "/usr/lib64", "/usr/lib", "/lib64", "/lib", "/var/lib/snapd/hostfs/usr/lib64", "/var/lib/snapd/hostfs/usr/lib" ];
-                var options = new EnumerationOptions();
-                options.RecurseSubdirectories = true;
-                options.MaxRecursionDepth = 8;
+                var options = new EnumerationOptions
+                {
+                    RecurseSubdirectories = true,
+                    MaxRecursionDepth = 8
+                };
                 foreach (var path in libraryPaths)
                 {
                     if (!Directory.Exists(path))
@@ -120,11 +122,43 @@ public static class CoreEnvironmentSettings
                     if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
                     {
                         mangoHudFound = true;
+                        Console.WriteLine("MangoHud found");
                         break;
                     }
                 }
             }
         }
         return mangoHudFound ?? false;
+    }
+
+    private static bool? gamescopeFound = null;
+
+    public static bool IsGamescopeInstalled()
+    {
+        if (gamescopeFound is null)
+        {
+            gamescopeFound = false;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                string[] binPaths = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
+                var options = new EnumerationOptions
+                {
+                    RecurseSubdirectories = false
+                };
+                foreach (var path in binPaths)
+                {
+                    if (!Directory.Exists(path))
+                        continue;
+
+                    if (Directory.GetFiles(path, "gamescope", options).Length > 0)
+                    {
+                        gamescopeFound = true;
+                        Console.WriteLine("Gamescope found");
+                        break;
+                    }
+                }
+            }
+        }
+        return gamescopeFound ?? false;
     }
 }

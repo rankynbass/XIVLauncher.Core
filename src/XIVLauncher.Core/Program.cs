@@ -179,6 +179,9 @@ sealed class Program
         Config.RB_UseVulkanWineD3D ??= false;
         Config.RB_ProtonUseVulkanWineD3D ??= false;
         Config.RB_KeepToolsUpdated ??= true;
+        Config.RB_MangoHudArguments ??= "";
+        Config.RB_GamescopeEnabled ??= false;
+        Config.RB_GamescopeArguments ??= "";
 
         // RB-patched App launcher
         Config.RB_App1 ??= "";
@@ -494,7 +497,34 @@ sealed class Program
             _ => throw new ArgumentOutOfRangeException(nameof(RBHudType), $"Not an expected RBHudType: {Config.RB_HudType}")
 
         };
-        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_DxvkFrameRate ?? 0, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, async, gplcache);
+        var commands = GetExtraCommands();
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkRelease, Config.RB_DxvkFrameRate ?? 0, Config.RB_HudType ?? RBHudType.None, customHud, nvapiRelease, Config.GameModeEnabled ?? false, async, gplcache, commands);
+    }
+
+    private static List<ExtraCommand>? GetExtraCommands()
+    {
+        var commands = new List<ExtraCommand>();
+        if (Config.RB_GamescopeEnabled ?? false && CoreEnvironmentSettings.IsGamescopeInstalled())
+        {
+            commands.Add(new ExtraCommand("gamescope", ((Config.RB_GamescopeArguments ?? string.Empty) + " --").Trim()));
+        }
+
+        if (CoreEnvironmentSettings.IsMangoHudInstalled())
+        {
+            switch (Config.RB_HudType)
+            {
+                case RBHudType.MHDefault:
+                case RBHudType.MHCustomFile:
+                case RBHudType.MHCustomString:
+                case RBHudType.MHFull:
+                    commands.Add(new ExtraCommand("mangohud", Config.RB_MangoHudArguments ?? ""));
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (commands.Count == 0) return null;
+        return commands;
     }
 
     public static void ShowWindow()

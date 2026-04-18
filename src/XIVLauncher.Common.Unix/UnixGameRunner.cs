@@ -39,12 +39,12 @@ public class UnixGameRunner : IGameRunner
         }
         else
         {
-            var process = compatibility.RunInPrefix($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
+            var process = compatibility.RunTheGame($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
             if (process is null)
             {
                 System.Console.WriteLine("Process was null");
                 Thread.Sleep(1000);
-                process = compatibility.RunInPrefix($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
+                process = compatibility.RunTheGame($"\"{path}\" {arguments}", workingDirectory, environment, writeLog: true);
             }
             return process;
         }

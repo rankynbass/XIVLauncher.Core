@@ -131,6 +131,12 @@ public interface ILauncherConfig
 
     public bool? RB_KeepToolsUpdated { get; set; }
 
+    public bool? RB_GamescopeEnabled { get; set; }
+
+    public string? RB_GamescopeArguments { get; set; }
+
+    public string? RB_MangoHudArguments { get; set; }
+
     #endregion
 
     #region RBpatchedApps
