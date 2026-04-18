@@ -98,7 +98,20 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
-            new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s)
+            new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
+
+            new SettingsEntry<bool>(Strings.GamescopeEnabled, Strings.GameScopeEnabledDescription, () => Program.Config.RB_GamescopeEnabled ?? false, b => Program.Config.RB_GamescopeEnabled = b)
+            {
+                CheckWarning = x => 
+                {
+                    if (!Program.IsGamescopeInstalled)
+                        return Strings.GamescopeNotFound;
+                    return null;
+                },
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            },
+
+            new SettingsEntry<string>(Strings.GamescopeArguments, Strings.GameScopeArgumentsDescription, () => Program.Config.RB_GamescopeArguments ?? "", s => Program.Config.RB_GamescopeArguments = s),
         };
     }
 

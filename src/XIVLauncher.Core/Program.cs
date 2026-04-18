@@ -8,6 +8,7 @@ using Hexa.NET.SDL3;
 
 using Serilog;
 
+using XIVLauncher.Aria.Attributes;
 using XIVLauncher.Common;
 using XIVLauncher.Common.Dalamud;
 using XIVLauncher.Common.Game.Patch;
@@ -505,12 +506,8 @@ sealed class Program
 
     private static List<ExtraCommand>? GetExtraCommands()
     {
-        var commands = new List<ExtraCommand>();
-        if (Config.RB_GamescopeEnabled ?? false && IsGamescopeInstalled)
-        {
-            commands.Add(new ExtraCommand("gamescope", ((Config.RB_GamescopeArguments ?? string.Empty) + " --").Trim()));
-        }
-
+        bool usingMangoHud = false;
+        bool usingMangoApp = false;
         if (IsMangoHudInstalled)
         {
             switch (Config.RB_HudType)
@@ -519,12 +516,27 @@ sealed class Program
                 case RBHudType.MHCustomFile:
                 case RBHudType.MHCustomString:
                 case RBHudType.MHFull:
-                    commands.Add(new ExtraCommand("mangohud", Config.RB_MangoHudArguments ?? ""));
+                    usingMangoHud = true;
                     break;
                 default:
                     break;
             }
         }
+        
+        var commands = new List<ExtraCommand>();
+        if ((Config.RB_GamescopeEnabled ?? false) && IsGamescopeInstalled)
+        {
+            if ((Config.RB_GamescopeArguments ?? "").Contains("--mangoapp"))
+                usingMangoApp = true;
+
+            commands.Add(new ExtraCommand("gamescope", ((Config.RB_GamescopeArguments ?? string.Empty) + " --").Trim()));
+        }
+
+        if (usingMangoHud && !usingMangoApp)
+        {
+            commands.Add(new ExtraCommand("mangohud", Config.RB_MangoHudArguments ?? ""));
+        }
+
         if (commands.Count == 0) return null;
         return commands;
     }

@@ -667,7 +667,7 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
         <value>Choose an overlay. DXVK Hud and MangoHud are supported.</value>
     </data>
     <data name="MangoHudNotFound" xml:space="preserve">
-        <value>Could not find MangoHud! MangoHud options may not work.</value>
+        <value>Could not find MangoHud! MangoHud options will not work.</value>
     </data>
     <data name="DXVKHudCustomSetting" xml:space="preserve">
         <value>DXVK Hud Custom String</value>
@@ -691,13 +691,29 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
         <value>Use a file to define MangoHud settings.</value>
     </data>
     <data name="MangoHudFileNotFound" xml:space="preserve">
-        <value>Could not find MangoHud config file!</value>
+        <value>Could not find MangoHud config file! Default setting will be used instead.</value>
     </data>
     <data name="MangoHudExtraArgs" xml:space="preserve">
-        <value>MangoHud Extra Arguments</value>
+        <value>MangoHud Arguments</value>
     </data>
     <data name="MangoHudExtraArgsDescription" xml:space="preserve">
         <value>Extra arguments to pass to mangohud. Not environment varibles. Use --dlsym if using WineD3D.</value>
+    </data>
+    <data name="GamescopeEnabled" xml:space="preserve">
+        <value>Enable Gamescope</value>
+    </data>
+    <data name="GamescopeEnabledDescription" xml:space="preserve">
+        <value>Experimental. May not work with regular wine.</value>
+    </data>
+    <data name="GamescopeArguments" xml:space="preserve">
+        <value>Gamescope Arguments</value>
+    </data>
+    <data name="GamescopeArgumentsDescription" xml:space="preserve">
+        <value>Arguments to pass to Gamescope. Do not add trailing "--"
+Recommended: --force-grab-cursor -f -H (vertical res).</value>
+    </data>
+    <data name="GamescopeNotFound" xml:space="preserve">
+        <value>Could not find Gamescope! Gamescope options will not work.</value>
     </data>
     <data name="HideWineExportsHack" xml:space="preserve">
         <value>Hack: Hide Wine Exports</value>

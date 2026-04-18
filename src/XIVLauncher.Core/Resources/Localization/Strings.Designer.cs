@@ -1314,6 +1314,36 @@ namespace XIVLauncher.Core.Resources.Localization {
             }
         }
 
+        internal static string GamescopeEnabled {
+            get {
+                return ResourceManager.GetString("GamescopeEnabled", resourceCulture);
+            }
+        }
+
+        internal static string GameScopeEnabledDescription {
+            get {
+                return ResourceManager.GetString("GamescopeEnabledDescription", resourceCulture);
+            }
+        }
+
+        internal static string GamescopeArguments {
+            get {
+                return ResourceManager.GetString("GamescopeArguments", resourceCulture);
+            }
+        }
+
+        internal static string GameScopeArgumentsDescription {
+            get {
+                return ResourceManager.GetString("GamescopeArgumentsDescription", resourceCulture);
+            }
+        }
+
+        internal static string GamescopeNotFound {
+            get {
+                return ResourceManager.GetString("GamescopeNotFound", resourceCulture);
+            }
+        }
+
         /* Troubleshooting Tab */
         internal static string HideWineExportsHack {
             get {
