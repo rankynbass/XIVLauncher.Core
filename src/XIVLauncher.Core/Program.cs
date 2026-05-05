@@ -239,20 +239,9 @@ sealed class Program
     {
         mainArgs = args;
 
-        bool badxlpath = false;
-        var badxlpathex = new Exception();
-        string? useAltPath = CoreEnvironmentSettings.GetAltUserDir();
-        
-        try
-        {
-            storage = new Storage(APP_NAME, useAltPath);
-        }
-        catch (Exception e)
-        {
-            storage = new Storage(APP_NAME);
-            badxlpath = true;
-            badxlpathex = e;
-        }
+        // XDG will handle the storage path for Linux and Mac. It will fall back to the old ~/.xlcore path on Linux and Mac if it exists and the XDG path does not.
+        var userDir = XDG.GetStoragePath(APP_NAME, CoreEnvironmentSettings.UserDir);
+        storage = new Storage(APP_NAME, userDir);
 
         SetupLogging(mainArgs);
         if (Environment.OSVersion.Platform == PlatformID.Unix)
@@ -261,18 +250,15 @@ sealed class Program
             WineManager = new WineManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
             DxvkManager = new DxvkManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
             NvapiManager = new NvapiManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
+            
             LoadConfig(storage);
-            WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true);
-            DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true);
-            NvapiManager.DownloadNvapiList(Config.RB_KeepToolsUpdated ?? true);
+            
+            WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
+            DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
+            NvapiManager.DownloadNvapiList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
         }
         else
             LoadConfig(storage);
-
-        if (badxlpath)
-        {
-            Log.Error(badxlpathex, $"Bad value for XL_USERDIR or XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
-        }
 
         if (CoreEnvironmentSettings.ClearAll)
         {

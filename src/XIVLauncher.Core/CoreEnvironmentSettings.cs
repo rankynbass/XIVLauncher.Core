@@ -27,6 +27,27 @@ public static class CoreEnvironmentSettings
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
     public static string? ProtonPrefix => System.Environment.GetEnvironmentVariable("PROTONPREFIX");
     public static bool IsAppImage => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPIMAGE_ROOT"));
+    
+    private static string? userDir = null;
+    public static string UserDir
+    {
+        get
+        {
+            if (userDir != null)
+                return userDir;
+
+            var uDir = Environment.GetEnvironmentVariable("XL_USERDIR") ?? "";
+            var uDir2 = Environment.GetEnvironmentVariable("XL_USER_DIR") ?? "";
+            var xlPath = Environment.GetEnvironmentVariable("XL_PATH") ?? "";
+            if (!string.IsNullOrEmpty(uDir))
+                userDir = uDir;
+            else if (!string.IsNullOrEmpty(uDir2))
+                userDir = uDir2;
+            else
+                userDir = xlPath;
+            return userDir;
+        }
+    }
 
     private static bool CheckEnvBool(string key)
     {
@@ -56,14 +77,6 @@ public static class CoreEnvironmentSettings
 
         // Will return 0 if appid is invalid (or zero).
         return result;
-    }
-
-    public static string? GetAltUserDir()
-    {
-        var alt1 = Environment.GetEnvironmentVariable("XL_USERDIR");
-        var alt2 = Environment.GetEnvironmentVariable("XL_PATH");
-        if (alt1 is not null) return alt1;
-        return alt2;
     }
 
     public static string GetCType()
