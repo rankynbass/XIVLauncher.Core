@@ -731,9 +731,9 @@ public class MainPage : Page
 
             if (App.Settings.RB_App1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App1))
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.RB_App1 + "\"" + App.Settings.RB_App1Args, wineD3D: App.Settings.RB_App1WineD3D.Value);
-            if (App.Settings.RB_App1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App2))
+            if (App.Settings.RB_App2Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App2))
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.RB_App2 + "\"" + App.Settings.RB_App2Args, wineD3D: App.Settings.RB_App2WineD3D.Value);
-            if (App.Settings.RB_App1Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App3))
+            if (App.Settings.RB_App3Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App3))
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.RB_App3 + "\"" + App.Settings.RB_App3Args, wineD3D: App.Settings.RB_App3WineD3D.Value);
 
             App.StartLoading(Strings.StartingGame, Strings.HaveFun);
