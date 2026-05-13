@@ -142,13 +142,44 @@ public class CompatibilityTools
 
     public async Task EnsureTool(HttpClient httpClient, DirectoryInfo tempPath)
     {
-        // Download Umu Launcher if it's missing.
-        if (Settings.IsUsingUmu && !File.Exists(RuntimePath))
+        if (Settings.IsUsingUmu)
         {
-            if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
-                throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
-            Log.Information($"umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
-            await DownloadRuntime().ConfigureAwait(false);
+            // Download Umu Launcher if it's missing.
+            var downloadUmu = false;
+            var downloadUrlExists = !string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl);
+            var webVersion = "";
+            if (!File.Exists(RuntimePath))
+            {
+                downloadUmu = true;
+                Log.Information($"Umu Launcher selected, but {RuntimePath} is not present. Downloading...");
+            }
+            else if (downloadUrlExists)
+            {
+                var urlParts = Settings.UmuLauncher.DownloadUrl.Split('/');
+                webVersion = urlParts[urlParts.Length - 2]; // The version is the second to last part of the url.
+                if (File.Exists(Path.Combine(umuDirectory.FullName, "version")))
+                {
+                    var currentVersion = File.ReadAllText(Path.Combine(umuDirectory.FullName, "version")).Trim();
+                    if (currentVersion != webVersion)
+                    {
+                        downloadUmu = true;
+                        Log.Information($"[UMU]Umu Launcher version mismatch. Current version: {currentVersion}, expected version: {webVersion}. Downloading...");
+                    }
+                }
+                else
+                {
+                    downloadUmu = true;
+                    Log.Information($"[UMU] Umu Launcher version file not found. Expected at {Path.Combine(umuDirectory.FullName, "version")}. Downloading...");
+                }
+            }
+            if (downloadUmu)
+            {
+                if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
+                    throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
+                Log.Information($"[UMU] umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
+                await Runtime.DownloadRuntime(httpClient, umuDirectory, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
+                File.WriteAllText(Path.Combine(umuDirectory.FullName, "version"), webVersion);
+            }        
         }
 
         if (Settings.IsProton)
@@ -197,20 +228,6 @@ public class CompatibilityTools
         PlatformHelpers.Untar(tempFilePath, targetPath.FullName);
         Log.Information("Compatibility tool {Name} successfully extracted to {Path}", Settings.WineRelease.Label, targetPath.FullName);
         File.Delete(tempFilePath);
-    }
-
-    private async Task DownloadRuntime()
-    {
-        using var client = HappyEyeballsHttp.CreateHttpClient();
-        var tempPath = PlatformHelpers.GetTempFileName();
-        await File.WriteAllBytesAsync(tempPath, await client.GetByteArrayAsync(Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false)).ConfigureAwait(false);
-        if (!CompatUtil.EnsureChecksumMatch(tempPath, [Settings.UmuLauncher.Checksum]))
-        {
-            throw new InvalidDataException("SHA512 checksum verification failed");
-        }
-        PlatformHelpers.Untar(tempPath, umuDirectory.Parent.FullName);
-        Log.Information("Umu Launcher successfully extracted to {Path}", umuDirectory.FullName);
-        File.Delete(tempPath);
     }
 
     public void EnsurePrefix()
