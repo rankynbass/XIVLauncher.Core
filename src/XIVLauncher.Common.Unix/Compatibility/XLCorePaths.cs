@@ -2,11 +2,11 @@ using System.IO;
 
 namespace XIVLauncher.Common.Unix.Compatibility.Wine;
 
-public class XLCorePaths( DirectoryInfo prefix, DirectoryInfo tools, DirectoryInfo game, DirectoryInfo config, DirectoryInfo steam)
+public class XLCorePaths( DirectoryInfo prefix, DirectoryInfo storage, DirectoryInfo game, DirectoryInfo config, DirectoryInfo steam)
 {
     public DirectoryInfo Prefix { get; } = prefix;
 
-    public DirectoryInfo ToolsFolder { get; } = tools;
+    public DirectoryInfo StorageFolder { get; } = storage;
 
     public DirectoryInfo GameFolder { get; } = game;
 

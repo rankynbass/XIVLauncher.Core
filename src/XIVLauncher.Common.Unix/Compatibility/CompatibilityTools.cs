@@ -24,6 +24,7 @@ public class CompatibilityTools
     private const uint NVAPI_CLEANUP_THRESHHOLD = 5;
     private const uint WINE_CLEANUP_THRESHHOLD = 10;
 
+    private readonly DirectoryInfo storageDirectory;
     private readonly DirectoryInfo wineDirectory;
     private readonly DirectoryInfo dxvkDirectory;
     private readonly DirectoryInfo nvapiDirectory;
@@ -70,14 +71,20 @@ public class CompatibilityTools
         this.dxvkAsyncOn = dxvkAsyncOn;
         this.gplAsyncCacheOn = gplAsyncCacheOn;
         this.extraCommands = commands;
-        this.wineDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "wine"));
-        this.dxvkDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "dxvk"));
-        this.nvapiDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "nvapi"));
-        this.umuDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.ToolsFolder.FullName, "umu"));
+        this.storageDirectory = Settings.Paths.StorageFolder;
+        this.wineDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.StorageFolder.FullName, "compatibilitytool", "wine"));
+        this.dxvkDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.StorageFolder.FullName, "compatibilitytool", "dxvk"));
+        this.nvapiDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.StorageFolder.FullName, "compatibilitytool", "nvapi"));
+        this.umuDirectory = new DirectoryInfo(Path.Combine(Settings.Paths.StorageFolder.FullName, "compatibilitytool", "umu"));
         this.gameDirectory = Settings.Paths.GameFolder;
         this.configDirectory = Settings.Paths.ConfigFolder;
         this.steamDirectory = Settings.Paths.SteamFolder;
 
+        this.wineDirectory.Create();
+        this.dxvkDirectory.Create();
+        this.nvapiDirectory.Create();
+        this.umuDirectory.Create();
+    
         // TODO: Replace these with a nicer way of preventing a pileup of compat tools,
         // This implementation is just a hack.
         if (Directory.GetFiles(dxvkDirectory.FullName).Length >= DXVK_CLEANUP_THRESHHOLD)
@@ -98,14 +105,6 @@ public class CompatibilityTools
 
         this.logWriter = new StreamWriter(wineSettings.LogFile.FullName);
 
-        if (!this.wineDirectory.Exists)
-            this.wineDirectory.Create();
-        if (!this.dxvkDirectory.Exists)
-            this.dxvkDirectory.Create();
-        if (!this.nvapiDirectory.Exists)
-            this.nvapiDirectory.Create();
-        if (!this.umuDirectory.Exists)
-            this.umuDirectory.Create();
         if (!this.steamDirectory.Exists && this.Settings.IsUsingUmu)
         {
             this.steamDirectory.Create();
@@ -212,7 +211,7 @@ public class CompatibilityTools
         if (isNvapiEnabled)
         {
             await Nvapi.Nvapi.InstallNvapi(httpClient, Settings.Prefix, nvapiDirectory, nvapiVersion).ConfigureAwait(false);
-            Nvapi.Nvapi.CopyNvngx(Settings.Paths.GameFolder, Settings.Prefix);
+            Nvapi.Nvapi.CopyNvngx(Settings.Paths.GameFolder, Settings.Prefix, storageDirectory);
         }
         IsToolReady = true;
     }

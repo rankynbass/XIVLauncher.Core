@@ -449,7 +449,6 @@ sealed class Program
                         (Config.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(Config.RB_WineBinaryPath));
         var winePrefix = isProton ? (new DirectoryInfo(CoreEnvironmentSettings.ProtonPrefix ?? Path.Combine(storage.Root.FullName, "protonprefix"))) :
                                     (new DirectoryInfo(CoreEnvironmentSettings.WinePrefix ?? Path.Combine(storage.Root.FullName, "wineprefix")));
-        var toolsFolder = storage.GetFolder("compatibilitytool");
         var wineRelease = Config.RB_WineStartupType switch
         {
             RBWineStartupType.Custom => WineSettings.IsValidWineBinaryPath(Config.RB_WineBinaryPath) ? 
@@ -467,12 +466,9 @@ sealed class Program
             NvapiManager.GetNvapi(Config.RB_NvapiVersion);
         var async = Config.RB_DxvkVersion.Contains("async") && Config.DxvkAsyncEnabled == true;
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
-        var paths = new XLCorePaths(winePrefix, toolsFolder, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
+        var paths = new XLCorePaths(winePrefix, storage.Root, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
         var useUmu = Config.RB_UmuLauncher != RBUmuLauncherType.Disabled;
         var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.RB_WineSync ?? RBWineSyncType.FSync, Config.WaylandEnabled ?? false);
-        toolsFolder.CreateSubdirectory("wine");
-        toolsFolder.CreateSubdirectory("dxvk");
-        toolsFolder.CreateSubdirectory("nvapi");
         var customHud = Config.RB_HudType switch
         {
             RBHudType.None => "0",

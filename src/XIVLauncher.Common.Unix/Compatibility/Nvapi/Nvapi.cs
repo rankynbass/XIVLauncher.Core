@@ -44,9 +44,9 @@ public static class Nvapi
 
     // In order for the nvngx dlls to work properly with wine-staging, they need to be in the game directory.
     // The prefix system32 folder will not work. If the dlls are only in system32, the game will hang on startup.
-    public static void CopyNvngx(DirectoryInfo gameDirectory, DirectoryInfo prefix)
+    public static void CopyNvngx(DirectoryInfo gameDirectory, DirectoryInfo prefix, DirectoryInfo storage)
     {
-        var nvngxPath = NvidiaWineDLLPath();
+        var nvngxPath = NvidiaWineDLLPath(storage);
         if (string.IsNullOrEmpty(nvngxPath))
         {
             Log.Information("No nvngx.dll or _nvngx.dll found. Try copying them to ~/.xlcore/compatibilitytool");
@@ -91,15 +91,15 @@ public static class Nvapi
         }
     }
 
-    private static string NvidiaWineDLLPath()
+    private static string NvidiaWineDLLPath(DirectoryInfo storage)
     {
         string nvngxPath = "";
-        string HOME = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         string PATH = Environment.GetEnvironmentVariable("XL_NVNGXPATH");      
 
         var targets = new List<string>
         { 
-            Path.Combine(HOME, ".xlcore", "compatibilitytool"),
+            Path.Combine(storage.FullName, "compatibilitytool"),
+            Path.Combine(storage.FullName, "nvidia"),
             Path.Combine("/", "app", "lib"),                        // flatpak
             Path.Combine("/", "usr", "lib", "extensions"),          // flatpak
             Path.Combine("/", "usr", "lib", "x86_64-linux-gnu"),    // flatpak, debuntu
