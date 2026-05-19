@@ -71,7 +71,7 @@ public class SettingsTabDxvk : SettingsTab
             {
                 CheckWarning = s =>
                 {
-                    if (!Program.IsMangoHudInstalled)
+                    if (!CoreEnvironmentSettings.IsMangoHudInstalled)
                         return Strings.MangoHudNotFound;
                     return null;
                 },

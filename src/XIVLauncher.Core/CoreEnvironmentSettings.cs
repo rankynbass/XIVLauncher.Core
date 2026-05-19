@@ -96,76 +96,84 @@ public static class CoreEnvironmentSettings
 
     static private bool? gameModeInstalled = null;
 
-    static public bool IsGameModeInstalled()
+    static public bool IsGameModeInstalled
     {
-        if (gameModeInstalled is not null)
-            return gameModeInstalled ?? false;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        get
         {
-            var handle = IntPtr.Zero;
-            gameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
-            NativeLibrary.Free(handle);
+            if (gameModeInstalled is not null)
+                return gameModeInstalled ?? false;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var handle = IntPtr.Zero;
+                gameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
+                NativeLibrary.Free(handle);
+            }
+            else
+                gameModeInstalled = false;
+            return gameModeInstalled ?? false;
         }
-        else
-            gameModeInstalled = false;
-        return gameModeInstalled ?? false;
     }
 
 
     private static bool? mangoHudFound =  null;
 
-    public static bool IsMangoHudInstalled()
+    public static bool IsMangoHudInstalled
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
-        if (mangoHudFound is null)
+        get
         {
-            mangoHudFound = false;
-            string[] libraryPaths = [ "/app/lib", "/usr/lib64", "/usr/lib", "/lib64", "/lib", "/var/lib/snapd/hostfs/usr/lib64", "/var/lib/snapd/hostfs/usr/lib" ];
-            var options = new EnumerationOptions
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
+            if (mangoHudFound is null)
             {
-                RecurseSubdirectories = true,
-                MaxRecursionDepth = 8
-            };
-            foreach (var path in libraryPaths)
-            {
-                if (!Directory.Exists(path))
-                    continue;
-
-                if (Directory.GetFiles(path, "libMangoHud.so", options).Length > 0)
+                mangoHudFound = false;
+                string[] binPaths = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
+                var options = new EnumerationOptions
                 {
-                    mangoHudFound = true;
-                    break;
+                    RecurseSubdirectories = false
+                };
+                foreach (var path in binPaths)
+                {
+                    if (!Directory.Exists(path))
+                        continue;
+
+                    if (Directory.GetFiles(path, "mangohud", options).Length > 0)
+                    {
+                        mangoHudFound = true;
+                        break;
+                    }
                 }
             }
+            return mangoHudFound ?? false;
         }
-        return mangoHudFound ?? false;
     }
 
     private static bool? gamescopeFound = null;
 
-    public static bool IsGamescopeInstalled()
+    public static bool IsGamescopeInstalled
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
-        if (gamescopeFound is null)
+        get
         {
-            gamescopeFound = false;
-            string[] binPaths = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
-            var options = new EnumerationOptions
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
+            if (gamescopeFound is null)
             {
-                RecurseSubdirectories = false
-            };
-            foreach (var path in binPaths)
-            {
-                if (!Directory.Exists(path))
-                    continue;
-
-                if (Directory.GetFiles(path, "gamescope", options).Length > 0)
+                gamescopeFound = false;
+                string[] binPaths = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':');
+                var options = new EnumerationOptions
                 {
-                    gamescopeFound = true;
-                    break;
+                    RecurseSubdirectories = false
+                };
+                foreach (var path in binPaths)
+                {
+                    if (!Directory.Exists(path))
+                        continue;
+
+                    if (Directory.GetFiles(path, "gamescope", options).Length > 0)
+                    {
+                        gamescopeFound = true;
+                        break;
+                    }
                 }
             }
+            return gamescopeFound ?? false;
         }
-        return gamescopeFound ?? false;
     }
 }

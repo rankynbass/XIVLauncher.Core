@@ -79,10 +79,6 @@ sealed class Program
     public static DxvkManager DxvkManager { get; private set; }
     public static NvapiManager NvapiManager { get; private set; }
     public static bool GameHasClosed { get; set; } = false;
-    public static bool IsGameModeInstalled = CoreEnvironmentSettings.IsGameModeInstalled();
-    public static bool IsMangoHudInstalled = CoreEnvironmentSettings.IsMangoHudInstalled();
-
-    public static bool IsGamescopeInstalled = CoreEnvironmentSettings.IsGamescopeInstalled();
 
     // TODO: We don't have the steamworks api for this yet.
     public static bool IsSteamDeckHardware => CoreEnvironmentSettings.IsDeck.HasValue ?
@@ -490,7 +486,7 @@ sealed class Program
     {
         bool usingMangoHud = false;
         bool usingMangoApp = false;
-        if (IsMangoHudInstalled)
+        if (CoreEnvironmentSettings.IsMangoHudInstalled)
         {
             switch (Config.RB_HudType)
             {
@@ -506,7 +502,7 @@ sealed class Program
         }
         
         var commands = new List<ExtraCommand>();
-        if ((Config.RB_GamescopeEnabled ?? false) && IsGamescopeInstalled)
+        if ((Config.RB_GamescopeEnabled ?? false) && CoreEnvironmentSettings.IsGamescopeInstalled)
         {
             if ((Config.RB_GamescopeArguments ?? "").Contains("--mangoapp"))
                 usingMangoApp = true;

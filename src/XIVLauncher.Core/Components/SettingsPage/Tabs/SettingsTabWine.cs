@@ -70,7 +70,7 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
                 CheckWarning = b =>
                 {
-                    if (b == true && FeralGameModeFound == false)
+                    if (b == true && CoreEnvironmentSettings.IsGameModeInstalled == false)
                         return Strings.EnableFeralGameModeNotFoundValidation;
                     return null;
                 }
@@ -104,7 +104,7 @@ public class SettingsTabWine : SettingsTab
             {
                 CheckWarning = x => 
                 {
-                    if (!Program.IsGamescopeInstalled)
+                    if (!CoreEnvironmentSettings.IsGamescopeInstalled)
                         return Strings.GamescopeNotFound;
                     return null;
                 },
@@ -120,21 +120,6 @@ public class SettingsTabWine : SettingsTab
     public override bool IsUnixExclusive => true;
 
     public override string Title => Strings.WineTitle;
-
-    private bool? feralGameModeFound = null;
-
-    private bool FeralGameModeFound
-    {
-        get
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return false;
-            if (feralGameModeFound != null) return feralGameModeFound ?? false;
-            var handle = IntPtr.Zero;
-            feralGameModeFound = (NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle));
-            NativeLibrary.Free(handle);
-            return feralGameModeFound ?? false;
-        }
-    }
 
     public override void Draw()
     {
