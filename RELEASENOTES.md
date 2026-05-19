@@ -1,4 +1,4 @@
-**1.4.0.3**
-- XIVLauncher-RB will now search for the storage in the following order: $XL_USERDIR env variable, $XDG_DATA_HOME/xlcore, ~/.xlcore
-- The storage directory is now passed to compatibility tools instead of the tools folder; this is mostly an internal housekeeping chore.
-- Umu will now keep track of the downloaded version, and if a different version is provided via the .json file, it will be updated.
+**1.4.0.4**
+- Fixed mangohud detection. It should now work with nix. Switched to using PATH, since mangohud is being called directly.
+- Fixed Apps tab. Toggles for slots 2 and 3 were broken. Thanks to Genevieve Mendoza.
+- Merged in some fixes from goatcorp repo

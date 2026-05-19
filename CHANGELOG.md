@@ -1,4 +1,10 @@
 # Changelog
+### Mon May 18 2026 Rankyn Bass <rankyn@proton.me>
+1.4.0.4
+- Fixed mangohud detection. It should now work with nix. Switched to using PATH, since mangohud is being called directly.
+- Fixed Apps tab. Toggles for slots 2 and 3 were broken. Thanks to Genevieve Mendoza.
+- Merged in some fixes from goatcorp repo
+ 
 ### Wed May 13 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.3
 - XIVLauncher-RB will now search for the storage in the following order: $XL_USERDIR env variable, $XDG_DATA_HOME/xlcore, ~/.xlcore
