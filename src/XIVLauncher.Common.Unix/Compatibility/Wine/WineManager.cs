@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -358,7 +359,7 @@ public class WineManager
         return null;
     }
 
-    public async Task DownloadWineList(bool keepUpdated)
+    public async Task DownloadWineList(bool keepUpdated, HttpClient client)
     {
         if (disableUpdate || !keepUpdated)
             return;
@@ -366,7 +367,6 @@ public class WineManager
         // Uncomment for testing
         // await Task.Delay(5000);
 
-        using var client = HappyEyeballsHttp.CreateHttpClient();
         client.Timeout = TimeSpan.FromSeconds(5);
         var tempPath = PlatformHelpers.GetTempFileName();
 

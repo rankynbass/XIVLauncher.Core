@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Serilog;
 
+using XIVLauncher.Common.Http.HappyEyeballs;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk.Releases;
 using XIVLauncher.Common.Util;
 
@@ -154,7 +156,7 @@ public class DxvkManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public async Task DownloadDxvkList(bool keepUpdated)
+    public async Task DownloadDxvkList(bool keepUpdated, HttpClient client)
     {
         if (disableUpdate || !keepUpdated)
             return;
@@ -162,7 +164,7 @@ public class DxvkManager
         // Uncomment for testing
         // await Task.Delay(5000);
 
-        using var client = HappyEyeballsHttp.CreateHttpClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(DXVKLIST_URL).ConfigureAwait(false));

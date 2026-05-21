@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Security.Cryptography;
 using Newtonsoft.Json;
 using Serilog;
 
+using XIVLauncher.Common.Http.HappyEyeballs;
 using XIVLauncher.Common.Unix.Compatibility.Nvapi.Releases;
 using XIVLauncher.Common.Util;
 
@@ -148,7 +150,7 @@ public class NvapiManager
         return Version[GetVersionOrDefault(name)];
     }
 
-    public async Task DownloadNvapiList(bool keepUpdated)
+    public async Task DownloadNvapiList(bool keepUpdated, HttpClient client)
     {
         if (disableUpdate || !keepUpdated)
             return;
@@ -156,7 +158,7 @@ public class NvapiManager
         // Uncomment for testing
         // await Task.Delay(5000);
         
-        using var client = HappyEyeballsHttp.CreateHttpClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(NVAPILIST_URL).ConfigureAwait(false));

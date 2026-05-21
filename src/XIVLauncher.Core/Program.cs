@@ -249,9 +249,9 @@ sealed class Program
             
             LoadConfig(storage);
             
-            WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
-            DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
-            NvapiManager.DownloadNvapiList(Config.RB_KeepToolsUpdated ?? true).ConfigureAwait(false);
+            WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true, HttpClient).ConfigureAwait(false);
+            DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true, HttpClient).ConfigureAwait(false);
+            NvapiManager.DownloadNvapiList(Config.RB_KeepToolsUpdated ?? true, HttpClient).ConfigureAwait(false);
         }
         else
             LoadConfig(storage);
