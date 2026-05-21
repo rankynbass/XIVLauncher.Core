@@ -182,7 +182,7 @@ sealed class Program
     {
         mainArgs = args;
         // XDG will handle the storage path for Linux and Mac. It will fall back to the old ~/.xlcore path on Linux and Mac if it exists and the XDG path does not.
-        var userDir = XDG.GetStoragePath(APP_NAME, CoreEnvironmentSettings.UserDir);
+        var userDir = XDG.GetStoragePath(APP_NAME);
         storage = new Storage(APP_NAME, userDir);
 
         if (CoreEnvironmentSettings.ClearAll)
