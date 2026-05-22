@@ -158,7 +158,6 @@ public class NvapiManager
         // Uncomment for testing
         // await Task.Delay(5000);
         
-        client.Timeout = TimeSpan.FromSeconds(5);
         var tempPath = PlatformHelpers.GetTempFileName();
 
         File.WriteAllBytes(tempPath, await client.GetByteArrayAsync(NVAPILIST_URL).ConfigureAwait(false));
