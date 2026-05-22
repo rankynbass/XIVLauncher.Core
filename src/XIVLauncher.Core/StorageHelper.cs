@@ -1,26 +1,25 @@
 using System.IO;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 using XIVLauncher.Common;
 
 namespace XIVLauncher.Core;
 
-public static class XDG
+public static class StorageHelper
 {
     private static Platform platform;
 
-    static XDG()
+    static StorageHelper()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             platform = Platform.Win32;
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        else if (OperatingSystem.IsLinux())
         {
             platform = Platform.Linux;
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (OperatingSystem.IsMacOS())
         {
             platform = Platform.Mac;
         }
@@ -30,25 +29,25 @@ public static class XDG
         }
     }
 
-    public static string? GetStoragePath(string appName, string? overridePath = null)
+    public static string? GetStoragePath(string appName)
     {
-        if (!string.IsNullOrEmpty(overridePath))
+        if (!string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir))
         {
-            return overridePath;
+            return CoreEnvironmentSettings.UserDir;
         }
         if (platform == Platform.Win32)
         {
-            return null; // Let Storage class handle it. Windows works fine.
+            return null; // Windows storage unchanged.
         }
         else if (platform == Platform.Linux  || platform == Platform.Mac)
         {
-            var xdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"dev.goats.{appName}"));
-            var oldxdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName));
-            var oldStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $".{appName}"));
+            var xdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName));
+            var oldxdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "xlcore"));
+            var oldStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".xlcore"));
             if (xdgStoragePath.Exists)
             {
-                return xdgStoragePath.FullName; // Use XDG Base Directory spec path if it exists. This is ~/.local/share/dev.goats.xlcore on Linux and ~/Library/Application Support/dev.goats.xlcore on Mac.
-                                                // This can be overridden with the XL_USERDIR environment variable, which will take precedence over both the old path and the XDG path.
+                return null;    // Use XDG Base Directory spec path if it exists. This is ~/.local/share/dev.goats.xivlauncher on Linux and ~/Library/Application Support/dev.goats.xivlauncher on Mac.
+                                // This can be overridden with the XL_USERDIR environment variable, which will take precedence over both the old path and the XDG path.
             }
             if (oldxdgStoragePath.Exists)
             {
@@ -56,7 +55,7 @@ public static class XDG
                 // If it's not, we will leave it in place and use it as the storage path, since moving it would take forever and hang the program.
                 if (IsMovable(oldxdgStoragePath.FullName, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)))
                 {
-                    oldxdgStoragePath.MoveTo(xdgStoragePath.FullName); // Move XDG_DATA_HOME/xlcore to XDG_DATA_HOME/dev.goats.xlcore, since it's confirmed to be on the same drive.
+                    oldxdgStoragePath.MoveTo(xdgStoragePath.FullName); // Move XDG_DATA_HOME/xlcore to XDG_DATA_HOME/dev.goats.xivlauncher, since it's confirmed to be on the same drive.
                     return xdgStoragePath.FullName;
                 }
                 return oldxdgStoragePath.FullName;
@@ -70,9 +69,9 @@ public static class XDG
                     oldStoragePath.MoveTo(xdgStoragePath.FullName); // Move ~/.xlcore to new XDG path, since it's confirmed to be on the same drive.
                     return xdgStoragePath.FullName;
                 }
-                return oldStoragePath.FullName; // In case Storage class gets modified before this XDG class gets removed.
+                return oldStoragePath.FullName; // Pass the old storage path ~/.xlcore
             }
-            return xdgStoragePath.FullName; // Use XDG Base Directory spec path for new installs on Linux and Mac.
+            return null; // Use XDG Base Directory spec path for new installs on Linux and Mac.
         }
         else
         {
