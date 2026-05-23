@@ -1,26 +1,25 @@
 using System.IO;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 using XIVLauncher.Common;
 
 namespace XIVLauncher.Core;
 
-public static class XDG
+public static class StorageHelper
 {
     private static Platform platform;
 
-    static XDG()
+    static StorageHelper()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             platform = Platform.Win32;
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        else if (OperatingSystem.IsLinux())
         {
             platform = Platform.Linux;
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (OperatingSystem.IsMacOS())
         {
             platform = Platform.Mac;
         }
@@ -30,6 +29,8 @@ public static class XDG
         }
     }
 
+    // Returns null if we're using the default storage path for the platform, or ~/.xlcore on Linux/Mac if it exists and can't be moved.
+    // Returns the XL_USERDIR if it's set. This overrides all other paths and is mostly here for dual-boxing.
     public static string? GetStoragePath(string appName)
     {
         if (!string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir))
@@ -42,12 +43,12 @@ public static class XDG
         }
         else if (platform == Platform.Linux  || platform == Platform.Mac)
         {
-            var xdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"dev.goats.{appName}"));
-            var oldStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $".{appName}"));
+            var xdgStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName));
+            var oldStoragePath = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $".xlcore"));
             if (xdgStoragePath.Exists)
             {
-                return xdgStoragePath.FullName; // Use XDG Base Directory spec path if it exists. This is ~/.local/share/dev.goats.xlcore on Linux and ~/Library/Application Support/dev.goats.xlcore on Mac.
-                                                // This can be overridden with the XL_USERDIR environment variable, which will take precedence over both the old path and the XDG path.
+                return null;    // Use XDG Base Directory spec path if it exists. This is ~/.local/share on Linux and ~/Library/Application Support on Mac.
+                                // This can be overridden with the XL_USERDIR environment variable, which will take precedence over both the old path and the XDG path.
             }
             if (oldStoragePath.Exists)
             {
@@ -60,7 +61,7 @@ public static class XDG
                 }
                 return oldStoragePath.FullName; // In case Storage class gets modified before this XDG class gets removed.
             }
-            return xdgStoragePath.FullName; // Use XDG Base Directory spec path for new installs on Linux and Mac.
+            return null;    // Use XDG Base Directory spec path for new installs on Linux and Mac.
         }
         else
         {
