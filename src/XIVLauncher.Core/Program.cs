@@ -238,7 +238,7 @@ sealed class Program
         // StorageHelper will handle moving old storage to the new XDG path if possible, and will return the correct path to use for storage.
         var userDir = StorageHelper.GetStoragePath();
         storage = new Storage(APP_NAME, userDir);
-        if (CoreEnvironmentSettings.MakeSymlink)
+        if (CoreEnvironmentSettings.MakeSymlink && !StorageHelper.CheckConfigFileExists("nosymlink"))
             StorageHelper.MakeSymlink(storage.Root.FullName);
 
         SetupLogging(mainArgs);

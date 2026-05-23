@@ -11,6 +11,8 @@ public static class StorageHelper
 
     private static string xdgPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.APP_NAME);
 
+    private static string xdgConfig => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Program.APP_NAME);
+
     private static string oldPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".xlcore");
 
     public static string? GetStoragePath()
@@ -103,5 +105,14 @@ public static class StorageHelper
         {
             Console.WriteLine($"Warning:Failed to create symlink at {oldPath} to {storageTarget}");
         }
+    }
+
+    public static bool CheckConfigFileExists(string configFileName)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return false; // Config file does not exist on Windows.
+        }
+        return File.Exists(Path.Combine(xdgConfig, configFileName));
     }
 }
