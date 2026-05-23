@@ -27,6 +27,7 @@ public static class CoreEnvironmentSettings
     public static string? WinePrefix => System.Environment.GetEnvironmentVariable("WINEPREFIX");
     public static string? ProtonPrefix => System.Environment.GetEnvironmentVariable("PROTONPREFIX");
     public static bool IsAppImage => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPIMAGE_ROOT"));
+    public static bool MakeSymlink => CheckEnvBool("XL_MAKE_SYMLINK", true);
     
     private static string? userDir = null;
     public static string UserDir
@@ -35,7 +36,7 @@ public static class CoreEnvironmentSettings
         {
             if (userDir != null)
                 return userDir;
-
+                
             var uDir = Environment.GetEnvironmentVariable("XL_USERDIR") ?? "";
             var uDir2 = Environment.GetEnvironmentVariable("XL_USER_DIR") ?? "";
             var xlPath = Environment.GetEnvironmentVariable("XL_PATH") ?? "";
@@ -49,11 +50,12 @@ public static class CoreEnvironmentSettings
         }
     }
 
-    private static bool CheckEnvBool(string key)
+    private static bool CheckEnvBool(string key, bool defaultValue = false)
     {
         string val = (Environment.GetEnvironmentVariable(key) ?? string.Empty).ToLower();
         if (val == "1" || val == "true" || val == "yes" || val == "y" || val == "on") return true;
-        return false;
+        if (val == "0" || val == "false" || val == "no" || val == "n" || val == "off") return false;
+        return defaultValue;
     }
 
     private static bool? CheckEnvBoolOrNull(string key)
