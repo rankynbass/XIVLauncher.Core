@@ -17,6 +17,7 @@ public static class CoreEnvironmentSettings
     public static bool IsSteamCompatTool => CheckEnvBool("XL_SCT");
     public static uint SteamAppId => GetAppId(Environment.GetEnvironmentVariable("SteamAppId"));
     public static uint AltAppID => GetAppId(Environment.GetEnvironmentVariable("XL_APPID"));
+    public static bool MakeSymlink => CheckEnvBool("XL_MAKE_SYMLINK", true);
     
     private static string? userDir = null;
     public static string UserDir
@@ -39,11 +40,12 @@ public static class CoreEnvironmentSettings
         }
     }
 
-    private static bool CheckEnvBool(string key)
+    private static bool CheckEnvBool(string key, bool defaultValue = false)
     {
         string val = (Environment.GetEnvironmentVariable(key) ?? string.Empty).ToLower();
         if (val == "1" || val == "true" || val == "yes" || val == "y" || val == "on") return true;
-        return false;
+        if (val == "0" || val == "false" || val == "no" || val == "n" || val == "off") return false;
+        return defaultValue;
     }
 
     private static bool? CheckEnvBoolOrNull(string key)

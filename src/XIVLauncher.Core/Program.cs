@@ -36,7 +36,7 @@ namespace XIVLauncher.Core;
 
 sealed class Program
 {
-    private const string APP_NAME = "dev.goats.xivlauncher";
+    internal const string APP_NAME = "dev.goats.xivlauncher";
     private static readonly Vector3 ClearColor = new(0.1f, 0.1f, 0.1f);
     private static string[] mainArgs = [];
     private static LauncherApp launcherApp = null!;
@@ -182,8 +182,10 @@ sealed class Program
     {
         mainArgs = args;
         // StorageHelper will handle moving old storage to the new XDG path if possible, and will return the correct path to use for storage.
-        var userDir = StorageHelper.GetStoragePath(APP_NAME);
+        var userDir = StorageHelper.GetStoragePath();
         storage = new Storage(APP_NAME, userDir);
+        if (CoreEnvironmentSettings.MakeSymlink)
+            StorageHelper.MakeSymlink(storage.Root.FullName);
 
         if (CoreEnvironmentSettings.ClearAll)
         {
