@@ -4,14 +4,15 @@
 Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with several versions of [WINE tuned for FFXIV](https://github.com/rankynbass/unofficial-wine-xiv-git), as well as Proton and Steam Runtime support.
 
 ## Changes from XIVLauncher.Core
-1) Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Steam Runtime with Proton
-2) Preview of various PRs for XIVLauncher.Core: I try to add various feature and bugfix PRs before they get merged.
-3) Wine and DXVK switchers. This feature will hopefully be merged upstream soon. For now, though, you can test it out here.
+- XDG folder support (hopefully soon to merge in vanilla XIVLauncher.Core). This means the storage folder will be at `$XDG_DATA_HOME/dev.goats.xivlauncher` instead of `~/.xlcore`. For now, a symlink will be created at `~/.xlcore` pointing to the new location. You can disable this with an environment variable (see below) or by creating a file at `$XDG_CONFIG_HOME/dev.goats.xivlauncher/nosymlink`. This *does not* delete an existing symlink.<br>By default, `$XDG_DATA_HOME` is `~/.local/share` for the native/appimage client, and `~/.var/app/dev.rankyn.xivlauncher/data` for flatpaks. `$XDG_CONFIG_HOME` is `~/.config` or `~/.var/app/dev.rankyn.xivlauncher/config`.
+- Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Steam Runtime with Proton
+- Preview of various PRs for XIVLauncher.Core: I try to add various feature and bugfix PRs before they get merged.
+- Wine and DXVK switchers. This feature will hopefully be merged upstream soon. For now, though, you can test it out here.
     - Allows switching between various pre-selected Wine and DXVK versions. DXVK is moved to its own tab.
-    - Allows you to easily add new wine and dxvk versions by dropping them in `~/.xlcore/compatibilitytool/wine` and `~/.xlcore/compatibilitytool/dxvk`, respectively.
-4) Automatic DLSS. You can either use proton, or choose an nvapi version in the DXVK tab. You need to use Wine 9, ValveBE wine, or wine-ge 8-x wine, along with DXVK 2.0+.
-5) Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
-6) Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
+    - Allows you to easily add new wine and dxvk versions by dropping them in `$XDG_DATA_HOME/dev.goats.xivlauncher/compatibilitytool/wine` and `$XDG_DATA_HOME/dev.goats.xivlauncher/compatibilitytool/dxvk`, respectively.
+- Automatic DLSS. You can either use proton, or choose an nvapi version in the DXVK tab. You need to use Wine 9, ValveBE wine, or wine-ge 8-x wine, along with DXVK 2.0+.
+- Auto-Start other windows programs from the Auto-Start tab. They'll be launched within the same prefix (and container, in the case of proton) just before FFXIV is launched. Only works with windows programs at the moment.
+- Managed wine includes several versions taken from my github repos at [Unofficial Wine-XIV](https://github.com/rankynbass/unofficial-wine-xiv-git) and [Wine-GE-XIV](https://github.com/rankynbass/https://github.com/rankynbass/wine-ge-xiv) in addition to the official versions.
 
 For an up-to-date changelog, see: [CHANGELOG.md](CHANGELOG.md)
 
@@ -68,7 +69,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Cor
 
 If you're having trouble, you can [join the XIVLauncher Discord server](https://discord.gg/3NMcUV5), grab the Steam Deck & Linux and join the #xlcore-questions channel. I'm online most days and can usually help out, and there are a number of other people who may also be willing. Please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher-RB.
 
-## Environment Variables for troubleshooting
+## Useful Environment Variables
 | Variable      | Description    |
 | ------------- | -------------- |
 | `XL_USERDIR` | Set to an alternate path to override the default `~/.xlcore` config path. For example, `XL_USERDIR=~/.local/share/xlcore`.
@@ -91,7 +92,7 @@ If you're having trouble, you can [join the XIVLauncher Discord server](https://
 2. Run `dotnet build` or `dotnet publish`
 3. There are a few extra runtime dependencies that may not be installed on some systems, particularly Gentoo and Nix. These include [aria2](https://github.com/aria2/aria2), zstd, and libunwind. If you need a static copy of aria2, you can download one [here](https://github.com/rankynbass/aria2-static-build/releases/tag/v1.37.0-2) and copy it into the same directory as XIVLauncher.Core.
 
-Common components that are shared with the Windows version of XIVLauncher are linked as a submodule in the "lib" folder. XIVLauncher Core can run on Windows, but is by far not as polished as the [original Windows version](https://github.com/goatcorp/FFXIVQuickLauncher). Windows users should not use this application unless for troubleshooting purposes or development work.
+Common components that are shared with the Windows version of XIVLauncher are linked as a submodule in the "lib" folder. XIVLauncher Core can run on Windows, but is by far not as polished as the [original Windows version](https://github.com/goatcorp/FFXIVQuickLauncher). Windows users should not use this application unless for troubleshooting purposes or development work. I do not test XIVLauncher-RB on Windows or Mac; it may not compile or work at all.
 
 ## Distribution
 XIVLauncher-RB is not officially supported by the XIVLauncher community, but many people have used it successfully on different linux distros. You can download flatpak files and AppImages from the releases, but it is also in several user-submitted repos:
@@ -102,6 +103,6 @@ XIVLauncher-RB is not officially supported by the XIVLauncher community, but man
 | [Copr (Fedora+openSuse+EL9)](https://copr.fedorainfracloud.org/coprs/rankyn/xivlauncher/) | ![COPR version](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frankynbass%2FXIVLauncher4rpm%2FRB-patched%2Fbadge.json)|
 | [MPR (Debian+Ubuntu)](https://mpr.makedeb.org/packages/xivlauncher-rb)&#42; | ![MPR package](https://repology.org/badge/version-for-repo/mpr/xivlauncher-rb.svg?header=MPR) |
 
-&#42; The MPR just pulls the latest git master, so it should always be up to date. If you want a specific tag, change the url in the PKGBUILD source section from `branch=RB-patched` to `tag={tag}`. Tags will be in the format `rb-v1.1.0.11`.
+&#42; The MPR just pulls the latest git master, so it should always be up to date. If you want a specific tag, change the url in the PKGBUILD source section from `branch=RB-patched` to `tag={tag}`. Tags will be in the format `rb-v1.4.0.3`.
 
 If there are any others, please let me know and I'll add them.
