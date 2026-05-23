@@ -81,6 +81,21 @@ public static class StorageHelper
         }
         if (oldStoragePath.Exists)
         {
+            var symLinkTarget = oldStoragePath.ResolveLinkTarget(true);
+            // If ~/.xlcore is already a symlink, assume it's correctly set up and create a symlink at XDG_DATA_HOME/dev.goats.xivlauncher pointing to the same target.
+            if (symLinkTarget is not null)
+            {
+                try
+                {
+                    Directory.CreateSymbolicLink(xdgStoragePath.FullName, symLinkTarget.FullName);
+                }
+                catch (System.Exception)
+                {
+                    return oldStoragePath.FullName; // Return the old storage path ~/.xlcore if the symlink creation failed.
+                }
+                return null;
+            }
+
             try
             {
                 var xlcore = oldStoragePath.FullName;           // Store the path. After the move, oldStoragePath will point to the new location.
