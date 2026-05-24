@@ -51,9 +51,9 @@ public static class StorageHelper
 
     public static void MakeSymlink(string storagePath)
     {
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows() || CoreEnvironmentSettings.UserDir != null)
         {
-            return; // Do not create symlink on Windows.
+            return; // Do not create symlink on Windows, or if a custom user directory is set.
         }
 
         // This should only happen if XDG_DATA_HOME is on a separate volume from HOME.
