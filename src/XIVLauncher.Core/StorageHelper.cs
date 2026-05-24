@@ -51,7 +51,7 @@ public static class StorageHelper
 
     public static void MakeSymlink(string storagePath)
     {
-        if (OperatingSystem.IsWindows() || CoreEnvironmentSettings.UserDir != null)
+        if (OperatingSystem.IsWindows() || !string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir))
         {
             return; // Do not create symlink on Windows, or if a custom user directory is set.
         }
