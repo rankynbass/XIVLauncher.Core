@@ -665,10 +665,16 @@ sealed class Program
         Config.GamePath = StorageHelper.FixConfigPath(Config.GamePath);
         Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GamePath);
         Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
-        Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
+        // Doesn't exist in XIVLauncher-RB
+        // Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
         Config.DalamudManualInjectPath = StorageHelper.FixConfigPath(Config.DalamudManualInjectPath);
 
         // RB-specific paths
+        Config.RB_WineBinaryPath = StorageHelper.FixConfigPath(Config.RB_WineBinaryPath);
+        Config.RB_MangoHudCustomFile = StorageHelper.FixConfigPath(Config.RB_MangoHudCustomFile);
+        Config.RB_App1 = StorageHelper.FixConfigPath(Config.RB_App1);
+        Config.RB_App2 = StorageHelper.FixConfigPath(Config.RB_App2);
+        Config.RB_App3 = StorageHelper.FixConfigPath(Config.RB_App3);
     }
 
     public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();
