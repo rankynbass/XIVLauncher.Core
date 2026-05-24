@@ -202,6 +202,7 @@ sealed class Program
 
         SetupLogging(mainArgs);
         LoadConfig(storage);
+        FixConfigPaths();
 
         Secrets = GetSecretProvider(storage);
 
@@ -483,6 +484,15 @@ sealed class Program
         ClearPlugins(tsbutton);
         ClearTools(tsbutton);
         ClearLogs(true);
+    }
+
+    public static void FixConfigPaths()
+    {
+        Config.GamePath = StorageHelper.FixConfigPath(Config.GamePath);
+        Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GamePath);
+        Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
+        Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
+        Config.DalamudManualInjectPath = StorageHelper.FixConfigPath(Config.DalamudManualInjectPath);
     }
 
     public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();

@@ -117,4 +117,42 @@ public static class StorageHelper
             Console.WriteLine($"Warning:Failed to create symlink at {oldPath} to {storageTarget}");
         }
     }
+
+    public static string? FixConfigPath(string configPath)
+    {
+        if (OperatingSystem.IsWindows() || !string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir) || configPath == null)
+            return configPath; // Do not modify the path on Windows, or if a custom user directory is set.
+
+        if (Path.Combine(Program.storage.Root.FullName) == Path.Combine(oldPath))
+            return configPath; // If the storage path is still the old path, do not modify the config ini path.
+
+        if (configPath.StartsWith(oldPath))
+            return Path.Combine(ReplaceFirst(configPath, oldPath, Program.storage.Root.FullName)); // Return the modified path.
+
+        return configPath; // Return the original path if it does not need to be modified.
+    }
+
+    public static DirectoryInfo? FixConfigPath(DirectoryInfo configPath)
+    {
+        if (OperatingSystem.IsWindows() || !string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir) || configPath == null)
+            return configPath; // Do not modify the path on Windows, or if a custom user directory is set.
+
+        if (Path.Combine(Program.storage.Root.FullName) == Path.Combine(oldPath))
+            return configPath; // If the storage path is still the old path, do not modify the config ini path.
+
+        if (configPath.FullName.StartsWith(oldPath))
+            return new DirectoryInfo(Path.Combine(ReplaceFirst(configPath.FullName, oldPath, Program.storage.Root.FullName))); // Return the modified path.
+
+        return configPath; // Return the original path if it does not need to be modified.
+    }
+
+    private static string ReplaceFirst(string text, string search, string replace)
+    {
+      int pos = text.IndexOf(search);
+      if (pos < 0)
+      {
+        return text;
+      }
+      return text[..pos] + replace + text[(pos + search.Length)..];
+    }
 }
