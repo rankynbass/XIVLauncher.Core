@@ -250,6 +250,7 @@ sealed class Program
             NvapiManager = new NvapiManager(storage.Root.FullName, CoreEnvironmentSettings.IgnoreLists, CoreEnvironmentSettings.DisableListUpdate);
             
             LoadConfig(storage);
+            FixConfigPaths();
             
             WineManager.DownloadWineList(Config.RB_KeepToolsUpdated ?? true, HttpClient).ConfigureAwait(false);
             DxvkManager.DownloadDxvkList(Config.RB_KeepToolsUpdated ?? true, HttpClient).ConfigureAwait(false);
@@ -273,13 +274,6 @@ sealed class Program
             if (CoreEnvironmentSettings.ClearNvngx) ClearNvngx();
         }
 
-<<<<<<< HEAD
-=======
-        SetupLogging(mainArgs);
-        LoadConfig(storage);
-        FixConfigPaths();
-
->>>>>>> 6afbe79 (Add fix to update folder paths in launcher.ini)
         Secrets = GetSecretProvider(storage);
 
         Dictionary<uint, string> apps = [];
@@ -673,6 +667,8 @@ sealed class Program
         Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
         Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
         Config.DalamudManualInjectPath = StorageHelper.FixConfigPath(Config.DalamudManualInjectPath);
+
+        // RB-specific paths
     }
 
     public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();
