@@ -72,9 +72,37 @@ public static class StorageHelper
             return;
         }
 
-        // Catch an edge case where the user did some unusual manual symlinking.
-        if (Directory.Exists(oldPath))
+        // Catch broken or incorrect symlinks at ~/.xlcore
+        if (Directory.Exists(oldPath) || File.Exists(oldPath))
         {
+            var isDirectory = File.GetAttributes(oldPath).HasFlag(FileAttributes.Directory);
+
+            var oldTarget = isDirectory ? Directory.ResolveLinkTarget(oldPath, true) : File.ResolveLinkTarget(oldPath, true);
+            if (oldTarget is null)
+            {
+                Console.WriteLine($"Warning: {oldPath} exists but is not a symlink. Please remove or rename it and restart the launcher to create a symlink at {oldPath}.");
+                return; // ~/.xlcore is not a symlink. Don't do anything.
+            }
+            if (Path.Combine(oldTarget.FullName) != Path.Combine(storagePath))
+            {
+                try
+                {
+                    if (isDirectory)
+                    {
+                        Directory.Delete(oldPath);
+                    }
+                    else
+                    {
+                        File.Delete(oldPath);
+                    }
+                    Directory.CreateSymbolicLink(oldPath, storagePath);
+                }
+                catch (System.Exception ex)
+                {                    
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"Warning: Failed to update symlink at {oldPath} to point to {storagePath}. Please manually update the symlink or remove {oldPath} and restart the launcher to use the new XDG storage location.");
+                }
+            }
             return;
         }
 
