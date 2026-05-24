@@ -273,6 +273,13 @@ sealed class Program
             if (CoreEnvironmentSettings.ClearNvngx) ClearNvngx();
         }
 
+<<<<<<< HEAD
+=======
+        SetupLogging(mainArgs);
+        LoadConfig(storage);
+        FixConfigPaths();
+
+>>>>>>> 6afbe79 (Add fix to update folder paths in launcher.ini)
         Secrets = GetSecretProvider(storage);
 
         Dictionary<uint, string> apps = [];
@@ -657,6 +664,15 @@ sealed class Program
         ClearTools(tsbutton);
         ClearLogs(true);
         ClearNvngx();
+    }
+
+    public static void FixConfigPaths()
+    {
+        Config.GamePath = StorageHelper.FixConfigPath(Config.GamePath);
+        Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GamePath);
+        Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
+        Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
+        Config.DalamudManualInjectPath = StorageHelper.FixConfigPath(Config.DalamudManualInjectPath);
     }
 
     public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();
