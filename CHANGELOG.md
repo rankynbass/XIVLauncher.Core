@@ -1,5 +1,10 @@
 # Changelog
-### Mon May 18 2026 Rankyn Bass <rankyn@proton.me>
+### Sat May 23 2026 Rankyn Bass <rankyn@proton.me>
+1.4.0.5
+- Fixed making symlink when using XL_USERDIR
+- Allowed bad ~/.xlcore symlink to be fixed. Will not delete an existing directory, but will delete a symlink to a non-empty directory.
+
+### Sat May 23 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.4
 - Fixed mangohud detection. It should now work with nix. Switched to using PATH, since mangohud is being called directly.
 - Fixed Apps tab. Toggles for slots 2 and 3 were broken. Thanks to Genevieve Mendoza.
