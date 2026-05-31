@@ -489,7 +489,7 @@ sealed class Program
     public static void FixConfigPaths()
     {
         Config.GamePath = StorageHelper.FixConfigPath(Config.GamePath);
-        Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GamePath);
+        Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GameConfigPath);
         Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
         Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
         Config.DalamudManualInjectPath = StorageHelper.FixConfigPath(Config.DalamudManualInjectPath);
