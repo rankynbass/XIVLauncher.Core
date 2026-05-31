@@ -1,4 +1,8 @@
 # Changelog
+### Sat May 30 2026 Rankyn Bass <rankyn@proton.me>
+1.4.0.6
+- Paths in launcher.ini will be modified from ~/.xlcore or XDG_DATA_HOME/xlcore to XDG_DATA_HOME/dev.goats.xivlauncher if storage has been moved
+
 ### Sat May 23 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.5
 - Fixed making symlink when using XL_USERDIR
