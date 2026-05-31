@@ -17,14 +17,6 @@ public static class StorageHelper
 
     private static string xdgConfig => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Program.APP_NAME);
 
-
-    static StorageHelper()
-    {
-        Console.WriteLine($"XDG PATH =     {xdgPath}");
-        Console.WriteLine($"OLD XDG PATH = {oldxdgPath}");
-        Console.WriteLine($"OLD PATH =     {oldPath}");
-    }
-
     public static string? GetStoragePath()
     {
         if (!string.IsNullOrEmpty(CoreEnvironmentSettings.UserDir))
@@ -163,7 +155,6 @@ public static class StorageHelper
         if (Path.Combine(Program.storage.Root.FullName) == Path.Combine(oldPath))
             return configPath; // If the storage path is still the old path, do not modify the config ini path.
 
-        Console.WriteLine("configPath is " + configPath);
         if (configPath.StartsWith(oldPath))
             return Path.Combine(ReplaceFirst(configPath, oldPath, Program.storage.Root.FullName)); // Return the modified path.
 
@@ -181,7 +172,6 @@ public static class StorageHelper
         if (Path.Combine(Program.storage.Root.FullName) == Path.Combine(oldPath))
             return configPath; // If the storage path is still the old path, do not modify the config ini path.
 
-        Console.WriteLine("configPath is " + configPath.FullName);
         if (configPath.FullName.StartsWith(oldPath))
             return new DirectoryInfo(Path.Combine(ReplaceFirst(configPath.FullName, oldPath, Program.storage.Root.FullName))); // Return the modified path.
 
