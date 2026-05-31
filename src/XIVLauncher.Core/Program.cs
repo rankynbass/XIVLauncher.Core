@@ -664,6 +664,8 @@ sealed class Program
     {
         Config.GamePath = StorageHelper.FixConfigPath(Config.GamePath);
         Config.GameConfigPath = StorageHelper.FixConfigPath(Config.GameConfigPath);
+        if (Config.GamePath.Name == Config.GameConfigPath.Name && Config.GameConfigPath.FullName.StartsWith(storage.Root.FullName))
+            Config.GameConfigPath = storage.GetFolder("ffxivConfig");
         Config.PatchPath = StorageHelper.FixConfigPath(Config.PatchPath);
         // Doesn't exist in XIVLauncher-RB
         // Config.WineBinaryPath = StorageHelper.FixConfigPath(Config.WineBinaryPath);
