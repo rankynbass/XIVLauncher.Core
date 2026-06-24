@@ -144,18 +144,15 @@ public class CompatibilityTools
         if (Settings.IsUsingUmu)
         {
             // Download Umu Launcher if it's missing.
-            var downloadUmu = false;
             var downloadUrlExists = !string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl);
-            var webVersion = "";
-            if (!File.Exists(RuntimePath))
+            if (!File.Exists(RuntimePath) && !downloadUrlExists)
+                throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
+
+            if (downloadUrlExists) 
             {
-                downloadUmu = true;
-                Log.Information($"Umu Launcher selected, but {RuntimePath} is not present. Downloading...");
-            }
-            else if (downloadUrlExists)
-            {
+                var downloadUmu = false;
                 var urlParts = Settings.UmuLauncher.DownloadUrl.Split('/');
-                webVersion = urlParts[urlParts.Length - 2]; // The version is the second to last part of the url.
+                var webVersion = urlParts[urlParts.Length - 2]; // The version is the second to last part of the url.
                 if (File.Exists(Path.Combine(umuDirectory.FullName, "version")))
                 {
                     var currentVersion = File.ReadAllText(Path.Combine(umuDirectory.FullName, "version")).Trim();
@@ -169,16 +166,18 @@ public class CompatibilityTools
                 {
                     downloadUmu = true;
                     Log.Information($"[UMU] Umu Launcher version file not found. Expected at {Path.Combine(umuDirectory.FullName, "version")}. Downloading...");
-                }
+                }                
+                
+                if (downloadUmu)
+                {
+                    if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
+                        throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
+                    Log.Information($"[UMU] umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
+                    await Runtime.DownloadRuntime(httpClient, umuDirectory, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
+                    File.WriteAllText(Path.Combine(umuDirectory.FullName, "version"), webVersion);
+                }  
             }
-            if (downloadUmu)
-            {
-                if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
-                    throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
-                Log.Information($"[UMU] umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
-                await Runtime.DownloadRuntime(httpClient, umuDirectory, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
-                File.WriteAllText(Path.Combine(umuDirectory.FullName, "version"), webVersion);
-            }        
+
         }
 
         if (Settings.IsProton)
