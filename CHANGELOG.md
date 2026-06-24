@@ -1,6 +1,7 @@
 # Changelog
-### Tue Jun 23 2026 Rankyn Bass <rankyn@proton.me>
+### Wed Jun 24 2026 Rankyn Bass <rankyn@proton.me>
 - Fix: Install umu-launcher to the correct path. It broke at some point during the XDG migration, and was installing to a subdirectory.
+- Fix: Added an xdg-open wrapper to the AppImage, so links should now properly open.
 
 ### Sat May 30 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.7

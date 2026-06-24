@@ -1,5 +1,6 @@
 **1.4.0.8**
 - Fix: Install umu-launcher to the correct path. It broke at some point during the XDG migration, and was installing to a subdirectory.
+- Fix: Added an xdg-open wrapper to the AppImage, so links should now properly open.
 
 **1.4.0.7**
 - Fix: Make Config.GameConfigPath point to GameConfigPath instead of GamePath
