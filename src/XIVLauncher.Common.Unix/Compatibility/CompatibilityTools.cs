@@ -172,8 +172,10 @@ public class CompatibilityTools
                 {
                     if (string.IsNullOrEmpty(Settings.UmuLauncher.DownloadUrl))
                         throw new ArgumentNullException("Umu Launcher selected, but is not present, and no download url provided.");
+                    umuDirectory.Delete(true);
+                    umuDirectory.Create();
                     Log.Information($"[UMU] umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
-                    await Runtime.DownloadRuntime(httpClient, umuDirectory, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
+                    await Runtime.DownloadRuntime(httpClient, umuDirectory.Parent, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
                     File.WriteAllText(Path.Combine(umuDirectory.FullName, "version"), webVersion);
                 }  
             }

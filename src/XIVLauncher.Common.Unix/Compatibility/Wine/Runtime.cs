@@ -24,13 +24,6 @@ public static class Runtime
 
         PlatformHelpers.Untar(tempPath, installDirectory.FullName);
 
-        // The umu tarball extracts to a subdirectory, so we need to move the files up one level
-        foreach (var file in Directory.GetFiles(Path.Combine(installDirectory.FullName, "umu")))
-        {
-            File.Move(file, Path.Combine(installDirectory.FullName, Path.GetFileName(file)), true);
-        }
-        Directory.Delete(Path.Combine(installDirectory.FullName, "umu"), true);
-
         File.Delete(tempPath);
     }
 }
