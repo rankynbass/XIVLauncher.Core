@@ -1,4 +1,7 @@
 # Changelog
+### Tue Jun 23 2026 Rankyn Bass <rankyn@proton.me>
+- Fix: Install umu-launcher to the correct path. It broke at some point during the XDG migration, and was installing to a subdirectory.
+
 ### Sat May 30 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.7
 - Fix: Make Config.GameConfigPath point to GameConfigPath instead of GamePath
