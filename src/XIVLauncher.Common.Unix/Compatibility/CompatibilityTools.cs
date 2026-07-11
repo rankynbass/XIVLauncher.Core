@@ -175,6 +175,7 @@ public class CompatibilityTools
                     umuDirectory.Delete(true);
                     umuDirectory.Create();
                     Log.Information($"[UMU] umu-run is not in $PATH, downloading {Settings.UmuLauncher.DownloadUrl} to {umuDirectory.FullName}");
+                    // Download the runtime to the parent folder of umuDirectory, since it will create a folder called "umu" inside it. 
                     await Runtime.DownloadRuntime(httpClient, umuDirectory.Parent, Settings.UmuLauncher.DownloadUrl).ConfigureAwait(false);
                     File.WriteAllText(Path.Combine(umuDirectory.FullName, "version"), webVersion);
                 }  

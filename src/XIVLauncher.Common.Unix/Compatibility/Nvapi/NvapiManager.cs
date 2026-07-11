@@ -56,6 +56,7 @@ public class NvapiManager
             InitializeJson();
         else
             InitializeDefault();
+        InitializeLocalNvapi();
     }
 
     public void Reload()
@@ -139,7 +140,10 @@ public class NvapiManager
     public string GetVersionOrDefault(string? name)
     {
         if (string.IsNullOrEmpty(name))
-            return DEFAULT;
+            if (Version.ContainsKey(DEFAULT))
+                return DEFAULT;
+            else
+                return Version.Keys.FirstOrDefault() ?? "DISABLED";
         if (Version.ContainsKey(name))
             return name;
         return DEFAULT;

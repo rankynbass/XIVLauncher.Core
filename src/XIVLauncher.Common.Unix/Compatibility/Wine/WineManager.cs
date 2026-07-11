@@ -318,7 +318,10 @@ public class WineManager
     public string GetWineVersionOrDefault(string? name)
     {
         if (string.IsNullOrEmpty(name))
-            return DEFAULTWINE;
+            if (WineVersion.ContainsKey(DEFAULTWINE))
+                return DEFAULTWINE;
+            else
+                return WineVersion.Keys.FirstOrDefault() ?? "";
         if (WineVersion.ContainsKey(name))
             return name;
         return DEFAULTWINE;
@@ -327,7 +330,10 @@ public class WineManager
     public string GetProtonVersionOrDefault(string? name)
     {
         if (string.IsNullOrEmpty(name))
-            return DEFAULTPROTON;
+            if (ProtonVersion.ContainsKey(DEFAULTPROTON))
+                return DEFAULTPROTON;
+            else
+                return ProtonVersion.Keys.FirstOrDefault() ?? "";
         if (ProtonVersion.ContainsKey(name))
             return name;
         return DEFAULTPROTON;
