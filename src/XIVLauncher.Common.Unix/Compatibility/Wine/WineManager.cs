@@ -67,7 +67,7 @@ public class WineManager
 
     private const string JSON_NAME = "RB-runnerlist.json";
     
-    private const string UMULAUNCHER_URL = "https://github.com/Open-Wine-Components/umu-launcher/releases/download/1.2.9/umu-launcher-1.2.9-zipapp.tar";
+    private const string UMULAUNCHER_URL = "https://github.com/Open-Wine-Components/umu-launcher/releases/download/1.4.1/umu-launcher-1.4.1-zipapp.tar";
 
     private WineReleaseDistro wineDistroId { get; }
 
@@ -178,33 +178,24 @@ public class WineManager
 
         var wineDefault = new WineCustomRelease("Unofficial 10.10", "Rankyn's Unofficial Wine-XIV 10.10", "unofficial-wine-xiv-staging-10.10", wineFolder,
             $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-{wineDistroId}-10.10.tar.xz", true);
+        var wineDefaultNtsync = new WineCustomRelease("Unofficial 10.10 NTSync", "Rankyn's Unofficial Wine-XIV 10.10 with NTSync", "unofficial-wine-xiv-staging-ntsync-10.10", wineFolder,
+            $"https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-ntsync-{wineDistroId}-10.10.tar.xz", true);
 
         this.DEFAULTWINE = wineDefault.Name;
 
         AddVersion(wineDefault);
-        AddVersion(new WineCustomRelease("Unofficial 10.10 NTSync", "Rankyn's Unofficial Wine-XIV 10.10 with NTSync", "unofficial-wine-xiv-staging-ntsync-10.10", wineFolder,
-            "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/v10.10/unofficial-wine-xiv-staging-ntsync-10.10.tar.xz", true));
-        AddVersion(new WineCustomRelease("ValveBE 9-20", "Patched Valve-Wine Bleeding Edge 9. A replacement for Wine-GE", "unofficial-wine-xiv-valvebe-9-20", wineFolder,
-            "https://github.com/rankynbass/unofficial-wine-xiv-git/releases/download/valvebe-9-20/unofficial-wine-xiv-valvebe-9-20.tar.xz", true));
-        AddVersion(new WineCustomRelease("Wine-GE-XIV 8-26", "Patched version of Wine-GE 8-26", "unofficial-wine-xiv-Proton8-26-x86_64", wineFolder,
-            "https://github.com/rankynbass/wine-ge-xiv/releases/download/xiv-Proton8-26/unofficial-wine-xiv-Proton8-26-x86_64.tar.xz", false));
+        AddVersion(wineDefaultNtsync);
         AddVersion(wineStable);
         AddVersion(wineBeta);
         AddVersion(wineLegacy);
 
         // Proton
-        var protonStable = new ProtonStableRelease(compatFolder);
-        var protonStableNtsync = new ProtonStableNtsyncRelease(compatFolder);
         var protonLatest = new ProtonLatestRelease(compatFolder);
-        var protonLatestNtsync = new ProtonLatestNtsyncRelease(compatFolder);
         var protonLegacy = new ProtonLegacyRelease(compatFolder);
 
         this.DEFAULTPROTON = protonLatest.Name;
 
         AddVersion(protonLatest);
-        AddVersion(protonLatestNtsync);
-        AddVersion(protonStable);
-        AddVersion(protonStableNtsync);
         AddVersion(protonLegacy);
 
         this.umuLauncherUrl = UMULAUNCHER_URL;
