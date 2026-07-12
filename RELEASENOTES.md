@@ -1,10 +1,5 @@
-**1.4.0.8**
-- Fix: Install umu-launcher to the correct path. It broke at some point during the XDG migration, and was installing to a subdirectory.
-- Fix: Added an xdg-open wrapper to the AppImage, so links should now properly open.
-
-**1.4.0.7**
-- Fix: Make Config.GameConfigPath point to GameConfigPath instead of GamePath
-
-**1.4.0.6**
-- Paths in launcher.ini will be modified from ~/.xlcore or XDG_DATA_HOME/xlcore to XDG_DATA_HOME/dev.goats.xivlauncher if storage has been moved
+**1.4.0.9**
+- Fix: There was a potential for a crash if the downloaded list had invalid values for the defaults. Now the first item in each list will be chosen if the default gets accidentally broken
+- Fix: Updated the default lists for `XL_IGNORE_LISTS=1` or for launching without access to github.
+- Fix: nvapi folder is now enumerated like all the others (except umu).
 
