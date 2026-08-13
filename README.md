@@ -5,7 +5,7 @@ Cross-platform version of XIVLauncher for Linux and Steam Deck. Comes with sever
 
 ## Changes from XIVLauncher.Core
 - XDG folder support (hopefully soon to merge in vanilla XIVLauncher.Core). This means the storage folder will be at `$XDG_DATA_HOME/dev.goats.xivlauncher` instead of `~/.xlcore`. For now, a symlink will be created at `~/.xlcore` pointing to the new location. You can disable this with an environment variable (see below) or by creating a file at `$XDG_CONFIG_HOME/dev.goats.xivlauncher/nosymlink`. This *does not* delete an existing symlink.<br>By default, `$XDG_DATA_HOME` is `~/.local/share` for the native/appimage client, and `~/.var/app/dev.rankyn.xivlauncher/data` for flatpaks. `$XDG_CONFIG_HOME` is `~/.config` or `~/.var/app/dev.rankyn.xivlauncher/config`.
-- Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Steam Runtime with Proton
+- Proton support. At the moment there are no plans to add proton to XIVLauncher.Core, so if you want to use proton, this is it. To enable proton, go to settings, Wine tab, and change the Installation Type to Managed Proton.
 - Preview of various PRs for XIVLauncher.Core: I try to add various feature and bugfix PRs before they get merged.
 - Wine and DXVK switchers. This feature will hopefully be merged upstream soon. For now, though, you can test it out here.
     - Allows switching between various pre-selected Wine and DXVK versions. DXVK is moved to its own tab.
@@ -39,7 +39,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Cor
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-flatpak.sh)"
 ```
 
-**Steam (Snap)** (Ubuntu 24.04 default)
+**Steam (Snap)** (Ubuntu 24.04 default, untested)
 ```
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/rankynbass/XIVLauncher.Core/refs/heads/RB-patched/xlm/install-snap.sh)
 ```
