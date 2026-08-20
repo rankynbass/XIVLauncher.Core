@@ -63,7 +63,7 @@ public class SettingsEntry<T> : SettingsEntry
         {
             ImGuiHelpers.TextWrapped(this.Name);
 
-            var nativeValue = this.Value as int? ?? 2026;
+            var nativeValue = this.Value as int? ?? 0;
             
             if (ImGui.InputInt($"###{Id.ToString()}", ref nativeValue, step: 0))
             {
