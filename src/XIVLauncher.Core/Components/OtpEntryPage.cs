@@ -113,9 +113,10 @@ public class OtpEntryPage : Page
             // center text in window
             ImGuiHelpers.CenteredText(Strings.EnterYourOTP);
 
+            const int PASTE_ICON_WIDTH = 28;
             const int INPUT_WIDTH = 150;
             ImGui.SetNextItemWidth(INPUT_WIDTH);
-            ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
+            ImGuiHelpers.CenterCursorFor(INPUT_WIDTH + PASTE_ICON_WIDTH);
 
             if (this.appearing)
             {
@@ -124,9 +125,18 @@ public class OtpEntryPage : Page
             }
 
             var doEnter = ImGui.InputText("###otpInput", ref this.otp, 7, ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.EnterReturnsTrue);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(PASTE_ICON_WIDTH);
+            ImGui.PushFont(FontManager.IconFont, 0.0f);
+            if(ImGui.Button(FontAwesomeIcon.Paste.ToIconString(), new Vector2(PASTE_ICON_WIDTH, 28)))
+            {
+                this.otp = ImGui.GetClipboardTextS();
+                doEnter = true;
+            }
+            ImGui.PopFont();
 
-            var buttonSize = new Vector2(INPUT_WIDTH / 2 - 4, 30);
-            ImGuiHelpers.CenterCursorFor(INPUT_WIDTH);
+            var buttonSize = new Vector2((INPUT_WIDTH + PASTE_ICON_WIDTH) / 2, 30);
+            ImGuiHelpers.CenterCursorFor(INPUT_WIDTH + PASTE_ICON_WIDTH);
 
             if (ImGui.Button(Strings.OKLabel, buttonSize) || doEnter)
             {
