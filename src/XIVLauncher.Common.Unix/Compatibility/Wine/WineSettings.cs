@@ -89,10 +89,8 @@ public class WineSettings
             if (WaylandOn)
                 EnvVars.Add("PROTON_ENABLE_WAYLAND", "1");
 
-            if (ProtonLoggingOn && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROTON_LOG_DIR")))
-            {
+            if (ProtonLoggingOn)
                 EnvVars.Add("PROTON_LOG_DIR", Path.Combine(Paths.StorageFolder.FullName, "logs"));
-            }
             
             setSteamCompatMounts();
         }
