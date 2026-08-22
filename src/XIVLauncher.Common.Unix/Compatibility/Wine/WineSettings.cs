@@ -30,9 +30,13 @@ public class WineSettings
     public string WinePath { get; private set; }
     public string WineServerPath { get; private set; }
 
+    public bool ProtonLoggingOn { get; } = false;
+
+    public bool ProtonLoggingVerbose { get; } = false;
+
     public Dictionary<string, string> EnvVars { get; private set; }
 
-    public WineSettings(IWineRelease wineRelease, IToolRelease umuLauncher, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, RBWineSyncType wineSync, bool waylandOn)
+    public WineSettings(IWineRelease wineRelease, IToolRelease umuLauncher, string dlloverrides, XLCorePaths paths, string debugVars, FileInfo logFile, RBWineSyncType wineSync, bool waylandOn, bool protonLogging, bool protonLoggingVerbose)
     {
         this.WineRelease = wineRelease;
         if (wineRelease.IsProton)
@@ -41,6 +45,8 @@ public class WineSettings
             this.WinePath = Path.Combine(parentPath, "proton");
             this.WineServerPath = Path.Combine(parentPath, "files", "bin", "wineserver");
             this.UmuLauncher = umuLauncher;
+            this.ProtonLoggingOn = protonLogging;
+            this.ProtonLoggingVerbose = protonLoggingVerbose;
         }
         else
         {
@@ -83,6 +89,11 @@ public class WineSettings
             if (WaylandOn)
                 EnvVars.Add("PROTON_ENABLE_WAYLAND", "1");
 
+            if (ProtonLoggingOn && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROTON_LOG_DIR")))
+            {
+                EnvVars.Add("PROTON_LOG_DIR", Path.Combine(Paths.StorageFolder.FullName, "logs"));
+            }
+            
             setSteamCompatMounts();
         }
         else

@@ -277,6 +277,14 @@ public class CompatibilityTools
 
     public Process RunTheGame(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
+        if (Settings.ProtonLoggingOn)
+        {
+            environment ??= new Dictionary<string, string>();
+            environment["PROTON_LOG"] = "1";
+            if (Settings.ProtonLoggingVerbose)
+                environment["WINEDEBUG"] = "+timestamp,+pid,+tid,+seh,+unwind,+threadname,+debugstr,+loaddll,+mscoree";
+        }
+
         var leadProcess = "";
         var extraArgs = "";
         var first = true;
@@ -464,6 +472,7 @@ public class CompatibilityTools
         var wineDbg = RunInPrefix("winedbg --command \"info proc\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Where(l => l.Contains(executableName));
+        Log.Verbose($"Found {executableName} with process ids: {string.Join(", ", matchingLines.Select(l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber)))}");
         return matchingLines.Select(l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber)).ToArray();
     }
 
@@ -489,6 +498,7 @@ public class CompatibilityTools
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var unixPids = matchingLines.Select(l => int.Parse(l.Substring(10, 8), System.Globalization.NumberStyles.HexNumber)).ToArray();
+        Log.Verbose($"Found {unixPids.Length} unix process ids for wine pid {winePid}: {string.Join(", ", unixPids)}");
         return unixPids.FirstOrDefault();
     }
 
@@ -499,6 +509,7 @@ public class CompatibilityTools
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var processNames = matchingLines.Select(l => l.Substring(20).Trim('\'')).ToArray();
+        Log.Verbose($"Found process names for wine pid {winePid}: {string.Join(", ", processNames)}");
         return processNames.FirstOrDefault();
     }
 
@@ -534,6 +545,7 @@ public class CompatibilityTools
         var launchArguments = $"winepath --windows \"{unixPath}\"";
         var winePath = RunWithoutRuntime(launchArguments);
         var output = winePath.StandardOutput.ReadToEnd();
+        Log.Verbose($"UnixToWinePath: {unixPath} -> {output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()}");
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
 
@@ -542,6 +554,7 @@ public class CompatibilityTools
         var args = $"reg add \"{key}\" /v \"{value}\" /d \"{data}\" /f";
         var wineProcess = RunWithoutRuntime(args);
         wineProcess.WaitForExit();
+        Log.Verbose($"Registry key added: {key}\\{value} = {data}");
     }
 
     public void Kill()

@@ -19,17 +19,20 @@ public class UnixDalamudRunner : IDalamudRunner
 {
     private readonly CompatibilityTools compatibility;
     private readonly DirectoryInfo dotnetRuntime;
+    private readonly bool ProtonLogging;
 
-    public UnixDalamudRunner(CompatibilityTools compatibility, DirectoryInfo dotnetRuntime)
+    public UnixDalamudRunner(CompatibilityTools compatibility, DirectoryInfo dotnetRuntime, bool protonLogging = false)
     {
         this.compatibility = compatibility;
         this.dotnetRuntime = dotnetRuntime;
+        this.ProtonLogging = protonLogging;
     }
 
     public Process? Run(FileInfo runner, bool fakeLogin, bool noPlugins, bool noThirdPlugins, FileInfo gameExe, string gameArgs, IDictionary<string, string> environment, DalamudLoadMethod loadMethod, DalamudStartInfo startInfo)
     {
         var gameExePath = "";
         var dotnetRuntimePath = "";
+        var oldLoggingPath = startInfo.LoggingPath;
 
         Parallel.Invoke(
             () => { gameExePath = compatibility.UnixToWinePath(gameExe.FullName); },
@@ -81,17 +84,31 @@ public class UnixDalamudRunner : IDalamudRunner
         launchArguments.Add("--");
         launchArguments.Add(gameArgs);
 
+        var log_default = new FileInfo(Path.Combine(oldLoggingPath, "steam-default.log"));
+        var log_39210 = new FileInfo(Path.Combine(oldLoggingPath, "steam-39210.log"));
+        var log_312060 = new FileInfo(Path.Combine(oldLoggingPath, "steam-312060.log"));
+
+        log_default.Delete();
+        log_39210.Delete();
+        log_312060.Delete();
+
         var dalamudProcess = compatibility.RunTheGame(string.Join(" ", launchArguments), environment: environment, redirectOutput: true, writeLog: true);
 
         DalamudConsoleOutput dalamudConsoleOutput = null;
         int invalidJsonCount = 0;
-
+ 
         // Keep checking for valid json output, but only 5 times. If it's still erroring out at that point, give up.
         while (dalamudConsoleOutput == null && invalidJsonCount < 5)
         {
+            Console.WriteLine("Waiting for Dalamud output...");
             var output = dalamudProcess.StandardOutput.ReadLine();
             if (output == null)
-                throw new DalamudRunnerException("An internal Dalamud error has occured");
+            {
+                if (ProtonLogging)
+                    break;
+                else
+                    throw new DalamudRunnerException("An internal Dalamud error has occured");
+            }
             Console.WriteLine(output);
 
             try
@@ -115,6 +132,43 @@ public class UnixDalamudRunner : IDalamudRunner
             }
 
         }).Start();
+
+        if (ProtonLogging)
+        {
+            FileInfo protonLog;
+            if (log_default.Exists)
+                protonLog = log_default;
+            else if (log_39210.Exists)
+                protonLog = log_39210;
+            else if (log_312060.Exists)
+                protonLog = log_312060;
+            else
+                protonLog = null;
+
+
+            if (protonLog != null)
+            {
+                using (StreamReader sr = protonLog.OpenText())
+                {
+                    string s = "";
+                    while ((s = sr.ReadLine()) != null)
+                    {
+                        try
+                        {
+                            dalamudConsoleOutput = JsonConvert.DeserializeObject<DalamudConsoleOutput>(s);
+                            Log.Information($"Found dalamud output in proton log {protonLog.FullName}");
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            // do nothing, too many lines in proton log.
+                        }
+                    }
+                    sr.Close();
+                }
+            }
+        }
+
 
         try
         {

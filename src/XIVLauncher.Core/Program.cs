@@ -181,6 +181,7 @@ sealed class Program
         Config.RB_MangoHudArguments ??= "";
         Config.RB_GamescopeEnabled ??= false;
         Config.RB_GamescopeArguments ??= "";
+        Config.RB_ProtonLoggingEnabled ??= false;
 
         // RB-patched App launcher
         Config.RB_App1 ??= "";
@@ -467,7 +468,7 @@ sealed class Program
         var gplcache = Config.RB_DxvkVersion.Contains("gplasync") && Config.RB_GPLAsyncCacheEnabled == true;
         var paths = new XLCorePaths(winePrefix, storage.Root, Config.GamePath, Config.GameConfigPath, WineManager.SteamFolder);
         var useUmu = Config.RB_UmuLauncher != RBUmuLauncherType.Disabled;
-        var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.RB_WineSync ?? RBWineSyncType.FSync, Config.WaylandEnabled ?? false);
+        var wineSettings = new WineSettings(wineRelease, useUmu ? WineManager.Runtime : null, Config.WineDLLOverrides ?? "", paths, Config.WineDebugVars, wineLogFile, Config.RB_WineSync ?? RBWineSyncType.FSync, Config.WaylandEnabled ?? false, Config.RB_ProtonLoggingEnabled ?? false, Config.RB_ProtonLoggingVerbose ?? false);
         var customHud = Config.RB_HudType switch
         {
             RBHudType.None => "0",

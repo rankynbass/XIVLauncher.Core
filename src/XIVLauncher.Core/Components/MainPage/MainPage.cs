@@ -546,7 +546,7 @@ public class MainPage : Page
                 break;
 
             case PlatformID.Unix:
-                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime);
+                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime, Program.Config.RB_ProtonLoggingEnabled ?? false);
                 dalamudCompatCheck = new UnixDalamudCompatibilityCheck();
                 break;
 
@@ -670,6 +670,9 @@ public class MainPage : Page
                 System.Environment.SetEnvironmentVariable(kvp[0], kvp[1]);
             }
         }
+
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROTON_LOG")))
+            Environment.SetEnvironmentVariable("PROTON_LOG", null); // unset PROTON_LOG, as we handle that separately
 
         if (Environment.OSVersion.Platform == PlatformID.Win32NT)
         {

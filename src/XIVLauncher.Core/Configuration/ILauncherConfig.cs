@@ -137,6 +137,10 @@ public interface ILauncherConfig
 
     public string? RB_MangoHudArguments { get; set; }
 
+    public bool? RB_ProtonLoggingEnabled { get; set; }
+
+    public bool? RB_ProtonLoggingVerbose { get; set; }
+
     #endregion
 
     #region RBpatchedApps

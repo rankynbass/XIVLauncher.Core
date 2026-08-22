@@ -98,6 +98,16 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
+            new SettingsEntry<bool>("Enable Proton Logging", "", () => Program.Config.RB_ProtonLoggingEnabled ?? false, b => Program.Config.RB_ProtonLoggingEnabled = b)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
+            },
+
+            new SettingsEntry<bool>("Enable Proton Verbose Logging", "", () => Program.Config.RB_ProtonLoggingVerbose ?? false, b => Program.Config.RB_ProtonLoggingVerbose = b)
+            {
+                CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
+            },
+
             new SettingsEntry<string>(Strings.WineDebugAdditionalVarSetting, Strings.WineDebugAdditionalVarSettingDescription, () => Program.Config.WineDebugVars ?? string.Empty, s => Program.Config.WineDebugVars = s),
 
             new SettingsEntry<bool>(Strings.GamescopeEnabled, Strings.GameScopeEnabledDescription, () => Program.Config.RB_GamescopeEnabled ?? false, b => Program.Config.RB_GamescopeEnabled = b)
