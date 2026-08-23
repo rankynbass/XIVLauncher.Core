@@ -483,7 +483,7 @@ public class CompatibilityTools
 
     public Int32 GetUnixProcessId(Int32 winePid)
     {
-        if (Settings.IsProton && !Settings.WineRelease.Name.Contains("XIV"))
+        if (Settings.IsProton && !Settings.WineRelease.Name.Contains("XIV") && !Settings.IsUsingUmu)
         {
             var processName = GetProcessName(winePid);
             return GetUnixProcessIdByName(processName);
@@ -513,7 +513,7 @@ public class CompatibilityTools
         return processNames.FirstOrDefault();
     }
 
-    private Int32 GetUnixProcessIdByName(string executableName)
+    public Int32 GetUnixProcessIdByName(string executableName)
     {
         int closest = 0;
         int early = 0;

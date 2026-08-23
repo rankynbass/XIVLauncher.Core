@@ -84,14 +84,6 @@ public class UnixDalamudRunner : IDalamudRunner
         launchArguments.Add("--");
         launchArguments.Add(gameArgs);
 
-        var log_default = new FileInfo(Path.Combine(oldLoggingPath, "steam-default.log"));
-        var log_39210 = new FileInfo(Path.Combine(oldLoggingPath, "steam-39210.log"));
-        var log_312060 = new FileInfo(Path.Combine(oldLoggingPath, "steam-312060.log"));
-
-        log_default.Delete();
-        log_39210.Delete();
-        log_312060.Delete();
-
         var dalamudProcess = compatibility.RunTheGame(string.Join(" ", launchArguments), environment: environment, redirectOutput: true, writeLog: true);
 
         DalamudConsoleOutput dalamudConsoleOutput = null;
@@ -101,6 +93,8 @@ public class UnixDalamudRunner : IDalamudRunner
         while (dalamudConsoleOutput == null && invalidJsonCount < 5)
         {
             Console.WriteLine("Waiting for Dalamud output...");
+            if (ProtonLogging)
+                break; // Don't wait for Dalamud output if we're logging proton, as it will be in the proton log instead
             var output = dalamudProcess.StandardOutput.ReadLine();
             if (output == null)
             {
@@ -135,40 +129,36 @@ public class UnixDalamudRunner : IDalamudRunner
 
         if (ProtonLogging)
         {
-            FileInfo protonLog;
-            if (log_default.Exists)
-                protonLog = log_default;
-            else if (log_39210.Exists)
-                protonLog = log_39210;
-            else if (log_312060.Exists)
-                protonLog = log_312060;
-            else
-                protonLog = null;
-
-
-            if (protonLog != null)
+            try
             {
-                using (StreamReader sr = protonLog.OpenText())
+                Process gameProcess;
+
+                int counter = 0;
+                var ffxivPid = compatibility.GetUnixProcessIdByName(gameExe.Name);
+                Log.Information($"Starting check for {gameExe.Name} [Proton Logging]");
+                while (ffxivPid == 0 && counter < 300) // After 30 seconds (300 * 100 ms), assume something went wrong and end the loop.
                 {
-                    string s = "";
-                    while ((s = sr.ReadLine()) != null)
-                    {
-                        try
-                        {
-                            dalamudConsoleOutput = JsonConvert.DeserializeObject<DalamudConsoleOutput>(s);
-                            Log.Information($"Found dalamud output in proton log {protonLog.FullName}");
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            // do nothing, too many lines in proton log.
-                        }
-                    }
-                    sr.Close();
+                    ffxivPid = compatibility.GetUnixProcessIdByName(gameExe.Name);
+                    counter++;
+                    Thread.Sleep(100);
                 }
+                if (ffxivPid == 0)
+                {
+                    Log.Error($"Could not find unix process id for {gameExe.Name} [Proton Logging]");
+                    return null;
+                }
+
+                gameProcess = Process.GetProcessById(ffxivPid);
+                Log.Information($"It took about {((decimal)counter / 10)} seconds to find the unix pid for {gameExe.Name}");
+                Log.Information($"Got game process handle {gameProcess.Handle} with Unix pid {gameProcess.Id} [Proton Logging]");
+                return gameProcess;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Could not retrieve game Process information");
+                return null;
             }
         }
-
 
         try
         {
