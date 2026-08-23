@@ -546,7 +546,10 @@ public class MainPage : Page
                 break;
 
             case PlatformID.Unix:
-                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime, Program.Config.RB_ProtonLoggingEnabled ?? false);
+                var protonLoggingOn = (Program.Config.RB_ProtonLoggingEnabled == true && 
+                                      (Program.Config.RB_WineStartupType == RBWineStartupType.Proton ||
+                                      (Program.Config.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(Program.Config.RB_WineBinaryPath))));
+                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime, protonLoggingOn);
                 dalamudCompatCheck = new UnixDalamudCompatibilityCheck();
                 break;
 

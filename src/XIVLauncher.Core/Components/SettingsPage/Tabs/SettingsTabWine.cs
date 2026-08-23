@@ -98,12 +98,12 @@ public class SettingsTabWine : SettingsTab
                 CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
             },
 
-            new SettingsEntry<bool>("Enable Proton Logging", "", () => Program.Config.RB_ProtonLoggingEnabled ?? false, b => Program.Config.RB_ProtonLoggingEnabled = b)
+            new SettingsEntry<bool>(Strings.ProtonLoggingSetting, Strings.ProtonLoggingSettingDescription, () => Program.Config.RB_ProtonLoggingEnabled ?? false, b => Program.Config.RB_ProtonLoggingEnabled = b)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
             },
 
-            new SettingsEntry<bool>("Enable Proton Verbose Logging", "", () => Program.Config.RB_ProtonLoggingVerbose ?? false, b => Program.Config.RB_ProtonLoggingVerbose = b)
+            new SettingsEntry<bool>(Strings.ProtonLoggingVerboseSetting, Strings.ProtonLoggingVerboseSettingDescription, () => Program.Config.RB_ProtonLoggingVerbose ?? false, b => Program.Config.RB_ProtonLoggingVerbose = b)
             {
                 CheckVisibility = () => startupTypeSetting.Value == RBWineStartupType.Proton || (startupTypeSetting.Value == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(wineCustomBinaryPath.Value)),
             },

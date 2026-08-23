@@ -1157,6 +1157,31 @@ namespace XIVLauncher.Core.Resources.Localization {
             }
         }
 
+        internal static string ProtonLoggingSetting {
+            get {
+                return ResourceManager.GetString("ProtonLoggingSetting", resourceCulture);
+            }
+        }
+
+        internal static string ProtonLoggingSettingDescription {
+            get {
+                return ResourceManager.GetString("ProtonLoggingSettingDescription", resourceCulture);
+            }
+        }
+
+        internal static string ProtonLoggingVerboseSetting {
+            get {
+                return ResourceManager.GetString("ProtonLoggingVerboseSetting", resourceCulture);
+            }
+        }
+
+        internal static string ProtonLoggingVerboseSettingDescription {
+            get {
+                return ResourceManager.GetString("ProtonLoggingVerboseSettingDescription", resourceCulture);
+            }
+        }
+
+
         /* DXVK Tab */
         internal static string GPLAsyncSetting {
             get {

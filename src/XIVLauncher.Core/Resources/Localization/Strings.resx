@@ -621,6 +621,19 @@ It should be an absolute path to a folder containing wine and/or win64 and wines
     <data name="WaylandSettingDescription" xml:space="preserve">
         <value>Enable Wine's experimental Wayland Driver.</value>
     </data>
+    <data name="ProtonLoggingSetting" xml:space="preserve">
+        <value>Enable Proton Logging</value>
+    </data>
+    <data name="ProtonLoggingSettingDescription" xml:space="preserve">
+        <value>Equivalent of PROTON_LOG=1</value>
+    </data>
+    <data name="ProtonLoggingVerboseSetting" xml:space="preserve">
+        <value>Enable Verbose Proton Logging</value>
+    </data>
+    <data name="ProtonLoggingVerboseSettingDescription" xml:space="preserve">
+        <value>Overrides the WINEDEBUG variables. Results in very large file sizes.
+Value used: "+timestamp,+pid,+tid,+seh,+unwind,+threadname,+debugstr,+loaddll,+mscoree"</value>
+    </data>
     <data name="GPLAsyncSetting" xml:space="preserve">
         <value>Enable GPLAsync Cache</value>
     </data>
