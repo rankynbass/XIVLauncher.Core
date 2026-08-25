@@ -59,6 +59,17 @@ public class SettingsEntry<T> : SettingsEntry
                 this.InternalValue = nativeBuffer;
             }
         }
+        else if (type == typeof(int))
+        {
+            ImGuiHelpers.TextWrapped(this.Name);
+
+            var nativeValue = this.Value as int? ?? 0;
+            
+            if (ImGui.InputInt($"###{Id.ToString()}", ref nativeValue, step: 0))
+            {
+                this.InternalValue = nativeValue; 
+            }
+        }
         else if (type == typeof(bool))
         {
             var nativeValue = this.Value as bool? ?? false;
