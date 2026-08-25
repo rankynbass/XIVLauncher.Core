@@ -40,37 +40,38 @@ public class SettingsTabGame : SettingsTab
                 CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
             },
 
-        new SettingsEntry<string>(Strings.AdditionalGameArgsSetting, Strings.AdditionalGameArgsSettingDescription, () => Program.Config.AdditionalArgs, x => Program.Config.AdditionalArgs = x),
-        new SettingsEntry<string>(Strings.ExtraWineDLLOverridesSetting, Strings.ExtraWineDLLOverridesSettingDescription, () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
-        {
-            CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
-            CheckValidity = s =>
+            new SettingsEntry<string>(Strings.AdditionalGameArgsSetting, Strings.AdditionalGameArgsSettingDescription, () => Program.Config.AdditionalArgs, x => Program.Config.AdditionalArgs = x),
+            new SettingsEntry<string>(Strings.ExtraWineDLLOverridesSetting, Strings.ExtraWineDLLOverridesSettingDescription, () => Program.Config.WineDLLOverrides ?? "", s => Program.Config.WineDLLOverrides = s)
             {
-                if (!WineSettings.WineDLLOverrideIsValid(s))
-                    return Strings.ExtraWineDLLOverridesInvalid;
-                
-                return null;
+                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+                CheckValidity = s =>
+                {
+                    if (!WineSettings.WineDLLOverrideIsValid(s))
+                        return Strings.ExtraWineDLLOverridesInvalid;
+                    
+                    return null;
+                },
             },
-        },
-        new SettingsEntry<ClientLanguage>(Strings.GameLanguageSetting, Strings.GameLanguageSettingDescription, () => Program.Config.ClientLanguage ?? ClientLanguage.English, x => Program.Config.ClientLanguage = x),
-        new SettingsEntry<DpiAwareness>(Strings.GameDPIAwarenessSetting, Strings.GameDPIAwarenessSettingDescription, () => Program.Config.DpiAwareness ?? DpiAwareness.Unaware, x => Program.Config.DpiAwareness = x),
-        enableDiscordRpc = new SettingsEntry<bool>(Strings.UseDiscordRPCBridgeSetting, Strings.UseDiscordRPCBridgeDescription, () => Program.Config.UseDiscordRpcBridge ?? false, x => Program.Config.UseDiscordRpcBridge = x),
-        this.enableDiscordRpcCustomPort = new SettingsEntry<bool>(Strings.DiscordRPCUseCustomPortSetting, Strings.DiscordRPCUseCustomPortDescription, () => Program.Config.DiscordRpcUseCustomPort ?? false, x => Program.Config.DiscordRpcUseCustomPort = x)
-        {
-            CheckVisibility = () => enableDiscordRpc.Value,
-        },
-        new SettingsEntry<int>(Strings.DiscordRPCCustomPortSetting, Strings.DiscordRPCCustomPortDescription, () => Program.Config.DiscordRpcCustomPort ?? 2026, x => Program.Config.DiscordRpcCustomPort = x)
-        {
-            CheckValidity = (port) => (port is < 1024 or > 49151) ? Strings.PortNumberMustBeBetween : null,
-            CheckVisibility = () => this.enableDiscordRpcCustomPort.Value,
-        },
-        new SettingsEntry<bool>(Strings.UseXLAuthMacrosSetting, Strings.UseXLAuthMacrosSettingDescription, () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
-        new SettingsEntry<bool>(Strings.IgnoreSteamSetting, Strings.IgnoreSteamSettingDescription, () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
-        {
-            CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
-        },
-        new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
-    };
+            new SettingsEntry<ClientLanguage>(Strings.GameLanguageSetting, Strings.GameLanguageSettingDescription, () => Program.Config.ClientLanguage ?? ClientLanguage.English, x => Program.Config.ClientLanguage = x),
+            new SettingsEntry<DpiAwareness>(Strings.GameDPIAwarenessSetting, Strings.GameDPIAwarenessSettingDescription, () => Program.Config.DpiAwareness ?? DpiAwareness.Unaware, x => Program.Config.DpiAwareness = x),
+            enableDiscordRpc = new SettingsEntry<bool>(Strings.UseDiscordRPCBridgeSetting, Strings.UseDiscordRPCBridgeDescription, () => Program.Config.UseDiscordRpcBridge ?? false, x => Program.Config.UseDiscordRpcBridge = x),
+            this.enableDiscordRpcCustomPort = new SettingsEntry<bool>(Strings.DiscordRPCUseCustomPortSetting, Strings.DiscordRPCUseCustomPortDescription, () => Program.Config.DiscordRpcUseCustomPort ?? false, x => Program.Config.DiscordRpcUseCustomPort = x)
+            {
+                CheckVisibility = () => enableDiscordRpc.Value,
+            },
+            new SettingsEntry<int>(Strings.DiscordRPCCustomPortSetting, Strings.DiscordRPCCustomPortDescription, () => Program.Config.DiscordRpcCustomPort ?? 2026, x => Program.Config.DiscordRpcCustomPort = x)
+            {
+                CheckValidity = (port) => (port is < 1024 or > 49151) ? Strings.PortNumberMustBeBetween : null,
+                CheckVisibility = () => this.enableDiscordRpcCustomPort.Value,
+            },
+            new SettingsEntry<bool>(Strings.UseXLAuthMacrosSetting, Strings.UseXLAuthMacrosSettingDescription, () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
+            new SettingsEntry<bool>(Strings.IgnoreSteamSetting, Strings.IgnoreSteamSettingDescription, () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
+            {
+                CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
+            },
+            new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
+        };
+    }
 
     public override string Title => Strings.GameTitle;
 
