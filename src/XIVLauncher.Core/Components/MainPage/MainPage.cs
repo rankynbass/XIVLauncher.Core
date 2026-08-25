@@ -549,7 +549,7 @@ public class MainPage : Page
                 var protonLoggingOn = (Program.Config.RB_ProtonLoggingEnabled == true && 
                                       (Program.Config.RB_WineStartupType == RBWineStartupType.Proton ||
                                       (Program.Config.RB_WineStartupType == RBWineStartupType.Custom && WineSettings.IsValidProtonBinaryPath(Program.Config.RB_WineBinaryPath))));
-                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime, protonLoggingOn);
+                dalamudRunner = new UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime);
                 dalamudCompatCheck = new UnixDalamudCompatibilityCheck();
                 break;
 
@@ -674,8 +674,12 @@ public class MainPage : Page
             }
         }
 
-        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROTON_LOG")))
+        var protonLogging = Environment.GetEnvironmentVariable("PROTON_LOG");
+        if (!string.IsNullOrEmpty(protonLogging))
+        {
+            Program.CompatibilityTools.Settings.EnableProtonLogging(protonLogging == "1");
             Environment.SetEnvironmentVariable("PROTON_LOG", null); // unset PROTON_LOG, as we handle that separately
+        }
 
         if (Environment.OSVersion.Platform == PlatformID.Win32NT)
         {

@@ -277,12 +277,18 @@ public class CompatibilityTools
 
     public Process RunTheGame(string command, string workingDirectory = "", IDictionary<string, string> environment = null, bool redirectOutput = false, bool writeLog = false, bool wineD3D = false)
     {
-        if (Settings.ProtonLoggingOn)
+        // Proton Logging
+        environment ??= new Dictionary<string, string>();
+        if (Settings.IsProton && Settings.ProtonLoggingOn)
         {
-            environment ??= new Dictionary<string, string>();
+            Log.Information("[WINE][Proton Logging] Logging Enabled. Check steam-*.log for output");
             environment["PROTON_LOG"] = "1";
+            environment["PROTON_LOG_DIR"] = Path.Combine(storageDirectory.FullName, "logs");
             if (Settings.ProtonLoggingVerbose)
+            {
                 environment["WINEDEBUG"] = "+timestamp,+pid,+tid,+seh,+unwind,+threadname,+debugstr,+loaddll,+mscoree";
+                Log.Information("[WINE][Proton Logging] Verbose Logging Enabled.");
+            }
         }
 
         var leadProcess = "";
@@ -385,7 +391,7 @@ public class CompatibilityTools
                 wineEnvironmentVariables.Add("PROTON_DISABLE_NVAPI", "1");
         }
 
-        if (!string.IsNullOrEmpty(Settings.DebugVars))
+        if (!string.IsNullOrEmpty(Settings.DebugVars) && !(environment?.ContainsKey("WINEDEBUG") ?? false))
         {
             wineEnvironmentVariables.Add("WINEDEBUG", Settings.DebugVars);
         }
@@ -472,7 +478,7 @@ public class CompatibilityTools
         var wineDbg = RunInPrefix("winedbg --command \"info proc\"", redirectOutput: true);
         var output = wineDbg.StandardOutput.ReadToEnd();
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Where(l => l.Contains(executableName));
-        Log.Verbose($"Found {executableName} with process ids: {string.Join(", ", matchingLines.Select(l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber)))}");
+        Log.Verbose($"[WINE] Found {executableName} with process ids: {string.Join(", ", matchingLines.Select(l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber)))}");
         return matchingLines.Select(l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber)).ToArray();
     }
 
@@ -483,7 +489,7 @@ public class CompatibilityTools
 
     public Int32 GetUnixProcessId(Int32 winePid)
     {
-        if (Settings.IsProton && !Settings.WineRelease.Name.Contains("XIV") && !Settings.IsUsingUmu)
+        if (Settings.IsProton && !Settings.WineRelease.Name.Contains("XIV"))
         {
             var processName = GetProcessName(winePid);
             return GetUnixProcessIdByName(processName);
@@ -498,7 +504,7 @@ public class CompatibilityTools
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var unixPids = matchingLines.Select(l => int.Parse(l.Substring(10, 8), System.Globalization.NumberStyles.HexNumber)).ToArray();
-        Log.Verbose($"Found {unixPids.Length} unix process ids for wine pid {winePid}: {string.Join(", ", unixPids)}");
+        Log.Verbose($"[WINE] Found {unixPids.Length} unix process ids for wine pid {winePid}: {string.Join(", ", unixPids)}");
         return unixPids.FirstOrDefault();
     }
 
@@ -509,7 +515,7 @@ public class CompatibilityTools
         var matchingLines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Where(
             l => int.Parse(l.Substring(1, 8), System.Globalization.NumberStyles.HexNumber) == winePid);
         var processNames = matchingLines.Select(l => l.Substring(20).Trim('\'')).ToArray();
-        Log.Verbose($"Found process names for wine pid {winePid}: {string.Join(", ", processNames)}");
+        Log.Verbose($"[WINE] Found process names for wine pid {winePid}: {string.Join(", ", processNames)}");
         return processNames.FirstOrDefault();
     }
 
@@ -536,7 +542,7 @@ public class CompatibilityTools
         }
         // Deal with rare edge-case where pid rollover causes the ffxiv pid to be lower than XLCore's.
         if (closest == 0 && early != 0) closest = early;
-        if (closest != 0) Log.Information($"Process for {executableName} found using fallback method: {closest}. XLCore pid: {currentProcess.Id}");
+        if (closest != 0) Log.Verbose($"[WINE] Process for {executableName} found using fallback method: {closest}. XLCore pid: {currentProcess.Id}");
         return closest;
     }
 
@@ -545,7 +551,7 @@ public class CompatibilityTools
         var launchArguments = $"winepath --windows \"{unixPath}\"";
         var winePath = RunWithoutRuntime(launchArguments);
         var output = winePath.StandardOutput.ReadToEnd();
-        Log.Verbose($"UnixToWinePath: {unixPath} -> {output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()}");
+        Log.Verbose($"[WINE] UnixToWinePath: {unixPath} -> {output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault()}");
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
     }
 
@@ -554,7 +560,7 @@ public class CompatibilityTools
         var args = $"reg add \"{key}\" /v \"{value}\" /d \"{data}\" /f";
         var wineProcess = RunWithoutRuntime(args);
         wineProcess.WaitForExit();
-        Log.Verbose($"Registry key added: {key}\\{value} = {data}");
+        Log.Verbose($"[WINE] Registry key added: {key}\\{value} = {data}");
     }
 
     public void Kill()

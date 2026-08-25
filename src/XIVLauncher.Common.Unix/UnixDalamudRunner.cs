@@ -20,19 +20,19 @@ public class UnixDalamudRunner : IDalamudRunner
     private readonly CompatibilityTools compatibility;
     private readonly DirectoryInfo dotnetRuntime;
     private readonly bool ProtonLogging;
+    private readonly bool ProtonLoggingVerbose;
 
-    public UnixDalamudRunner(CompatibilityTools compatibility, DirectoryInfo dotnetRuntime, bool protonLogging = false)
+    public UnixDalamudRunner(CompatibilityTools compatibility, DirectoryInfo dotnetRuntime)
     {
         this.compatibility = compatibility;
         this.dotnetRuntime = dotnetRuntime;
-        this.ProtonLogging = protonLogging;
     }
 
     public Process? Run(FileInfo runner, bool fakeLogin, bool noPlugins, bool noThirdPlugins, FileInfo gameExe, string gameArgs, IDictionary<string, string> environment, DalamudLoadMethod loadMethod, DalamudStartInfo startInfo)
     {
         var gameExePath = "";
         var dotnetRuntimePath = "";
-        var oldLoggingPath = startInfo.LoggingPath;
+        var ProtonLogging = compatibility.Settings.IsProton && compatibility.Settings.ProtonLoggingOn;
 
         Parallel.Invoke(
             () => { gameExePath = compatibility.UnixToWinePath(gameExe.FullName); },
@@ -92,16 +92,12 @@ public class UnixDalamudRunner : IDalamudRunner
         // Keep checking for valid json output, but only 5 times. If it's still erroring out at that point, give up.
         while (dalamudConsoleOutput == null && invalidJsonCount < 5)
         {
-            Console.WriteLine("Waiting for Dalamud output...");
             if (ProtonLogging)
                 break; // Don't wait for Dalamud output if we're logging proton, as it will be in the proton log instead
             var output = dalamudProcess.StandardOutput.ReadLine();
             if (output == null)
             {
-                if (ProtonLogging)
-                    break;
-                else
-                    throw new DalamudRunnerException("An internal Dalamud error has occured");
+                throw new DalamudRunnerException("An internal Dalamud error has occured");
             }
             Console.WriteLine(output);
 
@@ -114,6 +110,10 @@ public class UnixDalamudRunner : IDalamudRunner
                 Log.Warning(ex, $"Couldn't parse Dalamud output: {output}");
             }
             invalidJsonCount++;
+            if (invalidJsonCount > 5)
+            {
+                throw new DalamudRunnerException("Too many lines of errors from Dalamud. Try a different wine/proton version");
+            }
         }
 
         new Thread(() =>
@@ -135,7 +135,7 @@ public class UnixDalamudRunner : IDalamudRunner
 
                 int counter = 0;
                 var ffxivPid = compatibility.GetUnixProcessIdByName(gameExe.Name);
-                Log.Information($"Starting check for {gameExe.Name} [Proton Logging]");
+                Log.Information($"[WINE][Proton Logging] Starting check for {gameExe.Name}");
                 while (ffxivPid == 0 && counter < 300) // After 30 seconds (300 * 100 ms), assume something went wrong and end the loop.
                 {
                     ffxivPid = compatibility.GetUnixProcessIdByName(gameExe.Name);
@@ -144,13 +144,13 @@ public class UnixDalamudRunner : IDalamudRunner
                 }
                 if (ffxivPid == 0)
                 {
-                    Log.Error($"Could not find unix process id for {gameExe.Name} [Proton Logging]");
+                    Log.Error($"[WINE][Proton Logging] Could not find unix process id for {gameExe.Name}");
                     return null;
                 }
 
                 gameProcess = Process.GetProcessById(ffxivPid);
-                Log.Information($"It took about {((decimal)counter / 10)} seconds to find the unix pid for {gameExe.Name}");
-                Log.Information($"Got game process handle {gameProcess.Handle} with Unix pid {gameProcess.Id} [Proton Logging]");
+                Log.Information($"[WINE][Proton Logging] It took about {((decimal)counter / 10)} seconds to find the unix pid for {gameExe.Name}");
+                Log.Information($"[WINE][Proton Logging] Got game process handle {gameProcess.Handle} with Unix pid {gameProcess.Id}");
                 return gameProcess;
             }
             catch (Exception ex)
