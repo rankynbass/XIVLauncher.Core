@@ -27,6 +27,8 @@ namespace XIVLauncher.Core.Components.MainPage;
 
 public class MainPage : Page
 {
+    private UnixDiscordRpcRunner? rpcRunner;
+    
     private readonly LoginFrame loginFrame;
     private readonly NewsFrame newsFrame;
     private readonly ActionButtons actionButtons;
@@ -726,11 +728,11 @@ public class MainPage : Page
             {
                 isFailed = t.IsFaulted || t.IsCanceled;
 
-                if (isFailed)
-                    Log.Error(t.Exception, "Couldn't ensure compatibility tool");
+                    if (isFailed)
+                        Log.Error(t.Exception, "Couldn't ensure compatibility tool");
 
-                signal.Set();
-            });
+                    signal.Set();
+                });
 
             App.StartLoading(Strings.PreparingForCompatTool, Strings.PleaseBePatient);
             signal.WaitOne();
@@ -745,6 +747,38 @@ public class MainPage : Page
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.RB_App2 + "\"" + App.Settings.RB_App2Args, wineD3D: App.Settings.RB_App2WineD3D.Value);
             if (App.Settings.RB_App3Enabled.Value && !string.IsNullOrWhiteSpace(App.Settings.RB_App3))
                 Program.CompatibilityTools.RunInPrefix("\"" + App.Settings.RB_App3 + "\"" + App.Settings.RB_App3Args, wineD3D: App.Settings.RB_App3WineD3D.Value);
+                
+            // Start RPC bridge
+            if (App.Settings.UseDiscordRpcBridge ?? false)
+            {
+                var rpcSignal = new ManualResetEvent(false);
+                isFailed = false;
+                
+                var rpcTask = Task.Run(
+                    () =>
+                    {
+                        this.rpcRunner = App.Settings.DiscordRpcUseCustomPort ?? false
+                                             ? new UnixDiscordRpcRunner(App.Settings.DiscordRpcCustomPort)
+                                             : new UnixDiscordRpcRunner();
+                        this.rpcRunner.StartRpcBridge();
+                    }).ContinueWith(
+                    t =>
+                    {
+                        isFailed = t.IsFaulted || t.IsCanceled;
+
+                        if (isFailed)
+                            Log.Error(t.Exception, "Couldn't start Discord RPC Bridge");
+
+                        rpcSignal.Set();
+                    });
+                
+                App.StartLoading(Strings.StartingRPC, Strings.PleaseBePatient);
+                rpcSignal.WaitOne();
+                rpcSignal.Dispose();
+
+                if (isFailed)
+                    return null!;
+            }
 
             App.StartLoading(Strings.StartingGame, Strings.HaveFun);
 
@@ -817,7 +851,10 @@ public class MainPage : Page
         await Task.Run(() => launchedProcess!.WaitForExit()).ConfigureAwait(false);
 
         Log.Verbose("Game has exited");
-
+        
+        if (this.rpcRunner != null)
+            await this.rpcRunner.StopRpcBridge().ConfigureAwait(false);
+        
         if (addonMgr.IsRunning)
             addonMgr.StopAddons();
 
