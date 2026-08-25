@@ -125,7 +125,7 @@ public class WineSettings
         {
             for (int i = 0; i < 10; i++)
                 importantPaths.Append($":{runtimeDir}/discord-ipc-{i}");
-            importantPaths.Append($"{runtimeDir}/app/com.discordapp.Discord:{runtimeDir}/snap.discord-canary");
+            importantPaths.Append($"{runtimeDir}/app/com.discordapp.Discord:{runtimeDir}/app/com.discordapp.DiscordPTB:{runtimeDir}/app/com.discordapp.DiscordCanary:{runtimeDir}/app/dev.vencord.Vesktop:{runtimeDir}/snap.discord");
         }
         EnvVars.Add("STEAM_COMPAT_MOUNTS", importantPaths.ToString());
     }
