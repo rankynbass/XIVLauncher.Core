@@ -54,7 +54,16 @@ public class SettingsTabGame : SettingsTab
             },
             new SettingsEntry<ClientLanguage>(Strings.GameLanguageSetting, Strings.GameLanguageSettingDescription, () => Program.Config.ClientLanguage ?? ClientLanguage.English, x => Program.Config.ClientLanguage = x),
             new SettingsEntry<DpiAwareness>(Strings.GameDPIAwarenessSetting, Strings.GameDPIAwarenessSettingDescription, () => Program.Config.DpiAwareness ?? DpiAwareness.Unaware, x => Program.Config.DpiAwareness = x),
-            enableDiscordRpc = new SettingsEntry<bool>(Strings.UseDiscordRPCBridgeSetting, Strings.UseDiscordRPCBridgeDescription, () => Program.Config.UseDiscordRpcBridge ?? false, x => Program.Config.UseDiscordRpcBridge = x),
+            new SettingsEntry<bool>(Strings.UseXLAuthMacrosSetting, Strings.UseXLAuthMacrosSettingDescription, () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
+            new SettingsEntry<bool>(Strings.IgnoreSteamSetting, Strings.IgnoreSteamSettingDescription, () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
+            {
+                CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
+            },
+            new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
+            enableDiscordRpc = new SettingsEntry<bool>(Strings.UseDiscordRPCBridgeSetting, Strings.UseDiscordRPCBridgeDescription, () => Program.Config.UseDiscordRpcBridge ?? false, x => Program.Config.UseDiscordRpcBridge = x)
+            {
+                CheckWarning = x => "*Experimental! Requires plugin version with Wine RPC bridge support*",
+            },
             this.enableDiscordRpcCustomPort = new SettingsEntry<bool>(Strings.DiscordRPCUseCustomPortSetting, Strings.DiscordRPCUseCustomPortDescription, () => Program.Config.DiscordRpcUseCustomPort ?? false, x => Program.Config.DiscordRpcUseCustomPort = x)
             {
                 CheckVisibility = () => enableDiscordRpc.Value,
@@ -64,12 +73,6 @@ public class SettingsTabGame : SettingsTab
                 CheckValidity = (port) => (port is < 1024 or > 49151) ? Strings.PortNumberMustBeBetween : null,
                 CheckVisibility = () => this.enableDiscordRpcCustomPort.Value,
             },
-            new SettingsEntry<bool>(Strings.UseXLAuthMacrosSetting, Strings.UseXLAuthMacrosSettingDescription, () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
-            new SettingsEntry<bool>(Strings.IgnoreSteamSetting, Strings.IgnoreSteamSettingDescription, () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
-            {
-                CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
-            },
-            new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
         };
     }
 
