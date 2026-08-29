@@ -2,6 +2,7 @@ using Hexa.NET.ImGui;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
+// If Step is 0, the +/- buttons on the right side of the input box will be disabled.
 public class NumericSettingsEntry : SettingsEntry<int>
 {
     public int MinValue { get; set; }

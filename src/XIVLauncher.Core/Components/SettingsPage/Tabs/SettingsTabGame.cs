@@ -68,7 +68,7 @@ public class SettingsTabGame : SettingsTab
             {
                 CheckVisibility = () => enableDiscordRpc.Value,
             },
-            new SettingsEntry<int>(Strings.DiscordRPCCustomPortSetting, Strings.DiscordRPCCustomPortDescription, () => Program.Config.DiscordRpcCustomPort ?? 2026, x => Program.Config.DiscordRpcCustomPort = x)
+            new NumericSettingsEntry(Strings.DiscordRPCCustomPortSetting, Strings.DiscordRPCCustomPortDescription, () => Program.Config.DiscordRpcCustomPort ?? 2026, x => Program.Config.DiscordRpcCustomPort = x, 1024, 65536, 0)
             {
                 CheckValidity = (port) => (port is < 1024 or > 49151) ? Strings.PortNumberMustBeBetween : null,
                 CheckVisibility = () => this.enableDiscordRpcCustomPort.Value,

@@ -57,7 +57,7 @@ public class SettingsTabDxvk : SettingsTab
                 CheckVisibility = () => protonDxvkSetting.Value == false
             },
 
-            new NumericSettingsEntry(Strings.FrameRateSetting, Strings.FrameRateSettingDescription, () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000)
+            new NumericSettingsEntry(Strings.FrameRateSetting, Strings.FrameRateSettingDescription, () => Program.Config.RB_DxvkFrameRate ?? 0, i => Program.Config.RB_DxvkFrameRate = i, 0, 1000, 0)
             {
                 CheckValidity = i =>
                 {
