@@ -23,6 +23,8 @@ public class WineSettings
     public FileInfo LogFile { get; }
     public DirectoryInfo Prefix { get; }
     public XLCorePaths Paths { get; }
+    private FileInfo sourceLsc;
+    private FileInfo prefixLsc;
 
     public bool IsProton => WineRelease.IsProton;
     public bool IsUsingUmu => (UmuLauncher != null) && IsProton;
@@ -49,6 +51,8 @@ public class WineSettings
             this.UmuLauncher = umuLauncher;
             this.protonLogging = protonLogging;
             this.protonLoggingVerbose = protonLoggingVerbose;
+            var libDir = Directory.Exists(Path.Combine(parentPath, "files", "lib64")) ? "lib64" : "lib";
+            this.sourceLsc = new FileInfo(Path.Combine(parentPath, "files", libDir, "wine", "x86_64-windows", "lsteamclient.dll"));
         }
         else
         {
@@ -56,6 +60,9 @@ public class WineSettings
             this.SetWineOrWine64(parentPath);
             this.WineServerPath = Path.Combine(parentPath, "wineserver");
             this.UmuLauncher = null;
+            var tmpPath = Directory.GetParent(parentPath).FullName;
+            var libDir = Directory.Exists(Path.Combine(tmpPath, "lib64")) ? "lib64" : "lib";
+            this.sourceLsc = new FileInfo(Path.Combine(tmpPath, libDir, "wine", "x86_64-windows", "lsteamclient.dll"));
         }
         this.FsyncOn = wineSync == RBWineSyncType.FSync || wineSync == RBWineSyncType.NTSync;
         this.NTSyncOn = wineSync == RBWineSyncType.NTSync;
@@ -63,6 +70,7 @@ public class WineSettings
         this.DebugVars = debugVars;
         this.LogFile = logFile;
         this.Prefix = paths.Prefix;
+        this.prefixLsc = new FileInfo(Path.Combine(Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
         this.Paths = paths;
         this.WineDLLOverrides = (WineSettings.WineDLLOverrideIsValid(dlloverrides) && !string.IsNullOrEmpty(dlloverrides) ? dlloverrides + ";" : "") + WINEDLLOVERRIDES;
         this.EnvVars = new Dictionary<string, string>();
@@ -192,4 +200,33 @@ public class WineSettings
             return true;
         return false;
     }
+
+    public bool? LsteamclientFix()
+    {
+        if (!sourceLsc.Exists)
+        {
+            if(prefixLsc.Exists)
+                prefixLsc.Delete();
+            return false;
+        }
+        if (!prefixLsc.Exists)
+        {
+            prefixLsc.CreateAsSymbolicLink(sourceLsc.FullName);
+            return true;
+        }
+        if (prefixLsc.ResolveLinkTarget(false) is null) // File exists, not symlink
+        {
+            prefixLsc.Delete();
+            prefixLsc.CreateAsSymbolicLink(sourceLsc.FullName);
+            return true;
+        }
+        if (prefixLsc.ResolveLinkTarget(true).FullName != sourceLsc.FullName) // Symlink points to wrong target
+        {
+            prefixLsc.Delete();
+            prefixLsc.CreateAsSymbolicLink(sourceLsc.FullName);
+            return true;
+        }
+        return null;
+    }
+
 }

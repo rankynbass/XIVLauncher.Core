@@ -233,13 +233,6 @@ public class CompatibilityTools
 
     public void EnsurePrefix()
     {
-        // There are too many versions of lsteamclient floating around. Always delete before ensuring prefix to prevent crashes.
-        var lsteamclient = new FileInfo(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32", "lsteamclient.dll"));
-        if (lsteamclient.Exists)
-        {
-            lsteamclient.Delete();
-            Log.Verbose("Using custom wine or non-lsteamclient wine. Deleting lsteamclient.dll from prefix.");
-        }
         var verb = "runinprefix";
         // For proton, if the prefix hasn't been initialized, we need to use "proton run" instead of "proton runinprefix"
         // That will generate these files.
@@ -250,7 +243,26 @@ public class CompatibilityTools
         {
             verb = "run";
         }
+        if (Directory.Exists(Path.Combine(Settings.Prefix.FullName, "drive_c", "windows", "system32")))
+        {
+            // There are too many versions of lsteamclient floating around.
+            var lscfix = Settings.LsteamclientFix();
+            if (lscfix is null)
+            {
+                Log.Information("[WINE] lsteamclient.dll versions in " + (Settings.IsProton ? "proton" : "wine") + " and prefix are the same.");
+            }
+            else if (lscfix == true)
+            {
+                Log.Information("[WINE] Installing lsteamclient.dll from " + (Settings.IsProton ? "proton" : "wine") + " to prefix.");
+            }
+            else
+            {
+                Log.Information("[WINE] lsteamclient.dll is not present in this release of wine. Deleting (if present).");
+            }
+        }
         RunWithoutRuntime("cmd /c dir %userprofile%/Documents > nul", verb, false).WaitForExit();
+        
+
     }
 
     public Process RunWithoutRuntime(string command, string verb = "runinprefix", bool redirect = true)
@@ -281,13 +293,13 @@ public class CompatibilityTools
         environment ??= new Dictionary<string, string>();
         if (Settings.IsProton && Settings.ProtonLoggingOn)
         {
-            Log.Information("[WINE][Proton Logging] Logging Enabled. Check steam-*.log for output");
+            Log.Information("[WINE] [Proton Logging] Logging Enabled. Check steam-*.log for output");
             environment["PROTON_LOG"] = "1";
             environment["PROTON_LOG_DIR"] = Path.Combine(storageDirectory.FullName, "logs");
             if (Settings.ProtonLoggingVerbose)
             {
                 environment["WINEDEBUG"] = "+timestamp,+pid,+tid,+seh,+unwind,+threadname,+debugstr,+loaddll,+mscoree";
-                Log.Information("[WINE][Proton Logging] Verbose Logging Enabled.");
+                Log.Information("[WINE] [Proton Logging] Verbose Logging Enabled.");
             }
         }
 
