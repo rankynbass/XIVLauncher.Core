@@ -1,4 +1,9 @@
 # Changelog
+### Mon Aug 31 2026 Rankyn Bass <rankyn@proton.me>
+1.4.0.11
+- Fix: Crash on exit bug with some versions of proton 11. The launcher was deleting lsteamclient to fix another bug, and relying on proton to regenerate the file. It was not doing so. Created a fix which checks for lsteamclient in the prefix, and creates/fixes symlink from proton/wine to the prefix, or deletes it if not present in wine release.
+- Fix: NumericSettingsEntry was showing double input boxes due launcher changes made in the Discord patch,
+
 ### Tue Aug 25 2026 Rankyn Bass <rankyn@proton.me>
 1.4.0.10
 - Fix: Allow use of `PROTON_LOG=1`. `PROTON_LOG_DIR` will not work; logs will be in the xlcore log folder with all the other logs. wine.log will be empty when using proton logging. Multiboxing with proton logging enabled may not work. I cannot fix this! The normal launcher detection routine relies on reading stdout, which gets redirected by proton logging. The fallback routine I used just searches for an "ffxiv_dx11.exe" process, and may not select the correct one if there are multiple.

@@ -1,5 +1,3 @@
-** 1.4.0.10 **
-- Fix: Allow use of `PROTON_LOG=1`. `PROTON_LOG_DIR` will not work; logs will be in the xlcore log folder with all the other logs. wine.log will be empty when using proton logging. Multiboxing with proton logging enabled may not work. I cannot fix this! The normal launcher detection routine relies on reading stdout, which gets redirected by proton logging. The fallback routine I used just searches for an "ffxiv_dx11.exe" process, and may not select the correct one if there are multiple.
-- Add: Options within Wine tab to enable Proton logging and verbose Proton logging. Non-verbose logging will use the WINEDEBUG vars, while verbose logging will use `+timestamp,+pid,+tid,+seh,+unwind,+threadname,+debugstr,+loaddll,+mscoree`. Enabling Proton Logging is the same as adding `PROTON_LOG=1` as an environment variable.
-- Cleaned up a few of the launcher.log messages, and shuffled others to verbose logging where they belonged.
-- Add: Support for Discord Rich Presence wine/linux bridge. This fixes the Discord Rich Presence plugin when using wine/proton versions that don't support unix sockets (notably most proton 10 releases). Currently requires a custom dev version of the plugin.
+** 1.4.0.11 **
+- Fix: Crash on exit bug with some versions of proton 11. The launcher was deleting lsteamclient to fix another bug, and relying on proton to regenerate the file. It was not doing so. Created a fix which checks for lsteamclient in the prefix, and creates/fixes symlink from proton/wine to the prefix, or deletes it if not present in wine release.
+- Fix: NumericSettingsEntry was showing double input boxes due launcher changes made in the Discord patch,
