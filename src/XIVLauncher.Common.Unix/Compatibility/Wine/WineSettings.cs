@@ -88,6 +88,7 @@ public class WineSettings
                 EnvVars.Add("STORE", "none");
                 EnvVars.Add("PROTON_VERB", "runinprefix");
             }
+            EnvVars.Add("STEAM_COMPAT_INSTALL_PATH", Paths.GameFolder.FullName);
             EnvVars.Add("PROTON_NO_NTSYNC", NTSyncOn ? "0" : "1");
             EnvVars.Add("PROTON_USE_NTSYNC", NTSyncOn ? "1" : "0");
 

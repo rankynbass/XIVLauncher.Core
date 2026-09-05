@@ -1,3 +1,2 @@
-** 1.4.0.11 **
-- Fix: Crash on exit bug with some versions of proton 11. The launcher was deleting lsteamclient to fix another bug, and relying on proton to regenerate the file. It was not doing so. Created a fix which checks for lsteamclient in the prefix, and creates/fixes symlink from proton/wine to the prefix, or deletes it if not present in wine release.
-- Fix: NumericSettingsEntry was showing double input boxes due launcher changes made in the Discord patch,
+** 1.4.0.12 **
+- Fix: Internal Dalamud Error when launching with umu-launcher and native/appimage/flatpak. XLM was unaffected, as well as anyone using bazzite, because umu-launcher relies on an environment variable set by steam automatically, which bazzite also happens to set. This is why I missed it in testing. Distroboxes launched from bazzite still had the env var set, even if they were non-fedora distros.
