@@ -63,5 +63,5 @@ if (Program.Config.IsUidCacheEnabled == true)              // :51
 
 Instantiates: `SettingsEntry{T}.cs.md` (×8). Base of `SettingsTab.cs.md`; iterated by `SettingsPage.cs.md` §Draw/§search/§finish button; loaded on show by `SettingsTab.cs.md` §Load.
 Config vocabulary: `docs/XIVLauncher.Core/Program.cs.md` §`Config` + `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`; consumed at launch time by `MainPage.cs.md` §login pipeline (`ClientLanguage`, `AdditionalArgs`, `GamePath`, `IsOtpServer`, `IsUidCacheEnabled`, `IsIgnoringSteam`).
-Action: `docs/XIVLauncher.Core/Program.cs.md` §`ResetUIDCache`.
+Action: `docs/XIVLauncher.Core/Program.cs.md` §`ResetUIDCache` (`:484`, reaches `LauncherApp.cs:115`'s lib cache — **not** the fork's dead `UniqueIdCache` stub, spec'd in `docs/XIVLauncher.Core/Configuration/UniqueIdCache.cs.md` §1).
 Platform probe: `CoreEnvironmentSettings.cs.md` §`IsSteamCompatTool`.

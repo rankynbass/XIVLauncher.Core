@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Almost every row on the Settings page is `new SettingsEntry<SomeType>(label, description, () => Program.Config.X, x => Program.Config.X = x)`. The class is the *entire* persistence bridge: the two lambdas are the getter and setter for one field of `Program.Config` (see `docs/XIVLauncher.Core/Program.cs.md` §`Config` and `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Configuration/ILauncherConfig.cs`), and `InternalValue` is the frame-local copy the user edits in the widget. Nothing here knows about `App.Settings`/`LauncherApp` — the row talks to the process-wide `Program.Config` through the lambdas only, which is why no tab class needs a `LauncherApp` (contrast `MainPage.cs.md` §ctor, where children do).
+Almost every row on the Settings page is `new SettingsEntry<SomeType>(label, description, () => Program.Config.X, x => Program.Config.X = x)`. The class is the *entire* persistence bridge: the two lambdas are the getter and setter for one field of `Program.Config` (see `docs/XIVLauncher.Core/Program.cs.md` §`Config` and `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` §2 — the 41-member `ILauncherConfig` schema; upstream's equivalent is `lib/FFXIVQuickLauncher/src/XIVLauncher/Settings/ILauncherSettingsV3.cs`), and `InternalValue` is the frame-local copy the user edits in the widget. Nothing here knows about `App.Settings`/`LauncherApp` — the row talks to the process-wide `Program.Config` through the lambdas only, which is why no tab class needs a `LauncherApp` (contrast `MainPage.cs.md` §ctor, where children do).
 
 ## 2. Surface
 

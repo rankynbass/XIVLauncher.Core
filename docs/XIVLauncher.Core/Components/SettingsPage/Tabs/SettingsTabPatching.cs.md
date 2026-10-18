@@ -40,5 +40,5 @@ All three are `new SettingsEntry<…>(label, description, () => Program.Config.X
 
 Instantiates: `SettingsEntry{T}.cs.md` (×2), `NumericSettingsEntry.cs.md`; base of `SettingsTab.cs.md`; consumed by `SettingsPage.cs.md` §tabs/§Draw/§OnShow/§finish button.
 Consumed by (launcher side): `MainPage.cs.md` §10 (patch path, patch speed limit), library `Game/Patch/*` (keep patches).
-Config vocabulary: `docs/XIVLauncher.Core/Program.cs.md` §`Config` (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Configuration/ILauncherConfig.cs`).
+Config vocabulary: `docs/XIVLauncher.Core/Program.cs.md` §`Config`; the 41-member schema itself is `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` §2/§3 (upstream's equivalent is `lib/FFXIVQuickLauncher/src/XIVLauncher/Settings/ILauncherSettingsV3.cs`). `PatchPath` (`:47`, `DirectoryInfo?`) is persisted through `docs/XIVLauncher.Core/Configuration/Parsers/DirectoryInfoParser.cs.md`; `KeepPatches` (`:49`) and `PatchSpeedLimit` (`:51`, non-nullable `long`) are not in `ILauncherConfig.cs.md` §5's defaulting map — see that doc's §3 for why the latter cannot be `??=`-defaulted.
 Labels: `src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs` (`…PatchPathSetting…`, `MaximumSpeedSetting…`, `KeepPatchesSetting…`).

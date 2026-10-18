@@ -60,7 +60,7 @@ Note the casing asymmetry: the AppID override uses the mixed-case key **`SteamAp
 - The child process is not waited for explicitly; `StandardOutput.ReadToEnd()` is relied upon to block until EOF. `proc.Start()` + `ReadToEnd()` on `System.Diagnostics.Process` (the legacy class, not `Process.Run`) is used here.
 - Output is *not* sorted or normalised; selection order is whatever `locale -a` prints. A locale named `c.utf8` matches (upper-case compare) but a locale such as `en_US.UTF-8` never matches.
 - A missing `sh` (or missing `locale` binary) yields empty stdout and therefore `""`, silently.
-- Consumers: `Program.CType`, forwarded into game/Wine environment construction elsewhere in the project.
+- Consumers: `Program.CType` (`Program.cs:70`, a `static string` field initialised once), forwarded into game/Wine child environment construction — `MainPage.cs:613`/`:614` (`System.Environment.SetEnvironmentVariable("LC_ALL", Program.CType)` and `LC_CTYPE`) under `App.Settings.FixLocale == true`, which `CoreEnvironmentSettings.ForceLocale` (`:79`-`:83`, `ForceLocale == false`) is the off-switch for. It never feeds the launcher's *own* locale, so it must not be read as a localization control: the UI text mechanism is `Resources/Localization/Strings.Designer.cs.md`.
 
 ## 5. Relationship to other units
 

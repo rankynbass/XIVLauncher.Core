@@ -149,6 +149,8 @@ All `Clear*` methods re-create the folders/files they deleted (the trailing `sto
 
 Config is a `ConfigurationBuilder<ILauncherConfig>` composed from: command-line arguments, `<storage>/launcher.ini`, plus type parsers `DirectoryInfoParser` and `AddonListParser` (`Configuration/Parsers`). `AcceptLanguage` is filled from `ApiHelpers.GenerateAcceptLanguage()` when empty.
 
+The full 41-member schema, its three-state (`T?` = unset) convention, and the 13 members this file leaves `null` are specified in `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` §2/§3/§5; the two parsers in `docs/XIVLauncher.Core/Configuration/Parsers/` are the INI codecs for `DirectoryInfo` (4 members) and `List<AddonEntry>` (1 member). The 7-member `CommonSettings` view (`Configuration/CommonSettings.cs.md`) is constructed at `Program.cs:49` and has no consumers.
+
 Defaults asserted by this file (applied with `??=`, except where noted):
 
 | Key | Default |
@@ -213,14 +215,15 @@ It is constructed at class init, i.e. before config/logging exist.
 - All global state is unsynchronised; the design assumes a single-threaded startup and a single frame loop.
 - Raw SDL handles (`window`, `gpuDevice`) are leaked on any early `Environment.Exit(1)` before teardown.
 - `Clear*(tsbutton = true)` is unsound when called before `Main` constructs `launcherApp` — `ClearSettings(true)` touches `launcherApp.State`, `ClearAll(true)` propagates that. From `Main` they are always called with the default `false`.
-- `ResetUIDCache` ignores its `tsbutton` parameter entirely (the parameter is unused), and NPEs if `launcherApp` is null.
+- `ResetUIDCache` ignores its `tsbutton` parameter entirely (the parameter is unused), and NPEs if `launcherApp` is null. It reaches the lib cache (`LauncherApp.cs:115` `CommonUniqueIdCache`), *not* the fork's unused `XIVLauncher.Core.Configuration.UniqueIdCache` stub (`Configuration/UniqueIdCache.cs.md` §1) — two same-named classes, one live, one dead.
+- `Config` is `null!` until step 4 (`LoadConfig`) and every one of its 41 members is `get; set;`-public: any read that happens before step 4 sees `null` for the 13 members §8 does not default (`Configuration/ILauncherConfig.cs.md` §5), and the `!` assertions on `GamePath`/`PatchPath`/`GameConfigPath` at `MainPage.cs:185`/`:244`/`:733`/`:860`/`:1049` and `Support/Troubleshooting.cs:73` trap rather than report. Keep ordering inside this file.
 - `ClearPrefix`/`ClearPlugins`/`ClearTools`/`ClearLogs` delete recursive folders without checking in-flight use; they are only safe at startup.
 - `HideWindow`/`ShowWindow` are public but `window` is `null!` before `Main` reaches step 10.
 - `Patcher` is the only global with a public setter — external code may legitimately assign it; nothing in this file does.
 
 ## 13. Referenced (not defined here)
 
-`Storage`, `ConfigurationBuilder`/`ILauncherConfig` (Config.Net), `CommonSettings`, `DirectoryInfoParser`, `AddonListParser`, `ApiHelpers.GenerateAcceptLanguage`, `DalamudUpdater`, `DalamudOverlayInfoProxy`, `CompatibilityTools`, `WineSettings`, `WineUtility.SystemFsyncSupport`, `WindowsSteam`/`UnixSteam`, `FileSecretProvider`/`KeychainSecretProvider`/`DummySecretProvider`, `LauncherApp`, `ImGuiBindings`, `StyleModelV1`, `LauncherClientConfig`, `AppUtil.GetAssemblyVersion/GetGitHash`, `LogInit.Setup`, `CoreEnvironmentSettings`, SDL3 C ABI (`SDL.Init`, `SDL.CreateWindow`, `SDL.CreateGPUDevice`, `SDL.ClaimWindowForGPUDevice`, `SDL.SetGPUSwapchainParameters`, `SDL.ShowWindow`, `SDL.GetWindowFlags`, `SDL.Delay`, `SDL.PollEvent`…).
+`Storage`, `ConfigurationBuilder`/`ILauncherConfig` (Config.Net — schema spec: `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`), `CommonSettings` (`Configuration/CommonSettings.cs.md`), `DirectoryInfoParser`/`AddonListParser` (`Configuration/Parsers/…cs.md`), `UniqueIdCache` (dead stub, `Configuration/UniqueIdCache.cs.md`), `ApiHelpers.GenerateAcceptLanguage`, `DalamudUpdater`, `DalamudOverlayInfoProxy`, `CompatibilityTools`, `WineSettings`, `WineUtility.SystemFsyncSupport`, `WindowsSteam`/`UnixSteam`, `FileSecretProvider`/`KeychainSecretProvider`/`DummySecretProvider`, `LauncherApp`, `ImGuiBindings`, `StyleModelV1`, `LauncherClientConfig`, `AppUtil.GetAssemblyVersion/GetGitHash`, `LogInit.Setup`, `CoreEnvironmentSettings`, SDL3 C ABI (`SDL.Init`, `SDL.CreateWindow`, `SDL.CreateGPUDevice`, `SDL.ClaimWindowForGPUDevice`, `SDL.SetGPUSwapchainParameters`, `SDL.ShowWindow`, `SDL.GetWindowFlags`, `SDL.Delay`, `SDL.PollEvent`…).
 
 ## 14. Extension points / notes for maintainers
 

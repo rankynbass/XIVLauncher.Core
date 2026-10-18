@@ -108,7 +108,7 @@ Consequence: `ShowMessageBlocking` must never be called from the draw path itsel
 
 ### `ShowExceptionBlocking(Exception, string context)`
 
-`ShowMessageBlocking($"An error occurred ({context}).\n\n{exception}", Strings.XIVLauncherError)` — formats the exception with `ToString()` and uses the localized `Strings.XIVLauncherError` title (from `Resources/Localization/Strings.resx`).
+`ShowMessageBlocking($"An error occurred ({context}).\n\n{exception}", Strings.XIVLauncherError)` — formats the exception with `ToString()` and uses the localized `Strings.XIVLauncherError` title (from `Resources/Localization/Strings.resx`, accessor spec'ed in `Resources/Localization/Strings.Designer.cs.md`; the `text` argument here is **not** catalogued, so an error modal is half-translated by construction).
 
 ### `HandleContinuationBlocking(Task task)` → `bool`
 
@@ -175,8 +175,9 @@ Content alpha is 0.75 with `BlueShade0` (`ImGuiColors.cs.md` §2.4), letting the
 - `State` setter's default arm and `CurrentPage`'s `_` arm mean the enum and the page list must stay in sync when adding a page — three places to change: enum, setter switch, `CurrentPage` switch (plus the field and the ctor).
 - `WaitForOtpAsync` disables the OTP listener after awaiting; two concurrent waits are not supported.
 - `Steam` may be `null` (Steam failed to initialise) and is passed straight to `Launcher` in step 2 of the ctor — `Launcher` must tolerate a null Steam handle (contract of that unit, out of scope here).
+- `UniqueIdCache` is the lib cache type (`CommonUniqueIdCache`, `:115`), constructed from `uidCache.json` at `:130`; the fork's same-named `XIVLauncher.Core.Configuration.UniqueIdCache` (`Configuration/UniqueIdCache.cs.md`) is a dead null-object stub and is never constructed here — do not treat `App.UniqueIdCache` as that class.
 - `#if FLATPAK` and `#if DEBUG` are preprocessor switches; the csproj injects `WIN32`/`OSX`/`LINUX` and a configurable `ExtraDefineConstants`, which is the documented mechanism for `FLATPAK`.
 
 ## 11. Referenced units
 
-`Component` (base), `MainPage`, `SettingsPage`, `OtpEntryPage`, `LoadingPage`, `FtsPage`, `SteamDeckPromptPage`, `Background`, `Page`, `AccountManager`, `CommonUniqueIdCache`, `Launcher`, `SeVersion`, `Repository.Boot`, `EnvironmentSettings.IsNoKillswitch`, `ApiHelpers.GenerateAcceptLanguage`, `Strings.XIVLauncherError`, `Program` (`Config`, `Steam`), `ImGuiColors.BlueShade0`, `ImGuiHelpers.ViewportSize`.
+`Component` (base), `MainPage`, `SettingsPage`, `OtpEntryPage`, `LoadingPage`, `FtsPage`, `SteamDeckPromptPage`, `Background`, `Page`, `AccountManager`, `CommonUniqueIdCache` (`lib/…/XIVLauncher.Common/CommonUniqueIdCache.cs`, implements `lib/…/PlatformAbstractions/IUniqueIdCache.cs`; the fork's dead stub counterpart is spec'd in `docs/XIVLauncher.Core/Configuration/UniqueIdCache.cs.md`), `Launcher`, `SeVersion`, `Repository.Boot`, `EnvironmentSettings.IsNoKillswitch`, `ApiHelpers.GenerateAcceptLanguage`, `Strings.XIVLauncherError` (`Resources/Localization/Strings.Designer.cs.md` §7, the only `Strings.*` read in this file), `Program` (`Config`, `Steam`), `ImGuiColors.BlueShade0`, `ImGuiHelpers.ViewportSize`, `CommonSettings` (`docs/XIVLauncher.Core/Configuration/CommonSettings.cs.md`, constructed at `:49`, unused), `Settings` alias of `Program.Config` (`:107`, schema in `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`).

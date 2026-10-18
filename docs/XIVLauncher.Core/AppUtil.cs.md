@@ -40,6 +40,8 @@ Embedded resource logical names available (from `XIVLauncher.Core.csproj`):
 | `bg_logo.png` | `Resources/bg_logo.png` |
 | `steamdeck_fts.png`, `steamdeck_fterror.png`, `steamdeck_switchprompt.png` | `Resources/…` |
 
+The table is *not* exhaustive for `src/XIVLauncher.Core/Resources/`: that directory also holds the localization table `Localization/Strings.resx`, which is compiled as a CLR **resource table** rather than a `LogicalName` blob, so none of the names above covers it and the class that reads it is spec'ed in `docs/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs.md`.
+
 ### `GetGitHash` / `GetBuildOrigin`
 
 Both read the same assembly-metadata attributes injected by the build (`XIVLauncher.Core.csproj` task pair `GetGitHash`/`WriteGitHash`), which runs `git describe --long --always --dirty` in the project directory and writes `AssemblyMetadata("GitHash", <hash>)` plus `AssemblyMetadata("BuildOrigin", $(GITHUB_REPOSITORY))` into a generated `CustomAssemblyInfoFile`. Consequently these are `null` for local builds that skip the target (e.g. no git repo) — `Program.SetupLogging` logs them as `{Version} - {Hash}` with a `null` tail in that case.
