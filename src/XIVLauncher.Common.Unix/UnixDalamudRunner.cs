@@ -162,7 +162,7 @@ public class UnixDalamudRunner : IDalamudRunner
 
         try
         {
-            var unixPid = compatibility.GetUnixProcessId(dalamudConsoleOutput.Pid);
+            var unixPid = compatibility.GetUnixProcessId(dalamudConsoleOutput.Pid, gameExe.Name);
 
             if (unixPid == 0)
             {
