@@ -1,6 +1,6 @@
 # Button.cs (Common) — Specification
 
-**File:** `src/XIVLauncher.Core/Components/Common/Button.cs` · 68 lines · 2,014 bytes
+**File:** `src/XIVLauncher.Core/Components/Common/Button.cs` · 70 lines · 2,244 bytes
 **Namespace:** `XIVLauncher.Core.Components.Common` · **Declaration:** `public class Button : Component`
 **Role:** Launcher push button — a native Eto `Button` wrapped in the launcher's `Component` base
 
@@ -22,15 +22,17 @@ Usings: `Eto.Forms`. The wrapper inherits `Component` (`Component.cs.md`), so it
 | `IsEnabled` | `public bool` (lines 33–37) | forwards `button.Enabled` |
 | `Label` | `public string` (lines 39–43) | forwards `button.Text` |
 | `Width` | `public new int?` (lines 46–51) | `null` means "let the layout size the button"; getter returns `null` when `button.Width < 0`, setter writes `value ?? -1` |
-| `ShowIcon(FontAwesomeIcon icon)` | `public` (lines 53–56) | `button.Font = AppFonts.IconFont`, `button.Text = AppFonts.Glyph(icon)` |
-| `ToolTip` | `public new string` (lines 60–64) | forwards `Control.ToolTip` |
-| `Focus()` | `public new void` (line 67) | forwards `Control.Focus()` |
+| `ShowIcon(FontAwesomeIcon icon, float? fontSize = null)` | `public` (lines 55–59) | `button.Font = AppFonts.IconFont` (or `AppFonts.IconFontAt(fontSize)`), `button.Text = AppFonts.Glyph(icon)` |
+| `ToolTip` | `public new string` (lines 63–67) | forwards `Control.ToolTip` |
+| `Focus()` | `public new void` (line 69) | forwards `Control.Focus()` |
 
 `public new` on `Width`, `ToolTip`, `Focus` hides the inherited `Control` members (the base declares `Width` as `int`, `ToolTip` as `string`), which is why the declarations use `new` — the wrapper changes the nullability of `Width`.
 
 ## 3. `ShowIcon` semantics
 
 `ShowIcon` **replaces** the button's text with a Font Awesome glyph and switches the button font to `AppFonts.IconFont` (`AppFonts.cs.md`). There is no icon/text combination: after `ShowIcon` the label is the glyph, and `Label` (line 39) reads/writes the glyph string. Consumers that need text + icon must set `Label` after `ShowIcon`, which overwrites the glyph.
+
+The optional `fontSize` selects `AppFonts.IconFontAt(fontSize)`: GTK sizes a button's height from its font, so a fixed-height icon button needs a smaller glyph. `LoginFrame` passes `14f` for the 45 px caret and account buttons; every other consumer uses the page font size.
 
 `FontAwesomeIcon` comes from the submodule's FontAwesome enum (`XIVLauncher.Common`), so `ShowIcon`'s parameter type is the launcher's icon vocabulary, not Eto's `Image`.
 
@@ -41,17 +43,17 @@ The nullable wrapper encodes Eto's "unset width" sentinel: `button.Width` is `in
 - `Width` getter → `null` when `button.Width < 0`
 - `Width` setter → `value ?? -1`
 
-This lets callers write `button.Width = 45` (fixed) and leave the natural size (`Width = null`). Consumers use both forms: `Width = 45` for the login caret/friends buttons (`LoginFrame.cs:111`, `115`), `Width = 40` for the settings finish button (`SettingsPage.cs:56`), `Width = 28/89` for the OTP buttons (`OtpEntryPage.cs:49`, `57`, `60`), `Width = 320` for the loading-page buttons (`LoadingPage.cs:83`, `87`).
+This lets callers write `button.Width = 45` (fixed) and leave the natural size (`Width = null`). Consumers use both forms: `Width = 45, Height = 45` for the login caret/friends buttons (`LoginFrame.cs:122`, `126`), `Width = 40` for the settings finish button (`SettingsPage.cs:56`), `Width = 28, Height = 28` for the OTP paste button and `89x30` for OK/Cancel (`OtpEntryPage.cs:55`, `65`, `68`), `Width = 80, Height = 80` for the action icons (`ActionButtons.cs:49-52`), `Width = 320` for the loading-page buttons (`LoadingPage.cs:83`, `87`).
 
 ## 5. Consumers
 
 | Consumer | Site | Use |
 | --- | --- | --- |
-| `ActionButtons` | `ActionButtons.cs:43-53` | `MakeIconButton(FontAwesomeIcon, string toolTip, Action clicked)` builds `new Common.Button(string.Empty)` with `Width = 80` (line 47), then `ShowIcon(icon)` (line 50), `ToolTip` (line 51), `Click += clicked` (line 52) |
-| `LoginFrame` | `LoginFrame.cs:107`, `111`, `115` | login button (`Strings.LoginButton`), caret button (`Width = 45`), friends button (`Width = 45`) |
+| `ActionButtons` | `ActionButtons.cs:47-58` | `MakeIconButton(FontAwesomeIcon, string toolTip, Action clicked)` builds `new Common.Button(string.Empty)` with `Width = IconButtonSize, Height = IconButtonSize` (80x80, lines 49–52), then `ShowIcon(icon)` (line 55), `ToolTip` (line 56), `Click += clicked` (line 57) |
+| `LoginFrame` | `LoginFrame.cs:116`, `122`, `126` | login button (`Strings.LoginButton`), caret button (`45x45`, `ShowIcon(CaretDown, 14f)`), friends button (`45x45`, `ShowIcon(UserFriends, 14f)`) |
 | `LoadingPage` | `LoadingPage.cs:82`, `86` | cancel (`Strings.CancelLabel`), disable-auto-login, both `Width = 320` |
-| `SettingsPage` | `SettingsPage.cs:56` | finish button, `Width = 40`, `ShowIcon(FontAwesomeIcon.Check/Ban)` in `UpdateFinishButton` |
-| `OtpEntryPage` | `OtpEntryPage.cs:49`, `57`, `60` | paste (`28x28`), OK, Cancel (`89x30`) |
+| `SettingsPage` | `SettingsPage.cs:56` | finish button, `Width = 40`, `ShowIcon(FontAwesomeIcon.Check/Ban)` (lines 57, 154) |
+| `OtpEntryPage` | `OtpEntryPage.cs:55`, `65`, `68` | paste (`28x28`), OK, Cancel (`89x30`) |
 
 Consumers that use raw Eto buttons instead of this wrapper: `ModalDialog` (the modal OK button) and the settings tab action panels (`SettingsTabAbout.cs:61`, `SettingsTabGame.cs:60`, `SettingsTabTroubleshooting.cs:63-85`, `SettingsTabWine.cs:92-101`) — those need only `Text` + `Click`, so the wrapper adds nothing.
 

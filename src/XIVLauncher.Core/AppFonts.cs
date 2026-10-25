@@ -35,6 +35,10 @@ public static class AppFonts
     /// <summary>The Font Awesome icon font, at the same size as the text font.</summary>
     public static Font IconFont => new(iconFamily ?? throw new InvalidOperationException("AppFonts.Initialize must run first"), size);
 
+    /// <summary>The Font Awesome icon font at a given size, for buttons whose glyph must fit a fixed box
+    /// (GTK sizes a button's height from its font, so the HEAD 45 px icon buttons need a smaller glyph).</summary>
+    public static Font IconFontAt(float size) => new(iconFamily ?? throw new InvalidOperationException("AppFonts.Initialize must run first"), size);
+
     /// <summary>The glyph for a Font Awesome icon, to be drawn with <see cref="IconFont"/>.</summary>
     public static string Glyph(FontAwesomeIcon icon) => icon.ToIconString();
 

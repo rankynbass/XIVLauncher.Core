@@ -22,6 +22,11 @@ public class NewsFrame : Component
     /// <summary>News title width inside the news column: 800 px column, 20 px gutter.</summary>
     private const int NEWS_ENTRY_WIDTH = 780;
 
+    /// <summary>GTK cap on a wrapped label's natural width, so the label reports a small natural width and
+    /// GTK allocates the column width to it. Without the cap, the label reports the unwrapped title as its
+    /// natural size, and the column can never shrink it.</summary>
+    private const int NEWS_ENTRY_MAX_WIDTH_CHARS = 10;
+
     private readonly LauncherApp app;
 
     private IReadOnlyList<Banner> bannerList = new List<Banner>();
@@ -35,6 +40,9 @@ public class NewsFrame : Component
     private readonly Label newsCaptionLabel;
     private readonly Label topicsCaptionLabel;
     private readonly Panel listPanel;
+
+    /// <summary>The entries in <see cref="listPanel"/>, so their widths follow the column when it is resized.</summary>
+    private readonly System.Collections.Generic.List<Control> newsEntries = [];
 
     private readonly UITimer bannerTimer = new();
 
@@ -75,10 +83,25 @@ public class NewsFrame : Component
         // width: labels wrap inside it instead of reporting the unwrapped title as their natural size.
         this.listPanel = new Panel { Width = NEWS_ENTRY_WIDTH };
 
+        // The column scales with the window, so entries are re-widthed from the panel's allocation. GTK
+        // wraps a label at its allocation, which only equals the column when the label's natural width is
+        // capped (CapNewsEntryWidth).
+        this.listPanel.SizeChanged += (_, _) => this.ApplyNewsEntryWidth();
+
         this.Content = new StackLayout
         {
             Spacing = 15,
-            Items = { this.loadingLabel, this.bannerImage, this.newsCaptionLabel, this.listPanel },
+            Items =
+            {
+                this.loadingLabel,
+                this.bannerImage,
+                this.newsCaptionLabel,
+                this.listPanel,
+                // The news column scales with the window in the page's table. Eto.Gtk packs items at the
+                // top, so an empty stretch item at the end takes the remaining height and keeps the action
+                // button row at the bottom of the page.
+                new StackLayoutItem(new Panel(), VerticalAlignment.Stretch),
+            },
         };
 
         this.bannerTimer.Interval = BANNER_TIME / 1000.0;
@@ -142,13 +165,19 @@ public class NewsFrame : Component
         // News titles wrap inside the news column; GTK reports the unwrapped title as a label's
         // natural width, so the width is set explicitly.
         var layout = new DynamicLayout { Spacing = new Size(0, 5) };
+        this.newsEntries.Clear();
 
         if (this.headlines.News.Length > 0)
         {
             this.newsCaptionLabel.Visible = true;
             layout.Add(this.newsCaptionLabel);
             foreach (var newsEntry in this.headlines.News)
-                layout.Add(NewsEntry(newsEntry));
+            {
+                var entry = NewsEntry(newsEntry);
+                CapNewsEntryWidth(entry);
+                this.newsEntries.Add(entry);
+                layout.Add(entry);
+            }
         }
 
         if (this.headlines.Topics.Length > 0)
@@ -156,10 +185,40 @@ public class NewsFrame : Component
             this.topicsCaptionLabel.Visible = true;
             layout.Add(this.topicsCaptionLabel);
             foreach (var topic in this.headlines.Topics)
-                layout.Add(NewsEntry(topic));
+            {
+                var entry = NewsEntry(topic);
+                CapNewsEntryWidth(entry);
+                this.newsEntries.Add(entry);
+                layout.Add(entry);
+            }
         }
 
         this.listPanel.Content = layout;
+        this.ApplyNewsEntryWidth();
+    }
+
+    /// <summary>Widths the news entries to the column allocation, so titles wrap at the column edge.</summary>
+    private void ApplyNewsEntryWidth()
+    {
+        var width = this.listPanel.Width;
+        if (width <= 0)
+            return;
+
+        foreach (var entry in this.newsEntries)
+            entry.Width = width;
+    }
+
+    /// <summary>Caps a news entry's natural width on the native Gtk label. Eto exposes no width-chars
+    /// property, so the cap is applied through the Eto.Gtk handler, and a Gtk.LinkButton keeps its text in
+    /// a child label.</summary>
+    private static void CapNewsEntryWidth(Control entry)
+    {
+        var handler = ((Eto.IHandlerSource)entry).Handler;
+        var controlProp = handler.GetType().GetProperty("Control", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!;
+        var widget = (Gtk.Widget)controlProp.GetValue(handler)!;
+
+        var label = widget is Gtk.LinkButton link ? (Gtk.Label)link.Children[0]! : (Gtk.Label)widget;
+        label.MaxWidthChars = NEWS_ENTRY_MAX_WIDTH_CHARS;
     }
 
     private static Control NewsEntry(News newsEntry)

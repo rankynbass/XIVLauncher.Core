@@ -49,10 +49,12 @@ public class Button : Component
         set => this.button.Width = value ?? -1;
     }
 
-    /// <summary>Shows the icon glyph as the button label, using the Font Awesome font.</summary>
-    public void ShowIcon(FontAwesomeIcon icon)
+    /// <summary>Shows the icon glyph as the button label, using the Font Awesome font. A smaller
+    /// <paramref name="fontSize"/> keeps the glyph inside a fixed-size button, because GTK sizes a
+    /// button's height from its font.</summary>
+    public void ShowIcon(FontAwesomeIcon icon, float? fontSize = null)
     {
-        this.button.Font = AppFonts.IconFont;
+        this.button.Font = fontSize is null ? AppFonts.IconFont : AppFonts.IconFontAt(fontSize.Value);
         this.button.Text = AppFonts.Glyph(icon);
     }
 

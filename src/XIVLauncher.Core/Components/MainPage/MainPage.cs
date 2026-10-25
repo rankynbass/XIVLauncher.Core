@@ -98,7 +98,9 @@ public class MainPage : Page
             Spacing = new Size(0, 16),
         };
 
-        layout.Rows[1].ScaleHeight = true;
+        // HEAD sized the news column to the viewport height, so the columns scale and the button row
+        // stays under them. Scaling the button row instead floats it in the middle of the page.
+        layout.Rows[0].ScaleHeight = true;
         layout.Add(topRow, 0, 0, xscale: true, yscale: false);
         layout.Add(this.actionButtons, 0, 1, xscale: false, yscale: true);
 

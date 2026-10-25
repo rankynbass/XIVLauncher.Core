@@ -14,6 +14,10 @@ namespace XIVLauncher.Core.Components.MainPage;
 /// </remarks>
 public class ActionButtons : Component
 {
+    /// <summary>HEAD drew each icon button as an 80x80 square. GTK has a button minimum width above 80 px,
+    /// so the square comes from the height request.</summary>
+    private const int IconButtonSize = 80;
+
     private readonly Common.Button accountButton;
     private readonly Common.Button statusButton;
     private readonly Common.Button settingsButton;
@@ -44,7 +48,8 @@ public class ActionButtons : Component
     {
         var button = new Common.Button(string.Empty)
         {
-            Width = 80,
+            Width = IconButtonSize,
+            Height = IconButtonSize,
         };
 
         button.ShowIcon(icon);

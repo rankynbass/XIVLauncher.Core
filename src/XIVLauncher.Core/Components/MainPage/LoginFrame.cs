@@ -19,6 +19,13 @@ namespace XIVLauncher.Core.Components.MainPage;
 /// </remarks>
 public class LoginFrame : Component
 {
+    /// <summary>HEAD drew the entries with SetNextItemWidth(window width): each entry fills the login
+    /// column, which is 400 px wide inside the page's 32 px padding.</summary>
+    private const int LoginInputWidth = 400 - 2 * 32;
+
+    /// <summary>HEAD sized the login-action caret and account picker buttons as 45x45 squares.</summary>
+    private const int ExtraButtonSize = 45;
+
     private readonly MainPage mainPage;
 
     private readonly Common.Input loginInput;
@@ -76,9 +83,11 @@ public class LoginFrame : Component
         void TriggerLogin() => this.OnLogin?.Invoke(LoginAction.Game);
 
         this.loginInput = new Common.Input(Strings.UsernameInput, Strings.UsernameInputHint, new Vector2(12f, 0f), 128);
+        this.loginInput.InputWidth = LoginInputWidth;
         this.loginInput.Enter += TriggerLogin;
 
         this.passwordInput = new Common.Input(Strings.PasswordInput, Strings.PasswordInputHint, new Vector2(12f, 0f), 128, flags: Common.InputFlags.Password | Common.InputFlags.EnterReturnsTrue);
+        this.passwordInput.InputWidth = LoginInputWidth;
         this.passwordInput.Enter += TriggerLogin;
 
         this.oneTimePasswordCheckbox = new Common.Checkbox(Strings.UseOneTimePasswordCheckbox);
@@ -108,12 +117,14 @@ public class LoginFrame : Component
         this.loginButton.Click += TriggerLogin;
         this.loginButton.ContextMenu = loginActionMenu;
 
-        var caretButton = new Common.Button(string.Empty) { Width = 45 };
-        caretButton.ShowIcon(FontAwesomeIcon.CaretDown);
+        // GTK sizes a button's height from its font, so the 45 px square buttons get a smaller glyph
+        // than the page font; the width stays at the theme's button minimum.
+        var caretButton = new Common.Button(string.Empty) { Width = ExtraButtonSize, Height = ExtraButtonSize };
+        caretButton.ShowIcon(FontAwesomeIcon.CaretDown, 14f);
         caretButton.Click += () => loginActionMenu.Show(this.loginButton);
 
-        var friendsButton = new Common.Button(string.Empty) { Width = 45 };
-        friendsButton.ShowIcon(FontAwesomeIcon.UserFriends);
+        var friendsButton = new Common.Button(string.Empty) { Width = ExtraButtonSize, Height = ExtraButtonSize };
+        friendsButton.ShowIcon(FontAwesomeIcon.UserFriends, 14f);
         friendsButton.Click += () => this.mainPage.AccountSwitcher.Open(this.loginButton);
 
         this.secretsWarningLabel = new Label
@@ -145,6 +156,10 @@ public class LoginFrame : Component
                     Items = { caretButton, friendsButton },
                 },
                 this.secretsWarningLabel,
+                // The login column scales with the window in the page's table. Eto.Gtk packs items at the
+                // top with no expand flag, so an empty stretch item at the end takes the remaining height
+                // and keeps the action button row at the bottom of the page.
+                new StackLayoutItem(new Panel(), VerticalAlignment.Stretch),
             },
         };
     }
