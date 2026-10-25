@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Numerics;
+using System.Threading.Tasks;
 
-using Hexa.NET.ImGui;
-using Hexa.NET.SDL3;
+using Eto.Drawing;
+using Eto.Forms;
 
 using Serilog;
 
@@ -25,6 +25,15 @@ using XIVLauncher.Core.Support;
 
 namespace XIVLauncher.Core.Components.MainPage;
 
+/// <summary>
+/// The main launcher page: news, login, the account switcher, the action button row, and the whole
+/// login/patching/launch pipeline.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode main page. The login/launch pipeline is unchanged; the UI half of the old
+/// <c>Draw()</c> hook becomes the Eto layout, and the SDL quit push at the end of a successful login
+/// becomes an <c>Application.Quit</c> post.
+/// </remarks>
 public class MainPage : Page
 {
     private readonly LoginFrame loginFrame;
@@ -32,6 +41,8 @@ public class MainPage : Page
     private readonly ActionButtons actionButtons;
 
     public bool IsLoggingIn { get; private set; }
+
+    public AccountSwitcher AccountSwitcher { get; private set; }
 
     public MainPage(LauncherApp app)
         : base(app)
@@ -49,7 +60,7 @@ public class MainPage : Page
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
         this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
 
-        this.Padding = new Vector2(32f, 32f);
+        this.Padding = new Padding(32, 32);
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -58,10 +69,41 @@ public class MainPage : Page
         if (PlatformHelpers.IsElevated())
             App.ShowMessage(Strings.XLElevatedWarning, "XIVLauncher");
 
-        Troubleshooting.LogTroubleshooting();
-    }
+        // The troubleshooting payload hashes the game files and awaits a network reference fetch with
+        // sync-over-async (IntegrityCheck CompareIntegrityAsync().Result). The UI thread cannot run that
+        // here: Eto installs GtkSynchronizationContext at application start, so the continuation is
+        // queued to the GTK main loop, which is blocked inside the constructor. The payload is generated
+        // on a background thread, as it is in HEAD where no sync context exists.
+        Task.Run(Troubleshooting.LogTroubleshooting);
 
-    public AccountSwitcher AccountSwitcher { get; private set; }
+        // The old draw order (news beside login, then the action button row) becomes a table: the login
+        // frame and the news column in one row, the buttons under it.
+        //
+        // Eto 2.13 scales columns with a per-column flag, not a proportion, so the split is expressed
+        // with explicit widths on unscaled columns.
+        var topRow = new TableLayout(2, 1)
+        {
+            Spacing = new Size(16, 0),
+        };
+
+        // The login frame keeps its fixed width; the news column scales, so the news list and banner
+        // get the remaining window width instead of being clipped past the right edge.
+        topRow.Add(this.loginFrame, 0, 0, xscale: false, yscale: false);
+        topRow.Add(this.newsFrame, 1, 0, xscale: true, yscale: false);
+
+        this.loginFrame.Width = 400;
+
+        var layout = new TableLayout(1, 2)
+        {
+            Spacing = new Size(0, 16),
+        };
+
+        layout.Rows[1].ScaleHeight = true;
+        layout.Add(topRow, 0, 0, xscale: true, yscale: false);
+        layout.Add(this.actionButtons, 0, 1, xscale: false, yscale: true);
+
+        this.Content = layout;
+    }
 
     public void DoAutoLoginIfApplicable()
     {
@@ -71,21 +113,8 @@ public class MainPage : Page
             ProcessLogin(LoginAction.Game);
     }
 
-    public override void Draw()
-    {
-        base.Draw();
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
-        this.newsFrame.Draw();
-
-        ImGui.SameLine();
-
-        this.loginFrame.Draw();
-        this.AccountSwitcher.Draw();
-
-        this.actionButtons.Draw();
-        ImGui.PopStyleVar();
-    }
+    /// <summary>Temporary login smoke test: runs the login pipeline without launching the game.</summary>
+    public void RunLoginTest() => this.ProcessLogin(LoginAction.GameNoLaunch);
 
     public void ReloadNews() => this.newsFrame.ReloadNews();
 
@@ -127,7 +156,7 @@ public class MainPage : Page
             {
                 App.ShowMessageBlocking(Strings.RepairOfficialLauncherOpenError, Strings.XIVLauncherError);
 
-                Reactivate();
+                this.Reactivate();
                 return;
             }
 
@@ -142,22 +171,16 @@ public class MainPage : Page
                 return;
             }
 
-            IsLoggingIn = true;
+            this.IsLoggingIn = true;
 
             App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
 
-            var result = await Login(loginFrame.Username, loginFrame.Password, loginFrame.IsOtp, loginFrame.IsSteam, loginFrame.IsFreeTrial, false, action).ConfigureAwait(false);
+            var result = await Login(this.loginFrame.Username, this.loginFrame.Password, this.loginFrame.IsOtp, this.loginFrame.IsSteam, this.loginFrame.IsFreeTrial, false, action).ConfigureAwait(false);
 
             if (result)
             {
-                var sdlEvent = new SDLEvent
-                {
-                    Type = (int)SDLEventType.Quit
-                };
-                if (SDL.PushEvent(ref sdlEvent))
-                {
-                    Log.Error($"Failed to push event to SDL queue: {SDL.GetErrorS()}");
-                }
+                // The old code pushed an SDL quit event here, which ended the render loop and exited the app.
+                Ui.Post(() => Application.Instance.Quit());
             }
             else
             {
@@ -246,8 +269,8 @@ public class MainPage : Page
 
             if (action == LoginAction.Repair)
                 return await App.Launcher.Login(username, password, otp, isSteam, false, gamePath, true, isFreeTrial, language).ConfigureAwait(false);
-            else
-                return await App.Launcher.Login(username, password, otp, isSteam, enableUidCache, gamePath, false, isFreeTrial, language).ConfigureAwait(false);
+
+            return await App.Launcher.Login(username, password, otp, isSteam, enableUidCache, gamePath, false, isFreeTrial, language).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -414,10 +437,6 @@ public class MainPage : Page
                                     "Please check if there is an instance of the game that did not close correctly. (Detected: {0})"),
                                 count));
                             descriptions.Add(null);
-
-                            builder.WithButtons(MessageBoxButton.YesNoCancel)
-                                   .WithDefaultResult(MessageBoxResult.Yes)
-                                   .WithCancelButtonText(Loc.Localize("LaunchGameKillThenRetry", "_Kill then try again"));
                         }
                         else
                         {
@@ -558,7 +577,12 @@ public class MainPage : Page
                 throw new NotImplementedException();
         }
 
-        Troubleshooting.LogTroubleshooting();
+        // The troubleshooting payload hashes the game files and awaits a network reference fetch with
+        // sync-over-async (IntegrityCheck CompareIntegrityAsync().Result). The UI thread cannot run that
+        // here: Eto installs GtkSynchronizationContext at application start, so the continuation is
+        // queued to the GTK main loop, which is blocked inside the constructor. The payload is generated
+        // on a background thread, as it is in HEAD where no sync context exists.
+        Task.Run(Troubleshooting.LogTroubleshooting);
 
         var dalamudLauncher = new DalamudLauncher(dalamudRunner, Program.DalamudUpdater,
             App.Settings.DalamudLoadMethod.GetValueOrDefault(DalamudLoadMethod.DllInject), App.Settings.GamePath,
@@ -759,7 +783,7 @@ public class MainPage : Page
         // Show the Steam Deck prompt if on steam deck and not using as a compatibility tool
         if (!Program.IsSteamDeckHardware || CoreEnvironmentSettings.IsSteamCompatTool)
         {
-            Hide();
+            this.Hide();
         }
         else
         {
@@ -769,7 +793,7 @@ public class MainPage : Page
         if (launchedProcess == null)
         {
             Log.Information("GameProcess was null...");
-            IsLoggingIn = false;
+            this.IsLoggingIn = false;
             return null!;
         }
 
@@ -785,7 +809,7 @@ public class MainPage : Page
         }
         catch (Exception)
         {
-            IsLoggingIn = false;
+            this.IsLoggingIn = false;
             addonMgr.StopAddons();
             throw;
         }
@@ -916,22 +940,8 @@ public class MainPage : Page
         using var acquisition = new AriaPatchAcquisition(new FileInfo(Path.Combine(App.Storage.GetFolder("logs").FullName, "aria2.log")));
         Program.Patcher = new PatchManager(acquisition, App.Settings.PatchSpeedLimit, repository, pendingPatches, App.Settings.GamePath,
                                            App.Settings.PatchPath, installer, App.Launcher, sid);
-        Program.Patcher.OnFail += PatcherOnFail;
+        Program.Patcher.OnFail += this.PatcherOnFail;
         installer.OnFail += this.InstallerOnFail;
-
-        /*
-        Hide();
-
-        PatchDownloadDialog progressDialog = _window.Dispatcher.Invoke(() =>
-        {
-            var d = new PatchDownloadDialog(patcher);
-            if (_window.IsVisible)
-                d.Owner = _window;
-            d.Show();
-            d.Activate();
-            return d;
-        });
-        */
 
         this.App.StartLoading(string.Format(Strings.NowPatching, repository.ToString().ToLowerInvariant()), canCancel: false, isIndeterminate: false);
 
@@ -1130,7 +1140,6 @@ public class MainPage : Page
             }
         }
 
-
         return doLogin;
     }
 
@@ -1141,7 +1150,7 @@ public class MainPage : Page
 
     private void Reactivate()
     {
-        IsLoggingIn = false;
+        this.IsLoggingIn = false;
         this.App.State = LauncherApp.LauncherState.Main;
 
         Program.ShowWindow();

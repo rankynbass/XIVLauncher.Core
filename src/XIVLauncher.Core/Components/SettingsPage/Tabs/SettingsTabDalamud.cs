@@ -3,23 +3,28 @@ using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
+/// <summary>
+/// The Dalamud settings tab: enable/disable, load method, branch switcher, injection delay, and manual
+/// injection.
+/// </summary>
 public class SettingsTabDalamud : SettingsTab
 {
     public override string Title => Strings.DalamudTitle;
+
     public override SettingsEntry[] Entries { get; }
+
     private SettingsEntry<bool> enableManualInjection;
 
     public SettingsTabDalamud()
     {
-        this.Entries = new SettingsEntry[]
-        {
-
+        this.Entries =
+        [
             new SettingsEntry<bool>(Strings.EnableDalamudSetting, Strings.EnableDalamudSettingDescription, () => Program.Config.DalamudEnabled ?? true, b => Program.Config.DalamudEnabled = b),
             new SettingsEntry<DalamudLoadMethod>(Strings.LoadMethodSetting, Strings.LoadMethodSettingDescription, () => Program.Config.DalamudLoadMethod ?? DalamudLoadMethod.DllInject, method => Program.Config.DalamudLoadMethod = method),
-            new DalamudBranchMetaSettingsEntry(Strings.DalamudBranchSwitcher, Strings.DalamudBranchSwitcherDescription, () => Program.Config.DalamudBetaKind ?? "release", s => {}),
+            new DalamudBranchMetaSettingsEntry(Strings.DalamudBranchSwitcher, Strings.DalamudBranchSwitcherDescription, () => Program.Config.DalamudBetaKind ?? "release", s => { }),
             new NumericSettingsEntry(Strings.DalamudInjectionDelaySetting, Strings.DalamudInjectionDelaySettingDescription, () => Program.Config.DalamudLoadDelay, delay => Program.Config.DalamudLoadDelay = delay, 0, int.MaxValue, 1000),
 
-            enableManualInjection = new SettingsEntry<bool>(Strings.DalamudManualInjectionEnableSetting, Strings.DalamudManualInjectionEnableSettingDescription, () => Program.Config.DalamudManualInjectionEnabled ?? false, (enabled) =>
+            this.enableManualInjection = new SettingsEntry<bool>(Strings.DalamudManualInjectionEnableSetting, Strings.DalamudManualInjectionEnableSettingDescription, () => Program.Config.DalamudManualInjectionEnabled ?? false, enabled =>
             {
                 Program.Config.DalamudManualInjectionEnabled = enabled;
 
@@ -37,15 +42,15 @@ public class SettingsTabDalamud : SettingsTab
                 }
             }),
 
-            new SettingsEntry<DirectoryInfo>(Strings.DalamudLocalInjectionPathSetting, Strings.DalamudLocalInjectionPathSettingDescription, () => Program.Config.DalamudManualInjectPath, (input) =>
+            new SettingsEntry<DirectoryInfo>(Strings.DalamudLocalInjectionPathSetting, Strings.DalamudLocalInjectionPathSettingDescription, () => Program.Config.DalamudManualInjectPath, input =>
             {
-                if (enableManualInjection.Value == false) return;
+                if (this.enableManualInjection.Value == false) return;
                 if (input is null) return;
                 Program.Config.DalamudManualInjectPath = input;
                 Program.DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(input.FullName, Program.DALAMUD_INJECTOR_NAME));
             })
             {
-                CheckVisibility = () => enableManualInjection.Value,
+                CheckVisibility = () => this.enableManualInjection.Value,
                 CheckValidity = input =>
                 {
                     if (input is null || !input.Exists)
@@ -56,9 +61,10 @@ public class SettingsTabDalamud : SettingsTab
                     {
                         return Strings.DalamudLocalInjectionPathSettingNoInjValidation;
                     }
+
                     return null;
                 },
             },
-        };
+        ];
     }
 }

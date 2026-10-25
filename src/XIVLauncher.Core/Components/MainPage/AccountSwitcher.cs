@@ -1,75 +1,57 @@
-using System.Numerics;
-
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 using XIVLauncher.Core.Accounts;
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.MainPage;
 
+/// <summary>
+/// The saved-account picker, opened from the user icon button in the login frame.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode popup: the ImGui version registered a popup id, drew it when it was open,
+/// and re-opened it on a flag set by <c>Open()</c>. Eto builds a <see cref="ContextMenu"/> on demand and
+/// shows it anchored to a control, so the popup-id machinery is gone.
+/// </remarks>
 public class AccountSwitcher : Component
 {
-    private const string ACCOUNT_SWITCHER_POPUP_ID = "accountSwitcher";
-
     private readonly AccountManager manager;
-
-    private bool doOpen = false;
-
-    public event EventHandler<XivAccount>? AccountChanged;
 
     public AccountSwitcher(AccountManager manager)
     {
         this.manager = manager;
     }
 
-    public void Open()
-    {
-        this.doOpen = true;
-    }
+    /// <summary>Raises when an account is picked from the menu.</summary>
+    public event EventHandler<XivAccount>? AccountChanged;
 
-    public override void Draw()
+    /// <summary>Shows the account menu anchored to <paramref name="anchor"/>.</summary>
+    public void Open(Control anchor)
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(5));
+        var menu = new ContextMenu();
 
-        if (ImGui.BeginPopupContextItem(ACCOUNT_SWITCHER_POPUP_ID))
+        if (this.manager.Accounts.Count == 0)
+            menu.Items.Add(new ButtonMenuItem { Text = Strings.NoSavedAccounts, Enabled = false });
+
+        foreach (var account in this.manager.Accounts)
         {
-            if (this.manager.Accounts.Count == 0)
-            {
-                ImGui.Text(Strings.NoSavedAccounts);
-            }
+            var name = account.UserName;
 
-            foreach (XivAccount account in this.manager.Accounts)
-            {
-                var name = account.UserName;
+            if (account.UseSteamServiceAccount)
+                name += " (Steam)";
 
-                if (account.UseSteamServiceAccount)
-                    name += " (Steam)";
+            if (account.UseOtp)
+                name += " (OTP)";
 
-                if (account.UseOtp)
-                    name += " (OTP)";
+            if (account.IsFreeTrial)
+                name += " (Trial)";
 
-                if (account.IsFreeTrial)
-                    name += " (Trial)";
+            var item = new ButtonMenuItem { Text = name };
+            item.Click += (_, _) => this.AccountChanged?.Invoke(this, account);
 
-                var textLength = ImGui.CalcTextSize(name).X;
-
-                if (ImGui.Button(name + $"###{account.Id}", new Vector2(textLength + 15, 40)))
-                {
-                    this.AccountChanged?.Invoke(this, account);
-                }
-            }
-
-            ImGui.EndPopup();
+            menu.Items.Add(item);
         }
 
-        ImGui.PopStyleVar();
-
-        if (this.doOpen)
-        {
-            this.doOpen = false;
-            ImGui.OpenPopup(ACCOUNT_SWITCHER_POPUP_ID);
-        }
-
-        base.Draw();
+        menu.Show(anchor);
     }
 }

@@ -1,57 +1,74 @@
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 using XIVLauncher.Common.Dalamud;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
+/// <summary>
+/// A settings row listing the Dalamud branches, filled in once the branch metadata has loaded.
+/// </summary>
+/// <remarks>
+/// Replaces the ImGui branch combo, which checked the load task's completion state every frame and
+/// disabled itself until it finished. Here the drop-down is created disabled, then populated and
+/// enabled through a posted UI update when the fetch completes.
+/// </remarks>
 public class DalamudBranchMetaSettingsEntry : SettingsEntry<string>
 {
-    private DalamudBranchMeta.Branch? SelectedBranch { get; set; }
-    private Task<IEnumerable<DalamudBranchMeta.Branch>> BranchTask { get; init; }
+    private readonly DropDown dropDown = new();
     private List<DalamudBranchMeta.Branch> Branches { get; set; } = [];
 
     public DalamudBranchMetaSettingsEntry(string name, string description, Func<string> load, Action<string?> save)
         : base(name, description, load, save)
     {
-        this.BranchTask = this.LoadBranchesAsync();
-    }
+        this.dropDown.Enabled = false;
 
-    private async Task<IEnumerable<DalamudBranchMeta.Branch>> LoadBranchesAsync()
-    {
-        var branches = await DalamudBranchMeta.FetchBranchesAsync(Program.HttpClient).ConfigureAwait(false);
-        this.Branches = [.. branches];
-        return branches;
-    }
-
-    public override void Draw()
-    {
-        ImGuiHelpers.TextWrapped(this.Name);
-        ImGui.BeginDisabled(!this.BranchTask.IsCompletedSuccessfully);
-        var currentBranch = this.Branches.Find(b => b.Track == this.InternalValue as string);
-        if (ImGui.BeginCombo($"###{this.Id}", currentBranch?.DisplayName))
+        Task.Run(async () =>
         {
-            foreach (var branch in this.Branches)
+            var branches = await DalamudBranchMeta.FetchBranchesAsync(Program.HttpClient).ConfigureAwait(false);
+
+            Ui.Post(() =>
             {
-                if (branch.Hidden) continue;
-                if (ImGui.Selectable(branch.DisplayName, branch.Track == currentBranch?.Track))
-                {
-                    this.SelectedBranch = branch;
-                    this.InternalValue = branch.Track;
-                }
-            }
-            ImGui.EndCombo();
-        }
-        ImGui.EndDisabled();
-        ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
-        ImGuiHelpers.TextWrapped(this.Description);
-        ImGui.PopStyleColor();
+                this.Branches = [.. branches];
+
+                foreach (var branch in this.Branches.Where(b => !b.Hidden))
+                    this.dropDown.Items.Add(new ListItem { Text = branch.DisplayName, Key = branch.Track });
+
+                var idx = this.Branches.FindIndex(b => b.Track == this.InternalValue as string && !b.Hidden);
+                this.dropDown.SelectedIndex = idx;
+                this.dropDown.Enabled = true;
+            });
+        });
+    }
+
+    protected override Control CreateInput()
+    {
+        this.dropDown.SelectedIndexChanged += (_, _) =>
+        {
+            if (this.dropDown.SelectedIndex < 0)
+                return;
+
+            var track = this.dropDown.Items[this.dropDown.SelectedIndex].Key;
+            var branch = this.Branches.Find(b => b.Track == track);
+
+            if (branch is null)
+                return;
+
+            this.InternalValue = branch.Track;
+            this.UpdateState();
+        };
+
+        return this.dropDown;
     }
 
     public override void Save()
     {
-        if (this.SelectedBranch is null) return;
-        Program.Config.DalamudBetaKind = SelectedBranch.Track;
-        Program.Config.DalamudBetaKey = SelectedBranch.Key;
+        var selectedBranch = this.Branches.Find(b => b.Track == this.InternalValue as string);
+
+        if (selectedBranch is null)
+            return;
+
+        Program.Config.DalamudBetaKind = selectedBranch.Track;
+        Program.Config.DalamudBetaKey = selectedBranch.Key;
         Program.DalamudUpdater.Run(Program.Config.DalamudBetaKind, Program.Config.DalamudBetaKey);
     }
 }

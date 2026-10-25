@@ -1,9 +1,15 @@
-using System.Numerics;
-
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
+/// <summary>
+/// A settings tab: its entries, plus any tab-specific widgets drawn before and after them.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode tab, which drew each visible entry every frame. The entries and the
+/// header/footer widgets are built once; the tab rebuilds its layout when the page is shown so
+/// visibility checks (which depend on other settings) run at the same point they used to.
+/// </remarks>
 public abstract class SettingsTab : Component
 {
     public abstract SettingsEntry[] Entries { get; }
@@ -12,25 +18,17 @@ public abstract class SettingsTab : Component
 
     public abstract string Title { get; }
 
-    public override void Draw()
+    /// <summary>Widgets drawn above the entries.</summary>
+    protected virtual List<Control> HeaderContent => [];
+
+    /// <summary>Widgets drawn below the entries.</summary>
+    protected virtual List<Control> FooterContent => [];
+
+    public void LoadValues()
     {
         foreach (SettingsEntry settingsEntry in Entries)
         {
-            if (settingsEntry.IsVisible)
-            {
-                settingsEntry.Draw();
-                ImGui.Dummy(new Vector2(10) * ImGuiHelpers.GlobalScale);
-            }
-        }
-
-        base.Draw();
-    }
-
-    public void Load()
-    {
-        foreach (SettingsEntry settingsEntry in Entries)
-        {
-            settingsEntry.Load();
+            settingsEntry.LoadValues();
         }
     }
 
@@ -41,4 +39,34 @@ public abstract class SettingsTab : Component
             settingsEntry.Save();
         }
     }
+
+    /// <summary>Rebuilds the tab content from the currently visible entries.</summary>
+    public void RefreshEntries()
+    {
+        this.RefreshDynamic();
+
+        var items = new List<StackLayoutItem>();
+
+        foreach (var control in this.HeaderContent)
+            items.Add(new StackLayoutItem(control, expand: true));
+
+        foreach (SettingsEntry settingsEntry in Entries)
+        {
+            if (settingsEntry.IsVisible)
+                items.Add(new StackLayoutItem(settingsEntry, expand: true));
+        }
+
+        foreach (var control in this.FooterContent)
+            items.Add(new StackLayoutItem(control, expand: true));
+
+        var layout = new StackLayout { Spacing = 10 };
+
+        foreach (var item in items)
+            layout.Items.Add(item);
+
+        this.Content = layout;
+    }
+
+    /// <summary>Refreshes tab content that depends on other settings values.</summary>
+    protected virtual void RefreshDynamic() { }
 }

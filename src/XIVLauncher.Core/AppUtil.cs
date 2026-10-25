@@ -8,7 +8,7 @@ public static partial class AppUtil
 {
     public static byte[] GetEmbeddedResourceBytes(string resourceName)
     {
-        var assembly = typeof(ImGuiBindings).Assembly;
+        var assembly = typeof(AppUtil).Assembly;
 
         using var s = assembly.GetManifestResourceStream(resourceName);
         if (s == null)

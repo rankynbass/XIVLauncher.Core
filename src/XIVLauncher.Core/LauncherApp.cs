@@ -1,7 +1,4 @@
 using System.Diagnostics;
-using System.Numerics;
-
-using Hexa.NET.ImGui;
 
 using Serilog;
 
@@ -16,22 +13,33 @@ using XIVLauncher.Core.Components.MainPage;
 using XIVLauncher.Core.Components.SettingsPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Resources.Localization;
+
 using XIVLauncher.PlatformAbstractions;
 
 namespace XIVLauncher.Core;
 
-public class LauncherApp : Component
+/// <summary>
+/// The launcher shell: the state machine that swaps pages, the modal dialog helpers, and the shared
+/// launcher services (launcher, accounts, storage, news/OTP/FTS pages).
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode shell. Pages are Eto controls hosted by
+/// <see cref="LauncherForm.ShowPage"/>; every state change is posted to the UI thread because patching,
+/// login, and startup tasks mutate state from background threads.
+/// <para>
+/// The blocking modal semantics are preserved: <see cref="ShowMessage"/> posts an Eto
+/// <see cref="Eto.Forms.Dialog"/>, whose <c>ShowModal</c> pumps the UI loop, and
+/// <see cref="ShowMessageBlocking"/> waits on the same <see cref="ManualResetEvent"/> the modal button
+/// sets.
+/// </para>
+/// </remarks>
+public class LauncherApp
 {
     public static bool IsDebug { get; private set; } = Debugger.IsAttached;
 
     #region Modal State
 
-    private bool isModalDrawing = false;
-    private bool modalOnNextFrame = false;
-    private string modalText = string.Empty;
-    private string modalTitle = string.Empty;
-    private string modalButtonText = string.Empty;
-    private Action modalButtonPressAction = null!;
+    private int openModals;
     private readonly ManualResetEvent modalWaitHandle = new(false);
 
     #endregion
@@ -51,76 +59,80 @@ public class LauncherApp : Component
     public LauncherState State
     {
         get => this.state;
-        set
-        {
-            // If we are coming from the settings, we should reload the news, as the client language might have changed
-            if (this.state == LauncherState.Settings)
-            {
-                this.mainPage.ReloadNews();
-            }
-
-            this.state = value;
-
-            switch (value)
-            {
-                case LauncherState.Settings:
-                    this.setPage.OnShow();
-                    break;
-
-                case LauncherState.Main:
-                    this.mainPage.OnShow();
-                    break;
-
-                case LauncherState.Loading:
-                    this.LoadingPage.OnShow();
-                    break;
-
-                case LauncherState.OtpEntry:
-                    this.otpEntryPage.OnShow();
-                    break;
-
-                case LauncherState.Fts:
-                    this.ftsPage.OnShow();
-                    break;
-
-                case LauncherState.SteamDeckPrompt:
-                    this.steamDeckPromptPage.OnShow();
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(value), value, null);
-            }
-        }
+        set => Ui.Post(() => this.SetState(value));
     }
 
-    public Page CurrentPage => this.state switch
+    private void SetState(LauncherState value)
     {
-        LauncherState.Main => this.mainPage,
-        LauncherState.Settings => this.setPage,
-        LauncherState.Loading => this.LoadingPage,
-        LauncherState.OtpEntry => this.otpEntryPage,
-        LauncherState.Fts => this.ftsPage,
-        LauncherState.SteamDeckPrompt => this.steamDeckPromptPage,
-        _ => throw new ArgumentOutOfRangeException(nameof(this.state), this.state, null)
-    };
+        // If we are coming from the settings, we should reload the news, as the client language might have changed
+        if (this.state == LauncherState.Settings)
+            this.mainPage.ReloadNews();
+
+        this.state = value;
+
+        switch (value)
+        {
+            case LauncherState.Settings:
+                this.setPage.OnShow();
+                break;
+
+            case LauncherState.Main:
+                this.mainPage.OnShow();
+                break;
+
+            case LauncherState.Loading:
+                this.LoadingPage.OnShow();
+                break;
+
+            case LauncherState.OtpEntry:
+                this.otpEntryPage.OnShow();
+                break;
+
+            case LauncherState.Fts:
+                this.ftsPage.OnShow();
+                break;
+
+            case LauncherState.SteamDeckPrompt:
+                this.steamDeckPromptPage.OnShow();
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(value), value, null);
+        }
+
+        this.PageShown?.Invoke(this.CurrentPage);
+    }
+
+    /// <summary>Raises when a page must be hosted, marshalled to the UI thread.</summary>
+    public event Action<Page>? PageShown;
+
+    public Page CurrentPage =>
+        this.state switch
+        {
+            LauncherState.Main => this.mainPage,
+            LauncherState.Settings => this.setPage,
+            LauncherState.Loading => this.LoadingPage,
+            LauncherState.OtpEntry => this.otpEntryPage,
+            LauncherState.Fts => this.ftsPage,
+            LauncherState.SteamDeckPrompt => this.steamDeckPromptPage,
+            _ => throw new ArgumentOutOfRangeException(nameof(this.State), this.State, "CurrentPage: Unknown LauncherState"),
+        };
 
     public ILauncherConfig Settings => Program.Config;
     public Launcher Launcher { get; private set; }
     public ISteam? Steam => Program.Steam;
     public Storage Storage { get; private set; }
-
     public LoadingPage LoadingPage { get; }
-
     public AccountManager Accounts;
     public CommonUniqueIdCache UniqueIdCache;
 
     private readonly MainPage mainPage;
     private readonly SettingsPage setPage;
+
     private readonly OtpEntryPage otpEntryPage;
     private readonly FtsPage ftsPage;
     private readonly SteamDeckPromptPage steamDeckPromptPage;
-
-    private readonly Background background = new();
+    private LauncherForm? form;
 
     public LauncherApp(Storage storage, string frontierUrl, string? cutOffBootver)
     {
@@ -160,55 +172,69 @@ public class LauncherApp : Component
 #endif
     }
 
+    public void AttachForm(LauncherForm form)
+    {
+        this.form = form;
+
+        this.PageShown += form.ShowPage;
+
+        Ui.Post(() => this.SetState(LauncherState.Main));
+    }
+
     public void ShowMessage(string text, string title = "XIVLauncher", string modalButtonText = "OK", Action? modalPressedAction = default)
     {
-        if (this.isModalDrawing)
+        if (this.openModals > 0)
             throw new InvalidOperationException("Cannot open modal while another modal is open");
 
-        this.modalText = text;
-        this.modalTitle = title;
-        this.modalButtonText = modalButtonText;
-        if (modalPressedAction is null)
+        this.modalWaitHandle.Reset();
+
+        var pressedAction = modalPressedAction ?? new Action(() => { });
+
+        Ui.Post(() =>
         {
-            this.modalButtonPressAction = () =>
+            this.openModals++;
+
+            var dialog = new ModalDialog(text, title, modalButtonText, () =>
             {
-                ImGui.CloseCurrentPopup();
-                this.isModalDrawing = false;
                 this.modalWaitHandle.Set();
-            };
-        }
-        else
-        {
-            this.modalButtonPressAction = modalPressedAction;
-        }
-        this.isModalDrawing = true;
-        this.modalOnNextFrame = true;
+                pressedAction();
+            });
+
+            if (this.form is not null)
+                dialog.ShowModal(this.form);
+            else
+                dialog.ShowModal();
+
+            this.openModals--;
+        });
     }
 
     public void ShowMessageBlocking(string text, string title = "XIVLauncher", bool canContinue = true)
     {
-        if (!this.modalWaitHandle.WaitOne(0) && this.isModalDrawing)
+        if (!this.modalWaitHandle.WaitOne(0) && this.openModals > 0)
             throw new InvalidOperationException("Cannot open modal while another modal is open");
 
         this.modalWaitHandle.Reset();
         this.ShowMessage(text, title);
+
         this.modalWaitHandle.WaitOne();
     }
 
-    public void ShowExceptionBlocking(Exception exception, string context)
+    public void ShowExceptionBlocking(Exception ex, string context)
     {
-        this.ShowMessageBlocking($"An error occurred ({context}).\n\n{exception}", Strings.XIVLauncherError);
+        this.ShowMessageBlocking(context + " failed with exception\nPlease report this error to us.\n\n" + ex.Message, "XIVLauncher has encountered an error.");
     }
 
-    public bool HandleContinuationBlocking(Task task)
+    public bool HandleContinuationBlocking(Task t)
     {
-        if (task.IsFaulted)
+        if (t.IsFaulted)
         {
-            Log.Error(task.Exception, "Task failed");
-            this.ShowMessageBlocking(task.Exception?.InnerException?.Message ?? "Unknown error - please check logs.", "Error");
+            Log.Error(t.Exception, "Task failed");
+            this.ShowMessageBlocking(t.Exception?.InnerException?.Message ?? "Unknown error - please check logs.", "Error");
             return false;
         }
-        else if (task.IsCanceled)
+
+        if (t.IsCanceled)
         {
             this.ShowMessageBlocking("Task was canceled.", "Error");
             return false;
@@ -248,85 +274,17 @@ public class LauncherApp : Component
         this.State = LauncherState.Main;
     }
 
+    /// <summary>
+    /// Temporary login smoke test: runs the login pipeline without launching the game, so the login,
+    /// boot check, patch check, loading page, and modal can be exercised from the command line.
+    /// </summary>
+    public void RunLoginTest() => this.mainPage.RunLoginTest();
+
     public void RunStartupTasks()
     {
 #if FLATPAK
         this.ftsPage.OpenFtsIfNeeded();
 #endif
         this.mainPage.DoAutoLoginIfApplicable();
-    }
-
-    public override void Draw()
-    {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0));
-
-        ImGui.SetNextWindowPos(new Vector2(0, 0));
-        ImGui.SetNextWindowSize(ImGuiHelpers.ViewportSize);
-        if (ImGui.Begin("Background",
-                        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNavFocus
-                        | ImGuiWindowFlags.NoNavInputs | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
-        {
-            this.background.Draw();
-
-        }
-
-        ImGui.End();
-
-        ImGui.PopStyleVar(2);
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, this.CurrentPage.Padding ?? ImGui.GetStyle().WindowPadding);
-
-        ImGui.SetNextWindowPos(new Vector2(0, 0));
-        ImGui.SetNextWindowSize(ImGuiHelpers.ViewportSize);
-        ImGui.SetNextWindowBgAlpha(0.75f);
-
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, ImGuiColors.BlueShade0);
-
-        if (ImGui.Begin("XIVLauncher", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
-        {
-            this.CurrentPage.Draw();
-            base.Draw();
-        }
-
-        ImGui.End();
-
-        ImGui.PopStyleVar(2);
-        ImGui.PopStyleColor();
-
-        this.DrawModal();
-    }
-
-    private void DrawModal()
-    {
-        ImGui.SetNextWindowSize(new Vector2(450, 300));
-
-        if (ImGui.BeginPopupModal(this.modalTitle + "###xl_modal", ref this.isModalDrawing, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar))
-        {
-            if (ImGui.BeginChild("###xl_modal_scrolling", new Vector2(0, -ImGui.GetTextLineHeightWithSpacing() * 2)))
-            {
-                ImGui.TextWrapped(this.modalText);
-            }
-
-            ImGui.EndChild();
-
-            const float BUTTON_WIDTH = 120f;
-            ImGui.SetCursorPosX((ImGui.GetWindowWidth() - BUTTON_WIDTH) / 2);
-
-            if (ImGui.Button(modalButtonText, new Vector2(BUTTON_WIDTH, 40)))
-            {
-                modalButtonPressAction();
-            }
-
-            ImGui.EndPopup();
-        }
-
-        if (this.modalOnNextFrame)
-        {
-            ImGui.OpenPopup("###xl_modal");
-            this.modalOnNextFrame = false;
-            this.isModalDrawing = true;
-        }
     }
 }

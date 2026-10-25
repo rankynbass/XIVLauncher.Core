@@ -1,51 +1,74 @@
+using System.Diagnostics;
 using System.Numerics;
 
-using Hexa.NET.ImGui;
+using Eto.Drawing;
+using Eto.Forms;
 
 namespace XIVLauncher.Core.Components.LoadingPage;
 
-public class Spinner : Component
+/// <summary>
+/// The rotating arc spinner shown on the loading page.
+/// </summary>
+/// <remarks>
+/// Custom drawing is kept for this visual: 30 arc segments stroked with a round-capped pen, using the
+/// same wobble math the ImGui draw list produced. Redraw is driven by a UI timer instead of the render
+/// loop, and the colour comes from the launcher palette instead of the ImGui style.
+/// </remarks>
+public class Spinner : Drawable
 {
-    private readonly float radius;
-    private readonly int thickness;
-    private readonly uint color;
+    private const int NUM_SEGMENTS = 30;
 
-    public Spinner(float radius, int thickness, uint color)
+    private readonly float radius;
+    private readonly Pen pen;
+    private readonly Stopwatch stopwatch = Stopwatch.StartNew();
+    private readonly UITimer timer = new() { Interval = 1.0 / 30.0 };
+
+    public Spinner(float radius, int thickness, Color color)
     {
         this.radius = radius;
-        this.thickness = thickness;
-        this.color = color;
+
+        this.pen = new Pen(color, thickness)
+        {
+            LineCap = PenLineCap.Round,
+            LineJoin = PenLineJoin.Round,
+        };
+
+        // The old dummy reserved radius*2 plus frame padding on both sides.
+        this.Size = new Size((int)(radius * 2) + 32, (int)(radius * 2) + 32);
+
+        this.Paint += (_, e) => this.Draw(e.Graphics);
+
+        this.timer.Elapsed += (_, _) => this.Invalidate();
+        this.timer.Start();
     }
 
-    public override void Draw()
+    /// <summary>Stops the animation timer; the spinner stops rotating.</summary>
+    public void Stop() => this.timer.Stop();
+
+    private void Draw(Graphics g)
     {
-        var framePadding = ImGui.GetStyle().FramePadding;
+        var time = (float)(this.stopwatch.Elapsed.TotalSeconds / 1.2);
 
-        var pos = ImGui.GetCursorPos();
+        var start = MathF.Abs(MathF.Sin(time * 1.8f) * (NUM_SEGMENTS - 5));
+        var aMin = MathF.PI * 2.0f * start / NUM_SEGMENTS;
+        var aMax = MathF.PI * 2.0f * (NUM_SEGMENTS - 3) / NUM_SEGMENTS;
 
-        ImGui.Dummy(new Vector2(this.radius * 2) + (framePadding * 2));
+        var center = new Vector2(this.Width / 2f, this.Height / 2f);
 
-        var time = ImGui.GetTime() / 1.2;
-
-        const int NUM_SEGMENTS = 30;
-        var start = Math.Abs(Math.Sin(time * 1.8f) * (NUM_SEGMENTS - 5));
-
-        var aMin = Math.PI * 2.0f * ((float)start) / (float)NUM_SEGMENTS;
-        var aMax = Math.PI * 2.0f * ((float)NUM_SEGMENTS - 3) / (float)NUM_SEGMENTS;
-
-        var centre = new Vector2(pos.X + radius, pos.Y + radius + framePadding.Y);
-
-        var drawList = ImGui.GetWindowDrawList();
+        PointF? previous = null;
 
         for (var i = 0; i < NUM_SEGMENTS; i++)
         {
-            var a = aMin + (i / (float)NUM_SEGMENTS) * (aMax - aMin);
-            drawList.PathLineTo(new Vector2((float)(centre.X + Math.Cos(a + time * 8) * radius),
-                (float)(centre.Y + Math.Sin(a + time * 8) * radius)));
+            var angle = aMin + (i / (float)NUM_SEGMENTS) * (aMax - aMin) + time * 8;
+
+            var point = new PointF(
+                center.X + MathF.Cos(angle) * this.radius,
+                center.Y + MathF.Sin(angle) * this.radius);
+
+            if (previous is { } previousPoint)
+                g.DrawLine(this.pen, previousPoint, point);
+
+            previous = point;
         }
-
-        drawList.PathStroke(this.color, ImDrawFlags.RoundCornersAll, thickness);
-
-        base.Draw();
     }
 }

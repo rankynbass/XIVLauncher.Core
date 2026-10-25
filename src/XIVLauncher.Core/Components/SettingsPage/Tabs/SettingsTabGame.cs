@@ -1,14 +1,25 @@
-using Hexa.NET.ImGui;
+using Eto.Drawing;
+using Eto.Forms;
 
 using XIVLauncher.Common;
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
+/// <summary>
+/// The game settings tab: game path, configuration path, arguments, language, DPI, authentication
+/// options, plus the UID cache reset action.
+/// </summary>
+/// <remarks>
+/// The reset section is shown when the UID cache setting is enabled, as the immediate-mode tab checked
+/// on every frame.
+/// </remarks>
 public class SettingsTabGame : SettingsTab
 {
+    private readonly Panel resetUidPanel;
+
     public override SettingsEntry[] Entries { get; } =
-    {
+    [
         new SettingsEntry<DirectoryInfo>(Strings.GamePathSetting, Strings.GamePathSettingDescription, () => Program.Config.GamePath, x => Program.Config.GamePath = x)
         {
             CheckValidity = x =>
@@ -40,21 +51,30 @@ public class SettingsTabGame : SettingsTab
             CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
         },
         new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
-    };
+    ];
 
     public override string Title => Strings.GameTitle;
 
-    public override void Draw()
+    public SettingsTabGame()
     {
-        base.Draw();
+        var resetUidButton = new Button { Text = Strings.ResetUIDCacheButton };
+        resetUidButton.Click += (_, _) => Program.ResetUIDCache();
 
-        if (Program.Config.IsUidCacheEnabled == true)
+        this.resetUidPanel = new StackLayout
         {
-            ImGui.Text(Strings.ResetUIDCacheInfo);
-            if (ImGui.Button(Strings.ResetUIDCacheButton))
+            Spacing = 10,
+            Items =
             {
-                Program.ResetUIDCache();
-            }
-        }
+                new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character },
+                resetUidButton,
+            },
+        };
+    }
+
+    protected override List<Control> FooterContent => [this.resetUidPanel];
+
+    protected override void RefreshDynamic()
+    {
+        this.resetUidPanel.Visible = Program.Config.IsUidCacheEnabled == true;
     }
 }

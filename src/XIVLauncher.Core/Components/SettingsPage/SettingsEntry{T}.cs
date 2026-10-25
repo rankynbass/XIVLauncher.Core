@@ -1,14 +1,36 @@
-using Hexa.NET.ImGui;
+using Eto.Drawing;
+using Eto.Forms;
 
 using XIVLauncher.Common;
 using XIVLauncher.Common.Util;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
 
+/// <summary>
+/// A typed settings row: the value is read from and written to the launcher configuration, and the
+/// input control is chosen from the value type.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode typed entry, which switched on <c>typeof(T)</c> to pick an ImGui widget
+/// each frame. Here the switch picks the native control once:
+/// <list type="bullet">
+///   <item><description>paths and strings: a text box</description></item>
+///   <item><description>booleans: a check box (the label is the setting name)</description></item>
+///   <item><description>enums: a drop-down listing the friendly names with descriptions</description></item>
+/// </list>
+/// Validity and warning checks run when the value changes, so the labels update without a redraw loop.
+/// </remarks>
 public class SettingsEntry<T> : SettingsEntry
 {
     private readonly Func<T?> load;
     private readonly Action<T?> save;
+    protected Action applyValue = () => { };
+
+    private readonly Label nameLabel;
+    protected readonly Control input;
+    private readonly Label descriptionLabel;
+    private readonly Label validityLabel;
+    private readonly Label warningLabel;
 
     public override string Name { get; }
 
@@ -30,113 +52,171 @@ public class SettingsEntry<T> : SettingsEntry
         this.save = save;
         this.Name = name;
         this.Description = description;
+
+        this.nameLabel = new Label
+        {
+            Text = this.Name,
+            Wrap = WrapMode.Character,
+        };
+
+        this.input = this.CreateInput();
+
+        this.descriptionLabel = new Label
+        {
+            Text = this.Description,
+            TextColor = EtoColors.Grey3,
+            Wrap = WrapMode.Character,
+        };
+
+        this.validityLabel = new Label
+        {
+            TextColor = EtoColors.Red,
+            Wrap = WrapMode.Character,
+            Visible = false,
+        };
+
+        this.warningLabel = new Label
+        {
+            TextColor = EtoColors.Red,
+            Wrap = WrapMode.Character,
+            Visible = false,
+        };
+
+        this.Content = new StackLayout
+        {
+            Spacing = 5,
+            Items =
+            {
+                this.nameLabel,
+                this.input,
+                this.descriptionLabel,
+                this.validityLabel,
+                this.warningLabel,
+            },
+        };
     }
 
-    public override void Draw()
+    /// <summary>Creates the input control for the value type, plus the delegate that pushes a loaded
+    /// value into it.</summary>
+    protected virtual Control CreateInput()
     {
         var type = typeof(T);
 
         if (type == typeof(DirectoryInfo))
         {
-            ImGuiHelpers.TextWrapped(this.Name);
+            var textBox = new TextBox { MaxLength = 10000 };
 
-            var value = this.Value as DirectoryInfo;
-            var nativeBuffer = value?.FullName ?? string.Empty;
-
-            if (ImGui.InputText($"###{Id.ToString()}", ref nativeBuffer, 10000))
+            textBox.TextChanged += (_, _) =>
             {
-                this.InternalValue = !string.IsNullOrEmpty(nativeBuffer) ? new DirectoryInfo(nativeBuffer) : null;
-            }
+                this.InternalValue = !string.IsNullOrEmpty(textBox.Text) ? new DirectoryInfo(textBox.Text) : null;
+                this.UpdateState();
+            };
+
+            this.applyValue = () => textBox.Text = (this.Value as DirectoryInfo)?.FullName ?? string.Empty;
+
+            return textBox;
         }
-        else if (type == typeof(string))
+
+        if (type == typeof(string))
         {
-            ImGuiHelpers.TextWrapped(this.Name);
+            var textBox = new TextBox { MaxLength = 1000 };
 
-            var nativeBuffer = this.Value as string ?? string.Empty;
-
-            if (ImGui.InputText($"###{Id.ToString()}", ref nativeBuffer, 1000))
+            textBox.TextChanged += (_, _) =>
             {
-                this.InternalValue = nativeBuffer;
-            }
-        }
-        else if (type == typeof(bool))
-        {
-            var nativeValue = this.Value as bool? ?? false;
+                this.InternalValue = textBox.Text;
+                this.UpdateState();
+            };
 
-            if (ImGui.Checkbox($"{Name}###{Id.ToString()}", ref nativeValue))
+            this.applyValue = () => textBox.Text = this.Value as string ?? string.Empty;
+
+            return textBox;
+        }
+
+        if (type == typeof(bool))
+        {
+            var checkBox = new CheckBox { Text = this.Name };
+
+            // The check box carries the setting name, so the separate name label is not needed.
+            this.nameLabel.Visible = false;
+
+            checkBox.CheckedChanged += (_, _) =>
             {
-                this.InternalValue = nativeValue;
-            }
-        }
-        else if (type.IsEnum)
-        {
-            ImGuiHelpers.TextWrapped(this.Name);
+                this.InternalValue = checkBox.Checked == true;
+                this.UpdateState();
+            };
 
-            var idx = (int)(this.InternalValue ?? 0);
+            this.applyValue = () => checkBox.Checked = this.Value as bool? ?? false;
+
+            return checkBox;
+        }
+
+        if (type.IsEnum)
+        {
             var values = Enum.GetValues(type);
-            var descriptions = values.Cast<Enum>().Select(x => x.GetAttribute<SettingsDescriptionAttribute>() ?? new SettingsDescriptionAttribute(x.ToString(), string.Empty)).ToArray();
+            var descriptions = values.Cast<Enum>()
+                                     .Select(x => x.GetAttribute<SettingsDescriptionAttribute>() ?? new SettingsDescriptionAttribute(x.ToString(), string.Empty))
+                                     .ToArray();
 
-            if (ImGui.BeginCombo($"###{Id.ToString()}", descriptions[idx].FriendlyName))
+            var dropDown = new DropDown();
+
+            foreach (int value in values)
             {
-                foreach (int value in values)
-                {
-                    string desc = descriptions[value].Description;
-                    desc = (desc == string.Empty || desc == "dummy") ? string.Empty : " - " + desc;
-                    if (ImGui.Selectable(descriptions[value].FriendlyName + desc, idx == value))
-                    {
-                        this.InternalValue = value;
-                    }
-                }
-
-                ImGui.EndCombo();
+                var desc = descriptions[value].Description;
+                desc = desc == string.Empty || desc == "dummy" ? string.Empty : " - " + desc;
+                dropDown.Items.Add(new ListItem { Text = descriptions[value].FriendlyName + desc, Key = value.ToString() });
             }
+
+            dropDown.SelectedIndexChanged += (_, _) =>
+            {
+                if (dropDown.SelectedIndex < 0)
+                    return;
+
+                this.InternalValue = (T)Enum.ToObject(type, int.Parse(dropDown.Items[dropDown.SelectedIndex].Key));
+                this.UpdateState();
+            };
+
+            this.applyValue = () =>
+            {
+                var idx = (int)(this.InternalValue ?? 0);
+                dropDown.SelectedIndex = idx;
+            };
+
+            return dropDown;
         }
 
-        ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
-        ImGuiHelpers.TextWrapped(this.Description);
-        ImGui.PopStyleColor();
+        throw new InvalidOperationException($"No settings input for {type}");
+    }
 
+    protected void UpdateState()
+    {
         if (this.CheckValidity != null)
         {
             var validityMsg = this.CheckValidity.Invoke(this.Value);
             this.IsValid = string.IsNullOrEmpty(validityMsg);
 
-            if (!this.IsValid)
-            {
-                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-                ImGui.Text(validityMsg);
-                ImGui.PopStyleColor();
-            }
+            this.validityLabel.Text = validityMsg ?? string.Empty;
+            this.validityLabel.Visible = !this.IsValid;
         }
         else
         {
             this.IsValid = true;
+            this.validityLabel.Visible = false;
         }
 
         var warningMessage = this.CheckWarning?.Invoke(this.Value);
 
-        if (warningMessage != null)
-        {
-            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-            ImGui.Text(warningMessage);
-            ImGui.PopStyleColor();
-        }
+        this.warningLabel.Text = warningMessage ?? string.Empty;
+        this.warningLabel.Visible = warningMessage != null;
 
-        base.Draw();
+        this.RaiseChanged();
     }
 
-    public override void Load()
+    public override void LoadValues()
     {
         this.InternalValue = this.load();
 
-        if (this.CheckValidity != null)
-        {
-            this.IsValid = this.CheckValidity(this.Value) == null;
-        }
-        else
-        {
-            this.IsValid = true;
-        }
+        this.applyValue();
+        this.UpdateState();
     }
 
     public override void Save() => this.save(this.Value);

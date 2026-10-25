@@ -1,19 +1,19 @@
 using System.Net;
-using System.Numerics;
 using System.Runtime.InteropServices;
 
 using Config.Net;
 
-using Hexa.NET.SDL3;
+using Eto.Forms;
 
 using Serilog;
 
 using XIVLauncher.Common;
 using XIVLauncher.Common.Dalamud;
+using XIVLauncher.Common.Support;
+using XIVLauncher.Common.Game;
 using XIVLauncher.Common.Game.Patch;
 using XIVLauncher.Common.Http.HappyEyeballs;
 using XIVLauncher.Common.PlatformAbstractions;
-using XIVLauncher.Common.Support;
 using XIVLauncher.Common.Unix;
 using XIVLauncher.Common.Unix.Compatibility;
 using XIVLauncher.Common.Unix.Compatibility.Dxvk;
@@ -26,10 +26,6 @@ using XIVLauncher.Core.Components.LoadingPage;
 using XIVLauncher.Core.Configuration;
 using XIVLauncher.Core.Configuration.Parsers;
 using XIVLauncher.Core.Net;
-using XIVLauncher.Core.Style;
-
-using SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice;
-using SDLWindow = Hexa.NET.SDL3.SDLWindow;
 
 namespace XIVLauncher.Core;
 
@@ -37,16 +33,10 @@ namespace XIVLauncher.Core;
 sealed class Program
 {
     private const string APP_NAME = "xlcore";
-    private static readonly Vector3 ClearColor = new(0.1f, 0.1f, 0.1f);
     private static string[] mainArgs = [];
     private static LauncherApp launcherApp = null!;
-    private static unsafe SDLWindow* window = null!;
-    private static unsafe SDLGPUDevice* gpuDevice = null!;
-    public static unsafe SDLGPUDevice* GPUDevice => gpuDevice;
-    private static ImGuiBindings guiBindings = null!;
-    public static ImGuiBindings ImGuiBindings => guiBindings;
+    private static LauncherForm launcherForm = null!;
     public static ILauncherConfig Config { get; private set; } = null!;
-    public static CommonSettings CommonSettings => new(Config);
     public static ISteam? Steam { get; private set; }
     public static DalamudUpdater DalamudUpdater { get; private set; } = null!;
     public static DalamudOverlayInfoProxy DalamudLoadInfo { get; private set; } = null!;
@@ -262,95 +252,59 @@ sealed class Program
 
         CreateCompatToolsInstance();
 
-        Log.Debug("Creating SDL3 devices...");
+        Log.Debug("Creating the Eto application...");
 
         var version = AppUtil.GetAssemblyVersion();
         var hash = AppUtil.GetGitHash();
-        unsafe
+
+        // The launcher forces a dark theme: the previous build shipped a dark ImGui style, and the
+        // launcher artwork is dark. Eto 2.13 crashes on GTK3 when asked for Themes.Dark on a system
+        // theme with no dark variant, so the theme is chosen through GTK_THEME instead.
+        EtoTheme.PreferDarkGtkTheme();
+
+        var application = new Application
         {
-            if (!SDL.Init(SDLInitFlags.Video | SDLInitFlags.Gamepad))
-            {
-                Log.Error($"Error: SDL_Init(): {SDL.GetErrorS()}");
-                Environment.Exit(1);
-            }
+            Name = APP_NAME,
+        };
 
-            var mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
-            var windowFlags = SDLWindowFlags.Resizable | SDLWindowFlags.Hidden | SDLWindowFlags.HighPixelDensity;
-            window = SDL.CreateWindow(
-                $"XIVLauncher {version} ({hash})",
-                (int)(1280 * mainScale),
-                (int)(800 * mainScale),
-                windowFlags);
-            if (window == null)
-            {
-                Log.Error($"Error: SDL_CreateWindow(): {SDL.GetErrorS()}");
-                Environment.Exit(1);
-            }
-
-            SDL.SetWindowPosition(window, (int)SDL.SDL_WINDOWPOS_CENTERED_MASK, (int)SDL.SDL_WINDOWPOS_CENTERED_MASK);
-            Log.Debug("SDL OK!");
-
-            gpuDevice = SDL.CreateGPUDevice(
-                SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib,
-                true,
-                (byte*)null);
-            if (gpuDevice == null)
-            {
-                Log.Error($"Error: SDL_CreateGPUDevice(): {SDL.GetErrorS()}");
-                Environment.Exit(1);
-            }
-
-            if (!SDL.ClaimWindowForGPUDevice(gpuDevice, window))
-            {
-                Log.Error($"Error: SDL_ClaimWindowForGPUDevice(): {SDL.GetErrorS()}");
-                Environment.Exit(1);
-            }
-
-            SDL.SetGPUSwapchainParameters(gpuDevice, window, SDLGPUSwapchainComposition.Sdr, SDLGPUPresentMode.Vsync);
-            Log.Debug("SDL GPU OK!");
-
-            guiBindings = new ImGuiBindings(window, gpuDevice, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f, mainScale);
-            Log.Debug("ImGui OK!");
-
-            StyleModelV1.DalamudStandard.Apply();
+        application.Initialized += (_, _) =>
+        {
+            AppFonts.Initialize(Config.FontPxSize ?? 21.0f);
 
             var launcherClientConfig = LauncherClientConfig.GetAsync().GetAwaiter().GetResult();
             launcherApp = new LauncherApp(storage, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
-            SDL.ShowWindow(window);
+            Log.Debug("LauncherApp created");
 
-            var done = false;
-            while (!done)
+            launcherForm = new LauncherForm(launcherApp, version, hash);
+            launcherApp.AttachForm(launcherForm);
+            Log.Debug("LauncherForm created");
+
+            application.MainForm = launcherForm;
+            launcherForm.Show();
+            Log.Debug("Main form shown");
+
+            if (Environment.GetEnvironmentVariable("XL_LOGIN_TEST") == "1")
             {
-                done = guiBindings.ProcessExit();
-
-                if ((SDL.GetWindowFlags(window) & (SDLWindowFlags.Minimized | SDLWindowFlags.Hidden)) != 0)
-                {
-                    SDL.Delay(10);
-                    continue;
-                }
-
-                guiBindings.NewFrame();
-                launcherApp.Draw();
-                guiBindings.Render();
+                Log.Debug("Login test started");
+                launcherApp.RunLoginTest();
             }
-            guiBindings.Dispose();
-            SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
-            SDL.DestroyGPUDevice(gpuDevice);
-            SDL.DestroyWindow(window);
-            SDL.Quit();
+        };
 
-            if (Patcher is not null)
+        Log.Debug("Eto OK!");
+
+        application.Run();
+
+        if (Patcher is not null)
+        {
+            Patcher.StartCancellation();
+            // PatchManager.UnInitializeAcquisition() is private but the function bellow is the only call that is in the method and is public accessible
+            try
             {
-                Patcher.StartCancellation();
-                // PatchManager.UnInitializeAcquisition() is private but the function bellow is the only call that is in the method and is public accessible
-                try
-                {
-                    Environment.Exit(0);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Could not uninitialize patch acquisition.");
-                }
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Could not uninitialize patch acquisition.");
             }
         }
     }
@@ -367,21 +321,11 @@ sealed class Program
         CompatibilityTools = new CompatibilityTools(wineSettings, Config.DxvkVersion ?? DxvkVersion.Stable, Config.DxvkHudType, Config.GameModeEnabled ?? false, Config.DxvkAsyncEnabled ?? true, toolsFolder);
     }
 
-    public static void ShowWindow()
-    {
-        unsafe
-        {
-            SDL.ShowWindow(window);
-        }
-    }
+    /// <summary>Shows the launcher window, marshalled to the UI thread.</summary>
+    public static void ShowWindow() => Ui.Post(() => launcherForm.ShowWindow());
 
-    public static void HideWindow()
-    {
-        unsafe
-        {
-            SDL.HideWindow(window);
-        }
-    }
+    /// <summary>Hides the launcher window, marshalled to the UI thread.</summary>
+    public static void HideWindow() => Ui.Post(() => launcherForm.HideWindow());
 
     private static ISecretProvider GetSecretProvider(Storage storage)
     {

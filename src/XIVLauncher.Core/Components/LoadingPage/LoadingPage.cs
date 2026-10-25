@@ -1,113 +1,149 @@
-using System.Numerics;
+using Eto.Forms;
 
-using Hexa.NET.ImGui;
 
-using XIVLauncher.Core.Components.Common;
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.LoadingPage;
 
+/// <summary>
+/// The loading page: status lines, a cancel/disable-auto-login pair, and either the rotating spinner or
+/// a progress bar.
+/// </summary>
+/// <remarks>
+/// The ImGui version read <c>Line1/Line2/Line3/Progress</c> during every draw; here the setters push the
+/// new state to the UI thread and refresh the labels, so background patching threads can keep writing
+/// to the same properties.
+/// </remarks>
 public class LoadingPage : Page
 {
     private const int SPINNER_RADIUS = 15;
 
+    private readonly Spinner spinner;
+    private readonly ProgressBar progressBar;
+    private readonly Label progressLabel;
+    private readonly Label line1Label;
+    private readonly Label line2Label;
+    private readonly Label line3Label;
+    private readonly Label autoLoginLabel;
+    private readonly Common.Button cancelButton;
+    private readonly Common.Button disableAutoLoginButton;
+
+    private bool hasDisabledAutoLogin;
+
     public bool IsIndeterminate { get; set; }
+
     public bool CanCancel { get; set; } = true;
-    public bool CanDisableAutoLogin { get; set; } = false;
-    public float Progress { get; set; }
+
+    public bool CanDisableAutoLogin { get; set; }
 
     public string Line1 { get; set; } = "Loading text line 1";
+
     public string? Line2 { get; set; }
+
     public string? Line3 { get; set; }
 
-    public string? ProgressText { get; set; } = null;
+    public string? ProgressText { get; set; }
 
-    private Spinner spinner;
-    private Button cancelButton = new(Strings.CancelLabel);
-    private Button disableAutoLoginButton = new(Strings.DisableAutoLoginButton);
+    public float Progress
+    {
+        get => this.progress;
+        set
+        {
+            this.progress = value;
+            Ui.Post(this.Refresh);
+        }
+    }
 
-    private bool hasDisabledAutoLogin = false;
+    private float progress;
 
+    /// <summary>Raises when the cancel button is pressed.</summary>
     public event Action? Cancelled;
 
     public LoadingPage(LauncherApp app)
         : base(app)
     {
-        this.spinner = new Spinner(SPINNER_RADIUS, 5, ImGui.GetColorU32(ImGuiCol.ButtonActive));
+        this.spinner = new Spinner(SPINNER_RADIUS, 5, EtoColors.Blue);
+
+        // Eto's ProgressBar value is an integer, so progress is scaled to permille.
+        this.progressBar = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1000,
+            Width = 400,
+        };
+
+        this.progressLabel = new Label { TextAlignment = TextAlignment.Center };
+
+        this.line1Label = new Label { Wrap = WrapMode.Character };
+        this.line2Label = new Label { Wrap = WrapMode.Character };
+        this.line3Label = new Label { Wrap = WrapMode.Character };
+        this.autoLoginLabel = new Label { Text = Strings.AutoLoginDisabledNextStart };
+
+        this.cancelButton = new Common.Button(Strings.CancelLabel);
+        this.cancelButton.Width = 320;
         this.cancelButton.Click += () => this.Cancelled?.Invoke();
 
+        this.disableAutoLoginButton = new Common.Button(Strings.DisableAutoLoginButton);
+        this.disableAutoLoginButton.Width = 320;
         this.disableAutoLoginButton.Click += () =>
         {
             this.hasDisabledAutoLogin = true;
             App.Settings.IsAutologin = false;
+            this.Refresh();
+        };
+
+        // The draw order in HEAD was: lines, cancel/disable buttons, then the spinner or the progress
+        // bar. The same order, with the same spacers, as a stack.
+        this.Content = new StackLayout
+        {
+            Items =
+            {
+                new StackLayoutItem(new Panel(), expand: true),
+                new StackLayoutItem(this.line1Label, HorizontalAlignment.Center),
+                new StackLayoutItem(this.line2Label, HorizontalAlignment.Center),
+                new StackLayoutItem(this.line3Label, HorizontalAlignment.Center),
+                new StackLayoutItem(this.cancelButton, HorizontalAlignment.Center),
+                new StackLayoutItem(this.disableAutoLoginButton, HorizontalAlignment.Center),
+                new StackLayoutItem(this.autoLoginLabel, HorizontalAlignment.Center),
+                new StackLayoutItem(this.spinner, HorizontalAlignment.Center),
+                new StackLayoutItem(this.progressBar, HorizontalAlignment.Center),
+                new StackLayoutItem(this.progressLabel, HorizontalAlignment.Center),
+                new StackLayoutItem(new Panel(), expand: true),
+            },
         };
     }
 
+    /// <summary>Resets the per-session "auto-login disabled" flag, called when loading starts.</summary>
     public void Reset()
     {
         this.hasDisabledAutoLogin = false;
+        this.Refresh();
     }
 
-    public override void Draw()
+    public override void OnShow() => this.Refresh();
+
+    /// <summary>Pushes the current line/progress/cancel state onto the controls.</summary>
+    public void Refresh()
     {
-        var vp = ImGuiHelpers.ViewportSize;
+        this.line1Label.Text = this.Line1;
 
-        ImGui.SetCursorPosY(vp.Y / 2 - 100);
+        this.line2Label.Text = this.Line2 ?? string.Empty;
+        this.line2Label.Visible = !string.IsNullOrEmpty(this.Line2);
 
-        // center text in window
-        ImGuiHelpers.CenteredText(Line1);
+        this.line3Label.Text = this.Line3 ?? string.Empty;
+        this.line3Label.Visible = !string.IsNullOrEmpty(this.Line3);
 
-        if (!string.IsNullOrEmpty(Line2))
-        {
-            ImGui.Dummy(new Vector2(2));
-            ImGuiHelpers.CenteredText(Line2);
-        }
+        var showDisableAutoLogin = this.CanDisableAutoLogin && (App.Settings.IsAutologin ?? false);
 
-        if (!string.IsNullOrEmpty(Line3))
-        {
-            ImGui.Dummy(new Vector2(2));
-            ImGuiHelpers.CenteredText(Line3);
-        }
+        this.cancelButton.Visible = this.CanCancel;
+        this.disableAutoLoginButton.Visible = showDisableAutoLogin;
+        this.autoLoginLabel.Visible = this.hasDisabledAutoLogin && !showDisableAutoLogin;
 
-        var isDrawDisableAutoLogin = CanDisableAutoLogin && (App.Settings.IsAutologin ?? false);
+        this.spinner.Visible = this.IsIndeterminate;
+        this.progressBar.Visible = !this.IsIndeterminate;
+        this.progressBar.Value = (int)Math.Round(this.Progress * 1000);
 
-        if (CanCancel || isDrawDisableAutoLogin)
-        {
-            ImGui.Dummy(new Vector2(20));
-        }
-
-        if (CanCancel)
-        {
-            this.cancelButton.Width = (int)vp.X / 4;
-            ImGuiHelpers.CenterCursorFor(this.cancelButton.Width.Value);
-            this.cancelButton.Draw();
-        }
-
-        if (isDrawDisableAutoLogin)
-        {
-            this.disableAutoLoginButton.Width = (int)vp.X / 4;
-            ImGuiHelpers.CenterCursorFor(this.disableAutoLoginButton.Width.Value);
-            this.disableAutoLoginButton.Draw();
-        }
-        else if (this.hasDisabledAutoLogin)
-        {
-            ImGuiHelpers.CenteredText(Strings.AutoLoginDisabledNextStart);
-        }
-
-        ImGui.Dummy(new Vector2(20));
-
-        if (IsIndeterminate)
-        {
-            ImGuiHelpers.CenterCursorFor(SPINNER_RADIUS * 2);
-            this.spinner.Draw();
-        }
-        else
-        {
-            var width = vp.X / 3;
-            ImGuiHelpers.CenterCursorFor((int)width);
-            ImGui.ProgressBar(Progress, new Vector2(width, 20), ProgressText);
-        }
-
-        base.Draw();
+        this.progressLabel.Text = this.ProgressText ?? string.Empty;
+        this.progressLabel.Visible = !this.IsIndeterminate && !string.IsNullOrEmpty(this.ProgressText);
     }
 }

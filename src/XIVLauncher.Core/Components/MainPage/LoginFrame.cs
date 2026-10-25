@@ -1,24 +1,34 @@
 using System.Numerics;
 
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 using XIVLauncher.Core.Accounts.Secrets.Providers;
-using XIVLauncher.Core.Components.Common;
+
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.MainPage;
 
+/// <summary>
+/// The login column: username, password, the OTP/Steam/free-trial/auto-login checkboxes, the login
+/// button, the login-action dropdown and the account picker button.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode login child window. The right-click login-action popup becomes an Eto
+/// <see cref="ContextMenu"/> attached to the login button, so the caret icon button just shows the same
+/// menu, and the user icon button opens <see cref="AccountSwitcher"/>.
+/// </remarks>
 public class LoginFrame : Component
 {
     private readonly MainPage mainPage;
 
-    private readonly Input loginInput;
-    private readonly Input passwordInput;
-    private readonly Checkbox oneTimePasswordCheckbox;
-    private readonly Checkbox useSteamServiceCheckbox;
-    private readonly Checkbox freeTrialCheckbox;
-    private readonly Checkbox autoLoginCheckbox;
-    private readonly Button loginButton;
+    private readonly Common.Input loginInput;
+    private readonly Common.Input passwordInput;
+    private readonly Common.Checkbox oneTimePasswordCheckbox;
+    private readonly Common.Checkbox useSteamServiceCheckbox;
+    private readonly Common.Checkbox freeTrialCheckbox;
+    private readonly Common.Checkbox autoLoginCheckbox;
+    private readonly Common.Button loginButton;
+    private readonly Label secretsWarningLabel;
 
     public string Username
     {
@@ -56,145 +66,93 @@ public class LoginFrame : Component
         set => this.freeTrialCheckbox.Value = value;
     }
 
+    /// <summary>Raises with the login action the user requested.</summary>
     public event Action<LoginAction>? OnLogin;
-
-    private const string POPUP_ID_LOGINACTION = "popup_loginaction";
 
     public LoginFrame(MainPage mainPage)
     {
         this.mainPage = mainPage;
 
-        void TriggerLogin()
-        {
-            this.OnLogin?.Invoke(LoginAction.Game);
-        }
+        void TriggerLogin() => this.OnLogin?.Invoke(LoginAction.Game);
 
-        this.loginInput = new Input(Strings.UsernameInput, Strings.UsernameInputHint, new Vector2(12f, 0f), 128);
+        this.loginInput = new Common.Input(Strings.UsernameInput, Strings.UsernameInputHint, new Vector2(12f, 0f), 128);
         this.loginInput.Enter += TriggerLogin;
 
-        this.passwordInput = new Input(Strings.PasswordInput, Strings.PasswordInputHint, new Vector2(12f, 0f), 128, flags: ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo);
+        this.passwordInput = new Common.Input(Strings.PasswordInput, Strings.PasswordInputHint, new Vector2(12f, 0f), 128, flags: Common.InputFlags.Password | Common.InputFlags.EnterReturnsTrue);
         this.passwordInput.Enter += TriggerLogin;
 
-        this.oneTimePasswordCheckbox = new Checkbox(Strings.UseOneTimePasswordCheckbox);
-        this.useSteamServiceCheckbox = new Checkbox(Strings.UseSteamServiceAccount);
-        this.freeTrialCheckbox = new Checkbox(Strings.FreeTrialAccountCheckbox);
-        this.autoLoginCheckbox = new Checkbox(Strings.LogInAutomaticCheckbox);
+        this.oneTimePasswordCheckbox = new Common.Checkbox(Strings.UseOneTimePasswordCheckbox);
+        this.useSteamServiceCheckbox = new Common.Checkbox(Strings.UseSteamServiceAccount);
+        this.freeTrialCheckbox = new Common.Checkbox(Strings.FreeTrialAccountCheckbox);
+        this.autoLoginCheckbox = new Common.Checkbox(Strings.LogInAutomaticCheckbox);
 
-        this.loginButton = new Button(Strings.LoginButton);
-        this.loginButton.Click += TriggerLogin;
-    }
+        var loginActionMenu = new ContextMenu();
 
-    private Vector2 GetSize()
-    {
-        var vp = ImGuiHelpers.ViewportSize;
-        return new Vector2(-1, vp.Y - 128f);
-    }
+        loginActionMenu.Items.Add(MenuItem(Strings.LaunchWithoutDalamudButton, () => this.OnLogin?.Invoke(LoginAction.GameNoDalamud)));
+        loginActionMenu.Items.Add(new SeparatorMenuItem());
+        loginActionMenu.Items.Add(MenuItem(Strings.LaunchWithoutPluginsButton, () => this.OnLogin?.Invoke(LoginAction.GameNoPlugins)));
+        loginActionMenu.Items.Add(new SeparatorMenuItem());
+        loginActionMenu.Items.Add(MenuItem(Strings.LaunchWithNoCustomPluginsButton, () => this.OnLogin?.Invoke(LoginAction.GameNoThirdparty)));
+        loginActionMenu.Items.Add(new SeparatorMenuItem());
+        loginActionMenu.Items.Add(MenuItem(Strings.PatchWithoutLaunchingButton, () => this.OnLogin?.Invoke(LoginAction.GameNoLaunch)));
+        loginActionMenu.Items.Add(new SeparatorMenuItem());
+        loginActionMenu.Items.Add(MenuItem(Strings.RepairGameFilesButton, () => this.OnLogin?.Invoke(LoginAction.Repair)));
 
-    public override void Draw()
-    {
-        if (ImGui.BeginChild("###loginFrame", this.GetSize()))
+        if (LauncherApp.IsDebug)
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
-            this.loginInput.Draw();
-            this.passwordInput.Draw();
-
-            this.oneTimePasswordCheckbox.Draw();
-            this.useSteamServiceCheckbox.Draw();
-            this.freeTrialCheckbox.Draw();
-            this.autoLoginCheckbox.Draw();
-
-            ImGui.Dummy(new Vector2(10));
-
-            this.loginButton.Draw();
-
-            ImGui.PopStyleVar();
-
-            ImGui.NewLine();
-
-            ImGui.OpenPopupOnItemClick(POPUP_ID_LOGINACTION, ImGuiPopupFlags.MouseButtonRight);
-
-            ImGui.PushStyleColor(ImGuiCol.PopupBg, ImGuiColors.BlueShade1);
-
-            if (ImGui.BeginPopupContextItem(POPUP_ID_LOGINACTION))
-            {
-                if (ImGui.MenuItem(Strings.LaunchWithoutDalamudButton))
-                {
-                    this.OnLogin?.Invoke(LoginAction.GameNoDalamud);
-                }
-
-                ImGui.Separator();
-
-                if (ImGui.MenuItem(Strings.LaunchWithoutPluginsButton))
-                {
-                    this.OnLogin?.Invoke(LoginAction.GameNoPlugins);
-                }
-
-                ImGui.Separator();
-
-                if (ImGui.MenuItem(Strings.LaunchWithNoCustomPluginsButton))
-                {
-                    this.OnLogin?.Invoke(LoginAction.GameNoThirdparty);
-                }
-
-                ImGui.Separator();
-
-                if (ImGui.MenuItem(Strings.PatchWithoutLaunchingButton))
-                {
-                    this.OnLogin?.Invoke(LoginAction.GameNoLaunch);
-                }
-
-                ImGui.Separator();
-
-                if (ImGui.MenuItem(Strings.RepairGameFilesButton))
-                {
-                    this.OnLogin?.Invoke(LoginAction.Repair);
-                }
-
-                if (LauncherApp.IsDebug)
-                {
-                    ImGui.Separator();
-
-                    if (ImGui.MenuItem("Fake Login"))
-                    {
-                        this.OnLogin?.Invoke(LoginAction.Fake);
-                    }
-                }
-
-                ImGui.EndPopup();
-            }
-
-            ImGui.PopStyleColor();
-
-            if (Program.Secrets is DummySecretProvider)
-            {
-                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
-                ImGui.TextWrapped(Strings.NoSecretsProviderWarning);
-                ImGui.PopStyleColor();
-
-                ImGui.Dummy(new Vector2(15));
-            }
-
-            ImGui.PushFont(FontManager.IconFont, 0.0f);
-
-            var extraButtonSize = new Vector2(45) * ImGuiHelpers.GlobalScale;
-
-            if (ImGui.Button(FontAwesomeIcon.CaretDown.ToIconString(), extraButtonSize))
-            {
-                ImGui.OpenPopup(POPUP_ID_LOGINACTION);
-            }
-
-            ImGui.SameLine();
-
-            if (ImGui.Button(FontAwesomeIcon.UserFriends.ToIconString(), extraButtonSize))
-            {
-                this.mainPage.AccountSwitcher.Open();
-            }
-
-            ImGui.PopFont();
+            loginActionMenu.Items.Add(new SeparatorMenuItem());
+            loginActionMenu.Items.Add(MenuItem("Fake Login", () => this.OnLogin?.Invoke(LoginAction.Fake)));
         }
 
-        ImGui.EndChild();
+        this.loginButton = new Common.Button(Strings.LoginButton);
+        this.loginButton.Click += TriggerLogin;
+        this.loginButton.ContextMenu = loginActionMenu;
 
-        base.Draw();
+        var caretButton = new Common.Button(string.Empty) { Width = 45 };
+        caretButton.ShowIcon(FontAwesomeIcon.CaretDown);
+        caretButton.Click += () => loginActionMenu.Show(this.loginButton);
+
+        var friendsButton = new Common.Button(string.Empty) { Width = 45 };
+        friendsButton.ShowIcon(FontAwesomeIcon.UserFriends);
+        friendsButton.Click += () => this.mainPage.AccountSwitcher.Open(this.loginButton);
+
+        this.secretsWarningLabel = new Label
+        {
+            Text = Strings.NoSecretsProviderWarning,
+            TextColor = EtoColors.Red,
+            Wrap = WrapMode.Word,
+            // Without an explicit width, GTK sizes the wrapped label to the whole message, and that
+            // natural width becomes the login column's width, pushing the news column off-screen.
+            Width = 400,
+            Visible = Program.Secrets is DummySecretProvider,
+        };
+
+        this.Content = new StackLayout
+        {
+            Spacing = 10,
+            Items =
+            {
+                this.loginInput,
+                this.passwordInput,
+                this.oneTimePasswordCheckbox,
+                this.useSteamServiceCheckbox,
+                this.freeTrialCheckbox,
+                this.autoLoginCheckbox,
+                this.loginButton,
+                new StackLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Items = { caretButton, friendsButton },
+                },
+                this.secretsWarningLabel,
+            },
+        };
+    }
+
+    private static ButtonMenuItem MenuItem(string text, Action clicked)
+    {
+        var item = new ButtonMenuItem { Text = text };
+        item.Click += (_, _) => clicked();
+        return item;
     }
 }

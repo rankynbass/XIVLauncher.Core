@@ -1,45 +1,68 @@
-using System.Numerics;
-
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 namespace XIVLauncher.Core.Components.Common;
 
+/// <summary>
+/// A launcher push button: a native Eto button wrapped in a <see cref="Component"/>.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode ImGui button, which drew itself every frame and detected Enter on a
+/// focused button. Eto fires <see cref="Click"/> on press, and the default-button/focus behaviour comes
+/// from the platform, so the "focused button + Enter" special case disappears.
+/// </remarks>
 public class Button : Component
 {
-    public bool IsEnabled { get; set; } = true;
+    private readonly Eto.Forms.Button button;
 
-    public string Label { get; set; }
-    public Vector4 Color { get; set; }
-    public Vector4 HoverColor { get; set; }
-    public Vector4 TextColor { get; set; }
+    public Button(string label, bool isEnabled = true)
+    {
+        this.button = new Eto.Forms.Button
+        {
+            Text = label,
+            Enabled = isEnabled,
+        };
 
+        this.button.Click += (_, _) => this.Click?.Invoke();
+
+        this.Content = this.button;
+    }
+
+    /// <summary>Raises when the button is pressed.</summary>
     public event Action? Click;
 
-    public int? Width { get; set; }
-
-    public Button(string label, bool isEnabled = true, Vector4? color = null, Vector4? hoverColor = null, Vector4? textColor = null)
+    public bool IsEnabled
     {
-        Label = label;
-        IsEnabled = isEnabled;
-        Color = color ?? ImGuiColors.Blue;
-        HoverColor = hoverColor ?? ImGuiColors.BlueShade3;
-        TextColor = textColor ?? ImGuiColors.DalamudWhite;
+        get => this.button.Enabled;
+        set => this.button.Enabled = value;
     }
 
-    public override void Draw()
+    public string Label
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(16f, 16f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
-        ImGui.PushStyleColor(ImGuiCol.Button, Color);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, HoverColor);
-        ImGui.PushStyleColor(ImGuiCol.Text, TextColor);
-
-        if (ImGui.Button(Label, new Vector2(Width ?? -1, 0)) || (ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter)))
-        {
-            this.Click?.Invoke();
-        }
-
-        ImGui.PopStyleVar(2);
-        ImGui.PopStyleColor(3);
+        get => this.button.Text;
+        set => this.button.Text = value;
     }
+
+    /// <summary>Requested button width, <c>null</c> lets the layout size the button.</summary>
+    public new int? Width
+    {
+        get => this.button.Width < 0 ? null : this.button.Width;
+        set => this.button.Width = value ?? -1;
+    }
+
+    /// <summary>Shows the icon glyph as the button label, using the Font Awesome font.</summary>
+    public void ShowIcon(FontAwesomeIcon icon)
+    {
+        this.button.Font = AppFonts.IconFont;
+        this.button.Text = AppFonts.Glyph(icon);
+    }
+
+    /// <summary>The tooltip shown when the pointer rests on the button.</summary>
+    public new string ToolTip
+    {
+        get => this.button.ToolTip;
+        set => this.button.ToolTip = value;
+    }
+
+    /// <summary>Moves keyboard focus to the button.</summary>
+    public new void Focus() => this.button.Focus();
 }

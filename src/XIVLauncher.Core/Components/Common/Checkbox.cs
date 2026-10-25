@@ -1,64 +1,54 @@
-using System.Numerics;
-
-using Hexa.NET.ImGui;
+using Eto.Forms;
 
 namespace XIVLauncher.Core.Components.Common;
 
+/// <summary>
+/// A launcher checkbox: a native Eto checkbox wrapped in a <see cref="Component"/>.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode ImGui checkbox, which had to implement "click the label toggles the box"
+/// by hand. Eto renders the label as part of the checkbox, so label clicks toggle natively and
+/// <see cref="OnChange"/> fires with the new value.
+/// </remarks>
 public class Checkbox : Component
 {
-    private bool inputBacking = false;
-
-    public string Label { get; }
-
-    public bool IsEnabled { get; set; } = true;
-
-    public bool Value
-    {
-        get => inputBacking;
-        set => inputBacking = value;
-    }
-
-    public event Action<bool>? OnChange;
+    private readonly Eto.Forms.CheckBox checkBox;
 
     public Checkbox(string label, bool value = false, bool isEnabled = true)
     {
-        Label = label;
-        Value = value;
-        IsEnabled = isEnabled;
+        this.checkBox = new Eto.Forms.CheckBox
+        {
+            Text = label,
+            Checked = value,
+            Enabled = isEnabled,
+        };
+
+        this.checkBox.CheckedChanged += (_, _) => this.OnChange?.Invoke(this.Value);
+
+        this.Content = this.checkBox;
     }
 
-    public override void Draw()
+    /// <summary>Raises with the new value whenever the checkbox is toggled.</summary>
+    public event Action<bool>? OnChange;
+
+    public string Label
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0.5f, 0.5f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiColors.BlueShade1);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiColors.BlueShade2);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiColors.BlueShade2);
-        ImGui.PushStyleColor(ImGuiCol.TextDisabled, ImGuiColors.TextDisabled);
-        ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.Text);
-
-        if (!this.IsEnabled)
-            ImGui.BeginDisabled();
-
-        if (ImGui.Checkbox($"###{Id}", ref inputBacking))
-        {
-            this.OnChange?.Invoke(this.inputBacking);
-        }
-
-        if (!this.IsEnabled)
-            ImGui.EndDisabled();
-
-        ImGui.SameLine();
-
-        ImGui.Text(Label);
-
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
-        {
-            this.inputBacking = !this.inputBacking;
-            this.OnChange?.Invoke(this.inputBacking);
-        }
-
-        ImGui.PopStyleVar(2);
-        ImGui.PopStyleColor(5);
+        get => this.checkBox.Text;
+        set => this.checkBox.Text = value;
     }
+
+    public bool IsEnabled
+    {
+        get => this.checkBox.Enabled;
+        set => this.checkBox.Enabled = value;
+    }
+
+    public bool Value
+    {
+        get => this.checkBox.Checked == true;
+        set => this.checkBox.Checked = value;
+    }
+
+    /// <summary>Moves keyboard focus to the checkbox.</summary>
+    public new void Focus() => this.checkBox.Focus();
 }

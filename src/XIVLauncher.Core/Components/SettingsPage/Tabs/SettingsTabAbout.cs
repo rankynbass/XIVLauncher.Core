@@ -1,52 +1,73 @@
-using System.Numerics;
-
-using Hexa.NET.ImGui;
+using Eto.Drawing;
+using Eto.Forms;
 
 using XIVLauncher.Common.Util;
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
+/// <summary>
+/// The about tab: the launcher logo, version, contributors, and the repository/Discord/license actions.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode about tab: the SDL GPU texture becomes an embedded Eto image, and the
+/// selectable contributor text becomes a link button.
+/// </remarks>
 public class SettingsTabAbout : SettingsTab
 {
-    private readonly TextureWrap logoTexture;
+    private readonly Label versionLabel = new();
+    private readonly LinkButton contributorsLink = new();
 
-    public override SettingsEntry[] Entries => Array.Empty<SettingsEntry>();
+    public override SettingsEntry[] Entries => [];
 
     public override string Title => Strings.AboutTitle;
 
     public SettingsTabAbout()
     {
-        this.logoTexture = TextureWrap.Load(AppUtil.GetEmbeddedResourceBytes("logo.png"));
+        this.versionLabel.Text = $"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})";
+
+        this.contributorsLink.Text = string.Format(Strings.XLCoreCreatedBy, "goaaats, Blooym, rankynbass");
+        this.contributorsLink.Wrap = WrapMode.Character;
+        this.contributorsLink.Click += (_, _) => AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core/graphs/contributors");
     }
 
-    public override void Draw()
+    protected override List<Control> HeaderContent =>
+    [
+        new ImageView
+        {
+            Image = AppImages.FromResource("logo.png"),
+            Size = new Size(256, 256),
+        },
+        this.versionLabel,
+        this.contributorsLink,
+    ];
+
+    protected override List<Control> FooterContent =>
+    [
+        new StackLayout
+        {
+            Orientation = Orientation.Horizontal,
+            Items =
+            {
+                CreateBrowserButton(Strings.OpenRepositoryButton, "https://github.com/goatcorp/XIVLauncher.Core"),
+                CreateBrowserButton(Strings.JoinDiscordButton, "https://discord.gg/3NMcUV5"),
+                CreateBrowserButton(Strings.SeeSoftwareLicensesButton, null),
+            },
+        },
+    ];
+
+    private static Button CreateBrowserButton(string label, string? url)
     {
-        ImGui.Image(this.logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale);
+        var button = new Button { Text = label };
 
-        ImGui.Text($"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})");
-
-        var contribText = string.Format(Strings.XLCoreCreatedBy, "goaaats, Blooym, rankynbass");
-        if (ImGui.Selectable(contribText, false, default, ImGui.CalcTextSize(contribText)))
-            AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core/graphs/contributors");
-
-        ImGui.Dummy(new Vector2(20));
-
-        if (ImGui.Button(Strings.OpenRepositoryButton))
+        button.Click += (_, _) =>
         {
-            AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core");
-        }
-        ImGui.SameLine();
-        if (ImGui.Button(Strings.JoinDiscordButton))
-        {
-            AppUtil.OpenBrowser("https://discord.gg/3NMcUV5");
-        }
-        ImGui.SameLine();
-        if (ImGui.Button(Strings.SeeSoftwareLicensesButton))
-        {
-            PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"));
-        }
+            if (url is not null)
+                AppUtil.OpenBrowser(url);
+            else
+                PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"));
+        };
 
-        base.Draw();
+        return button;
     }
 }

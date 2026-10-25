@@ -1,21 +1,68 @@
-using System.Numerics;
+using Eto.Drawing;
+using Eto.Forms;
 
-using Hexa.NET.ImGui;
+using XIVLauncher.Core.Components.Common;
 
 namespace XIVLauncher.Core.Components;
 
+/// <summary>
+/// The Steam Deck first-time-setup screen, with the invisible guide and finish regions over the artwork.
+/// </summary>
+/// <remarks>
+/// Replaces the immediate-mode FTS page. The artwork is drawn at fixed coordinates with a
+/// <see cref="PixelLayout"/>; the two invisible ImGui buttons become <see cref="ClickArea"/> rectangles
+/// at the same positions.
+/// </remarks>
 public class FtsPage : Page
 {
-    private readonly TextureWrap steamdeckFtsTexture;
-    private readonly TextureWrap steamdeckAppIdErrorTexture;
+    private readonly ImageView steamdeckFtsImage;
+    private readonly ImageView steamdeckAppIdErrorImage;
 
-    private bool isSteamDeckAppIdError = false;
+    private bool isSteamDeckAppIdError;
 
     public FtsPage(LauncherApp app)
         : base(app)
     {
-        this.steamdeckFtsTexture = TextureWrap.Load(AppUtil.GetEmbeddedResourceBytes("steamdeck_fts.png"));
-        this.steamdeckAppIdErrorTexture = TextureWrap.Load(AppUtil.GetEmbeddedResourceBytes("steamdeck_fterror.png"));
+        this.steamdeckFtsImage = new ImageView
+        {
+            Image = AppImages.FromResource("steamdeck_fts.png"),
+            Size = new Size(1280, 800),
+            Visible = false,
+        };
+
+        this.steamdeckAppIdErrorImage = new ImageView
+        {
+            Image = AppImages.FromResource("steamdeck_fterror.png"),
+            Size = new Size(1280, 800),
+            Visible = false,
+        };
+
+        var layout = new PixelLayout();
+
+        layout.Add(this.steamdeckFtsImage, 0, 0);
+        layout.Add(this.steamdeckAppIdErrorImage, 0, 0);
+
+        var openGuideButton = new ClickArea(649, 101);
+        openGuideButton.Click += () =>
+        {
+            if (!this.isSteamDeckAppIdError)
+                AppUtil.OpenBrowser("https://goatcorp.github.io/faq/steamdeck");
+            else
+                Environment.Exit(0);
+        };
+
+        layout.Add(openGuideButton, 316, 481);
+
+        var finishFtsButton = new ClickArea(649, 101);
+        finishFtsButton.Click += () =>
+        {
+            if (!this.isSteamDeckAppIdError)
+                this.FinishFts(true);
+        };
+
+        layout.Add(finishFtsButton, 316, 598);
+
+        this.Content = layout;
     }
 
     public void OpenFtsIfNeeded()
@@ -27,8 +74,8 @@ public class FtsPage : Page
                 App.State = LauncherApp.LauncherState.Fts;
                 return;
             }
-            else
-                return;
+
+            return;
         }
 
         if (!(App.Settings.CompletedFts ?? false) && Program.IsSteamDeckHardware)
@@ -41,6 +88,7 @@ public class FtsPage : Page
         {
             // If IsIgnoringSteam == true, skip the error screen. This fixes a bug with Steam Deck always showing the Fts Error screen.
             if (App.Settings.IsIgnoringSteam ?? false) return;
+
             App.State = LauncherApp.LauncherState.Fts;
             this.isSteamDeckAppIdError = true;
         }
@@ -54,39 +102,9 @@ public class FtsPage : Page
             App.Settings.CompletedFts = true;
     }
 
-    public override void Draw()
+    public override void OnShow()
     {
-        ImGui.SetCursorPos(new Vector2(0));
-
-        ImGui.Image(this.isSteamDeckAppIdError ? this.steamdeckAppIdErrorTexture.ImGuiHandle : this.steamdeckFtsTexture.ImGuiHandle, new Vector2(1280, 800));
-
-        ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
-
-        ImGui.SetCursorPos(new Vector2(316, 481));
-
-        if (ImGui.Button("###openGuideButton", new Vector2(649, 101)))
-        {
-            if (!this.isSteamDeckAppIdError)
-            {
-                AppUtil.OpenBrowser("https://goatcorp.github.io/faq/steamdeck");
-            }
-            else
-            {
-                Environment.Exit(0);
-            }
-        }
-
-        ImGui.SetCursorPos(new Vector2(316, 598));
-
-        if (ImGui.Button("###finishFtsButton", new Vector2(649, 101)) && !this.isSteamDeckAppIdError)
-        {
-            this.FinishFts(true);
-        }
-
-        ImGui.PopStyleColor(3);
-
-        base.Draw();
+        this.steamdeckFtsImage.Visible = !this.isSteamDeckAppIdError;
+        this.steamdeckAppIdErrorImage.Visible = this.isSteamDeckAppIdError;
     }
 }
