@@ -278,7 +278,6 @@ public class LauncherApp
     /// Temporary login smoke test: runs the login pipeline without launching the game, so the login,
     /// boot check, patch check, loading page, and modal can be exercised from the command line.
     /// </summary>
-    public void RunLoginTest() => this.mainPage.RunLoginTest();
 
     public void RunStartupTasks()
     {

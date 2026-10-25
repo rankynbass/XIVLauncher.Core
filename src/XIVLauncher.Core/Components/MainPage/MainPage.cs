@@ -113,9 +113,6 @@ public class MainPage : Page
             ProcessLogin(LoginAction.Game);
     }
 
-    /// <summary>Temporary login smoke test: runs the login pipeline without launching the game.</summary>
-    public void RunLoginTest() => this.ProcessLogin(LoginAction.GameNoLaunch);
-
     public void ReloadNews() => this.newsFrame.ReloadNews();
 
     private void SwitchAccount(XivAccount account, bool saveAsCurrent)

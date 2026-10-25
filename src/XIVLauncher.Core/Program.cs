@@ -282,12 +282,6 @@ sealed class Program
             application.MainForm = launcherForm;
             launcherForm.Show();
             Log.Debug("Main form shown");
-
-            if (Environment.GetEnvironmentVariable("XL_LOGIN_TEST") == "1")
-            {
-                Log.Debug("Login test started");
-                launcherApp.RunLoginTest();
-            }
         };
 
         Log.Debug("Eto OK!");
