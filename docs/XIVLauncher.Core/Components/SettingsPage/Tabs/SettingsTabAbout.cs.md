@@ -1,56 +1,75 @@
 # SettingsTabAbout.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabAbout.cs` · 52 lines · 1661 bytes
-**Namespace:** `XIVLauncher.Core.Components.SettingsPage.Tabs` · **Declaration:** `public class SettingsTabAbout : SettingsTab`
-**Role:** The "About" tab — logo, version string, contributor credit, repo/Discord/license links; no settings rows
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabAbout.cs` · 73 lines · 2,386 bytes
+**Namespace:** `XIVLauncher.Core.Components.SettingsPage.Tabs` · **Declaration:** `public class SettingsTabAbout : SettingsTab` (line 16)
+**Role:** About tab — logo image, version line, contributors link, repository/Discord/license buttons
 
 ---
 
 ## 1. Purpose
 
-`SettingsTabAbout` is a tab that carries **no entries**: `Entries` is `Array.Empty<SettingsEntry>()` and everything visible is hand-drawn in `Draw()`. It pairs with `Tabs/SettingsTabDebug.cs.md` (also entry-less) as the two "informational tabs" in the package, and it is the tab whose job is to be a link farm rather than a settings surface.
+Replaces the immediate-mode About tab. The SDL GPU texture becomes an embedded Eto `ImageView`; the selectable contributor text becomes a `LinkButton`; the three action buttons become plain Eto `Button`s.
+
+Usings: `Eto.Drawing` (`Size`), `Eto.Forms`, `XIVLauncher.Common.Util` (`PlatformHelpers`), `XIVLauncher.Core.Resources.Localization` (`Strings`).
 
 ## 2. Surface
 
-| Member | Anchor | Notes |
+| Member | Kind | Line | Notes |
+| --- | --- | --- | --- |
+| `versionLabel` | `private readonly Label` | 18 | version string, set once in ctor |
+| `contributorsLink` | `private readonly LinkButton` | 19 | wrapped link, click opens contributors page |
+| `Entries` | `override SettingsEntry[]` | 21 | **empty** — the tab has no settings rows |
+| `Title` | `override string` | 23 | `Strings.AboutTitle` (`Strings.Designer.cs:84`) |
+| ctor | `public` | 25-32 | version text, contributor text + wrap + click |
+| `HeaderContent` | `override List<Control>` | 34-43 | ImageView + version label + contributors link |
+| `FooterContent` | `override List<Control>` | 45-57 | horizontal `StackLayout` of three buttons |
+| `CreateBrowserButton` | `private static Button` | 59-72 | button factory with url/license branch |
+
+`RefreshDynamic()` is not overridden.
+
+## 3. Construction
+
+- `versionLabel.Text = $"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})"` (line 27) — built once at tab construction, so the version/hash line never changes while the process runs (`AppUtil.cs.md` §3).
+- `contributorsLink.Text = string.Format(Strings.XLCoreCreatedBy, "goaaats, Blooym, rankynbass")` (line 29), `Wrap = WrapMode.Character` (30), `Click += (_, _) => AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core/graphs/contributors")` (31).
+
+## 4. Header and footer content
+
+`HeaderContent` (34-43) returns, per access:
+
+1. `new ImageView { Image = AppImages.FromResource("logo.png"), Size = new Size(256, 256) }` (36-40) — a **new** image view and a **new** `Bitmap` decode on every rebuild (`AppImages.cs.md`).
+2. `this.versionLabel` (41).
+3. `this.contributorsLink` (42).
+
+`FooterContent` (45-57) returns a **new** horizontal `StackLayout` (47-49) containing three freshly built buttons (52-54):
+
+| Button | Label | URL |
 | --- | --- | --- |
-| `logoTexture` | `:12` | `private readonly TextureWrap` — loaded in the ctor, never reloaded |
-| `Entries` | `:14` | `public override SettingsEntry[] => Array.Empty<SettingsEntry>()` |
-| `Title` | `:16` | `Strings.AboutTitle` |
-| ctor | `:18-:21` | `public SettingsTabAbout()` — loads `logo.png` (`:20`) |
-| `Draw()` | `:23-:51` | `override`, `base.Draw()` **last** (`:50`) |
+| repository | `Strings.OpenRepositoryButton` | `https://github.com/goatcorp/XIVLauncher.Core` |
+| Discord | `Strings.JoinDiscordButton` | `https://discord.gg/3NMcUV5` |
+| licenses | `Strings.SeeSoftwareLicensesButton` | `null` → license branch |
 
-Uses: `docs/XIVLauncher.Core/TextureWrap.cs.md` (`Load`, `ImGuiHandle`), `docs/XIVLauncher.Core/AppUtil.cs.md` (`GetEmbeddedResourceBytes`, `GetAssemblyVersion`, `GetGitHash`, `OpenBrowser`), `docs/XIVLauncher.Core/AppUtil.VersionInfo.cs.md`, `docs/XIVLauncher.Core/ImGuiHelpers.cs.md` (`GlobalScale`, `CalcTextSize`), `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Util/PlatformHelpers.cs` (`OpenBrowser`), `src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs`.
+## 5. `CreateBrowserButton` (59-72)
 
-## 3. Construction — the texture is uploaded once
+`new Button { Text = label }` (61); click handler (63-69): `url is not null` → `AppUtil.OpenBrowser(url)` (66); otherwise `PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"))` (68). `AppUtil.OpenBrowser` includes the Steam Deck branch (Steam overlay) and the generic `PlatformHelpers.OpenBrowser` path (`AppUtil.cs.md` §4); the license branch calls `PlatformHelpers` directly, so it never uses the Steam overlay.
 
-`SettingsTabAbout()` is constructed by `SettingsPage.cs.md` §tabs (`private readonly SettingsTab[] tabs = { … }` at `:21 new SettingsTabAbout()`), itself built during `LauncherApp.cs:135`. `TextureWrap.Load(AppUtil.GetEmbeddedResourceBytes("logo.png"))` therefore runs once per process, during `LauncherApp` construction — a GPU/texture resource acquired at page-construction time, outside any frame. Consequences: `logoTexture` is never `null` (no lazy path exists); there is no teardown, so the wrap lives for the process lifetime (see `docs/XIVLauncher.Core/TextureWrap.cs.md` §lifecycle for the release model); and renaming the resource means editing the `GetEmbeddedResourceBytes("logo.png")` key and the embedded resource together, not a draw-guard.
+## 6. Consumers
 
-## 4. `Draw()` sequence
-
-| Step | Anchor | What |
+| Consumer | Line | Use |
 | --- | --- | --- |
-| Logo | `:25` | `ImGui.Image(logoTexture.ImGuiHandle, new Vector2(256) * ImGuiHelpers.GlobalScale)` |
-| Version line | `:27` | `ImGui.Text($"XIVLauncher Core v{AppUtil.GetAssemblyVersion()}({AppUtil.GetGitHash()})")` |
-| Credit | `:29-:32` | `string.Format(Strings.XLCoreCreatedBy, "goaaats, Blooym, rankynbass")` then `ImGui.Selectable(contribText, false, default, ImGui.CalcTextSize(contribText))` → `AppUtil.OpenBrowser("…/graphs/contributors")` |
-| Spacing | `:33` | `ImGui.Dummy(new Vector2(20))` |
-| Repo button | `:35-:38` | `Button(Strings.OpenRepositoryButton)` → `AppUtil.OpenBrowser("https://github.com/goatcorp/XIVLauncher.Core")` |
-| Discord button | `:40-:43` | `ImGui.SameLine()` then `Button(Strings.JoinDiscordButton)` → `AppUtil.OpenBrowser("https://discord.gg/3NMcUV5")` |
-| License button | `:45-:49` | `ImGui.SameLine()` then `Button(Strings.SeeSoftwareLicensesButton)` → `PlatformHelpers.OpenBrowser(Path.Combine(AppContext.BaseDirectory, "license.txt"))` |
-| `base.Draw()` | `:50` | `SettingsTab.Draw()` over an empty `Entries` (then `Component.Draw()` — see `SettingsTab.cs.md` §Draw/§base) |
+| `SettingsPage.tabs` | `SettingsPage.cs:30` | fifth tab in the fixed array |
+| `SettingsPage.OnShow` | `SettingsPage.cs:88` | `tab.LoadValues()` — no entries, so no values are loaded |
+| `SettingsPage.RebuildPages` | `SettingsPage.cs:115-116` | `RefreshEntries()` + `TabPage(Text = Title, Scrollable(tab))` |
+| `SettingsPage.RebuildPages` | `SettingsPage.cs:126` | `tab.Entries` search filter — always empty, so About never matches a search |
 
-- **The credit row's hit area uses the `CalcTextSize` width trick** — `Selectable(text, default, ImGui.CalcTextSize(text))` makes the whole line clickable instead of just the trailing hit-mark (the same trick recorded in `MainPage/AccountSwitcher.cs.md` §width trick and `MainPage/ActionButtons.cs.md` §tooltip adjacency). Keep the size argument if the credit row is restyled: without it the row looks like a paragraph and behaves like a 1-pixel target.
-- **The contributor names are a hardcoded string literal** (`:29`, `"goaats, Blooym, rankynbass"` as the format argument of `Strings.XLCoreCreatedBy`), while everything else in the tab is a `Strings` key. The link goes to the GitHub contributors graph, so the literal is a decorative, deliberately-stale credit; the format key is the localizable part. Do not "move the names into the key" without checking the key's `{0}` placeholder (`src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs`, `XLCoreCreatedBy`).
-- **Buttons are laid out with `ImGui.SameLine()` between them** (repo → Discord → license on one row), the same flow-control idiom as `MainPage.cs.md` §4 and `SettingsPage.cs.md` §5.1/§5.4; the row's content width is `Strings`-dependent, so the three buttons can wrap on a narrow viewport — that's ImGui's behaviour, not something to guard here.
-- **`base.Draw()` is last** (contrast `Tabs/SettingsTabGame.cs.md`, `Tabs/SettingsTabDebug.cs.md`, `Tabs/SettingsTabTroubleshooting.cs.md`, `Tabs/SettingsTabWine.cs.md` which put it first/earlier). With `Entries` empty, position is irrelevant *today* but the choice still records intent ("rows, if ever added, appear after the links"). If rows are added to this tab, decide the order explicitly per `SettingsTab.cs.md` §position list.
+## 7. Quirks
 
-## 5. The two browser helpers
+- **No entries** (`Entries => []`, line 21): the About tab contributes nothing to search results, and `UpdateFinishButton` sees no rows from it (`SettingsPage.cs.md` §6).
+- `HeaderContent`/`FooterContent` build new widgets per access, so each `RefreshEntries()` allocates a new ImageView (decoding `logo.png` again) and three new buttons; the previous instances are dropped (`SettingsTab.cs.md` §6).
+- The license button opens `AppContext.BaseDirectory/license.txt`; `license.txt` is not copied by `XIVLauncher.Core.csproj` and is absent from the build output, so the link targets a missing file. The same behavior exists in HEAD (`git show HEAD:.../SettingsTabAbout.cs` line 68), so it is pre-existing.
+- The version string is computed once at construction (`AppUtil.GetAssemblyVersion()`, `AppUtil.GetGitHash()`), not per rebuild, so a rebuild does not re-run git/build metadata lookups.
+- `RefreshDynamic()` is unused; nothing on this tab depends on other settings.
 
-Three buttons use `AppUtil.OpenBrowser(url)` and the license button uses `PlatformHelpers.OpenBrowser(path)`. `AppUtil.cs.md` §`OpenBrowser` is the Steam-Deck-aware wrapper (`Program.Steam.ActivateGameOverlayToWebPage(url)` when the Deck + Steam are live) and it *delegates* to `PlatformHelpers.OpenBrowser` otherwise. The direct call here is therefore deliberate: `license.txt` is a local path opened through the OS file handler, which the overlay cannot express (`AppContext.BaseDirectory` is the *executable's* directory, i.e. the packaged/installed tree — on a Flatpak build that is the app root, see `docs/XIVLauncher.Core/Program.cs.md` §packaging and `AppUtil.cs.md` §`GetEmbeddedResourceBytes`). Keep the split; routing the license button through `AppUtil.OpenBrowser` would hand a path to `ActivateGameOverlayToWebPage`.
+## 8. Cross-references
 
-## 6. Invariants and extension points
-
-- **No entries ⇒ this tab cannot affect `SettingsPage.cs.md` §finish button or search mode**: it contributes a tab header in browse mode (`SettingsPage.cs.md` §5.1) and nothing in search results (`SettingsEntry.cs.md` §Name filter has no rows to match). A "search finds nothing in About" complaint is a consequence of this, not a bug to fix in the tab.
-- **Hardcoded URLs are the tab's literals** (`:31` contributors graph, `:37` repo, `:42` Discord). Labels are localized, targets are not — the package keeps links in code (contrast `Tabs/SettingsTabTroubleshooting.cs.md`, where the actions are local code paths). Adding a link: literal URL + `Strings` label + one of the two browser helpers per §5.
-- **The version string is read per frame** (`GetAssemblyVersion()`/`GetGitHash()`), so it follows the build stamped at process start (see `docs/XIVLauncher.Core/AppUtil.VersionInfo.cs.md` §source of the stamp, `AppUtil.cs.md` §`GetGitHash`). That is the mechanism for "what build am I running" reports; do not add a re-read on a timer — the value is build-constant.
-- **`Entries` uses the accessor-block form (`=> Array.Empty<SettingsEntry>()`, a classic accessor)** matching `SettingsTab.cs.md` §Entries override style; `Tabs/SettingsTabDebug.cs.md` uses the same. Keep that form for entry-less tabs (rather than `get { return … }` blocks) so the tab specs stay diff-able.
+Uses: `SettingsTab` (`SettingsTab.cs.md`), `AppImages` (`AppImages.cs.md`), `AppUtil` (`AppUtil.cs.md`), `Strings` (`Resources/Localization/Strings.Designer.cs.md`), `PlatformHelpers` (lib: `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/PlatformAbstractions/PlatformHelpers.cs`, out of docs scope).
+Referenced by: `SettingsPage.cs.md` §2.

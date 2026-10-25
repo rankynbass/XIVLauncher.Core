@@ -1,213 +1,276 @@
 # MainPage.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1149 lines · 45429 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1,155 lines · 46,979 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class MainPage : Page`
-**Role:** The launcher's whole "log in → patch → launch → wait for the game" machine, plus the MainPage's UI composition — the logic hub every `Components/` page feeds into
+**Role:** The launcher's login → patch → launch → wait-for-game machine plus the main page UI composition
 
 ---
 
 ## 1. Purpose and the seam
 
-`MainPage` is the concrete `Page` (`Page.cs.md`) that `LauncherApp.cs.md` keeps as `CurrentPage` and activates on `LauncherState.Main` (`LauncherApp.cs:71 this.mainPage.OnShow();`, constructed at `LauncherApp.cs:134 this.mainPage = new MainPage(this);`). It has two clearly separated halves in one file, and the specs of the other MainPage components exist mostly so this half can stay readable:
+`MainPage` is the concrete `Page` (`Components/Page.cs.md`) that `LauncherApp` hosts for `LauncherState.Main` (`LauncherApp.cs.md`): constructed at `LauncherApp.cs:146`, exposed as `CurrentPage` for `LauncherState.Main` (`LauncherApp.cs:112`), entered via `this.mainPage.OnShow()` (`LauncherApp.cs:80`), refreshed with `this.mainPage.ReloadNews()` when leaving settings (`LauncherApp.cs:69`), and asked to auto-login by `RunStartupTasks` (`LauncherApp.cs:282`).
 
-- **UI half** — ctor wiring (`:36-62`) and `Draw()` (`:74-88`) compose `LoginFrame.cs.md`, `NewsFrame.cs.md`, `AccountSwitcher.cs.md`, `ActionButtons.cs.md`, and translate clicks into `LoginAction.cs.md` values.
-- **Logic half** — `ProcessLogin` (`:114`) → `Login` (`:174`) → `TryLoginToGame` (`:219`) → `TryProcessLoginResult` (`:259`) → `StartGameAndAddon` (`:538`), with the patch (`:845-1025`) and repair (`:1027`) machinery and the exit/`Hide`/`Reactivate` plumbing (`:1137-1148`).
+Two halves in one file:
 
-The seam is one event: `MainPage.cs:47 this.loginFrame.OnLogin += this.ProcessLogin;`. Everything else in the logic half is reached from that or from `LauncherApp.cs:256 this.mainPage.DoAutoLoginIfApplicable();` (inside `RunStartupTasks`, `LauncherApp.cs:251`, right after the `#if FLATPAK` Fts hook at `:254`).
+- **UI half:** the `TableLayout` composition built in the constructor (`MainPage.cs:84-105`) of `LoginFrame` (`LoginFrame.cs.md`), `NewsFrame` (`NewsFrame.cs.md`), `ActionButtons` (`ActionButtons.cs.md`), and the public `AccountSwitcher` (`AccountSwitcher.cs.md`).
+- **Pipeline half:** `ProcessLogin` → `Login` → `TryLoginToGame` → `TryProcessLoginResult` → `StartGameAndAddon`, plus patching (`HandleBootCheck`, `InstallGamePatch`, `TryHandlePatchAsync`) and repair (`RepairGame`).
+
+In HEAD the pipeline lived inside the immediate-mode draw loop with SDL quit events; in the Eto path the UI half became Eto controls and the quit push became `Ui.Post(() => Application.Instance.Quit())` (`MainPage.cs:181`, `Ui.cs.md`). `MainPage` has **no** `OnShow()` override, so `LauncherApp.cs:80` calls `Page.OnShow()`'s empty base (`Components/Page.cs.md` §3).
+
+Usings: `System.Diagnostics` (`Debug.Assert`, `Process`), `System.Threading.Tasks`, `Eto.Drawing` (`Size`), `Eto.Forms` (`Application`), `Serilog`, the `XIVLauncher.Common` game/patch/compatibility namespaces (submodule `lib/FFXIVQuickLauncher`, out of docs scope), `XIVLauncher.Core.Accounts`, localization, `XIVLauncher.Core.Support`.
 
 ## 2. Surface
 
-| Member | Anchor | Kind | Notes |
+| Member | Kind | Line | Notes |
 | --- | --- | --- | --- |
-| `loginFrame` / `newsFrame` / `actionButtons` | `:30/:31/:32` | `private readonly` fields | children; `AccountSwitcher` is the odd one out (§3) |
-| `IsLoggingIn` | `:34` | `public bool { get; private set; }` | the re-entry gate, §5 |
-| ctor | `:36-62` | `public MainPage(LauncherApp app) : base(app)` | `base(app)` is `Page`'s protected ctor (`Page.cs.md`) |
-| `AccountSwitcher` | `:64` | `public AccountSwitcher { get; private set; }` | accessor field, not `readonly` |
-| `DoAutoLoginIfApplicable()` | `:66` | `public void` | called by `LauncherApp.cs:256` |
-| `Draw()` | `:74-88` | `override` | §4 |
-| `ReloadNews()` | `:90` | `public void` (expression body) | forwarder to `NewsFrame.cs.md`, called by `LauncherApp.cs:59` |
-| `SwitchAccount(account, saveAsCurrent)` | `:92-107` | `private` | writes the six `LoginFrame.cs.md` accessors |
-| `AccountSwitcherOnAccountChanged(sender, e)` | `:109` | `private` | the `AccountChanged` handler bound at `:45` |
-| `ProcessLogin(LoginAction)` | `:114-172` | `private void` | §5 |
-| `Login(…, doingAutoLogin, action)` | `:174-217` | `public async Task<bool>` | §6 — public so a second caller could drive login directly |
-| `TryLoginToGame(…)` | `:219-257` | `private async Task<Launcher.LoginResult>` | §7 |
-| `TryProcessLoginResult(result, isSteam, action)` | `:259-536` | `private async Task<bool>` | §8 |
-| `StartGameAndAddon(result, isSteam, forceNoDalamud, noPlugins, noThird)` | `:538-815` | `public async Task<Process>` | §9 — returns `null!` on two paths (§9) |
-| `PersistAccount(…)` | `:817-843` | `private` | writes `App.Accounts`, `docs/XIVLauncher.Core/Accounts/AccountManager.cs.md` |
-| `HandleBootCheck()` | `:845-882` | `private async Task<bool>` | §10 |
-| `InstallGamePatch(loginResult)` | `:884-892` | `private Task<bool>` (non-async) | `Debug.Assert`s |
-| `TryHandlePatchAsync(repository, patches, sid)` | `:894-1013` | `private async Task<bool>` | §10 |
-| `PatcherOnFail(patch, context)` / `InstallerOnFail()` | `:1015` / `:1021` | `private void` | both end in `Environment.Exit(0)` |
-| `RepairGame(loginResult)` | `:1027-1135` | `private async Task<bool>` | §10 |
-| `Hide()` | `:1137` | `private` | `Program.HideWindow()` (`docs/XIVLauncher.Core/Program.cs.md`) |
-| `Reactivate()` | `:1142-1148` | `private` | clears `IsLoggingIn`, `App.State = Main`, `Program.ShowWindow()` |
+| `loginFrame`, `newsFrame`, `actionButtons` | `private readonly` | 39–41 | child components |
+| `IsLoggingIn` | `public bool { get; private set; }` | 43 | pipeline gate |
+| `AccountSwitcher` | `public AccountSwitcher { get; private set; }` | 45 | exposed so `LoginFrame` can open it (`LoginFrame.cs:117`) |
+| `MainPage(LauncherApp app)` | ctor | 47–105 | |
+| `DoAutoLoginIfApplicable()` | `public` | 108–114 | |
+| `ReloadNews()` | `public` | 116 | forwards to `NewsFrame` |
+| `SwitchAccount(XivAccount, bool)` | `private` | 118–133 | |
+| `AccountSwitcherOnAccountChanged` | `private` | 135–138 | |
+| `ProcessLogin(LoginAction)` | `private` | 140–195 | |
+| `Login(username, password, isOtp, isSteam, isFreeTrial, doingAutoLogin, action)` | `public async Task<bool>` | 194–238 | |
+| `TryLoginToGame(...)` | `private async Task<Launcher.LoginResult>` | 239–271 | |
+| `TryProcessLoginResult(loginResult, isSteam, action)` | `private async Task<bool>` | 279–553 | |
+| `StartGameAndAddon(loginResult, isSteam, forceNoDalamud, noPlugins, noThird)` | `public async Task<Process>` | 554–837 | |
+| `PersistAccount(...)` | `private` | 838–864 | |
+| `HandleBootCheck()` | `private async Task<bool>` | 866–904 | |
+| `InstallGamePatch(loginResult)` | `private Task<bool>` | 905–914 | |
+| `TryHandlePatchAsync(repository, pendingPatches, sid)` | `private async Task<bool>` | 915–1021 | |
+| `PatcherOnFail(patch, context)` | `private` | 1022–1027 | |
+| `InstallerOnFail()` | `private` | 1028–1033 | |
+| `RepairGame(loginResult)` | `private async Task<bool>` | 1034–1142 | |
+| `Hide()` | `private` | 1143–1146 | `Program.HideWindow()` |
+| `Reactivate()` | `private` | 1148–1153 | `IsLoggingIn = false`, `State = Main`, `Program.ShowWindow()` |
 
-Usings (`:1-24`): `System.Diagnostics`, `System.Numerics`, `Hexa.NET.ImGui`, `Hexa.NET.SDL3`, `Serilog`, and the library namespaces `XIVLauncher.Common` (+ `.Addon`, `.Dalamud`, `.Game`, `.Game.Exceptions`, `.Game.Patch`, `.Game.Patch.Acquisition.Aria`, `.Game.Patch.PatchList`, `.PlatformAbstractions`, `.Unix`, `.Unix.Compatibility.Wine`, `.Util`, `.Windows`), `XIVLauncher.Core.Accounts`, `XIVLauncher.Core.Resources.Localization`, `XIVLauncher.Core.Support`. It is the most import-heavy file in `Components/` — a sign that the *logic* half pulls the whole launcher vocabulary into the same class that draws the UI. Keep new logic in this class only if that vocabulary is already imported; new UI belongs in the MainPage children (§3).
+`LoginAction` (7 members) lives in `Components/MainPage/LoginAction.cs.md`.
 
-## 3. Construction (`:36-62`) — what is wired and why
+## 3. Constructor
 
-```
-:39 loginFrame     = new LoginFrame(this);            // takes the OWNING MainPage
-:40 newsFrame      = new NewsFrame(app);              // takes the LauncherApp  ← asymmetry, see NewsFrame.cs.md §3
-:42 actionButtons  = new ActionButtons();             // takes nothing
-:44 AccountSwitcher = new AccountSwitcher(app.Accounts);
-:45 AccountSwitcher.AccountChanged  += this.AccountSwitcherOnAccountChanged;
-:47 loginFrame.OnLogin              += this.ProcessLogin;
-:48/:49/:50 actionButtons.{Settings,Status,Account}  += handlers
-:52 this.Padding = new Vector2(32f, 32f);             // the ONLY Padding writer in the package
-:54/:56 savedAccount restore
-:58/:59 PlatformHelpers.IsElevated() warning
-:61 Troubleshooting.LogTroubleshooting();
-```
+Order matters, because some steps touch the UI thread during app startup (`Program.cs.md` §4 explains the GTK synchronization-context hazard):
 
-- **`IsElevated` warning (`:58-59`)** runs at construction, i.e. at `LauncherApp.cs:134` (inside `LauncherApp`'s ctor, before the first frame) — a blocking-free `App.ShowMessage` on a window that does not exist yet; see `docs/XIVLauncher.Core/LauncherApp.cs.md` §show-message for how messages route. Keep this call in the ctor (it reports "you are root / elevated", which must be reported before any game-side work).
-- **`Troubleshooting.LogTroubleshooting()` is called twice**, here (`:61`) and again at `MainPage.cs:561` inside `StartGameAndAddon`: once for "app started" and once for "about to launch the game". It is not redundant; the second call captures the post-settings, pre-launch environment (see `docs/XIVLauncher.Core/Support/Troubleshooting.cs.md`).
-- **`Padding` (`:52`)** is the `init`-only accessor of `Page.cs.md` §5 — legal *only* in the ctor body, and its sole consumer is `LauncherApp.Draw()`'s `PushStyleVar(WindowPadding, this.CurrentPage.Padding ?? …)`. Do not move this assignment into `Draw()`; it will not compile against `init`, and `LauncherApp.cs.md` §8 reads it every frame.
-- **The saved-account restore (`:54-56`)** pre-fills the login form from `App.Accounts.CurrentAccount` before the first frame — it calls `SwitchAccount(…, saveAsCurrent: false)`, i.e. restore *without* re-recording `CurrentAccount` (contrast `:109`'s handler, which passes `true`). That boolean is the class's only "did the user choose this?" distinction; keep it that way when touching `docs/XIVLauncher.Core/Accounts/AccountManager.cs.md` §`CurrentAccount`.
-- **`AccountSwitcher` is not `readonly`** (`:64` accessor with `private set;`) while the other three children are `private readonly` fields — today nothing reassigns it, but the accessor makes it *readable* publicly (`MainPage/LoginFrame.cs.md` reaches it through `mainPage.AccountSwitcher.Open()`). If a new child needs public access, follow the accessor form, not a public field.
-- **Handler placement convention:** event handlers live in this ctor (`:45`, `:47`, `:48-:50`) rather than in the children — `ActionButtons.cs.md` §6 and `MainPage/AccountSwitcher.cs.md` §5 both rely on it; `LoginFrame.cs.md` is the exception that handles its own popup items inline (§5 of that spec).
-
-## 4. `Draw()` (`:74-88`)
-
-```csharp
-public override void Draw()
-{
-    base.Draw();                                              // :76 — Page/Component child loop FIRST
-    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
-    this.newsFrame.Draw();                                    // :79
-    ImGui.SameLine();                                         // :81
-    this.loginFrame.Draw();                                   // :83
-    this.AccountSwitcher.Draw();                              // :84
-    this.actionButtons.Draw();                                // :86
-    ImGui.PopStyleVar();
-}
-```
-
-- **`base.Draw()` is first, not last** — unlike every leaf/page override in this package (see `Component.cs.md` §Draw chain: `Button`/`Checkbox`/`Input` skip it, most pages call it last). Here it matters: `Page` inherits `Component.Draw` (`Page.cs.md`/`Component.cs.md` §children), so the (empty-by-default) `Children` loop paints *before* the frames. Keep the first position: `AccountSwitcher.cs.md` §3's popup anchor rule and `NewsFrame.cs.md` §7's width arithmetic both depend on child-window creation happening in a predictable order within a frame.
-- **One `PushStyleVar(WindowPadding, 32)` wraps all four children.** `LoginFrame.cs.md` §6 and `NewsFrame.cs.md` §7 push their *own* padding inside their child windows; this push applies to the shared content window (`LauncherApp.cs.md` §8). The value `32` duplicates `:52`'s `Padding` (`Page.cs.md` §5) — two places encode the same inset, which is why the file says the same number twice; changing one without the other produces a doubled/again-default inset. Treat `{`:52`, `:78`}` as a pair to edit together.
-- **Order is load-bearing.** `newsFrame` before `loginFrame` and the `ImGui.SameLine()` between them define the two-column layout both `NewsFrame.cs.md` §7 (fractional width) and `LoginFrame.cs.md` §6 (`-1` = "rest of the width") describe. `AccountSwitcher.Draw()` immediately after `loginFrame.Draw()` is the frame-ordering contract recorded in `MainPage/AccountSwitcher.cs.md` §3 (`doOpen` consumed same frame) and `LoginFrame.cs.md` §7 (the friends icon calls `Open()` during `loginFrame.Draw()`).
-- **`actionButtons.Draw()` last, after `AccountSwitcher`** puts the icon strip in the same row flow (no `SameLine`/`NewLine` between them), i.e. `ActionButtons.cs.md` §4's row continues on the login frame's row; `AccountSwitcher.Draw()` adds no visible items outside its popup, which is what keeps that row flush.
-
-## 5. `ProcessLogin` (`:114`) and the re-entry gate
-
-```
-:119 this.App.StartLoading(Strings.LoggingIn, canDisableAutoLogin: true);
-     Task.Run(async () => {
-:126     if (GameHelpers.CheckIsGameOpen() && action == LoginAction.Repair) → ShowMessageBlocking + Reactivate() + return
-:137     if (Repository.Ffxiv.GetVer(GamePath) == Constants.BASE_GAME_VERSION && IsUidCacheEnabled == true) → ShowMessageBlocking + Reactivate() + return
-:145     IsLoggingIn = true;
-:147     App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
-:149     result = await Login(username, password, isOtp, isSteam, isFreeTrial, /*doingAutoLogin*/ false, action)
-         if (result) push SDL Quit event (:153-:157) else Log + Reactivate()
-     }).ContinueWith(t => { if (!App.HandleContinuationBlocking(t)) this.Reactivate(); });   // :169/:170
-```
-
-- **The gate is checked at `:115-117` (`if (IsLoggingIn) return;`) but set at `:145`, inside the task.** So it prevents *cross-frame* re-entry (a second click while a login runs) but cannot prevent two submissions that both pass the guard before the task reaches `:145`. `LoginFrame.cs.md` §4's three triggers plus `DoAutoLoginIfApplicable` (`:66`) are the entry points; do not assume the guard is a mutex.
-- **`StartLoading` (`:119`) runs synchronously before the task starts**, and `canDisableAutoLogin: true` is what makes `LoadingPage.cs.md` draw its "disable auto-login" button during login (`LoadingPage.cs.md` §5's `isDrawDisableAutoLogin`). The other loading calls in this file use different flags (§10) — the flags are per-call, not per-page state.
-- **The body is fire-and-forget:** `Task.Run(...).ContinueWith(...)` — `ProcessLogin` returns `void`, so `MainPage/LoginFrame.cs.md`'s click handlers all return immediately and the whole login runs off the draw loop. The only failure reporting is `ContinueWith` → `App.HandleContinuationBlocking(t)` (`LauncherApp.cs:203`, `docs/XIVLauncher.Core/LauncherApp.cs.md`: returns `false` on `IsFaulted`/`IsCanceled` after showing a blocking message), and `Reactivate()` when it returns `false`. Note `Reactivate()` is also reached with `this.` at `:141`/`:165`/`:170` and bare at `:130` — cosmetic, but keep both spellings if editing nearby lines with an exact-match tool.
-- **`Login() != true` means "not an error"** — the `else` branch at `:164-166` logs `"Reactivated after Login() != true"` and reactivates the window, because `GameNoLaunch` deliberately returns `false` (`LoginAction.cs.md` §2 row for `GameNoLaunch`, produced at `:333`). Do not treat `false` as failure when changing `Login`'s return contract.
-- **The SDL Quit push (`:153-157`) on success** (`SDLEvent { Type = (int)SDLEventType.Quit }`, `SDL.PushEvent(ref sdlEvent)`) is the *self*-termination mechanism: `docs/XIVLauncher.Core/ImGuiBindings.cs.md` §`ProcessExit` (`ImGuiBindings.cs:143-156`) polls SDL events and returns `true` on `Quit`, which ends `Program.cs`'s main loop (`:326-336`) and runs `SDL.Quit()` (`:340`) plus the `Patcher.StartCancellation()` path (`Program.cs:343-360`). `Login() == true` implies the game already exited (the launch path waits, §9), so "the game is gone → close the launcher" is exactly this block. Keep the `ref` argument (the binding writes into the struct) and keep the `Log.Error` on push failure — a failed push leaves the launcher window alive after the game exits.
-- **`MainPage.cs:147` writes persisted config from inside the login task** (`App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;`). This is the counterpart of `LoadingPage.cs.md` §3's `App.Settings.IsAutologin = false` and of `Page.cs.md`-adjacent `SwitchAccount`'s `MainPage.cs:98` read — `LoginFrame.cs.md` §8 records the two-truths invariant across those three sites; any change here must be reflected in that spec.
-- **The commented-out guard at `:121-122`** (`// if (Program.UsesFallbackSteamAppId && this.loginFrame.IsSteam) throw …`) is a *deliberate* removal: the fallback Steam app-id path exists (`docs/XIVLauncher.Core/Program.cs.md`), so this line documents a decision, not dead code to delete. Keep it commented or restore it intentionally, per `FtsPage.cs.md` §error-mode discussion.
-
-## 6. `Login` (`:174-217`) — the pipeline order is the contract
-
-| Step | Anchor | What | On failure |
-| --- | --- | --- | --- |
-| `Fake` action | `:176-:188` | builds a throwaway `WindowsGameRunner(null, false)` / `UnixGameRunner(Program.CompatibilityTools, null, false)` and calls `App.Launcher.LaunchGame(…, "0", 1, 2, false, "", GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware)`, then `return false` | debug-only (produced by `LoginFrame.cs.md` §5's `LauncherApp.IsDebug` menu item) — the `FIXME` comment about the `null` `DalamudLauncher` is the file's own note, keep it |
-| Boot check | `:190` `HandleBootCheck()` | boot patches (§10) | `return false` at `:194` |
-| UID-cache reset | `:198` `Program.ResetUIDCache()` | only when `isOtp && HasValidCache(username) && IsUidCacheEnabled == false` | — |
-| OTP | `:202-:206` | `App.AskForOtp()` then `otp = await App.WaitForOtpAsync()` | `otp == null → return false` at `:210-:212` (user cancelled) |
-| (state) | `:206` `App.State = LauncherApp.LauncherState.Loading` | "make sure we are loading again" after OTP returns | — |
-| Persist | `:215` `PersistAccount(…)` | before the login attempt | — |
-| Login | `:218` `TryLoginToGame(username, password, otp, isSteam, isFreeTrial, action)` | discards `doingAutoLogin` — **the parameter is never used in the body** | — |
-| Process | `:219`… | `TryProcessLoginResult(loginResult, isSteam, action)` | §8 |
-
-- **The OTP await happens on the *task*, not on the draw loop**: `App.AskForOtp()` (`LauncherApp.cs:220`) sets `LauncherState.OtpEntry` (`OtpEntryPage.cs.md`) and `await App.WaitForOtpAsync()` (`LauncherApp.cs:226`, which also calls `StopOtpListener()` unconditionally) blocks the login task until the page's `TaskCompletionSource` yields. That is the `OtpEntryPage.cs.md` §"TaskCompletionSource completion protocol" contract; the three outcomes (6-digit string, `null`, hang) map to this file's `otp == null → return false` and to a permanently parked login task in the hang case.
-- **`doingAutoLogin` is an unused parameter** (`:174` declares it, nothing reads it; the only call passes `false` at `:149`). It is the placeholder for "auto-login needs different UX during OTP", i.e. the parameter is the *intent*, `MainPage.cs:149` is the site to change. Do not silently drop it from the signature: `Login` is `public`, so external callers (and future auto-login code) name arguments positionally.
-- **`Program.ResetUIDCache()` (`:198`) is gated by `IsUidCacheEnabled == false`** — note the `== false` (not `!…`): a `null`/unset flag means "enabled", matching `MainPage.cs:137`'s `IsUidCacheEnabled == true` test and `LauncherApp.cs.md` §uid-cache defaults. Keep the three-way comparison, since `App.Settings` flags are nullable. The cache it resets is the lib's (`LauncherApp.cs:115`/`:130`, `CommonUniqueIdCache`); the fork's same-named `Configuration/UniqueIdCache.cs` stub is dead — see `docs/XIVLauncher.Core/Configuration/UniqueIdCache.cs.md` §1/§5 for why the two must not be conflated.
-- **`PersistAccount` runs *before* `TryLoginToGame`** (`:215` before `:218`): a failed login still stores the account/password it tried. That ordering is deliberate (it is what makes "remember the account you couldn't log into" work) and is the reason `docs/XIVLauncher.Core/Accounts/AccountManager.cs.md` §`AddAccount`/`UpdatePassword` must stay idempotent for the retry case.
-
-## 7. `TryLoginToGame` (`:219-257`)
-
-- **The `#if !DEBUG` gate block (`:221-:238`) handles only `gateStatus == null`** (`:236` "Login servers could not be reached or maintenance is in progress…"), i.e. a `gateStatus == false` (maintenance) *falls through and logs in*. Compare §8's second gate block (`:338-:362`), which **does** handle `false` (`:357` "Maintenance is in progress."). The asymmetry is real: pre-login gate unknown → abort; gate explicitly down → abort only later. Preserve both blocks when editing, and do not "unify" them by adding a `false` case to the first without checking that the second still runs (`:259` `TryProcessLoginResult` runs only after a successful `Login`, so the two gates cover different phases: the first blocks an unreachable server *before* spending an OTP round-trip).
-- **The repair call differs only by two `Login` arguments** (`:247`): `Login(username, password, otp, isSteam, /*isPatchBans*/ false, gamePath, /*repair*/ true, isFreeTrial, language)` vs the normal `Login(…, enableUidCache, gamePath, false, …)`. The 6th/7th booleans are "use UID cache" and "this is a repair" in the library's signature (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Launcher.cs`); keep them paired if the signature changes.
-- **`isFreeTrial` is threaded through but not `forceNoDalamud`**: the "no Dalamud" variants affect §9 only.
-- **`catch { Log.Error; throw; }`** (`:253-:256`): rethrows so §5's `ContinueWith` reports it. Do not swallow here — swallowing yields a silently-stuck launcher (the `IsFaulted` → `Reactivate` path is what returns the user to the Main page).
-- **`#if !DEBUG` means release-only**: debug builds skip the gate entirely, which is why the string is an English literal and not a `Strings` key (`LoginAction.cs.md` §2 records the literal-string convention for debug text). Same for §8's block.
-
-## 8. `TryProcessLoginResult` (`:259-536`) — result mapping and the exception-wrap trick
-
-- **The `preErrorMsg`/`postErrorMsg` pair (`:261-:262`)** wraps a localized message into the exact shape `OauthLoginException` expects: `"window.external.user(\"login=auth,ng,err,"` + message + `"\");"`. The library parses that JS-ish form (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Exceptions/`), so the wrapping is a *protocol*, not cosmetics: three sites use it (`:270` `NoService`, `:276` `NoTerms`, `:300` `NeedsPatchBoot` with a non-localized `"Boot conflict, need reinstall"`, `:344` repair-state mismatch). Keep all sites wrapped, or the exception renders as a bare message and loses the "login error" presentation.
-- **`LoginState.NeedsPatchBoot` here is a fatal inconsistency** (`:293-:300`, and the file's long comment above it): boot patches were already applied by `HandleBootCheck` (§6, `:190`), so a second boot-patch request means out-of-band modification, and the only exit is the throw. Keep the comment if the code moves.
-- **Repair path (`:321-:340`)**: requires `NeedsPatchGame` (else throws the wrapped `OauthLoginException` at `:344`), calls `RepairGame(loginResult)` (§10), and on success **mutates `loginResult.State = LoginState.Ok`** (`:335`) so the shared code below continues to launch. Same mutation appears after the game-patch branch (`:410`). The mutation, not a new flag, is what threads "we are now good to launch" through `while (true)`; keep it that way or change both sites.
-- **`GameNoLaunch` (`:331`)** shows `Strings.UpdateCheckFinished` and `return false` *after* the patches have run — i.e. "patched, don't launch", and the `false` is handled as a normal return (§5).
-- **The second `#if !DEBUG` gate switch (`:338-:362`)** runs *after* patching and before launching, with both `null` (`:354`) and `false` (`:357`) aborting.
-- **`Debug.Assert(loginResult.State == LoginState.Ok);` (`:361`) then `while (true)` (`:364`)**: the loop exists to host a retry menu (the huge commented-out `/* … */` block at `:381-:534` is the Windows variant's multi-exception handler with Yes/No/Cancel semantics and the "kill then retry" branch — `:420`'s `LaunchGameKillThenRetry` string is inside that comment). The live `catch` (`:378-:380`) logs and **rethrows**, so the loop cannot currently iterate; the `NOTE(goat)` line at `:381` ("This HAS to handle all possible exceptions from StartGameAndAddon!!!!!") is the file's own reminder that the loop is a placeholder for that commented block. Consequences: keep `while (true)` only if you also keep a non-`throw` path inside `catch`, otherwise the loop is dead-ish scaffolding that reviewers read as a TODO. Deleting the comment block is a decision to record in this spec, not one to take silently.
-- **`process.ExitCode != 0 && (App.Settings.TreatNonZeroExitCodeAsFailure ?? false)` (`:373`)** throws `InvalidOperationException("Game exited with non-zero exit code")` — i.e. by default a non-zero game exit code is **success** (`Login() == true` → SDL Quit push at §5). The `?? false` default is the documented behaviour; `SettingsPage/SettingsTabTroubleshooting.cs.md` (or `SettingsTabGame.cs.md`, whichever exposes it — see that spec's settings-entry table) is the user-facing lever.
-- **`using var process = await StartGameAndAddon(...)` (`:368`)** is a C# `using` declaration: the `Process` handle is disposed at the end of the loop body, so the launcher never leaves a dangling process handle even on the throw paths. Keep the `using` form if the loop is restructured — dropping it leaks the handle that `docs/XIVLauncher.Core/Program.cs.md`'s shutdown cannot see.
-- **`StartGameAndAddon(... , action == LoginAction.GameNoDalamud, action == LoginAction.GameNoPlugins, action == LoginAction.GameNoThirdparty)` (`:368`)** is where three enum values become three booleans. `LoginAction.cs.md` §2 is the cross-reference; keep the mapping positional-correct (`forceNoDalamud, noPlugins, noThird`, §9).
-
-## 9. `StartGameAndAddon` (`:538-815`) — launch, environment, and the wait
-
-| Region | Anchor | What / invariant |
+| Step | Line(s) | Behaviour |
 | --- | --- | --- |
-| Runner selection | `:545-:556` | `PlatformID.Win32NT` → `WindowsDalamudRunner(Program.DalamudUpdater.Runtime)` + `WindowsDalamudCompatibilityCheck`; `Unix` → `UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime)` + `UnixDalamudCompatibilityCheck`; `default: throw new NotImplementedException()` — the platform switch has **no third case**, so macOS/etc. aborts from inside the launch path |
-| Troubleshooting | `:561` | second `LogTroubleshooting()` call (§3) |
-| `DalamudLauncher` ctor | `:564-:571` | arguments map `App.Settings.DalamudLoadMethod ?? DllInject`, `GamePath`, `App.Storage.Root`, `logs` folder, `ClientLanguage ?? English`, `DalamudLoadDelay`, `false`, `noPlugins`, `noThird`, `Troubleshooting.GetTroubleshootingJson()` — the last is the crash-report channel, see `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Dalamud/DalamudLauncher.cs` |
-| Compat check | `:574-:583` | `dalamudCompatCheck.EnsureCompatibility()`, rethrown for the two named cases (`NoRedistsException`, `ArchitectureNotSupportedException`) |
-| Dalamud wait | `:585-:595` | only `if (App.Settings.DalamudEnabled ?? true) && !forceNoDalamud`: `App.StartLoading(Strings.WaitingForDanshimud…)` (`:587 StartLoading(Strings.WaitingForDalamud, Strings.PleaseBePatient)`) then `dalamudOk = dalamudLauncher.HoldForUpdate(GamePath) == DalamudInstallState.Ok` — the flag pair here is (§8's `forceNoDalamud`, `App.Settings.DalamudEnabled`), the value feeds the runner ctor below |
-| Env hacks | `:599-:643` | order is load-bearing: XL_PRELOAD→LD_PRELOAD (`:601-:608`) **before** the `FixLDP` strip (`:618`), whose comment at `:599` says "This check must be done before the FixLDP check so that it will still work"; then `FixLocale` (`:611`, `LC_ALL`/`LC_CTYPE` = `Program.CType`), `FixLDP` (`:618`, strips `gameoverlayrenderer.so` via `CoreEnvironmentSettings.GetCleanEnvironmentVariable`), `FixIM` (`:625`, `XMODIFIERS=@im=null`), `FixError127` (`:631`, `DOTNET_SYSTEM_GLOBALIZATION_USENLS=true`), `DontUseSystemTz` (`:639`, `TZ=""` on Unix only). Every flag is `== true` (three-way, nullable), and all of them are process-global `System.Environment` mutations — they persist for the rest of the launcher's life, not just the game |
-| `AdditionalArgs` | `:645-:673` | `%command%` split (Steam-Style): no `%command%` → leading `-` means game args, otherwise env; with `%command%` → left = env, right = args; env tokens need `=`, and a `KEY+=value` form appends to the existing value (`:668-:671`). This is the Steam-deck-style overlay syntax — `SettingsPage/SettingsTabGame.cs.md` (see that spec's `AdditionalArgs` row) is the UI side |
-| Wine validation | `:684-:696` | `WineStartupType.Custom` requires `WineBinaryPath` to exist *and* contain `wine64`; three `throw new InvalidOperationException` messages are user-facing prose (not `Strings` keys) — they surface through §5's `ContinueWith` (`LauncherApp.cs:203`), which is why they read like instructions |
-| Compat tool | `:703-:728` | `ManualResetEvent` + `Task.Run(async () => CompatibilityTools.EnsureTool(HttpClient, tempPath))` + `.ContinueWith` setting `isFailed`, then `App.StartLoading(Strings.PreparingForCompatTool, Strings.PleaseBePatient)` (`:720`) **after** starting the task, `signal.WaitOne()` (`:721`), `signal.Dispose()` (`:722`), `if (isFailed) return null!;` (`:725`), then `App.StartLoading(Strings.StartingGame, Strings.HaveFun)` (`:727`) |
-| Runner | `:680` / `:729` | `WindowsGameRunner(dalamudLauncher, dalamudOk)` / `UnixGameRunner(Program.CompatibilityTools, dalamudLauncher, dalamudOk)` — note the Unix runner also takes `CompatibilityTools` |
-| `UserPath` | `:734-:739` | appended to `gameArgs`; quoted only when `IsEncryptArgs ?? true` is *false* — the file's comment explains SE re-encodes spaces. `App.Settings.GameConfigPath!` unwrap, so the `null`-path case throws |
-| `LaunchGame` | `:747-:757` | `App.Launcher.LaunchGame(runner, loginResult.UniqueId, loginResult.OauthLogin.Region, loginResult.OauthLogin.MaxExpansion, isSteam, gameArgs, GamePath!, ClientLanguage ?? English, IsEncryptArgs ?? true, DpiAwareness ?? Unaware)` |
-| Window state | `:762` / `:766` | `!Program.IsSteamDeckHardware \|\| CoreEnvironmentSettings.IsSteamCompatTool` → `Hide()` (`Program.HideWindow()`, `docs/XIVLauncher.Core/Program.cs.md`; `Program.cs:326-330` then *pauses* the draw loop via `SDL.Delay(10); continue;` on `Minimized\|Hidden` flags); else `App.State = LauncherApp.LauncherState.SteamDeckPrompt` — the only writer of that state, see `SteamDeckPromptPage.cs.md`. This is **before** the process wait, so the launcher either stops drawing or shows the prompt page while the game runs |
-| Null handle | `:771-:774` | `launchedProcess == null` → log, `IsLoggingIn = false`, `return null!` — the second of the two `null!` returns (the first is `:725`) |
-| Addons | `:776-:791` | `AddonManager().RunAddons(launchedProcess.Id, App.Settings.Addons.Where(x => x.IsEnabled).Select(x => x.Addon).Cast<IAddon>())`; `catch (Exception) { IsLoggingIn = false; addonMgr.StopAddons(); throw; }` — `Addons ??= new List<AddonEntry>()` at `:779` first |
-| Wait | `:794` | `await Task.Run(() => launchedProcess!.WaitForExit())` — the launch path *blocks until the game exits*, which is what makes §5's SDL-Quit push mean "game gone" |
-| Cleanup | `:799-:812` | `if (addonMgr.IsRunning) addonMgr.StopAddons();` then `App.Steam?.Shutdown()` guarded by `App.Steam?.IsValid == true`, wrapped in `catch` that logs "Could not shut down Steam" (`:806`) |
-| Return | `:814` | `return launchedProcess!;` |
+| children | 50–53 | `new LoginFrame(this)`, `new NewsFrame(app)` (starts the news fetch + banner timer), `new ActionButtons()` |
+| account switcher | 55–56 | `new AccountSwitcher(app.Accounts)`, `AccountChanged += AccountSwitcherOnAccountChanged` |
+| login wiring | 58 | `loginFrame.OnLogin += ProcessLogin` |
+| action buttons | 59–61 | settings → `App.State = Settings`; status → `AppUtil.OpenBrowser("https://is.xivup.com/")`; account → `AppUtil.OpenBrowser("https://sqex.to/Msp")` (`AppUtil.cs.md`) |
+| padding | 63 | `new Padding(32, 32)` |
+| saved account | 65–67 | `App.Accounts.CurrentAccount` → `SwitchAccount(savedAccount, false)`, so the login frame is prefilled without touching `CurrentAccount` |
+| elevation warning | 69–70 | `PlatformHelpers.IsElevated()` → `App.ShowMessage(Strings.XLElevatedWarning, "XIVLauncher")` |
+| troubleshooting | 77 | `Task.Run(Troubleshooting.LogTroubleshooting)` — deliberately off the UI thread; HEAD generated the payload synchronously inside the constructor, and `IntegrityCheck.CompareIntegrityAsync().Result` blocks the GTK main loop when run there (`Support/Troubleshooting.cs.md`) |
+| layout | 84–105 | see §4 |
 
-**`StartGameAndAddon` returns `Task<Process>` but two paths return `null!`** (`:725`, `:773`), while `TryProcessLoginResult` immediately converts `process is null` into `throw new InvalidOperationException("Could not obtain Process Handle")` (`:370`). That is the file's convention: `null!` (assert-non-null type) to keep the signature honest-ish and let the *caller* decide the error presentation. Keep both sides if you change either.
+`Padding`, `Width`, `Content` are GTK widget writes ⇒ the ctor runs on the UI thread from `LauncherApp`'s construction inside `application.Initialized` (`Program.cs.md`).
 
-## 10. Patch and repair machinery (`:845-:1135`)
+## 4. Layout
 
-- **`HandleBootCheck` (`:845-:882`)** is the first thing `Login` does (§6): it nulls a non-existent `App.Settings.PatchPath` (`App.Settings.PatchPath is { Exists: false }` — a C# 13 pattern on the accessor, `Program.cs.md` §patch-path), defaults it to `{Roaming}/patches`, calls `App.Launcher.CheckBootVersion(GamePath!)`, and with zero patches returns `true` immediately; otherwise it routes through `TryHandlePatchAsync(Repository.Boot, …, "")` (`:872`). A failed version check shows `Strings.CannotGetBootVerError` (`:875`) and returns `false`; the outer `catch` (`:876-:880`) shows `ShowExceptionBlocking(ex, "PatchBoot")` **then `Environment.Exit(0)` (`:878`)** — an exit from inside the login pipeline, i.e. the launcher kills itself rather than continue with an unusable patch state. That is one of four `Environment.Exit(0)` sites here: `:878`, `:903`, `:1018`, `:1024` (plus `FtsPage.cs.md`'s dead one). They bypass `Reactivate()` and the SDL path entirely.
-- **`InstallGamePatch` (`:884`)** is the non-async `Task<bool>` wrapper asserting the caller's preconditions (`loginResult.State == NeedsPatchGame`, `PendingPatches != null`) before delegating — i.e. the assertions document the `TryProcessLoginResult` contract (§8).
-- **`TryHandlePatchAsync` (`:894-:1013`)**: the `#if WIN32` mutex block (`:896-:905`, `"XivLauncherIsPatching"`) is **Windows-only** and the file's own `BUG(goat)` comment (`:894-:895`) says the mutex "doesn't seem to disappear on Linux, .NET issue", so on Unix there is no double-patch guard at all — the guard is `GameHelpers.CheckIsGameOpen()` (`:908`), which is *not* equivalent. Keep `#if WIN32` when editing, and keep `:902-:903`'s message-with-`Environment.Exit(0)` shape (its `return false;` after it is documented as unreachable in the source's own comment).
-- **Patch progress is drawn through `LoadingPage.cs.md`'s fields** (`:951`/`:952`/`:955` inside the local `UpdatePatchStatus` function, `:941-:965`): a `new Thread(UpdatePatchStatus)` + `Thread.Sleep(30)` loop writing `App.LoadingPage.Line2/Line3/Progress`, cancelled by a `CancellationTokenSource` in the `finally` of the `PatchAsync` try (`:966 token.Cancel(); statusThread.Join(1000)`). `LoadingPage.cs.md` §5 and `LoadingPage/DalamudOverlayInfoProxy.cs.md` §4 both point here as an existing `Progress` writer — the pattern is "a thread writes the page's fields", and the `Thread.Sleep(30)` + `Join(1000)` pair is what bounds the lag. The same pattern recurs in `RepairGame` with `Timer` instead of `Thread` (§10 next bullet).
-- **`Program.Patcher = new PatchManager(acquisition, PatchSpeedLimit, repository, pendingPatches, GamePath, PatchPath, installer, App.Launcher, sid)` (`:917`)** assigns the process-wide handle `docs/XIVLauncher.Core/Program.cs.md` uses for its shutdown `Patcher.StartCancellation()` — so `Program.Patcher` must stay non-null across the patch run; `using var installer`/`using var acquisition` (`:912-:913`, `AriaPatchAcquisition` logging to `{Storage}/logs/aria2.log`) dispose the downloader with the method scope.
-- **`finally { App.State = LauncherApp.LauncherState.Main; }` (`:1009`)** — the page comes back to Main whether the patch succeeded, threw `PatchInstallerException`, `NotEnoughSpaceException` (three `SpaceKind` cases, `:973-:1000` with `NotEnoughSpacePatchesError`/`AllPatchesError`/`GameError`), or hit the generic `catch` (`:1005 ShowExceptionBlocking`). Keep it in `finally`, not on the success path.
-- **`RepairGame` (`:1027-:1135`)**: `#if WIN32` mutex again (`:1029-:1038`), `using var verify = new PatchVerifier(Program.HttpClient, Program.Config.GamePath!, Program.Config.PatchPath!, loginResult, 100ms, MaxExpansion, false)` (`:1049`), a `doVerify` loop (`:1052`) that starts the verifier under a `Timer` callback writing `LoadingPage.Line2/Line3/Progress` (`:1057-:1082`, `timer.Change(0, 250)`), waits (`:1084 verify.WaitForCompletion()`), disposes the timer (`:1085`), and **`this.App.StopLoading()` (`:1086`)** — `StopLoading` sets `App.State = Main` (`LauncherApp.cs:246`), i.e. the repair loop returns the page per iteration; then the `verify.State` switch maps `Done` (`:1090-:1110`, summary text built from `verify.NumBrokenFiles` and `verify.MovedFiles`/`MovedFileToDir` via a `switch` expression + `ShowMessageBlocking`), `Error` (`:1112`, `NoVersionReferenceException` special-cased with `Strings.RepairGameVerUnsupportedError`), `Cancelled` (`:1127-:1128` clearing both `doLogin` and `doVerify`). It returns **`doLogin`** (`:1134`), and `TryProcessLoginResult` treats `false` as "stop, don't launch" (`:330-:332`). The `MovedFiles` reporting exists to tell the user where quarantined files went, and the "TODO: show more progress info here" and "TODO: ask the user if they want to login or rerun after repair" markers are the file's own unfinished UX.
-- **`PatcherOnFail` (`:1015`) and `InstallerOnFail` (`:1021`)** are bound at `:921`/`:922` (`Program.Patcher.OnFail += PatcherOnFail`, `installer.OnFail += this.InstallerOnFail`) and both end in `Environment.Exit(0)` — the file's rule is "an async failure callback cannot resume the pipeline, so exit". Keep that shape for new failure handlers; the alternative (`Reactivate()`) leaves the launcher running and is used only where the user *can* retry (§5, §11).
-
-## 11. Exit and recovery
-
-```csharp
-private void Hide()      { Program.HideWindow(); }                                   // :1137
-private void Reactivate(){ IsLoggingIn = false; this.App.State = LauncherApp.LauncherState.Main; Program.ShowWindow(); }   // :1142
+```
+this.Content = TableLayout(1, 2)            // 1 column, 2 rows, Spacing (0, 16)
+  row 0: topRow (TableLayout 2,1, Spacing (16,0))   xscale: true, yscale: false
+         column 0: loginFrame  (xscale false, Width = 400 at line 94)
+         column 1: newsFrame    (xscale: true)
+  row 1: actionButtons (xscale: false, yscale: true)   Rows[1].ScaleHeight = true (line 101)
 ```
 
-- **`Hide()`/`ShowWindow()` are SDL window operations** (`docs/XIVLauncher.Core/Program.cs.md` §`ShowWindow`/`HideWindow`, `Program.cs:374`/`:382`, and the `Minimized|Hidden` guard in the main loop at `Program.cs:326`) — "hidden" is not "closed": the frame loop keeps spinning with `SDL.Delay(10)`, which is what keeps the launcher quiet while the game runs (§9, `:762`).
-- **`Reactivate()` is the only recovery path** and is reached from `:130`, `:141`, `:165`, `:170` (all inside `ProcessLogin`'s task) and from `Hide()`'s counterpart on the deck branch (`SteamDeckPromptPage.cs.md` — that page never calls back, so recovery there goes through `LauncherApp.cs.md` §`State`). It clears `IsLoggingIn` (the gate, §5) **and** the page, so a user can retry. Keep both statements: clearing the gate without the page leaves a live-but-hidden window; clearing the page without the gate re-enters `ProcessLogin` and immediately returns at `:115`.
-- **Three different "back to Main" mechanisms coexist here**: `Reactivate()` (page + gate + SDL show), `App.StopLoading()` (`:1086`, page only, via `LauncherApp.cs:246`), and `finally { App.State = Main; }` (`:1009`, page only). Pick by whether the gate must be cleared — patch/repair paths deliberately leave `IsLoggingIn` set so a second login cannot start behind them.
+Eto 2.13 scales columns/rows with boolean flags rather than proportions (`LauncherForm.cs.md` on the fixed 1280×800 window), so the split is expressed as: login frame with an explicit `Width = 400` in an unscaled column, news column scaled to take the remaining width (`NewsFrame.cs.md` §3 adds explicit child widths for the same reason).
 
-## 12. Invariants and extension points
+`MainPage.cs:101` sets `Rows[1].ScaleHeight = true`, so the button row grows vertically; the login/news row keeps its natural height.
 
-- **Two halves in one class** is the file's structural risk: adding UI to this class (rather than to the MainPage children) drags library vocabulary into a `Page` and breaks the composition recorded in §3/§4. Adding *logic* to this class is the intended place (there is no separate "launcher core" component here).
-- **`Login` and `StartGameAndAddon` are `public`** despite having no external callers in `src/` (only `LauncherApp.cs.md` reaches this class through `DoAutoLoginIfApplicable`, `ReloadNews`, `OnShow`, `Draw`). Treat the visibility as the extension hook for a future "headless launch" path; do not widen `ProcessLogin`'s visibility, which is the click-side entry and is already reachable through `loginFrame.OnLogin` (`MainPage/LoginFrame.cs.md` §5).
-- **Every `App.Settings.*` read here is nullable and most use `== true` / `?? false` / `GetValueOrDefault(true)`** inconsistently: `FixLocale == true`, `DontUseSystemTz == true`, `IsUidCacheEnabled == true`, `IsEncryptArgs.GetValueOrDefault(true)`, `TreatNonZeroExitCodeAsFailure ?? false`, `DalamudEnabled.GetValueOrDefault(true)` (`MainPage.cs:583`). The defaults differ per flag (some default *on*), and `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` §5 (13 never-defaulted members) plus `docs/XIVLauncher.Core/Program.cs.md` §8 are the source of truth. Do not "normalize" the three-way tests: a flag that defaults to true must use `!= false`, not `== true`. Cross-reference `SettingsPage/Tabs/SettingsTabGame.cs.md` and `SettingsTabTroubleshooting.cs.md` for the user-facing side of these flags.
-- **`Environment.Exit(0)` inside the pipeline (`:878`, `:903`, `:1018`, `:1024`) skips `Program.cs`'s shutdown tail only partially**: `Program.cs:343-360` still runs `Patcher.StartCancellation()` when `Patcher is not null`, but the ImGui frame loop's `guiBindings.Dispose()` (`Program.cs:335`) is skipped because `Environment.Exit` never returns. Keep the exits only where the source already has them; every other error path in this file uses `throw` → §5's `ContinueWith` or `ShowMessageBlocking` + `Reactivate()`.
-- **`#if` regions** in this file are `{!DEBUG}` (twice: `:221`, `:338`) and `{WIN32}` (twice: `:896`, `:1029`) plus `{FLATPAK}` (`FtsPage.cs.md` §"OpenFtsIfNeeded" is reached from `LauncherApp.cs:254`, not here). Any new build-gated behaviour should follow the same placement rule (the *reason* is documented in the file's own comments — e.g. the mutex's `BUG(goat)` line), and the region contents must stay compileable in the other configuration because CI builds both.
-- **`while (true)` at `:364`** has exactly one `return` and one `throw` in its live body, so today it never iterates; if the retry-menu block (`:381-:534`) is restored, the `continue`/`return false`/`Cancel`-kill branches it describes must be re-implemented against this file's `Process`-based flow, not the Windows variant's message-box API.
+## 5. `ProcessLogin(LoginAction action)`
 
-## 13. Referenced / referenced-by
+Lines 140–195 — the entry point from `LoginFrame` (`LoginFrame.cs.md` §6, `LoginFrame.cs:58`):
 
-Constructed by: `LauncherApp.cs:134`. Activated by: `LauncherApp.cs:71` (`OnShow`), `LauncherApp.cs:256` (`DoAutoLoginIfApplicable`), `LauncherApp.cs:59` (`ReloadNews`), `LauncherApp.cs.md` §`CurrentPage`/`LauncherState.Main`.
-Owns/creates: `MainPage/LoginFrame.cs.md` (`:39`), `MainPage/NewsFrame.cs.md` (`:40`), `MainPage/ActionButtons.cs.md` (`:42`), `MainPage/AccountSwitcher.cs.md` (`:44`); draws them in §4; uses `LoginAction.cs.md` values at `:71`, `:126`, `:174`, `:176`, `:247`, `:292`, `:331`, `:368`.
-Reads/writes: `Page.cs.md` (`Padding`, `App`, protected ctor), `Component.cs.md` (`Draw` chain, `Children`), `LoadingPage.cs.md` (via `App.StartLoading`/`StopLoading` and direct `Line2/Line3/Progress` writes at `:951-:955`, `:1063-:1077`), `OtpEntryPage.cs.md` (via `App.AskForOtp`/`WaitForOtpAsync`), `SteamDeckPromptPage.cs.md` (the only `SteamDeckPrompt` state writer, `:766`), `docs/XIVLauncher.Core/LauncherApp.cs.md` (`Settings` state change at `:48`, `HandleContinuationBlocking`, `ShowMessageBlocking`/`ShowExceptionBlocking`), `docs/XIVLauncher.Core/Program.cs.md` (`Patcher`, `HttpClient`, `CompatibilityTools`, `DotnetRuntime`, `Secrets`, `CType`, `IsSteamDeckHardware`, `ResetUIDCache`, `ShowWindow`/`HideWindow`), `docs/XIVLauncher.Core/AppUtil.cs.md` (`OpenBrowser`), `docs/XIVLauncher.Core/CoreEnvironmentSettings.cs.md` (`IsSteamCompatTool`, `GetCleanEnvironmentVariable`), `docs/XIVLauncher.Core/Accounts/` (`XivAccount`, `AccountManager`), `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` (flag defaults), `docs/XIVLauncher.Core/Support/Troubleshooting.cs.md`, `docs/XIVLauncher.Core/ImGuiHelpers.cs.md`, `docs/XIVLauncher.Core/FontAwesomeIcon.cs.md` (through the children), `src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs`.
-Library (no specs here; cite source paths): `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Launcher.cs` (`Login`, `CheckBootVersion`, `GetGateStatus`), `Game/Patch/{PatchManager,PatchInstaller,PatchVerifier,NotEnoughSpaceException}.cs`, `Game/Patch/PatchList`, `Game/Headlines.cs`, `Game/GateStatus.cs`, `Game/Exceptions/OauthLoginException.cs`, `Addon/{AddonManager,IAddon}.cs`, `Dalamud/{DalamudLauncher,DalamudUpdater,DalamudRunnerException}.cs`, `PlatformAbstractions/{IDalamudCompatibilityCheck}.cs`, `Windows/{WindowsGameRunner,WindowsDalamudRunner,WindowsDalamudCompatibilityCheck}.cs`, `Unix/{UnixGameRunner,UnixDalamudRunner,UnixDalamudCompatibilityCheck}.cs`, `Unix/Compatibility`, `Http/{HttpServer,OtpListener}.cs`.
-Related specs (behaviour mirrors): `FtsPage.cs.md` (startup gate), `LoadingPage/DalamudOverlayInfoProxy.cs.md` (the unwritten Dalamud-progress bridge, sibling of §10's progress writers), `LoginAction.cs.md` (the action vocabulary), `MainPage/LoginFrame.cs.md` §8 (the auto-login two-truths invariant).
+1. Gate: `if (this.IsLoggingIn) return;` (lines 142–144)
+2. `App.StartLoading(Strings.LoggingIn, canDisableAutoLogin: true)` (line 145) — switches to `LoadingPage` (`Components/LoadingPage/LoadingPage.cs.md`); `canCancel` keeps the default `false`, so no cancel button appears.
+3. `Task.Run(async () => ...)` (line 152):
+   - `GameHelpers.CheckIsGameOpen() && action == Repair` → `App.ShowMessageBlocking(Strings.RepairOfficialLauncherOpenError, Strings.XIVLauncherError)` then `this.Reactivate()` and return (lines 154–160)
+   - `Repository.Ffxiv.GetVer(GamePath) == Constants.BASE_GAME_VERSION && IsUidCacheEnabled == true` → `App.ShowMessageBlocking(Strings.ReinstallUIDCacheError, ...)` + `Reactivate()` + return (lines 162–171)
+   - `this.IsLoggingIn = true` (line 172)
+   - `App.Settings.IsAutologin = this.loginFrame.IsAutoLogin` (line 174)
+   - `Login(loginFrame.Username, loginFrame.Password, loginFrame.IsOtp, loginFrame.IsSteam, loginFrame.IsFreeTrial, false, action)` (line 176)
+   - `result == true` → `Ui.Post(() => Application.Instance.Quit())` (lines 178–183): HEAD pushed an SDL quit event, ending the render loop and exiting the app.
+   - `result == false` → `Log.Verbose("Reactivated after Login() != true")` + `Reactivate()` (lines 184–188)
+4. `.ContinueWith(t => { if (!App.HandleContinuationBlocking(t)) this.Reactivate(); })` (lines 191–194) — `LauncherApp.HandleContinuationBlocking` handles faulted/cancelled continuations, showing modals (`LauncherApp.cs.md` §6).
+
+`ProcessLogin` is private; `RunLoginTest()` wrappers used during smoke-testing have been removed (`LauncherApp.cs.md`).
+
+## 6. `Login(...)` (public)
+
+Lines 194–238:
+
+| Step | Line(s) |
+| --- | --- |
+| `LoginAction.Fake` | 196–208 — builds `WindowsGameRunner(null, false)` (line 201) or `UnixGameRunner(Program.CompatibilityTools, null, false)` (line 203), calls `App.Launcher.LaunchGame(gameRunner, "0", 1, 2, false, "", GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware)` (line 205), returns `false` (line 207) |
+| `HandleBootCheck()` | 210, gate 212–213 |
+| UID cache reset | 217–218 — `isOtp && HasValidCache(username) && IsUidCacheEnabled == false` → `Program.ResetUIDCache()` |
+| OTP request | 220–227 — `isOtp && !HasValidCache` → `App.AskForOtp()` (line 222), `otp = await App.WaitForOtpAsync()` (line 223), then `App.State = LauncherState.Loading` (line 226) to restore the loading page |
+| OTP cancel | 229–230 — `otp == null` → `false` (`OtpEntryPage.cs.md` §5: `GetResultAsync()` yields `null` on cancel) |
+| `PersistAccount` | 232 |
+| `TryLoginToGame` | 234 |
+| `TryProcessLoginResult` | 236 |
+
+`doingAutoLogin` is accepted but **never read** in this method (parameter line 194; grep finds no use). Auto-login is triggered from `DoAutoLoginIfApplicable` (lines 108–114) with `Debug.Assert(App.State == LauncherState.Main)` (line 110), gate on `App.Settings.IsAutologin ?? false` plus non-empty username/password (line 112), then `ProcessLogin(LoginAction.Game)` (line 113).
+
+`Login` is public because `LauncherApp`'s smoke/continuation logic uses it; `ProcessLogin` stays private, so the login UI path is `LoginFrame.OnLogin` → `ProcessLogin`.
+
+## 7. `TryLoginToGame(...)`
+
+Lines 239–271. In non-`DEBUG` builds it first queries the login gate (`#if !DEBUG` block, lines 241–259): `App.Launcher.GetGateStatus(ClientLanguage)` (line 246), with `Log.Error(ex, "Could not obtain gate status")` on failure (lines 249–252); `gateStatus == null` → `App.ShowMessageBlocking("Login servers could not be reached or maintenance is in progress. ...")` and `return null!` (lines 254–258).
+
+Then (lines 261–270): `enableUidCache = IsUidCacheEnabled ?? false`, `gamePath = GamePath!`, `language = ClientLanguage ?? English`; `action == Repair` → `App.Launcher.Login(username, password, otp, isSteam, false, gamePath, true, isFreeTrial, language)` (line 268) — the uid-cache flag is forced `false` and `repair` flag `true` for repair; otherwise `App.Launcher.Login(..., enableUidCache, gamePath, false, ...)` (line 270). `catch` logs `"Could not login to game"` and rethrows (lines 272–276).
+
+`return null!` at line 256 is consumed by `TryProcessLoginResult`, which dereferences `loginResult.State` (`MainPage.cs:285`) — a `NullReferenceException` in the login gate failure path, surfaced through `ProcessLogin`'s `ContinueWith` → `App.HandleContinuationBlocking` (`LauncherApp.cs.md` §6).
+
+## 8. `TryProcessLoginResult(...)`
+
+Lines 279–553. Sequence:
+
+| Branch | Line(s) |
+| --- | --- |
+| `LoginState.NoService` | 285–288 → `throw new OauthLoginException(preErrorMsg + Strings.LoginNoServiceAccountError + postErrorMsg)` |
+| `LoginState.NoTerms` | 290–293 → `throw` with `Strings.LoginTermsNotAcceptedError` |
+| `LoginState.NeedsPatchBoot` | 307–310 → `throw` with `"Boot conflict, need reinstall"` (the comment at lines 296–306 explains boot binaries changed outside the launcher) |
+| `LoginAction.Repair` | 312–338 — `NeedsPatchGame` → `RepairGame(loginResult)` (318), `false` → `return false` (320), else `State = Ok`; non-`NeedsPatchGame` state → `throw` with `"Repair login state not NeedsPatchGame"` (line 325); the `catch` rethrows (lines 330–338, comment notes it should never be reached) |
+| `LoginState.NeedsPatchGame` | 340–349 — `InstallGamePatch` false → `Log.Error("patchSuccess != true")`, `return false`; success → `State = Ok` |
+| `LoginAction.GameNoLaunch` | 351–356 → `App.ShowMessageBlocking(Strings.UpdateCheckFinished, "XIVLauncher")`, `return false` |
+| Gate check (`#if !DEBUG`) | 358–379 — `null` → `"Login servers could not be reached..."` + `false` (lines 374–376); `false` → `"Maintenance is in progress."` + `false` (lines 377–378) |
+| `Debug.Assert(State == Ok)` | 382 |
+| launch loop | 384–405 — `using var process = await StartGameAndAddon(loginResult, isSteam, action == GameNoDalamud, action == GameNoPlugins, action == GameNoThirdparty)` (line 388); `process is null` → `throw new InvalidOperationException("Could not obtain Process Handle")` (lines 390–391); `ExitCode != 0 && TreatNonZeroExitCodeAsFailure` → `throw new InvalidOperationException("Game exited with non-zero exit code")` (lines 393–396); success → `return true` (line 398); `catch` logs `"StartGameAndError resulted in an exception."` and rethrows (lines 400–404) |
+
+The `while (true)` loop body has `continue` only in HEAD's commented-out exception-dialog block (lines 410–549), so in the current code every iteration either returns `true` (line 398) or throws. `preErrorMsg`/`postErrorMsg` (lines 282–283) wrap messages in the string format `OauthLoginException` expects (`window.external.user("login=auth,ng,err,...")`).
+
+`MessageBoxResult` handling, `Process.GetProcessesByName("ffxiv_dx11"/"ffxiv")` multibox detection, and the process-kill loop are all commented out (lines 410–549) — HEAD's interactive error dialog is absent, so any `StartGameAndAddon` failure becomes a thrown exception that reaches `ProcessLogin`'s continuation handler.
+
+## 9. `StartGameAndAddon(...)` (public)
+
+Lines 554–837. Highlights:
+
+| Step | Line(s) |
+| --- | --- |
+| Dalamud runner/compat check selection | 561–575 — `Win32NT` → `WindowsDalamudRunner(Program.DalamudUpdater.Runtime)` + `WindowsDalamudCompatibilityCheck`; `Unix` → `UnixDalamudRunner(Program.CompatibilityTools, Program.DotnetRuntime)` + `UnixDalamudCompatibilityCheck`; other platform → `throw new NotImplementedException()` (line 574) |
+| troubleshooting payload | 582 — `Task.Run(Troubleshooting.LogTroubleshooting)` (same UI-thread hazard comment as the ctor, lines 578–581) |
+| `DalamudLauncher` | 584–587 — `DalamudLoadMethod.GetValueOrDefault(DllInject)`, `Storage.Root`, `Storage.GetFolder("logs")`, `ClientLanguage`, `DalamudLoadDelay`, `noPlugins`, `noThird`, `Troubleshooting.GetTroubleshootingJson()` |
+| compatibility check | 590–602 — `EnsureCompatibility()`, rethrow on `NoRedistsException` (line 594) / `ArchitectureNotSupportedException` (line 599) |
+| Dalamud wait | 604–617 — `DalamudEnabled.GetValueOrDefault(true) && !forceNoDalamud` → `App.StartLoading(Strings.WaitingForDalamud, Strings.PleaseBePatient)` (line 608), `dalamudOk = dalamudLauncher.HoldForUpdate(GamePath) == DalamudInstallState.Ok` (line 609); `DalamudRunnerException` → log + rethrow (lines 611–616) |
+| env hacks | 622–664 — `CoreEnvironmentSettings.IsSteamCompatTool` → merge `XL_PRELOAD` into `LD_PRELOAD` (622–628); `FixLocale` → `LC_ALL`/`LC_CTYPE` = `Program.CType` (632–637); `FixLDP` → strip `gameoverlayrenderer.so` (639–643); `FixIM` → `XMODIFIERS=@im=null` (646–649); `FixError127` → `DOTNET_SYSTEM_GLOBALIZATION_USENLS=true` (652–655); Unix + `DontUseSystemTz` → `TZ=""` (660–664) |
+| `AdditionalArgs` parsing | 666–697 — split on `%command%` into `launchEnv`/`gameArgs` (666–682); single token starting with `-` is args, else env (671–677); env pairs skip entries without `=` (688), and `key+` means append to the existing variable (690–694), each pair applied with `Environment.SetEnvironmentVariable` (696) |
+| runner selection | 699–766 — `Win32NT` → `WindowsGameRunner(dalamudLauncher, dalamudOk)` (line 701); `Unix` → custom-wine validation (`WineStartupType == Custom`: `WineBinaryPath` null / missing directory / no `wine64` → `InvalidOperationException`, lines 707–714; custom/managed/Dxvk version logging 716–724) + `UnixGameRunner(Program.CompatibilityTools, dalamudLauncher, dalamudOk)` (line 750); other platform → `throw new NotImplementedException()` (line 766) |
+| compatibility tool ensure | 726–748 — `ManualResetEvent` (724) + `isFailed` flag (727) + `Task.Run(... Program.CompatibilityTools.EnsureTool(Program.HttpClient, tempPath) ...).ContinueWith(... signal.Set())` (729–740), `App.StartLoading(Strings.PreparingForCompatTool, Strings.PleaseBePatient)` (line 741), `signal.WaitOne()` (742), `signal.Dispose()` (743), `isFailed` → `return null!` (745–746), then `App.StartLoading(Strings.StartingGame, Strings.HaveFun)` (line 748) |
+| `UserPath` | 756–761 — `Program.CompatibilityTools.UnixToWinePath(App.Settings.GameConfigPath!.FullName)` (756), appended as ` UserPath=...` unquoted when `IsEncryptArgs` is true (757–758) and quoted when false (759–760), then `gameArgs.Trim()` (761) |
+| launch | 768–777 — `App.Launcher.LaunchGame(runner, loginResult.UniqueId, loginResult.OauthLogin.Region, loginResult.OauthLogin.MaxExpansion, isSteam, gameArgs, App.Settings.GamePath, App.Settings.ClientLanguage.GetValueOrDefault(English), IsEncryptArgs.GetValueOrDefault(true), DpiAwareness.GetValueOrDefault(Unaware))` |
+| window state | 781–788 — `!Program.IsSteamDeckHardware \|\| CoreEnvironmentSettings.IsSteamCompatTool` → `this.Hide()` (line 783); else `App.State = LauncherState.SteamDeckPrompt` (line 787, `SteamDeckPromptPage.cs.md`) |
+| null process | 791–796 — `Log.Information("GameProcess was null...")` (792), `IsLoggingIn = false` (794), `return null!` (795) |
+| addons | 798–812 — `AddonManager` (798), `App.Settings.Addons ??= new List<AddonEntry>()` (802), enabled entries cast to `IAddon` (804), `addonMgr.RunAddons(launchedProcess.Id, addons)` (806); on exception `IsLoggingIn = false` (809), `StopAddons()` (810), rethrow (811) |
+| game wait | 814–821 — `Log.Debug("Waiting for game to exit")` (814), `await Task.Run(() => launchedProcess!.WaitForExit())` (816), `Log.Verbose("Game has exited")` (818), `StopAddons()` when `addonMgr.IsRunning` (820–821) |
+| Steam shutdown | 824–832 — `App.Steam?.IsValid == true` (825) → `App.Steam.Shutdown()` (827), `Log.Error(ex, "Could not shut down Steam")` on failure (831) |
+| return | 835 — `return launchedProcess!` |
+
+`Steam app id` behaviour is unchanged in HEAD semantics: `Program.UsesFallbackSteamAppId` and `EngcribeSteamAppId` live in `Program.cs.md`, and `ProcessLogin` retains HEAD's commented-out Steam app-id check (lines 148–150).
+
+### Account persistence
+
+`PersistAccount(username, password, isOtp, isSteam, isFreeTrial)` (838–864) is called from `Login` (line 232) before the login attempt:
+
+| Step | Line(s) |
+| --- | --- |
+| password refresh | 841–844 — current account matches `username` (`StringComparison.Ordinal`), stored password differs, `SavePassword` true → `App.Accounts.UpdatePassword(CurrentAccount, password)` (844) |
+| free-trial refresh | 846–849 — current account matches `username` (`OrdinalIgnoreCase`), `IsFreeTrial` differs → `App.Accounts.UpdateFreeTrial(CurrentAccount, isFreeTrial)` (849) |
+| new account | 851–863 — no current account, or `CurrentAccount.Id != $"{username}-{isOtp}-{isSteam}"` → `new XivAccount(username) { Password, SavePassword = true, UseOtp, IsFreeTrial, UseSteamServiceAccount }` (854–861), `App.Accounts.AddAccount` (862), `App.Accounts.CurrentAccount = accountToSave` (863) |
+
+`SwitchAccount(XivAccount account, bool saveAsCurrent)` (118–133) is called from `AccountSwitcherOnAccountChanged` (line 137, `saveAsCurrent: true`, `AccountSwitcher.cs.md` §4) and from the ctor with `saveAsCurrent: false` (line 67). It writes `loginFrame.Username` (120), `IsOtp` (121), `IsFreeTrial` (122), `IsSteam` (123), `IsAutoLogin = App.Settings.IsAutologin ?? false` (124), `Password` when `account.SavePassword` (126–127), and `App.Accounts.CurrentAccount = account` when `saveAsCurrent` (131). The account id format `"{username}-{isOtp}-{isSteam}"` (852) is the identity key: switching OTP/Steam flags on the same username creates a new saved account.
+
+## 10. Patching
+
+`HandleBootCheck` (866–904): `App.Settings.PatchPath is { Exists: false }` → `PatchPath = null` (870–873), `PatchPath ??= new DirectoryInfo(Path.Combine(Paths.RoamingPath, "patches"))` (875), `App.Launcher.CheckBootVersion(App.Settings.GamePath!)` (881), inner `catch` → `Log.Error(ex, "Unable to check boot version")` + `App.ShowMessage(Strings.CannotGetBootVerError, "XIVLauncher")` + `false` (883–888); `bootPatches.Length == 0` → `true` (891–892); patches → `TryHandlePatchAsync(Repository.Boot, bootPatches, "")` (894). Outer `catch` → `App.ShowExceptionBlocking(ex, "PatchBoot")` (898) + `Environment.Exit(0)` (899) + `false` (901).
+
+`InstallGamePatch` (905–914): `Debug.Assert` on `NeedsPatchGame` (907–908) and `PendingPatches != null` (911), then `TryHandlePatchAsync(Repository.Ffxiv, loginResult.PendingPatches, loginResult.UniqueId)` (913).
+
+`TryHandlePatchAsync` (915–1021):
+
+| Step | Line(s) |
+| --- | --- |
+| `#if WIN32` mutex `"XivLauncherIsPatching"` | 917–928 — busy-wait `WaitOne(0, false)` false → `App.ShowMessageBlocking("XIVLauncher is already patching your game in another instance...", "XIVLauncher")` + `Environment.Exit(0)` (923–924); the `return false` at line 925 is unreachable by comment; HEAD's note at line 917 says the mutex does not disappear on Linux |
+| game open check | 929–934 — `GameHelpers.CheckIsGameOpen()` → `App.ShowMessageBlocking(Strings.CannotPatchGameOpenError, "XIVLauncher")`, `false` |
+| patcher setup | 936–941 — `PatchInstaller(GamePath, KeepPatches ?? false)`, `AriaPatchAcquisition(logs/aria2.log)`, `Program.Patcher = new PatchManager(...)`, `Program.Patcher.OnFail += PatcherOnFail`, `installer.OnFail += InstallerOnFail` |
+| loading page | 943 — `App.StartLoading(string.Format(Strings.NowPatching, repository.ToString().ToLowerInvariant()), canCancel: false, isIndeterminate: false)` |
+| status thread | 945–962 — `CancellationTokenSource`, `new Thread(UpdatePatchStatus)`, `statusThread.Start()`; local function (952–963) sleeps 30 ms (956) and writes `App.LoadingPage.Line2` (958), `Line3` (959–960), `Progress = CurrentInstallIndex / (float)Downloads.Count` (962) |
+| patch run | 966–975 — `await Program.Patcher.PatchAsync(false)` (967), `finally { token.Cancel(); statusThread.Join(1000 ms); }` (970–973); success → `true` (976) |
+| failures | 977–1013 — `PatchInstallerException` → `App.ShowMessageBlocking(string.Format(Strings.PatchInstallerStartFailError, ex.Message), Strings.XIVLauncherError)` (978); `NotEnoughSpaceException` per `SpaceKind` (`Patches` 986–990, `AllPatches` 992–996, `Game` 998–1002; `Debug.Assert(false, "HandlePatchAsync:Invalid NotEnoughSpaceException.SpaceKind value.")` on default 1005); generic `Exception` → `Log.Error(ex, "Error during patching")` + `App.ShowExceptionBlocking(ex, "HandlePatchAsync")` (1011–1012) |
+| finally | 1014–1017 — `App.State = LauncherApp.LauncherState.Main` (1016) |
+| return | 1019 — `false` for every failure path |
+
+`Program.Patcher` is a static field on `Program` (`Program.cs.md`), so the patcher is process-global, not page-owned.
+
+`PatcherOnFail` (1022–1027) and `InstallerOnFail` (1028–1033) both show a blocking modal then `Environment.Exit(0)` — the process terminates inside a modal handler, not through `Application.Quit`.
+
+## 11. Repair
+
+`RepairGame` (1034–1142): `#if WIN32` mutex block (comment 1038, mutex 1040, busy-wait `WaitOne(0, false)` 1042, `App.ShowMessageBlocking("XIVLauncher is already patching your game in another instance. Please check if XIVLauncher is still open.", "XIVLauncher")` 1044, `Environment.Exit(0)` 1045, unreachable `return false` 1046) as in patching; asserts `PendingPatches != null` (1050) and `Length != 0` (1051); `Log.Information("STARTING REPAIR")` (1053); `PatchVerifier(Program.HttpClient, Program.Config.GamePath!, Program.Config.PatchPath!, loginResult, 100 ms, MaxExpansion, false)` (1056).
+
+`for (var doVerify = true; doVerify;)` (1058) wraps: `App.StartLoading(Strings.NowRepairingFiles, canCancel: false, isIndeterminate: false)` (1060), `verify.Start()` (1062), a `System.Threading.Timer` callback (1064–1088), `timer.Change(0, 250)` (1089), `await verify.WaitForCompletion()` (1091), `timer.Dispose()` (1092), `App.StopLoading()` (1093).
+
+The timer callback writes, per `verify.State`:
+
+- `DownloadMeta` (1069–1072): `Line2 = verify.CurrentFile` (1070), `Line3 = patchSet progress + bytes` (1071), `Progress = Progress/Total` (1072)
+- `VerifyAndRepair` (1075–1078): `Line2 = CurrentFile` (1076), `Line3 = patch set + task + bytes` (1077), `Progress` (1078)
+- default (1081–1084): `Line2 = ""` (1082), `Line3 = task count` (1083), `Progress = 1.0` when `Done` else `0` (1084)
+
+`Components/LoadingPage/LoadingPage.cs.md` §4 is the relevant rule: `Line2`/`Line3` are plain auto-properties (no widget writes), while `Progress`'s setter posts `Refresh` through `Ui.Post` — so the timer callback is safe with respect to GTK: only `Progress` touches widgets, and it marshals.
+
+Result handling (`switch (verify.State)`, 1095–1136): `Done` (1097) → message built from `NumBrokenFiles` (`Strings.RepairAllFilesValid` / `RepairFixedSingularFile` / `RepairFixedPluralFiles`, lines 1100–1104) plus moved-file text (`RepairSingleFileMoved`/`RepairPluralFilesMoved`, lines 1107–1111), `App.ShowMessageBlocking(mainText + additionalText)` (1114), stop looping (1116); `Error` (1119) → `doLogin = false`, `NoVersionReferenceException` → `Strings.RepairGameVerUnsupportedError` (1122–1124), else `verify.LastException + "\n\n" + Strings.RepairFailureError` (1128), stop looping (1131); `Cancelled` (1134) → `doLogin = doVerify = false` (1135). `return doLogin` (1140) — `RepairGame` returns `true` only when `doLogin` was never cleared, i.e. after a successful verify loop; `TryProcessLoginResult` then sets `State = Ok` and continues to the launch path (`MainPage.cs:320-322`).
+
+## 12. `Hide()` / `Reactivate()`
+
+- `Hide()` (1143–1146) → `Program.HideWindow()`, which minimizes the launcher window so the GTK application stays alive (`Program.cs.md` §5; the GTK `GApplication` exits when the last visible window closes).
+- `Reactivate()` (1148–1153) → `IsLoggingIn = false`, `App.State = LauncherState.Main` (marshalled), `Program.ShowWindow()` (restores `WindowState.Normal`). Called from `ProcessLogin`'s failure paths (lines 157, 168, 186, 194) and as the login-failure recovery signal observed in smoke tests (`Log.Verbose("Reactivated after Login() != true")`, line 185).
+
+## 13. Consumers
+
+`MainPage` is used only by `LauncherApp` (`LauncherApp.cs.md`):
+
+| Site | Use |
+| --- | --- |
+| `LauncherApp.cs:129` | `private readonly MainPage mainPage` field |
+| `LauncherApp.cs:146` | `new MainPage(this)` |
+| `LauncherApp.cs:112` | `LauncherState.Main => this.mainPage` (page for `CurrentPage`) |
+| `LauncherApp.cs:80` | `this.mainPage.OnShow()` on entering `Main` |
+| `LauncherApp.cs:69` | `this.mainPage.ReloadNews()` when leaving `Settings` |
+| `LauncherApp.cs:282` | `this.mainPage.DoAutoLoginIfApplicable()` in `RunStartupTasks` |
+
+`MainPage` consumes: `LoginFrame` (lines 50, 58, 94, 112, 120–127, 173, 175), `NewsFrame` (51, 92, 116), `ActionButtons` (41, 53, 59–61, 103), `AccountSwitcher` (45, 55, 56, 135–138), `App.*` (`StartLoading` 145/608/741/748/943/1060, `StopLoading` 1093, `ShowMessageBlocking`, `ShowMessage`, `HandleContinuationBlocking`, `AskForOtp` 222, `WaitForOtpAsync` 223, `Settings`, `Accounts`, `Launcher`, `UniqueIdCache`, `LoadingPage` 958–962/1070–1084, `Storage`, `Steam` 825–827), `Program.*` (`CompatibilityTools` 203/727, `ResetUIDCache` 218, `CType` 632, `HttpClient` 1056, `Patcher` 938–962, `SteamDeckHardware` 781, `HideWindow` 1145, `ShowWindow` 1152, `Config` 1056, `DalamudUpdater` 562/584, `DotnetRuntime` 567), `AppUtil.OpenBrowser` (60, 61), `Troubleshooting` (77, 582, 587), `Ui.Post` (181), `Strings`, `Support` exceptions.
+
+## 14. Thread / UI rules
+
+| Context | Rules |
+| --- | --- |
+| UI thread | ctor, layout, `SwitchAccount`, `DoAutoLoginIfApplicable`, `ProcessLogin` (up to `Task.Run`), `Ui.Post(() => Application.Instance.Quit())` |
+| Background (login task) | `Login`, `TryLoginToGame`, `TryProcessLoginResult`, `StartGameAndAddon`, patching, repair, `PersistAccount`, `Reactivate`'s `State` write (marshalled via `Ui.Post` inside `LauncherApp.SetState`, `LauncherApp.cs.md` §4) |
+| Blocking modals from background | `App.ShowMessageBlocking`, `App.ShowExceptionBlocking` pump a modal on the UI thread and release a `ManualResetEvent` (`LauncherApp.cs.md` §6), so background callers can block safely |
+| Plain property writes from background | `App.LoadingPage.Line2/Line3/Progress` (958–962, 1070–1085): `Line*` are plain fields, `Progress` marshals `Refresh` |
+| Direct widget writes from background | `App.StartLoading(...)` (145, 608, 741, 748, 943, 1060) writes `LoadingPage.Line1/Line2/Line3/IsIndeterminate/CanCancel/CanDisableAutoLogin` and calls `LoadingPage.Reset()`, whose `Refresh()` writes GTK labels/buttons/bar directly on the caller's thread (`LauncherApp.cs:259-270`) — see §15 |
+| Environment mutation | `StartGameAndAddon` sets process-wide env vars (622–664, 686–697), which affects the launcher process itself, not only the child game |
+
+## 15. Quirks
+
+- **`StartLoading` writes widgets off the UI thread.** Every `StartLoading` call in this file happens inside the background login task (lines 145, 608, 741, 748, 943, 1060). `LauncherApp.StartLoading` (`LauncherApp.cs.md` §7) sets plain `LoadingPage` properties and then calls `Reset()` → `Refresh()`, writing GTK label/bar/button state on the caller's thread. `State`'s setter marshals, so page *switching* is safe; the label/bar writes are not. Eto's GTK handlers for `Label.Text`/`ProgressBar.Value` are not synchronized to `Gtk.Application`'s main thread.
+- **`App.StopLoading` does not clear the loading page** (`LauncherApp.cs:272-273`): it only sets `State = Main`. `RepairGame` calls `App.StopLoading()` (line 1093) and patching's `finally` sets `State = Main` (line 1016), so a later `StartLoading` reuses stale `Progress`/`ProgressText` values until they are overwritten.
+- **`RepairGame`'s `doLogin` is only true after a successful verify**, and `TryProcessLoginResult` treats `RepairGame == false` as a hard stop (`MainPage.cs:318-320`), so repair failure never reaches the launch path.
+- `RepairGame` uses `Program.Config.GamePath!`/`Program.Config.PatchPath!` (line 1055), not `App.Settings.*`, so the patch verifier follows the startup config, not any settings-page change made after startup (`Program.cs.md` §6).
+- `Environment.Exit(0)` inside modal handlers (899, 924, 1025, 1031) exits the process from inside a modal dialog handler, bypassing `Application.Quit` and any Eto cleanup.
+- `Debug.Assert` calls (110, 382, 907–911, 1048–1049, 986) compile away in release: `Debug.Assert(loginResult.State == Ok)` (382) is a no-op in release, so the launch path runs with whatever `State` the server returned.
+- `StartGameAndAddon` returns `null!` in three paths (746, 795, and implicitly via `Process is null` throw path) while its signature is non-nullable `Task<Process>`, so `TryProcessLoginResult` must null-check (390–391).
+- The commented-out multibox/kill loop (lines 410–549) means no interactive error dialog exists for launch failures; all failures become exceptions, and `ProcessLogin`'s `ContinueWith` shows a modal via `App.HandleContinuationBlocking` (`LauncherApp.cs.md` §6).
+- `doingAutoLogin` is an unused parameter (line 194), kept for API shape.
+- `AddonManager` failures reset `IsLoggingIn` (810) but do not reset the loading page, so the UI can remain on `LoadingPage` while `IsLoggingIn` is false, permitting a new login while the old task's exception is being handled.
+- `Program.Steam.Shutdown()` (827) is called after the game exits, in `StartGameAndAddon`; Steam state is process-global (`Program.cs.md`).
+- `SwitchAccount` writes `Password` only when `account.SavePassword` (126–127), so switching to a saved account without a stored password leaves whatever is in the password box.
+- No `OnShow()` override means page entry performs no refresh; `LauncherApp.cs:80`'s `OnShow()` is the empty base (`Components/Page.cs.md` §3), and news refresh comes only from `LauncherApp.cs:69` when leaving settings.
+
+## 16. Referenced / referenced-by
+
+Uses: `Page` (`Components/Page.cs.md`), `LauncherApp` (`LauncherApp.cs.md`), `LoginFrame` (`LoginFrame.cs.md`), `NewsFrame` (`NewsFrame.cs.md`), `ActionButtons` (`ActionButtons.cs.md`), `AccountSwitcher` (`AccountSwitcher.cs.md`), `OtpEntryPage` via `App.AskForOtp` (`Components/OtpEntryPage.cs.md`), `LoadingPage` (`Components/LoadingPage/LoadingPage.cs.md`), `SteamDeckPromptPage` (`Components/SteamDeckPromptPage.cs.md`), `Ui` (`Ui.cs.md`), `Program` (`Program.cs.md`), `AppUtil` (`AppUtil.cs.md`), `Troubleshooting` (`Support/Troubleshooting.cs.md`), `AccountManager`/`XivAccount` (`Accounts/AccountManager.cs.md`), `Strings` (`Resources/Localization/Strings.Designer.cs.md`), and the `XIVLauncher.Common` game/patch/Dalamud/compatibility types in `lib/FFXIVQuickLauncher` (submodule — out of docs scope).
+Referenced by: `LauncherApp.cs` (lines 12, 69, 80, 112, 129, 146, 282).

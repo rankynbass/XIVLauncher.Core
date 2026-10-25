@@ -1,183 +1,159 @@
 # LauncherApp.cs — Specification
 
-**File:** `src/XIVLauncher.Core/LauncherApp.cs` · 332 lines · 10,910 bytes
-**Namespace:** `XIVLauncher.Core` · **Declaration:** `public class LauncherApp : Component`
-**Role:** Root UI component: page state machine, blocking modal dialogs, draw orchestration
+**File:** `src/XIVLauncher.Core/LauncherApp.cs` · 284 lines · 9,241 bytes
+**Namespace:** `XIVLauncher.Core` · **Declaration:** `public class LauncherApp`
+**Role:** The launcher shell — state machine that swaps pages, modal-dialog helpers, and the shared launcher services (login client, accounts, storage, news/OTP/FTS pages)
 
 ---
 
 ## 1. Purpose
 
-`LauncherApp` is the single "root component" instantiated by `Program.Main` and drawn every frame. It owns:
+`LauncherApp` is the object every page component is built around (`Components/Page.cs.md` stores it as `App`). It owns:
 
-- the **page state machine** (`LauncherState` ⇄ page instances),
-- the **modal dialog system** (including a blocking variant that halts the calling thread until the user clicks),
-- the **frame draw order** (fullscreen background → fullscreen page window → popup),
-- the **startup policy** (killswitch check, auto-login trigger),
-- shared handles to accounts, unique-id cache, and the `Launcher`.
+- the `LauncherState` state machine (`Main`, `Settings`, `Loading`, `OtpEntry`, `Fts`, `SteamDeckPrompt`),
+- the six page instances and the `PageShown` event that the window host subscribes to,
+- the modal system (single-modal counter + `ManualResetEvent` + `ModalDialog`),
+- the shared services: `Launcher` (login client), `Accounts`, `UniqueIdCache`, `Storage`, `Settings`,
+- the startup behaviour: kill-switch check, `RunStartupTasks()` (FTS on Flatpak, auto-login).
 
-It derives from `Component` (the project's component base class) so it participates in the component draw convention, calling `base.Draw()` (C# 13 `base` keyword ⇒ the inherited `Component.Draw()`).
+The file previously drove an immediate-mode loop: it created the ImGui windows, drew `CurrentPage.Draw()` each frame, and drew a modal with `DrawModal()`. All of that is gone: pages are Eto controls hosted by `LauncherForm.ShowPage`, and modals are real Eto `Dialog`s.
 
 ## 2. State machine
 
-### `enum LauncherState`
+`public enum LauncherState { Main, Settings, Loading, OtpEntry, Fts, SteamDeckPrompt }` (line 47).
 
-`Main`, `Settings`, `Loading`, `OtpEntry`, `Fts`, `SteamDeckPrompt` — public nested enum, referenced from outside this file as `LauncherApp.LauncherState.Settings` (e.g. `Program.ClearSettings`).
+```csharp
+public LauncherState State
+{
+    get => this.state;
+    set => Ui.Post(() => this.SetState(value));   // line 62
+}
+```
 
-### `public LauncherState State { get; set }`
+**The setter marshals to the UI thread** (line 62). Login, patching, Dalamud, and startup code run on background tasks and set `State` directly (`MainPage.cs:226`, `MainPage.cs:59`, `Program.cs:364`, `MainPage.cs:1151`), so posting is what makes page swaps safe under Eto's single-threaded UI (`Ui.cs.md`).
 
-The setter is **effectful**, and that effect is the contract every other unit relies on:
+`SetState(LauncherState value)` (line 65) — private, UI-thread only:
 
-| Transition | Side effect |
-| --- | --- |
-| *leaving* `Settings` (any new value) | `mainPage.ReloadNews()` — because `ClientLanguage` may have changed while on the settings page |
-| → `Settings` | `setPage.OnShow()` |
-| → `Main` | `mainPage.OnShow()` |
-| → `Loading` | `LoadingPage.OnShow()` |
-| → `OtpEntry` | `otpEntryPage.OnShow()` |
-| → `Fts` | `ftsPage.OnShow()` |
-| → `SteamDeckPrompt` | `steamDeckPromptPage.OnShow()` |
-| → anything else | `throw ArgumentOutOfRangeException` |
+1. If the outgoing state is `Settings`, calls `this.mainPage.ReloadNews()` (line 68) — the client language may have changed in settings.
+2. Assigns `this.state = value`.
+3. Calls `OnShow()` on the **new** page (`setPage`, `mainPage`, `LoadingPage`, `otpEntryPage`, `ftsPage`, `steamDeckPromptPage`), `default:` → `ArgumentOutOfRangeException` (line 97).
+4. Raises `this.PageShown?.Invoke(this.CurrentPage)` (line 104).
 
-Assigning the *same* state still re-runs that page's `OnShow()` (no identity guard) — do not set `State` to the current value casually, as `OnShow()` implementations may reset page-local state.
+`public event Action<Page>? PageShown` (line 107) is the only integration point with the window: `LauncherForm.ShowPage` replaces `pageHost.Content` with the page (`LauncherForm.cs.md`).
 
-`OnShow()` is the page's "this page became visible" hook; `Draw()` is per-frame. Pages are constructed once and reused; `OnShow` is not a construction event.
+`public Page CurrentPage` (line 109) maps each state to its page, `default` → `ArgumentOutOfRangeException` naming `this.State` (line 117). Note the exception text references `this.State`, not the local `state` field.
 
-### `public Page CurrentPage`
-
-Get-only accessor mapping `state` → the page instance (same six-way mapping; `_` arm throws). This is what `Draw()` draws and what the `Padding` read comes from.
+**Ordering rule:** `OnShow()` runs before `PageShown` is raised, so a page's `OnShow()` sees the *old* host content. `MainPage.OnShow()` (Steam Deck prompts) and `FtsPage.OnShow()` set `State` again from inside `OnShow()` — that is legal because the setter posts to the UI thread, so the nested change is queued after the current `SetState` completes.
 
 ## 3. Collaborator surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `Settings` | accessor `=> Program.Config` | the `ILauncherConfig` view (aliased, not copied) |
-| `Steam` | accessor `=> Program.Steam` (`ISteam?`) | global handle, may be `null` |
-| `Storage` | field, ctor-assigned | the launcher-wide `Storage` (same object as `Program.storage`) |
-| `Launcher` | `get`/`private set` | `new Launcher(Program.Steam, UniqueIdCache, frontierUrl, AcceptLanguage ?? ApiHelpers.GenerateAcceptLanguage())` |
-| `Accounts` | `public AccountManager` | `Storage.GetFile("accounts.json")` |
-| `UniqueIdCache` | `public CommonUniqueIdCache` | `Storage.GetFile("uidCache.json")` — also the target of `Program.ResetUIDCache` |
-| `LoadingPage` | `get` accessor | the `LoadingPage` instance |
-| `mainPage`, `setPage`, `otpEntryPage`, `ftsPage`, `steamDeckPromptPage` | `private readonly` | constructed in ctor |
-| `background` | `private readonly Background = new()` | the fullscreen backdrop component |
-| `IsDebug` | `public static bool` (`get`, `private set`) `= Debugger.IsAttached`, forced `true` under `#if DEBUG` in the ctor | global "debug UI" flag read by other units |
+| `Settings` | `public ILauncherConfig` → `Program.Config` (line 121) | settings tabs write it through `App.Settings` |
+| `Launcher` | `public Launcher` (line 122) | login client, built in ctor (line 144) |
+| `Steam` | `public ISteam?` → `Program.Steam` (line 123) | `MainPage.cs:147`, `FtsPage.cs:87`, `Components/Common/Input.cs:92` |
+| `Storage` | `public Storage` (line 124) | `App.Storage.Root`, `App.Storage.GetFolder("logs")` (`MainPage.cs:586`) |
+| `LoadingPage` | `public LoadingPage { get; }` (line 125) | the *page* object; also the name of the type — see §7 |
+| `Accounts` | `public AccountManager` **field** (line 126) | `MainPage.cs:65,131` |
+| `UniqueIdCache` | `public CommonUniqueIdCache` **field** (line 127) | `MainPage.cs:217,220`, `Program.cs:422` |
+| `mainPage`/`setPage`/`otpEntryPage`/`ftsPage`/`steamDeckPromptPage` | `private readonly` (lines 129–134) | created once in ctor |
+| `form` | `private LauncherForm?` (line 135) | set by `AttachForm`; modal owner |
+| `openModals` | `private int` (line 42) | modal counter guard |
+| `modalWaitHandle` | `private readonly ManualResetEvent` (line 43) | modal blocking |
+| `IsDebug` | `public static bool` = `Debugger.IsAttached`, `#if FLATPAK`? no — `#if DEBUG` sets `true` (line 171) | |
 
-`Accounts`/`UniqueIdCache`/`Launcher` are declared **without initializers** (definite assignment via the ctor) while `Storage`/`LoadingPage`/`Launcher` are accessors/fields with `null!`-style declarations — mixed but all assigned before first use.
+`Settings`/`Steam` are pass-throughs to `Program`; the shell keeps the names so pages keep the `App.X` idiom.
 
 ## 4. Constructor contract
 
-`LauncherApp(Storage storage, string frontierUrl, string? cutOffBootver)` — supplied by `Program.Main` from `LauncherClientConfig.GetAsync()` (so these two values are network-derived: the Frontier base URL and the "cut off bootver" killswitch threshold).
+`public LauncherApp(Storage storage, string frontierUrl, string? cutOffBootver)` (line 137), created inside `application.Initialized` (`Program.cs:275`).
 
-1. `Storage = storage`; `Accounts = AccountManager(accounts.json)`; `UniqueIdCache = CommonUniqueIdCache(uidCache.json)`.
-2. `Launcher = Launcher(Program.Steam, UniqueIdCache, frontierUrl, AcceptLanguage ?? ApiHelpers.GenerateAcceptLanguage())`.
-3. Construct all six pages **plus** `LoadingPage` (order: `mainPage`, `setPage`, `otpEntryPage`, `LoadingPage`, `ftsPage`, `steamDeckPromptPage`) — every page holds a reference back to `this`, so page constructors must not touch `LauncherApp` state that is assigned later.
-4. **Killswitch gate:** if `!EnvironmentSettings.IsNoKillswitch && !string.IsNullOrEmpty(cutOffBootver)`, compare `SeVersion.Parse(Repository.Boot.GetVer(Config.GamePath))` against `SeVersion.Parse(cutOffBootver)`. If the game's current boot version exceeds the cutoff, show the "XIVLauncher is unavailable at this time…" modal with button `"Close Launcher"` and action `() => Environment.Exit(0)`, then **`return`** — startup tasks are skipped, and the launcher keeps drawing the modal until the user presses the button, at which point the process exits.
-5. `RunStartupTasks()`; then `#if DEBUG IsDebug = true;`.
+Order (lines 139–144): `Storage` (139) → `AccountManager(storage.GetFile("accounts.json"))` (141) → `CommonUniqueIdCache(storage.GetFile("uidCache.json"))` (142) → `Launcher(Program.Steam, UniqueIdCache, frontierUrl, Program.Config.AcceptLanguage ?? ApiHelpers.GenerateAcceptLanguage())` (144).
 
-The killswitch path is the reason `Program.Main` blocks on `GetAsync().GetAwaiter().GetResult()` before constructing the app: `frontierUrl` and `cutOffBootver` must exist synchronously at construction time.
+Then pages are constructed in order `mainPage`, `setPage`, `otpEntryPage`, `LoadingPage`, `ftsPage`, `steamDeckPromptPage` (lines 146–151). **All page construction runs on the UI thread inside `Initialized`** — Eto controls must be created there, so any page that does network work in its constructor blocks first paint (`MainPage`'s constructor triggers `NewsFrame.ReloadNews()`, `MainPage.cs.md`).
 
-## 5. Modal system
+Kill switch (lines 153–166): when `!EnvironmentSettings.IsNoKillswitch && !string.IsNullOrEmpty(cutOffBootver)`, compares `SeVersion.Parse(Repository.Boot.GetVer(Program.Config.GamePath))` with `SeVersion.Parse(cutOffBootver)`; if the local boot version is newer, `ShowMessage(..., "Close Launcher", () => Environment.Exit(0))` is posted and the ctor **returns** — so `RunStartupTasks()` is skipped, the pages exist, and the UI starts normally with the modal displayed on top.
 
-Private state (`#region Modal State`):
+`this.RunStartupTasks()` (line 168) then `#if DEBUG IsDebug = true` (lines 170–172).
 
-| Field | Meaning |
-| --- | --- |
-| `isModalDrawing` | a modal is currently on screen |
-| `modalOnNextFrame` | a modal was *requested* this frame and must be opened at the start of the next frame |
-| `modalText`, `modalTitle`, `modalButtonText` | content |
-| `modalButtonPressAction` (`Action`) | what runs when the button is pressed |
-| `modalWaitHandle` (`ManualResetEvent`, initially `false`) | used by the blocking variants to park a thread |
+**Ordering hazard:** the kill-switch modal is posted *before* `AttachForm` runs (`Program.cs:279`), so `this.form` is `null` and `ShowMessage` takes the `dialog.ShowModal()` branch (`LauncherApp.cs:206`) — the dialog is not parented to the main window, and it is shown before any page has been hosted. Its action calls `Environment.Exit(0)` directly, not `Application.Instance.Quit()`, so no Eto shutdown path runs.
 
-### `ShowMessage(text, title = "XIVLauncher", modalButtonText = "OK", modalPressedAction = default)`
+## 5. `AttachForm`
 
-- Throws `InvalidOperationException("Cannot open modal while another modal is open")` when `isModalDrawing` — the UI supports **exactly one** modal.
-- `modalPressedAction` uses the C# 13 **`= default`** parameter default (⇒ `null` for the `Action` type). When `null`, the default action is installed: `CloseCurrentPopup()`, `isModalDrawing = false`, `modalWaitHandle.Set()`. A caller-provided action **replaces** it and is responsible for closing the popup itself (e.g. the killswitch action exits the process without closing).
-- Sets `isModalDrawing = true` and `modalOnNextFrame = true`; it does **not** open the popup immediately.
-
-### Why the "next frame" deferral exists
-
-`ShowMessage` may be called from anywhere (including during the current frame's `Draw()` of a page). Opening a popup mid-frame would nest it inside the page's window. `DrawModal()` runs at the very end of `Draw()`; it first calls `ImGui.OpenPopup("###xl_modal")` when `modalOnNextFrame`, clears the flag, and sets `isModalDrawing = true` — so the modal actually becomes interactive on the following frame. The visible effect for callers is that a message appears one frame later.
-
-### `ShowMessageBlocking(text, title = "XIVLauncher", canContinue = true)`
-
-1. Guard: `if (!modalWaitHandle.WaitOne(0) && isModalDrawing) throw InvalidOperationException(…)`. `WaitOne(0)` is a non-blocking "is the handle set?" test, so the throw only fires while an *unfinished* modal is on screen — i.e. blocking calls nest legally after the previous one completed.
-2. `modalWaitHandle.Reset()` (re-arm), then `ShowMessage(...)` — note the default button label `"OK"` and no custom action, so pressing the button installs the default action which sets the handle.
-3. `modalWaitHandle.WaitOne()` — **blocks the calling thread until the frame loop renders the modal and the user presses the button**.
-
-Consequence: `ShowMessageBlocking` must never be called from the draw path itself (`Draw`, page draws, or `OnShow`), only from startup/logic code, otherwise the loop that would render the modal is the blocked thread — deadlock. `Program.Main`'s frame loop is the only thing that can satisfy the wait.
-
-### `ShowExceptionBlocking(Exception, string context)`
-
-`ShowMessageBlocking($"An error occurred ({context}).\n\n{exception}", Strings.XIVLauncherError)` — formats the exception with `ToString()` and uses the localized `Strings.XIVLauncherError` title (from `Resources/Localization/Strings.resx`, accessor spec'ed in `Resources/Localization/Strings.Designer.cs.md`; the `text` argument here is **not** catalogued, so an error modal is half-translated by construction).
-
-### `HandleContinuationBlocking(Task task)` → `bool`
-
-| Task state | Action | Return |
-| --- | --- | --- |
-| `IsFaulted` | `Log.Error(task.Exception, "Task failed")` + blocking modal with `task.Exception?.InnerException?.Message ?? "Unknown error - please check logs."` titled `"Error"` | `false` |
-| `IsCanceled` | blocking modal `"Task was canceled."` titled `"Error"` | `false` |
-| else | none | `true` |
-
-Note it inspects `InnerException` (unwrapping one level, e.g. `AsyncTaskResultWrapper` style nesting) rather than the outermost message, and it does not rethrow.
-
-## 6. OTP and loading flows
-
-| Member | Contract |
-| --- | --- |
-| `AskForOtp()` | `otpEntryPage.Reset()` then `State = OtpEntry` (fires `OnShow`) |
-| `async Task<string?> WaitForOtpAsync()` | `await otpEntryPage.GetResultAsync().ConfigureAwait(false)` then **always** `otpEntryPage.StopOtpListener()` — the listener is torn down even when the result is `null` |
-| `StartLoading(line1, line2 = "", line3 = "", isIndeterminate = true, canCancel = false, canDisableAutoLogin = false)` | `State = Loading` (fires `OnShow`), sets `Line1..3`, `IsIndeterminate`, `CanCancel`, `CanDisableAutoLogin`, then `LoadingPage.Reset()` — order matters: flags are set before the reset |
-| `StopLoading()` | `State = Main` (also triggers `ReloadNews` if the previous state was `Settings`) |
-
-`WaitForOtpAsync` returns whatever the OTP page produced (a code or `null`), leaving it to the caller to distinguish "no code" from failure.
-
-## 7. `RunStartupTasks`
-
+```csharp
+public void AttachForm(LauncherForm form)
+{
+    this.form = form;
+    this.PageShown += form.ShowPage;
+    Ui.Post(() => this.SetState(LauncherState.Main));
+}
 ```
+
+- Called by `Program` immediately after construction (`Program.cs:279`), i.e. **before** `launcherForm.Show()`; the posted `SetState(Main)` lands on the UI queue, so the first page is hosted when the GTK loop starts pumping.
+- `form` is stored so `ShowMessage` can parent dialogs to the main window (`dialog.ShowModal(this.form)`, line 204).
+- `PageShown` is a single-subscriber contract in practice: `LauncherForm` is the only subscriber; subscribing twice would host the page in two places.
+
+## 6. Modal system
+
+`ShowMessage(string text, string title = "XIVLauncher", string modalButtonText = "OK", Action? modalPressedAction = default)` (line 184):
+
+1. `if (this.openModals > 0) throw new InvalidOperationException("Cannot open modal while another modal is open")` (lines 186–187) — checked on the **caller's** thread, before posting.
+2. `this.modalWaitHandle.Reset()` (line 189).
+3. `var pressedAction = modalPressedAction ?? new Action(() => { })` (line 191) — the `new Action(...)` form is required: `() => { }` alone is not convertible to `Action` on the right-hand side of `??`.
+4. Posts a UI block that increments `openModals`, builds a `ModalDialog(text, title, modalButtonText, callback)`, shows it **modally** (`dialog.ShowModal(this.form)` when a form is attached, line 204; `dialog.ShowModal()` otherwise, line 206) and decrements `openModals` after the modal returns.
+
+**`ShowModal` pumps the GTK loop**, so `openModals` stays `> 0` for the entire time the modal is visible, and `ShowMessage` does not return until the modal is closed (it returns on the UI thread). The button callback sets `modalWaitHandle` and runs `pressedAction` (`ModalDialog.cs.md`).
+
+`ShowMessageBlocking(string text, string title = "XIVLauncher", bool canContinue = true)` (line 212):
+
+- Guard: `if (!this.modalWaitHandle.WaitOne(0) && this.openModals > 0) throw ...` (line 214) — i.e. the "modal already open" rule is relaxed when the handle is already set (a blocking modal in flight).
+- `Reset()`, `ShowMessage(text, title)`, then `this.modalWaitHandle.WaitOne()` (lines 217–220) — the caller blocks on a `ManualResetEvent` that is set by the modal button, so background login/patch code waits for user acknowledgement.
+
+`ShowExceptionBlocking(Exception ex, string context)` (line 223) formats `context + " failed with exception\nPlease report this error to us.\n\n" + ex.Message` with title `"XIVLauncher has encountered an error."`.
+
+`HandleContinuationBlocking(Task t)` (line 228): `IsFaulted` → `Log.Error(t.Exception, "Task failed")` + blocking modal with `t.Exception?.InnerException?.Message ?? "Unknown error - please check logs."`; `IsCanceled` → blocking modal `"Task was canceled."`; returns `false` in both cases, `true` otherwise. Consumers: `MainPage.cs:189`, `MainPage.cs` patch/login continuations.
+
+**Defaults are now HEAD-equivalent.** An earlier pass attempted richer exception-specific text for `SeBreakException`, `OauthLoginException`, and auth-char offline/online errors; those types and `Strings.LoginAuthCharOfflineError`/`LoginAuthCharOnlineError` do not exist in this project, so `HandleContinuationBlocking` is the generic fault/cancel form.
+
+**Threading rules:**
+- `ShowMessage` is safe from any thread (it posts). `ShowMessageBlocking` is intended for background threads; calling it from the UI thread deadlocks, because `ShowModal` needs the UI loop and `WaitOne()` blocks that same loop.
+- The `openModals` guard runs on the caller thread while the counter is mutated on the UI thread, so the guard is advisory: a race can post two modals that each see `openModals == 0` at check time. The counter is decremented after `ShowModal` returns, so a second `ShowMessage` posted while a modal is open throws on the UI thread.
+- `modalWaitHandle` is shared across all modals: `ShowMessage` resets it unconditionally, so an outstanding blocking caller can be released by a later modal's button.
+
+## 7. OTP and loading flows
+
+- `AskForOtp()` (line 246): `this.otpEntryPage.Reset()` then `State = LauncherState.OtpEntry` (`MainPage.cs:222`).
+- `WaitForOtpAsync()` (line 252): awaits `otpEntryPage.GetResultAsync()` with `ConfigureAwait(false)`, then `otpEntryPage.StopOtpListener()` and returns the code (`MainPage.cs:223`).
+- `StartLoading(string line1, string line2 = "", string line3 = "", bool isIndeterminate = true, bool canCancel = false, bool canDisableAutoLogin = false)` (line 259): sets `State = Loading` first, then writes `Line1`/`Line2`/`Line3`/`IsIndeterminate`/`CanCancel`/`CanDisableAutoLogin` on `LoadingPage`, then `LoadingPage.Reset()`. Called from `MainPage.cs:145` (login), `MainPage.cs:608` (Dalamud wait), `MainPage.cs:741`/`748` (compat-tool prepare and game start), `MainPage.cs:943` (patching), `MainPage.cs:1060` (file repair). The `State` write is marshalled (`Ui.Post`, `LauncherApp.cs.md` §4), but the property writes and `Reset()` are not: `LoadingPage.Reset()` calls `Refresh()` directly (`Components/LoadingPage/LoadingPage.cs.md` §5), so a `StartLoading` call from a background thread writes GTK labels/buttons/bar off the UI thread — see `Components/MainPage/MainPage.cs.md` §14. Only the `Progress` setter marshals (via `Ui.Post(this.Refresh)`).
+- `StopLoading()` (line 272): `State = LauncherState.Main`.
+- **Naming collision:** the member `LoadingPage` and the type `LoadingPage` share a name; `this.LoadingPage.Line1` is the page instance, and `Components/LoadingPage/LoadingPage.cs` is the type. Consumers use `App.LoadingPage.Line2`/`Line3`/`Progress` for patch progress (`MainPage.cs:958–962`).
+
+## 8. `RunStartupTasks`
+
+```csharp
+public void RunStartupTasks()
+{
 #if FLATPAK
     this.ftsPage.OpenFtsIfNeeded();
 #endif
     this.mainPage.DoAutoLoginIfApplicable();
+}
 ```
 
-`FLATPAK` is a build-time `DefineConstants` switch (the same mechanism `XIVLauncher.Core.csproj` uses for `WIN32`/`OSX`/`LINUX`), so the Flatpak build proactively offers the free trial. `DoAutoLoginIfApplicable` consults `Config.IsAutologin` (and account state) inside `MainPage`.
+- FTS (first-time setup) is only checked under `FLATPAK` — the sandboxed build, where the Wine prefix cannot be assumed. Non-Flatpak builds reach FTS through `MainPage.OnShow()` (`MainPage.cs`, `FtsPage.cs.md`).
+- `DoAutoLoginIfApplicable()` (`MainPage.cs:110–114`) starts the login pipeline when `App.Settings.IsAutologin` is true with non-empty username/password (`MainPage.cs.md`).
+- Runs inside the constructor, i.e. on the UI thread, so auto-login starts from the UI thread and then `Task.Run`s the login (`MainPage.cs` `ProcessLogin`).
+- A temporary `RunLoginTest()` wrapper (public `MainPage.RunLoginTest` + `LauncherApp.RunLoginTest` + `XL_LOGIN_TEST` hook in `Program.cs`) was used to exercise this pipeline from the command line and has been removed; `ProcessLogin` is `private` in `MainPage`, so any future smoke test needs a wrapper again.
 
-## 8. `Draw()` contract (override of `Component.Draw`)
+## 9. Invariants and hazards
 
-Two fullscreen windows plus the popup, in this exact order:
+- **Every UI mutation from this file is posted.** `State`, `AttachForm`'s `SetState`, and `ShowMessage`'s dialog creation all go through `Ui.Post`. Any new page mutation added here must follow the same rule; `SetState` is the single place that touches pages, and it is private.
+- **Single-modal invariant**: `openModals` is a plain `int` with no lock; the intended discipline is one modal at a time. Long modal chains (login errors, patch errors, gate status) are sequential because each `ShowMessageBlocking` waits for the button.
+- **Pages are constructed once and never disposed** — Eto controls are re-hosted, not recreated; `LauncherForm.ShowPage` swaps `pageHost.Content` (`LauncherForm.cs.md`). Leaving a page for a new one does not detach the previous page from its parent, so the old page is dropped by the host.
+- **`Settings`/`Steam` are live views onto `Program`**; they can be `null` for `Steam` when Steam fails to initialize (`Program.cs:245`), and pages must null-check (`FtsPage.cs:87`, `Input.cs:92`).
+- `State`'s setter is fire-and-forget: a caller that reads `App.State` right after setting it sees the **old** value until the UI thread drains the queue. `MainPage` does not rely on this, and `Debug.Assert(App.State == LauncherState.Main)` (`MainPage.cs:110`) is asserted on the UI thread.
 
-1. **Background window** `"Background"`:
-   `PushStyleVar(WindowRounding, 0)`, `PushStyleVar(WindowPadding, Vector2(0))`, pos `(0,0)`, size `ImGuiHelpers.ViewportSize`, flags `NoTitleBar | NoBackground | NoResize | NoFocusOnAppearing | NoNavFocus | NoNavInputs | NoScrollbar | NoScrollWithMouse`, body `background.Draw()`, then `PopStyleVar(2)`.
-2. **Content window** `"XIVLauncher"`:
-   `PushStyleVar(WindowRounding, 0)`, `PushStyleVar(WindowPadding, CurrentPage.Padding ?? GetStyle().WindowPadding)` — the page's `Padding` (a `Vector2`, see `Margins.cs.md` note) drives window padding; pos `(0,0)`, size `ViewportSize`, `SetNextWindowBgAlpha(0.75f)`, `PushStyleColor(ImGuiCol.WindowBg, ImGuiColors.BlueShade0)`, flags `NoTitleBar | NoResize | NoScrollbar | NoScrollWithMouse`, body **`CurrentPage.Draw()` then `base.Draw()`** (children of the root component), `End()`, `PopStyleVar(2)`, `PopStyleColor()`.
-3. **`DrawModal()`** last, so the modal always paints above the page.
+## 10. Referenced / referenced-by
 
-Push/Pop balance: 2 pushes before each window, `PopStyleVar(2)` after each; one `PushStyleColor`/`PopStyleColor` pair. Any early `return` inside a page's draw must not break this balance (the balance is held entirely in this method).
-
-Content alpha is 0.75 with `BlueShade0` (`ImGuiColors.cs.md` §2.4), letting the background bleed through — the reason the background window must have `NoBackground`.
-
-## 9. `DrawModal()` detail
-
-- `SetNextWindowSize(450, 300)` then `BeginPopupModal(modalTitle + "###xl_modal", ref isModalDrawing, AlwaysAutoResize | NoScrollbar | NoTitleBar)`.
-  - The popup's ImGui **id** is the concatenated string; `"###xl_modal"` is the project's uniqueness marker, appended so the popup id cannot collide with a page's window id while the *displayed* title stays `modalTitle` (ImGui hides text after its own `###` id-splitting convention).
-  - The `ref isModalDrawing` argument is ImGui's "open flag": ImGui drives it to `false` when the popup closes itself (e.g. via `CloseCurrentPopup`), keeping the field authoritative.
-- Inside: `BeginChild("###xl_modal_scrolling", new Vector2(0, -GetTextLineHeightWithSpacing() * 2))` then `TextWrapped(modalText)` — a scrollable child window with **negative bottom padding of two text lines** (the message can scroll, and the reserved two lines are where the button sits).
-- Button: `BUTTON_WIDTH = 120f` (`const float`), cursor X = `(GetWindowWidth() - 120) / 2` (centred), `ImGui.Button(modalButtonText, Vector2(120, 40))`; on press → `modalButtonPressAction()`.
-- `AlwaysAutoResize` + a fixed `SetNextWindowSize` ⇒ the 450×300 hint is a starting size, not a bound.
-- Closing: `ImGui.EndPopup()`; then (outside the `if`) the `modalOnNextFrame` open-popup block described in §5.
-
-## 10. Invariants and hazards
-
-- **Single modal only.** `ShowMessage` throws while one is open; `ShowExceptionBlocking`/`HandleContinuationBlocking` are therefore unusable as "toast" spam. There is no queue.
-- **`modalWaitHandle` is the only synchronisation**, and it is armed by blocking callers; the non-blocking path (`ShowMessage`) with a caller-supplied action that never calls `modalWaitHandle.Set()` leaves a blocking caller parked forever. Only the default action sets it.
-- **`isModalDrawing` vs `modalOnNextFrame` interlock:** a `ShowMessage` immediately followed by another `ShowMessage` in the same frame throws (first call sets `isModalDrawing`), even though the popup has not opened yet.
-- `IsDebug` is `static` mutable state derived from `Debugger.IsAttached` at first touch (and unconditionally `true` in Debug builds); a debug build therefore always shows debug UI.
-- `State` setter's default arm and `CurrentPage`'s `_` arm mean the enum and the page list must stay in sync when adding a page — three places to change: enum, setter switch, `CurrentPage` switch (plus the field and the ctor).
-- `WaitForOtpAsync` disables the OTP listener after awaiting; two concurrent waits are not supported.
-- `Steam` may be `null` (Steam failed to initialise) and is passed straight to `Launcher` in step 2 of the ctor — `Launcher` must tolerate a null Steam handle (contract of that unit, out of scope here).
-- `UniqueIdCache` is the lib cache type (`CommonUniqueIdCache`, `:115`), constructed from `uidCache.json` at `:130`; the fork's same-named `XIVLauncher.Core.Configuration.UniqueIdCache` (`Configuration/UniqueIdCache.cs.md`) is a dead null-object stub and is never constructed here — do not treat `App.UniqueIdCache` as that class.
-- `#if FLATPAK` and `#if DEBUG` are preprocessor switches; the csproj injects `WIN32`/`OSX`/`LINUX` and a configurable `ExtraDefineConstants`, which is the documented mechanism for `FLATPAK`.
-
-## 11. Referenced units
-
-`Component` (base), `MainPage`, `SettingsPage`, `OtpEntryPage`, `LoadingPage`, `FtsPage`, `SteamDeckPromptPage`, `Background`, `Page`, `AccountManager`, `CommonUniqueIdCache` (`lib/…/XIVLauncher.Common/CommonUniqueIdCache.cs`, implements `lib/…/PlatformAbstractions/IUniqueIdCache.cs`; the fork's dead stub counterpart is spec'd in `docs/XIVLauncher.Core/Configuration/UniqueIdCache.cs.md`), `Launcher`, `SeVersion`, `Repository.Boot`, `EnvironmentSettings.IsNoKillswitch`, `ApiHelpers.GenerateAcceptLanguage`, `Strings.XIVLauncherError` (`Resources/Localization/Strings.Designer.cs.md` §7, the only `Strings.*` read in this file), `Program` (`Config`, `Steam`), `ImGuiColors.BlueShade0`, `ImGuiHelpers.ViewportSize`, `CommonSettings` (`docs/XIVLauncher.Core/Configuration/CommonSettings.cs.md`, constructed at `:49`, unused), `Settings` alias of `Program.Config` (`:107`, schema in `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`).
+Referenced by: `Program.cs` (construction, `AttachForm`, `ClearSettings` `launcherApp.State`), `Components/Page.cs` (`App`), `MainPage.cs`, `SettingsPage.cs`, `LoadingPage.cs`, `OtpEntryPage.cs`, `FtsPage.cs`, `SteamDeckPromptPage.cs`, `LauncherForm.cs` (`PageShown` subscription, `ModalOwner`).
+Uses: `Ui`, `ModalDialog`, `LauncherForm`, `Program.Config`, `Program.Steam`, `Eto.Forms.Dialog` (via `ModalDialog`), `Launcher`, `AccountManager`, `CommonUniqueIdCache`, `Storage`, `SeVersion`, `Repository`, `ApiHelpers`, `EnvironmentSettings`, `Strings`, `Log`, `Debugger`.

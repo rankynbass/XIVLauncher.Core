@@ -1,101 +1,76 @@
-# Button.cs — Specification
+# Button.cs (Common) — Specification
 
-**File:** `src/XIVLauncher.Core/Components/Common/Button.cs` · 45 lines · 1379 bytes
+**File:** `src/XIVLauncher.Core/Components/Common/Button.cs` · 68 lines · 2,014 bytes
 **Namespace:** `XIVLauncher.Core.Components.Common` · **Declaration:** `public class Button : Component`
-**Role:** Reusable labelled button with a colour triple and a `Click` event — the primitive every page composes actions onto
+**Role:** Launcher push button — a native Eto `Button` wrapped in the launcher's `Component` base
 
 ---
 
 ## 1. Purpose
 
-`Button` is the shared "pressable label" for the launcher UI. It draws one ImGui button and, when pressed, fires an `event Action? Click` to which callers subscribe (`+=`) their own closures. It carries no domain knowledge: login, settings, OTP, FTS and news links all use it.
+Replaces the immediate-mode ImGui button, which drew itself every frame and implemented the "press Enter while focused" special case. This wrapper exposes the launcher's original API shape (`Click`, `IsEnabled`, `Label`, `ShowIcon`) over a native Eto button; click detection, keyboard focus, and default-button behaviour come from GTK, so the special case is gone.
 
-Known binding sites (all outside this file):
-
-| Site | Effect of a click |
-| --- | --- |
-| `MainPage/LoginFrame.cs.md` | `loginButton.Click += TriggerLogin` → `OnLogin?(LoginAction.Game)` |
-| `LoadingPage/LoadingPage.cs.md` | `cancelButton.Click += () => this.Cancelled?.Invoke()` |
-| `LoadingPage/LoadingPage.cs.md` | `disableAutoLoginButton.Click += () => { hasDisabledAutoLogin = true; App.Settings.IsAutologin = false; }` |
-| `Component.cs.md` (base) / page draw loops | none — the button is a leaf |
-
-Usings: `System.Numerics`, `Hexa.NET.ImGui`; reads `ImGuiColors` (`ImGuiColors.cs.md`).
+Usings: `Eto.Forms`. The wrapper inherits `Component` (`Component.cs.md`), so it is a `Panel` whose `Content` is the real button.
 
 ## 2. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `IsEnabled` | `public bool`, `get`/`set`, `= true` | **never read anywhere in the project** — see §4 |
-| `Label` | `public string`, `get`/`set` | doubles as ImGui id *and* displayed text |
-| `Color` / `HoverColor` / `TextColor` | `public Vector4`, `get`/`set` | ImGui `Button`, `ButtonHovered`, `Text` colours |
-| `Click` | `public event Action?` | nullary event; `+=`/`-=` composition, `?.Invoke()` fire |
-| `Width` | `public int?`, `get`/`set` | `null` ⇒ auto width; otherwise explicit pixel width |
-| `Button(label, isEnabled = true, color = null, hoverColor = null, textColor = null)` | ctor | null colour ⇒ defaults, see §3 |
+| `button` | `private readonly Eto.Forms.Button` (line 15) | the native control |
+| `Button(string label, bool isEnabled = true)` | ctor (lines 17–29) | `Text = label`, `Enabled = isEnabled` (lines 20–23), forwards `Click` (line 25), `Content = button` (line 27) |
+| `Click` | `public event Action?` (line 31) | raised from the native `Click` handler, `(_, _) => this.Click?.Invoke()` |
+| `IsEnabled` | `public bool` (lines 33–37) | forwards `button.Enabled` |
+| `Label` | `public string` (lines 39–43) | forwards `button.Text` |
+| `Width` | `public new int?` (lines 46–51) | `null` means "let the layout size the button"; getter returns `null` when `button.Width < 0`, setter writes `value ?? -1` |
+| `ShowIcon(FontAwesomeIcon icon)` | `public` (lines 53–56) | `button.Font = AppFonts.IconFont`, `button.Text = AppFonts.Glyph(icon)` |
+| `ToolTip` | `public new string` (lines 60–64) | forwards `Control.ToolTip` |
+| `Focus()` | `public new void` (line 67) | forwards `Control.Focus()` |
 
-Declared *after* the fields, mid-class — cosmetic only. The ctor assigns `Label`, `IsEnabled`, and the three colours with `x ?? default`.
+`public new` on `Width`, `ToolTip`, `Focus` hides the inherited `Control` members (the base declares `Width` as `int`, `ToolTip` as `string`), which is why the declarations use `new` — the wrapper changes the nullability of `Width`.
 
-## 3. Colour defaults
+## 3. `ShowIcon` semantics
 
-| Field | Default (`??` fallback) | Source |
+`ShowIcon` **replaces** the button's text with a Font Awesome glyph and switches the button font to `AppFonts.IconFont` (`AppFonts.cs.md`). There is no icon/text combination: after `ShowIcon` the label is the glyph, and `Label` (line 39) reads/writes the glyph string. Consumers that need text + icon must set `Label` after `ShowIcon`, which overwrites the glyph.
+
+`FontAwesomeIcon` comes from the submodule's FontAwesome enum (`XIVLauncher.Common`), so `ShowIcon`'s parameter type is the launcher's icon vocabulary, not Eto's `Image`.
+
+## 4. `Width` semantics
+
+The nullable wrapper encodes Eto's "unset width" sentinel: `button.Width` is `int` and `-1` means unset, so:
+
+- `Width` getter → `null` when `button.Width < 0`
+- `Width` setter → `value ?? -1`
+
+This lets callers write `button.Width = 45` (fixed) and leave the natural size (`Width = null`). Consumers use both forms: `Width = 45` for the login caret/friends buttons (`LoginFrame.cs:111`, `115`), `Width = 40` for the settings finish button (`SettingsPage.cs:56`), `Width = 28/89` for the OTP buttons (`OtpEntryPage.cs:49`, `57`, `60`), `Width = 320` for the loading-page buttons (`LoadingPage.cs:83`, `87`).
+
+## 5. Consumers
+
+| Consumer | Site | Use |
 | --- | --- | --- |
-| `Color` | `ImGuiColors.Blue` | `ImGuiColors.cs.md` |
-| `HoverColor` | `ImGuiColors.BlueShade3` | same file, darker ramp step ⇒ "pressed/hover" look |
-| `TextColor` | `ImGuiColors.DalamudWhite` | plain theme white |
+| `ActionButtons` | `ActionButtons.cs:43-53` | `MakeIconButton(FontAwesomeIcon, string toolTip, Action clicked)` builds `new Common.Button(string.Empty)` with `Width = 80` (line 47), then `ShowIcon(icon)` (line 50), `ToolTip` (line 51), `Click += clicked` (line 52) |
+| `LoginFrame` | `LoginFrame.cs:107`, `111`, `115` | login button (`Strings.LoginButton`), caret button (`Width = 45`), friends button (`Width = 45`) |
+| `LoadingPage` | `LoadingPage.cs:82`, `86` | cancel (`Strings.CancelLabel`), disable-auto-login, both `Width = 320` |
+| `SettingsPage` | `SettingsPage.cs:56` | finish button, `Width = 40`, `ShowIcon(FontAwesomeIcon.Check/Ban)` in `UpdateFinishButton` |
+| `OtpEntryPage` | `OtpEntryPage.cs:49`, `57`, `60` | paste (`28x28`), OK, Cancel (`89x30`) |
 
-Because the ctor resolves `null` to defaults, a caller **cannot** express "use the theme's own button colour" — an explicit `Vector4` must be passed. Conversely, mutating `Color` after construction *does* take effect the next frame, since the accessors are read in `Draw()` per frame. All three are get/set, so per-frame re-tinting (e.g. a "disabled-looking" state) is possible without `ImGui.BeginDisabled`.
+Consumers that use raw Eto buttons instead of this wrapper: `ModalDialog` (the modal OK button) and the settings tab action panels (`SettingsTabAbout.cs:61`, `SettingsTabGame.cs:60`, `SettingsTabTroubleshooting.cs:63-85`, `SettingsTabWine.cs:92-101`) — those need only `Text` + `Click`, so the wrapper adds nothing.
 
-## 4. `IsEnabled` is dead code
+## 6. Thread / UI rules
 
-`IsEnabled` is initialised `true`, settable, and read **nowhere** — neither in this `Draw()` nor by any consumer (grep across `src/` finds only `App.Settings.Addons.Where(x => x.IsEnabled)`, an unrelated `AddonEntry` field). It is *not* `Component.Enabled` either, which is equally unread outside `Component.cs.md` §3. Practical consequences:
+Construction and every property mutation must happen on the UI thread: `Component` is a GTK `Panel`, and `ShowIcon` mutates the native button's `Font`/`Text`. The wrapper does not marshal: `IsEnabled`, `Label`, `Width`, `ShowIcon`, `ToolTip` called from a background thread mutate GTK directly. Consumers that change button state from background work marshal themselves (e.g. `SettingsPage` finish-button updates, `MainPage` UI updates via `Ui.Post`; `Ui.cs.md`).
 
-- `Button.IsEnabled = false` changes nothing on screen; the button stays clickable.
-- To actually grey out a button, callers use `ImGui.BeginDisabled(...)` around a raw `ImGui.Button` (`MainPage/ActionButtons.cs.md`) or the `Checkbox`/`Input` pattern of gating inside their own draw (`Common/Checkbox.cs.md`, `Common/Input.cs.md`).
-- A future fix should pick one meaning ("skip draw", "draw disabled", "ignore click") and implement it in this `Draw()`; keeping the field name is currently load-bearing for the two sibling controls' *own* `IsEnabled` fields, which are honoured.
+`Click` is raised by GTK, i.e. on the UI thread; handlers that start background work should not block.
 
-## 5. `Draw()` — exact order and state
+## 7. Quirks
 
-```
-PushStyleVar(FramePadding, (16,16));  PushStyleVar(FrameRounding, 0);
-PushStyleColor(Button, Color);        PushStyleColor(ButtonHovered, HoverColor);
-PushStyleColor(Text, TextColor);
-ImGui.Button(Label, Vector2(Width ?? -1, 0))   → on true: Click?.Invoke()
-PopStyleVar(2);  PopStyleColor(3);
-```
-
-- **`FramePadding (16,16)` and `FrameRounding 0`** are forced for the button only: 16px inset on all sides (text-to-edge) and no rounded corners. The push/pop of `2` is balanced against those two pushes.
-- **`ImGuiCol.ButtonActive` is *not* pushed.** So the "actively held" frame uses the theme value (`ImGuiColors.cs.md`), while pressed-hover comes from `HoverColor`. Compare `FtsPage.cs.md` §Draw, which hides buttons by pushing `Button`, `ButtonHovered` **and** `ButtonActive` to zero — this component deliberately leaves `ButtonActive` alone.
-- **`ImGuiCol.Text` is pushed**, so the label colour is `TextColor`; the pop count of `3` matches the three colour pushes.
-- **Size:** `Vector2(Width ?? -1, 0)`. In ImGui, `size.x < 0` ⇒ width auto-sized from the label text, `size.y <= 0` ⇒ auto from style frame padding + text line height. So `Width == null` gives a text-fitted button, and a non-null `Width` fixes the width while height stays auto. `Width` is per-frame mutable, which is how `LoadingPage` centres quarter-width buttons (`LoadingPage.cs.md` §Draw).
-- **No `base.Draw()` call.** This is the only leaf in the package that skips the base draw chain (`Component.cs.md` §6), so a `Button` can never paint children.
-
-### `Click` firing rules
-
-`Click?.Invoke()` runs once per frame **per activation source**, and the sources are OR-ed:
-
-```csharp
-ImGui.Button(Label, size) || (ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
-```
-
-1. Mouse/pointer press-and-release on the button (ImGui's normal "button clicked" result).
-2. Keyboard fallback: if this item currently has ImGui keyboard focus and `Enter` is *held* (`IsKeyPressed`, not `IsKeyShortcut`/pressed-once), it also fires. Two consequences: holding `Enter` re-fires every frame (repeat-fire — e.g. repeated login triggers, guarded only by whatever the callee checks); and focus is global to the window, set by `Input.Draw()`/`Input.TakeKeyboardFocus` (`Common/Input.cs.md`), so a focused *different* item makes this condition true for that item, not for the button. The fallback is best-effort, not a proper focus-navigation model.
-3. Since `Click` is an `event` field of type `Action?`, multiple handlers can be composed; with more than one subscriber, the return of `ImGui.Button(...)` (and thus activation) still happens once — every subscriber runs in the same frame, in subscription order.
-
-## 6. `Label` as ImGui id
-
-`Label` is passed straight to `ImGui.Button`, so it is simultaneously the display text and the ImGui id string. Unlike `Checkbox`, `Input` and `SettingsEntry` — which use the `###` id-splitting form (`$"###{Id}"`, empty display text + unique id, `Component.cs.md` §5) — a `Button`'s id is derived from the **label text**, which means:
-
-- Two buttons with the same localized label inside the same ImGui window collide (ImGui ids hash the string) — a real risk for duplicated `Strings.CancelLabel` buttons in one window.
-- Localized strings containing `#`/`###` characters change the id/label split; keep label strings free of `#` or use the `###`-suffixed form.
-- Renaming a `Strings.*` label changes ImGui identity, which ImGui uses to remember hover/focus/active state across frames — a cosmetic, not functional, hazard.
-
-## 7. Usage contract for callers
-
-- Subscribe with `+=` in a constructor or at the point of ownership (`loginButton.Click += TriggerLogin`), unsubscribe with `-=` if the closure's captured state must not run again; the field is an `event`, so it is writable only inside this class — external code can only add/remove handlers (`event` encapsulation).
-- Handler closures run **inside the draw pass**, so they must be non-blocking and must not call `LauncherApp.ShowMessageBlocking` (deadlock, per `LauncherApp.cs.md` §5's "must never be called from the draw path") — page code that needs blocking dialogs routes through its own task/state machinery instead (`MainPage/MainPage.cs.md`).
-- `Width` must be assigned **before** reading `Width.Value`; `LoadingPage` does `button.Width = …; CenterCursorFor(button.Width.Value)` in that order (see that file's §Draw). A null `Width` at `.Value` read time throws on the null unwrap.
+- `Click` is `Action?` (no sender/args), so handlers can't distinguish rapid multi-clicks, mouse buttons, or keyboard vs mouse activation.
+- `isEnabled` is a constructor parameter only; toggling enablement later goes through `IsEnabled`.
+- `ShowIcon` does not cache the icon, so a consumer cannot read which glyph is displayed.
+- `Component`'s `Enabled` is `Panel.Enabled`, which propagates to children, so `Component.Enabled = false` disables the wrapped button as well as `IsEnabled = false`; the two paths coexist.
+- `Component.Id` exists on this wrapper (`Component.cs.md` §2) and is unused.
+- There is no `Height` wrapper: `Height = 28` / `Height = 30` in the OTP page use `Control.Height` directly, so the wrapper's nullable-`Width` convenience is not symmetrical.
 
 ## 8. Referenced / referenced-by
 
-Used by: `LoadingPage/LoadingPage.cs.md` (two buttons), `MainPage/LoginFrame.cs.md` (login button).
-Uses: `Component` (`Component.cs.md`), `ImGuiColors` (`ImGuiColors.cs.md`), Hexa.NET ImGui button/style bindings.
-Related: `Common/Checkbox.cs.md`, `Common/Input.cs.md` (the sibling controls, each with their *own* honoured `IsEnabled`), `MainPage/ActionButtons.cs.md` (raw ImGui buttons with tooltips instead of this component).
+Uses: `Component` (`Component.cs.md`), `AppFonts.IconFont`/`Glyph` (`AppFonts.cs.md`), `FontAwesomeIcon`.
+Referenced by: `ActionButtons.cs`, `LoginFrame.cs`, `LoadingPage.cs`, `SettingsPage.cs`, `OtpEntryPage.cs`.

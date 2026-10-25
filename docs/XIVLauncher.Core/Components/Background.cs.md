@@ -1,62 +1,63 @@
 # Background.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/Background.cs` · 22 lines · 541 bytes
-**Namespace:** `XIVLauncher.Core.Components` · **Declaration:** `public class Background : Component`
-**Role:** The fullscreen backdrop image, drawn beneath every page
+**File:** `src/XIVLauncher.Core/Components/Background.cs` · 25 lines · 834 bytes
+**Namespace:** `XIVLauncher.Core.Components` · **Declaration:** `public class Background : Panel`
+**Role:** The decorative FFXIV logo anchored to the bottom-left of the launcher window
 
 ---
 
 ## 1. Purpose
 
-`Background` paints one embedded PNG (`bg_logo.png`) as the launcher's wallpaper. It is instantiated by `LauncherApp` as `private readonly Background background = new();` and drawn inside the separate, first fullscreen ImGui window (`LauncherApp.cs.md` §8, the `"Background"` window with `ImGuiWindowFlags.NoBackground`) — which is why the content window can carry a 0.75 alpha background and still show this image underneath.
+`Background` renders the embedded `bg_logo.png` at full window size. It is the bottom layer of the launcher window: `LauncherForm` adds it to a `PixelLayout` at `(0, 0)` **before** the page host, so pages paint over it (`LauncherForm.cs.md`).
 
-Usings: `System.Numerics`, `Hexa.NET.ImGui` (plus implicit project-wide `AppUtil`, `TextureWrap`, `Component` from the `XIVLauncher.Core` namespace).
+The artwork lives in the **bottom-left quadrant** of a 1280×800 canvas and the rest is transparent, so a full-window image view places the logo in the bottom-left corner without any positioning logic. The previous immediate-mode version positioned the texture at `(0, viewport.Y - height)` for the same effect.
+
+Usings: `Eto.Drawing`, `Eto.Forms`.
 
 ## 2. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `bgTexture` | `private TextureWrap` | no initializer; assigned in ctor → definite-assignment style field |
-| `Background()` | `public` ctor, **no parameters, no explicit `: base(...)`** | `TextureWrap.Load(AppUtil.GetEmbeddedResourceBytes("bg_logo.png"))` |
-| `Draw()` | `override` | positions the image, draws it, then `base.Draw()` |
+| `Background()` | `public` ctor (lines 17–24) | sets `Content` once |
+| `Content` | `ImageView` with `Image = AppImages.FromResource("bg_logo.png")`, `Size = new Size(1280, 800)` | lines 19–23 |
 
-The ctor is `public` (unlike `Page`'s `protected` one) — `Background` is a plain `Component`, so it can be created anywhere; in practice it exists exactly once, as a `LauncherApp` field initializer.
+`Background` derives from **`Eto.Forms.Panel`**, not from `Component` — it has no `OnShow()`, no `Id`, and is not a page. It is constructed once by `LauncherForm` and never swapped.
 
-## 3. Construction contract
+## 3. Consumer
 
-- `AppUtil.GetEmbeddedResourceBytes("bg_logo.png")` reads a resource embedded in the built binary (see `AppUtil.cs.md`); the name is a **string literal, compile-time unchecked**: renaming `Resources/binaries`-adjacent assets or the PNG itself yields a runtime failure at app startup, not a build error. The asset lives under `src/XIVLauncher.Core/Resources/` alongside the fonts/icon assets used by `SettingsTabAbout` (`logo.png`) and `SteamDeckPromptPage` (`steamdeck_switchprompt.png`).
-- `TextureWrap.Load` decodes and uploads to the GPU device immediately (`TextureWrap.cs.md`), so the cost is paid once, during `LauncherApp` construction — inside the `"Background"` window's owner, before the first frame.
-- `bgTexture` is not `readonly`: the field is reassignable in principle but nothing reassigns it; treat the handle as lifetime-long. ImGui handles are only valid for the lifetime of the `TextureWrap`, so **do not** let it be garbage-reclaimed or re-loaded per frame.
-- `new Background()` runs as a field initializer on `LauncherApp`; field initializers run before the ctor body, so the texture is loaded before the killswitch check and before `RunStartupTasks()` (`LauncherApp.cs.md` §4/§5) — an image failure therefore precedes the modal system.
+| Consumer | Site | Use |
+| --- | --- | --- |
+| `LauncherForm.cs` | line 31 | `new Background { Size = new Size(1280, 800) }`, then `layout.Add(background, 0, 0)` |
 
-## 4. `Draw()` geometry
+The consumer sets `Size` on the `Panel` itself (the image view already has `Size(1280, 800)`), so both layers are window-sized.
 
-```csharp
-ImGui.SetCursorPos(new Vector2(0, ImGuiHelpers.ViewportSize.Y - bgTexture.Height));
-ImGui.Image(bgTexture.ImGuiHandle, new Vector2(bgTexture.Width, bgTexture.Height));
-base.Draw();
-```
+## 4. Rendering behaviour (GTK `ImageView`)
 
-- The cursor is set to the **bottom-left** corner of the window: `x = 0`, `y = viewportHeight − imageHeight`. `ImGuiHelpers.ViewportSize` is a live accessor (`ImGuiHelpers.cs.md` §"Both are accessors"), so the image tracks window resizes immediately — correct mid-frame.
-- `ImGui.Image` is given the image's **native size** (`Width`, `Height`), not a viewport-relative size and not scaled by `ImGuiHelpers.GlobalScale`. The wallpaper is therefore unscaled: on a Steam Deck 1280×800 window it fills the frame only if the asset is 1280×800; on a larger monitor it stays anchored bottom-left and leaves empty space above/right, and on a window shorter than the image the top is clipped by the window and the negative `y` pushes the top off-screen.
-- This is the intended contrast with the other full-bleed images in the package (`FtsPage.cs.md`, `SteamDeckPromptPage.cs.md`), which pass a *fixed* `new Vector2(1280, 800)` and thus stretch.
-- The image is drawn into whichever window is current when called: `LauncherApp.Draw()` opens `"Background"` first, so it is window-scoped to that fullscreen, `NoBackground`/`NoScrollbar` window. If `Background.Draw()` were called inside another window, clipping would follow that window instead.
-- `ImGui.Image` registers an item, so `ImGui.IsItemClicked`-style hit tests issued right afterwards would target the image; `Background` performs none.
-- `base.Draw()` runs last, so any children would paint above the image (in this project the collection is empty — `Component.cs.md` §2).
+`Eto.Gtk/Forms/Controls/ImageViewHandler.cs` implements the image view as a `Gtk.DrawingArea`:
 
-## 5. Interaction with the rest of the draw order
+- the image is scaled by `Math.Min(scaleWidth, scaleHeight)` (uniform scaling, no distortion),
+- the scaled image is **centred** within the widget,
+- drawing happens in the GTK expose/draw handler.
 
-`LauncherApp.Draw()`'s sequence is: background window (this component) → content window (`CurrentPage.Draw()` with `SetNextWindowBgAlpha(0.75f)` and `ImGuiCol.WindowBg = ImGuiColors.BlueShade0`) → `DrawModal()`. `Background` is thus the only component drawn *outside* the content window and the only one that can be seen through the content window's 0.75 alpha — that contrast is the visual contract, so changing either the alpha (in `LauncherApp`) or the image's own opacity changes the perceived theme. The theme's background colour pairing is documented in `ImGuiColors.cs.md` (`BlueShade0`).
+Here the widget size equals the bitmap size (1280×800), so `scaleWidth == scaleHeight == 1`: the bitmap is drawn 1:1, no scaling, no centring offset. Two consequences:
 
-## 6. Invariants and hazards
+- If the window is resized larger than 1280×800, the image stays 1280×800 anchored at the widget's top-left; the logo does **not** re-anchor to the bottom-left, because centring is applied inside the fixed-size image view.
+- The image view's transparency handling depends on the GTK expose path; `bg_logo.png` is RGBA, so the transparent region shows the window background (the dark GTK theme), not the page content underneath. There is nothing underneath here — the background is added first, so page content is drawn on top of the window, not composited with the logo.
 
-- **No `Enabled` gate, no DPI scaling, no aspect handling:** the class assumes "one asset, one size". Any future "fit to window"/"cover" behaviour must come from this file — the geometry is entirely local.
-- **No push/pop of ImGui style state:** `Draw()` is style-neutral, which is required because the enclosing `LauncherApp.Draw()` balances its own `PushStyleVar(2)`/`PopStyleVar(2)` around the window (`LauncherApp.cs.md` §8 note on push/pop balance). Do not add unbalanced pushes here.
-- The whole component is stateless beyond the texture handle, so it is trivially re-drawable every frame; nothing about it depends on `OnShow()`, and it never participates in page transitions.
-- If the asset were replaced by a transparent image, this file still occupies the whole first window — the backdrop window exists regardless of content. There is no fallback draw (e.g. solid colour), so an image failure is a black or garbage backdrop rather than a visible error.
-- `bg_logo.png` is not referenced by any other file, so the asset name appears only here; a rename must be paired with the resource embedding list, not just this string.
+## 5. Image source
+
+`AppImages.FromResource("bg_logo.png")` (`AppImages.cs.md`) resolves the resource through `Bitmap.FromResource(resourceName, typeof(AppUtil).Assembly)`. `bg_logo.png` is embedded as `EmbeddedResource` in `src/XIVLauncher.Core/Resources/bg_logo.png` (`XIVLauncher.Core.csproj.md`), measured as `1280 x 800`, 8-bit RGBA, non-interlaced.
+
+`AppImages` caches per resource name, so the bitmap is decoded once; the page host swaps do not re-decode it.
+
+## 6. Quirks
+
+- **Fixed 1280×800 literal:** the size is hard-coded, matching `LauncherForm.ClientSize`. It is not derived from the bitmap's own `Width`/`Height`, so a future artwork change that alters canvas size needs both files updated.
+- **No `Component` inheritance:** `Background` is the only UI class in `Components/` that does not inherit `Component`, so `OnShow()` is unavailable on it.
+- The comment claims the image view "scales the bitmap to its own size"; GTK scales uniformly and centres, which is equivalent here only because the sizes match. The wording is the design rationale, not the mechanism.
+- Because the image view is a `DrawingArea`, the background artwork does not participate in GTK theme painting (no background fill, no border), so the area outside the artwork is the window's own background.
 
 ## 7. Referenced / referenced-by
 
-Referenced by: `LauncherApp.cs.md` (field `background`, drawn in §8).
-Uses: `Component` (`Component.cs.md`), `TextureWrap` (`TextureWrap.cs.md`), `AppUtil.GetEmbeddedResourceBytes` (`AppUtil.cs.md`), `ImGuiHelpers.ViewportSize` (`ImGuiHelpers.cs.md`), `Hexa.NET.ImGui` cursor/image calls.
+Uses: `AppImages` (`AppImages.cs.md`), `Eto.Forms.ImageView`, `Eto.Forms.Panel`.
+Referenced by: `LauncherForm.cs` (line 31).

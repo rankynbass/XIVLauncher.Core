@@ -1,67 +1,66 @@
 # SettingsTabGame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabGame.cs` · 60 lines · 2967 bytes
-**Namespace:** `XIVLauncher.Core.Components.SettingsPage.Tabs` · **Declaration:** `public class SettingsTabGame : SettingsTab`
-**Role:** The "Game" tab — game/config directory, extra args, language, DPI, OTP-macros toggle, ignore-Steam toggle, UID-cache toggle plus a reset button
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabGame.cs` · 80 lines · 3,699 bytes
+**Namespace:** `XIVLauncher.Core.Components.SettingsPage.Tabs` · **Declaration:** `public class SettingsTabGame : SettingsTab` (line 17)
+**Role:** Game tab — game path, config path, extra arguments, language, DPI, auth toggles, UID-cache reset action
 
 ---
 
 ## 1. Purpose
 
-The row-heavy, mostly-data tab: eight rows in an `Entries` **field initializer** and a `Draw()` that adds exactly one conditional action. Everything else is inherited from `SettingsTab.cs.md` (§Draw entries loop, §Load, §Save), so this file is the reference example for "how a row is written" (`SettingsEntry{T}.cs.md` §config bridge + §`init` hooks) and for the per-row platform filter style that `SettingsPage.cs.md` §`IsUnixExclusive` deliberately does *not* use.
+Replaces the immediate-mode game tab, which checked the UID-cache visibility flag every frame. Here the reset section is a panel whose `Visible` flag is recomputed in `RefreshDynamic()`, and each row persists through `Program.Config` on the settings page's Save pass.
 
-## 2. Entries
+Usings: `Eto.Drawing` (`Size`? not used here — `WrapMode`), `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`, `DpiAwareness`, `CoreEnvironmentSettings`), `XIVLauncher.Core.Resources.Localization` (`Strings`).
 
-Rows are `new SettingsEntry<T>(label, description, () => Program.Config.X, x => Program.Config.X = x)` (`SettingsEntry{T}.cs.md` §2) with `T` choosing the widget (`SettingsEntry{T}.cs.md` §3: `DirectoryInfo` → text field, `string` → text field, `bool` → checkbox, enum → combo with `SettingsDescriptionAttribute` labels — `Tabs/SettingsTabGame.cs.md` §enum rows).
+## 2. Entries (8 rows, lines 21-54)
 
-| Row (label key) | Anchor | `T` | Config field (`Program.Config.*`) | Hooks |
+| # | Type | Label / Description | Load → Save | Extra behaviour |
 | --- | --- | --- | --- | --- |
-| `Strings.GamePathSetting` | `:12-:22` | `DirectoryInfo` | `GamePath` | `CheckValidity` (`:14-:21`) |
-| `Strings.GameConfigurationPathSetting` | `:24-:30` | `DirectoryInfo` | `GameConfigPath` | `CheckValidity` (`:26`, ternary), `CheckVisibility` (`:29`) |
-| `Strings.AdditionalGameArgsSetting` | `:34` | `string` | `AdditionalArgs` | — |
-| `Strings.GameLanguageSetting` | `:35` | `ClientLanguage` (enum) | `ClientLanguage` (`?? ClientLanguage.English`) | — |
-| `Strings.GameDPIAwarenessSetting` | `:36` | `DpiAwareness` (enum) | `DpiAwareness` (`?? DpiAwareness.Unaware`) | — |
-| `Strings.UseXLAuthMacrosSetting` | `:37` | `bool` | **`IsOtpServer`** | — |
-| `Strings.IgnoreSteamSetting` | `:38-:41` | `bool` | `IsIgnoringSteam` (`?? false`) | `CheckVisibility` (`:40`) |
-| `Strings.UseUIDCacheSetting` | `:42` | `bool` | `IsUidCacheEnabled` (`?? false`) | — |
+| 1 | `SettingsEntry<DirectoryInfo>` (23-35) | `Strings.GamePathSetting` / `...Description` (`Strings.Designer.cs:456, 462`) | `Program.Config.GamePath` (23) | `CheckValidity` (25-34): whitespace `FullName` → `Strings.GamePathSettingNotSetValidation` (28); `x.Name is "game" or "boot"` → `Strings.GamePathSettingInvalidValidationj` (31); else `null` (33) |
+| 2 | `SettingsEntry<DirectoryInfo>` (37-43) | `Strings.GameConfigurationPathSetting` / `...Description` (480, 486) | `Program.Config.GameConfigPath` (37) | validity: empty → `Strings.GameConfigurationPathNotSetValidation` (39); visibility: `Environment.OSVersion.Platform == PlatformID.Unix` (42) |
+| 3 | `SettingsEntry<string>` (45) | `Strings.AdditionalGameArgsSetting` / `...Description` (498, 504) | `Program.Config.AdditionalArgs` | no validity/warning/visibility hooks |
+| 4 | `SettingsEntry<ClientLanguage>` (46) | `Strings.GameLanguageSetting` / `...Description` (510, 516) | `Program.Config.ClientLanguage ?? ClientLanguage.English` | `DropDown` built from `SettingsDescriptionAttribute` (`SettingsEntry{T}.cs.md` §5) |
+| 5 | `SettingsEntry<DpiAwareness>` (47) | `Strings.GameDPIAwarenessSetting` / `...Description` (522, 528) | `Program.Config.DpiAwareness ?? DpiAwareness.Unaware` | enum drop-down |
+| 6 | `SettingsEntry<bool>` (48) | `Strings.UseXLAuthMacrosSetting` / `...Description` (534, 540) | `Program.Config.IsOtpServer ?? false` | check box carries the label (`SettingsEntry{T}.cs.md` §4) |
+| 7 | `SettingsEntry<bool>` (49-52) | `Strings.IgnoreSteamSetting` / `...Description` (546, 552) | `Program.Config.IsIgnoringSteam ?? false` | visibility: `!CoreEnvironmentSettings.IsSteamCompatTool` (51) |
+| 8 | `SettingsEntry<bool>` (53) | `Strings.UseUIDCacheSetting` / `...Description` (558, 564) | `Program.Config.IsUidCacheEnabled ?? false` | toggles the footer panel via `RefreshDynamic` |
 
-`Title` is `:45 Strings.GameTitle`; `Draw()` is `:47-:59` with `base.Draw()` at `:49` (§4).
+`Title` is `Strings.GameTitle` (`Strings.Designer.cs:570`) (line 56).
 
-## 3. The rows' platform and validation logic
+## 3. Reset section
 
-- **`GameConfigPath` is Unix-only per row**, not per tab: `CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix` (`:29`) with a `// TODO: We should also support this on Windows` comment (`:28`) marking it as *current state*, not intent. Contrast `Tabs/SettingsTabWine.cs.md` (`IsUnixExclusive => true`, whole tab hidden) — the granularity choice is recorded in `SettingsTab.cs.md` §`IsUnixExclusive`.
-- **`IgnoreSteamSetting` is *hidden* under a Steam compat tool**, not "Steam Deck only": `CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool` (`:40`). Read `CoreEnvironmentSettings.cs.md` §`IsSteamCompatTool` for what that tests (the steam-virtuous / steamcompat launcher flavour): the row is offered when the launcher is *not* running under a compat tool, because under one, Steam is the thing being sidestepped. Keep the polarity — inverting it is what makes "can't launch without Steam" unconfigurable on Deck-class systems.
-- **`GamePath` validity is name-shape, not existence**: `string.IsNullOrWhiteSpace(x?.FullName)` → `Strings.GamePathSettingNotSetValidation`; `x.Name is "game" or "boot"` (C# 13 `or` pattern on `DirectoryInfo.Name`, the last path component) → `Strings.GamePathSettingInvalidValidationj`; else `null`. The name test is the guard against pointing at the folder *inside* a prefix layout (`…/Final Fantasy XIV Online/game` or `…/drive_c/game`) instead of the prefix-ish directory the launcher expects — see `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` for what the launcher derives from `GamePath`, and `MainPage.cs.md` §patch machinery for what it then scans. Nothing here touches the filesystem, so a set-but-missing path is valid at the UI level.
-- **The `…InvalidValidationj` key name really ends in a stray `j`** in `src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs:474` (a typo carried into the `.resx`); the code must keep the identifier that exists, so do not "fix" one side only — a rename is a `Designer.cs` + every `.resx` pair edit (`SettingsTab.cs.md` §2.1).
-- **The `bool` row named `UseXLAuthMacrosSetting` writes `Program.Config.IsOtpServer`** (`:37`) — the label and the field disagree in vocabulary, and the field is the one `OtpEntryPage.cs.md` / `MainPage.cs.md` §OTP server (`HttpServer`, port 4646) read for the in-game OTP macro path. The mapping is the row's contract: rename the *label* (in the `.resx`) if the vocabulary must change, keep the field.
+Constructor (58-72):
 
-## 4. `Draw()` — rows first, then the UID-cache affordance
+- `var resetUidButton = new Button { Text = Strings.ResetUIDCacheButton }` (60) (`Strings.Designer.cs:582`)
+- `resetUidButton.Click += (_, _) => Program.ResetUIDCache()` (61) → `Program.cs:422` (`launcherApp.UniqueIdCache.Reset()`)
+- `this.resetUidPanel = new StackLayout { Spacing = 10, Items = { new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character }, resetUidButton } }` (63-71) (`Strings.Designer.cs:576`)
 
-```csharp
-base.Draw();                                              // :49 — SettingsTab entries loop
-if (Program.Config.IsUidCacheEnabled == true)              // :51
-{
-    ImGui.Text(Strings.ResetUIDCacheInfo);                 // :53
-    if (ImGui.Button(Strings.ResetUIDCacheButton))          // :55
-        Program.ResetUIDCache();                            // :57
-}
-```
+`FooterContent => [this.resetUidPanel]` (74) — the panel and its widgets are created once and reused across rebuilds.
 
-- **`base.Draw()` first** puts the action block *below* the rows, i.e. the affordance reads as "after the setting it acts on" — the position choice `SettingsTab.cs.md` §base.Draw() lists; see that spec for which tabs choose first vs last (`Tabs/SettingsTabWine.cs.md`, `Tabs/SettingsTabTroubleshooting.cs.md`, `Tabs/SettingsTabPatching.cs.md` §no Draw, `Tabs/SettingsTabAbout.cs.md`, `Tabs/SettingsTabDebug.cs.md`).
-- **The gate is `== true`, three-state** (`Config.IsUidCacheEnabled` is `bool?`): a never-set row shows the row itself (`?? false` getter ⇒ row reads `false`) but draws no affordance, and `Save()` on the row writes `true` (not "unset"). That distinction is why the button block is gated on the literal-`true` comparison against `Config` rather than on `UseUIDCacheSetting.Value`: config keeps the unset/`false` split, whereas `Value` collapses them (`SettingsEntry{T}.cs.md` §null boxes read as default).
-- **`Program.ResetUIDCache()` fires on click, immediately** (`:57`) — see `docs/XIVLauncher.Core/Program.cs.md:484` (`public static void ResetUIDCache(bool tsbutton = false) => launcherApp.UniqueIdCache.Reset();`). It is **not** deferred to the finish-button save path (`SettingsPage.cs.md` §finish button), unlike `Tabs/SettingsTabWine.cs.md` §Save override: the tab's button is an instant action, `Tabs/SettingsTabGame.cs.md` §`UseUIDCacheSetting` is the persisted toggle. The launcher-side lever on the same switch (`MainPage.cs.md:198` calling `Program.ResetUIDCache()` before a login, gated by `IsUidCacheEnabled == false` — see that spec's UID-cache gating note) is what makes clicking the button equivalent to a login-cycle reset — see that spec for the gate details.
-- **The row's `CheckVisibility` is absent**, so the row is visible on every platform; the tab is not `IsUnixExclusive`. That is the shape `SettingsTab.cs.md` §`IsUnixExclusive` bullet records for this tab.
+`RefreshDynamic()` (76-79) sets `this.resetUidPanel.Visible = Program.Config.IsUidCacheEnabled == true` (78). `RefreshDynamic` is called by `SettingsTab.RefreshEntries()` (`SettingsTab.cs.md` §4), i.e. on page show / search rebuild, so the section appears only when the tab layout is rebuilt after the UID-cache checkbox changes.
 
-## 5. Invariants and extension points
+## 4. Consumers
 
-- **Rows are added in the `Entries` field initializer**, hooks via designated initializers (`SettingsEntry{T}.cs.md` §`init` accessors — the restriction is compile-enforced, so a hook can only be set here, never later; a dynamic hook is a closure reading live state, which is exactly what `:29`/`:40` do).
-- **The order of rows is the tab's visual order** (`SettingsTab.cs.md` §Draw iterates in `Entries` order), and `SettingsPage.cs.md` §search mode groups matches by tab in the same order.
-- **No entry here holds state that the launcher re-reads mid-session** — `SettingsEntry{T}.cs.md` §config bridge bullet (lambdas re-read `Program.Config`) is why `MainPage.cs.md` §`DoAutoLoginIfApplicable` (which consults `Config.ClientLanguage` and friends at login time) sees a fresh value after a Settings visit without any reload. Do not add per-row caching to "make it stick"; the launcher-side reads are the live path.
-- **Enums here are library types** (`ClientLanguage`, `DpiAwareness` — see `lib/FFXIVQuickLauncher/src/XIVLauncher.Common/` for their declarations) whose combo labels come from `SettingsDescriptionAttribute` annotations (`SettingsEntry{T}.cs.md` §enum rows): adding an `Enum.WithAnnotations`-style member is an enum-edit, adding a *friendly label* is an annotation edit, both outside this file. Neither of these two enums is annotated today, which is why their combo rows show raw member names (`SettingsEntry{T}.cs.md` §enum rows fallback `x.ToString()`).
+| Consumer | Line(s) | Use |
+| --- | --- | --- |
+| `SettingsPage.tabs` | `SettingsPage.cs:26` | first tab |
+| `MainPage` login | `MainPage.cs:175, 262` | reads `App.Settings.GamePath`, `ClientLanguage` (`Components/MainPage/MainPage.cs.md` §3) |
+| `MainPage` patching | `MainPage.cs:870-875, 943` | `App.Settings.PatchPath`, patch progress |
+| `MainPage` launch | `MainPage.cs:205, 261` | `App.Settings.GamePath`, `IsUidCacheEnabled` |
+| `Program` | `Program.cs:39` | `Program.Config` is the `ILauncherConfig` the entries read/write |
 
-## 6. Referenced / referenced-by
+`App.Settings` and `Program.Config` are the same object: `LauncherApp.Settings` is `Program.Config` (`LauncherApp.cs:121`).
 
-Instantiates: `SettingsEntry{T}.cs.md` (×8). Base of `SettingsTab.cs.md`; iterated by `SettingsPage.cs.md` §Draw/§search/§finish button; loaded on show by `SettingsTab.cs.md` §Load.
-Config vocabulary: `docs/XIVLauncher.Core/Program.cs.md` §`Config` + `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`; consumed at launch time by `MainPage.cs.md` §login pipeline (`ClientLanguage`, `AdditionalArgs`, `GamePath`, `IsOtpServer`, `IsUidCacheEnabled`, `IsIgnoringSteam`).
-Action: `docs/XIVLauncher.Core/Program.cs.md` §`ResetUIDCache` (`:484`, reaches `LauncherApp.cs:115`'s lib cache — **not** the fork's dead `UniqueIdCache` stub, spec'd in `docs/XIVLauncher.Core/Configuration/UniqueIdCache.cs.md` §1).
-Platform probe: `CoreEnvironmentSettings.cs.md` §`IsSteamCompatTool`.
+## 5. Quirks
+
+- **Persistence is Save-time, not keystroke-time.** The `save` delegate runs only in `SettingsEntry<T>.Save()` (`SettingsEntry{T}.cs:222`), called by the finish button (`SettingsPage.cs:61-63`). Typing in the game-path box updates `InternalValue` and validity labels immediately, but `Program.Config.GamePath` is written only when the user presses Finish.
+- `CheckValidity` for the game path reads `x.Name` (30) after the whitespace guard returns, so a `null` `DirectoryInfo` never reaches it.
+- The config-path row is Unix-only (42); on Windows it never appears in the tab and never appears in search results (`IsVisible` gate at `SettingsPage.cs:136`).
+- `CoreEnvironmentSettings.IsSteamCompatTool` (lib API, out of docs scope) is evaluated at rebuild time, so launching the launcher under a Steam compat tool and changing env mid-session does not re-show the row.
+- The reset button calls `Program.ResetUIDCache()` with the default `tsbutton: false` (`Program.cs:422`).
+- The footer panel is a `Panel` field typed as `Panel` (19) holding a `StackLayout`; hiding the panel hides both label and button.
+
+## 6. Cross-references
+
+Uses: `SettingsTab` (`SettingsTab.cs.md`), `SettingsEntry<T>` (`SettingsEntry{T}.cs.md`), `Strings` (`Resources/Localization/Strings.Designer.cs.md`), `Program` (`Program.cs.md`).
+Referenced by: `SettingsPage.cs.md` §2.

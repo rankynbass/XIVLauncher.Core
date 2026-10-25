@@ -1,72 +1,84 @@
 # Spinner.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/LoadingPage/Spinner.cs` · 51 lines · 1484 bytes
-**Namespace:** `XIVLauncher.Core.Components.LoadingPage` · **Declaration:** `public class Spinner : Component`
-**Role:** The indeterminate-progress spinner: a 30-segment rotating arc drawn from `ImGui.GetTime()`, no state of its own
+**File:** `src/XIVLauncher.Core/Components/LoadingPage/Spinner.cs` · 74 lines · 2,382 bytes
+**Namespace:** `XIVLauncher.Core.Components.LoadingPage` · **Declaration:** `public class Spinner : Drawable`
+**Role:** The rotating arc spinner on the loading page — custom-drawn, timer-driven
 
 ---
 
 ## 1. Purpose
 
-`Spinner` is the "please wait" glyph shown by `LoadingPage` while `IsIndeterminate` is true (`LoadingPage.cs.md` §Draw: `ImGuiHelpers.CenterCursorFor(SPINNER_RADIUS * 2); this.spinner.Draw();`). Its entire geometry is a function of wall time — no fields are mutated in `Draw()`, so it is trivially re-drawable every frame.
+`Spinner` keeps the launcher's custom-drawn visual: 30 arc segments stroked with a round-capped pen, computed with the same wobble math the ImGui draw list produced. Redraw is driven by an Eto `UITimer` (30 fps) instead of the render loop, and colour/thickness come from the constructor arguments rather than the ImGui style.
 
-Usings: `System.Numerics`, `Hexa.NET.ImGui`. Constructed once, in `LoadingPage`'s ctor: `new Spinner(SPINNER_RADIUS, 5, ImGui.GetColorU32(ImGuiCol.ButtonActive))`.
+Usings: `System.Diagnostics` (`Stopwatch`), `System.Numerics` (`Vector2`), `Eto.Drawing`, `Eto.Forms`.
 
 ## 2. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `radius` | `private readonly float` | ctor param; also the reservation box size |
-| `thickness` | `private readonly int` | stroke width of the arc |
-| `color` | `private readonly uint` | ImGui colour (`ImU32`), captured at construction |
-| `Spinner(float radius, int thickness, uint color)` | ctor | pure capture, no side effects |
-| `Draw()` | `override` | dummy reservation → arc path → `base.Draw()` |
+| `NUM_SEGMENTS` | `private const int = 30` (line 19) | segment count, used by the angle math |
+| `radius` | `private readonly float` (line 21) | arc radius, from ctor |
+| `pen` | `private readonly Pen` (line 22) | `new Pen(color, thickness)` with `LineCap = PenLineCap.Round`, `LineJoin = PenLineJoin.Round` (lines 30–35) |
+| `stopwatch` | `private readonly Stopwatch` (line 23) | `Stopwatch.StartNew()` at construction — monotonic clock for the animation |
+| `timer` | `private readonly UITimer` (line 24) | `Interval = 1.0 / 30.0` (seconds) |
+| `Spinner(float radius, int thickness, Color color)` | ctor (lines 26–44) | builds pen, sets size, wires paint + timer, starts timer |
+| `Size` | set in ctor (line 37) | `((int)(radius * 2) + 32, (int)(radius * 2) + 32)` |
+| `Paint` handler | line 39 | `(_, e) => this.Draw(e.Graphics)` |
+| `timer.Elapsed` handler | line 41 | `(_, _) => this.Invalidate()` |
+| `timer.Start()` | line 42 | animation begins at construction |
+| `Stop()` | `public` (line 46) | `=> this.timer.Stop()` |
+| `Draw(Graphics g)` | `private` (lines 48–73) | paint body |
 
-Everything is `readonly`: the spinner cannot be recoloured or resized per frame. The colour is sampled **once** in `LoadingPage`'s ctor via `ImGui.GetColorU32(ImGuiCol.ButtonActive)`, i.e. before the theme is pushed by the draw pass — a themed recolour at runtime does not propagate to the spinner. `LoadingPage.cs.md` should be read together with this constraint (the spinner inherits the *startup* style, not the loading-page style).
+The constructor is UI-thread-only: `Drawable` is an Eto control, so `Spinner` must be created after the Eto `Application` exists (`Program.cs.md`).
 
-## 3. Layout contribution
-
-```csharp
-var framePadding = ImGui.GetStyle().FramePadding;
-var pos = ImGui.GetCursorPos();
-ImGui.Dummy(new Vector2(this.radius * 2) + (framePadding * 2));
-```
-
-- The component **reserves its own bounding box** (`2r + 2·framePadding` square) before drawing, so the cursor advances and the containing page can stack content below it. `LoadingPage` first calls `ImGuiHelpers.CenterCursorFor(SPINNER_RADIUS * 2)` (`ImGuiHelpers.cs.md`) to centre horizontally, then `Draw()` reserves the box — the two centring helpers use `radius*2` without the padding term, so the arc is offset left by one `framePadding` relative to the centring assumption. Cosmetic, but it is the reason the spinner does not look perfectly centred against the text lines around it.
-- `centre` is derived from the **pre-Dummy cursor** (`pos`), and includes `+ framePadding.Y` but **not** `+ framePadding.X` — same asymmetry as above; the horizontal centring is not padding-corrected.
-- Geometry is drawn through `ImGui.GetWindowDrawList()` (`PathLineTo`/`PathStroke`), i.e. absolute window coordinates, not the item cursor: a change of window/padding does not rescale the spinner, only its anchor.
-
-## 4. The animation function
+## 3. Animation math
 
 ```csharp
-const int NUM_SEGMENTS = 30;
-var time    = ImGui.GetTime() / 1.2;
-var start   = Math.Abs(Math.Sin(time * 1.8f) * (NUM_SEGMENTS - 5));   // 0..25, ping-pong
-var aMin    = 2π · start / 30;
-var aMax    = 2π · (30 - 3) / 30;                                    // fixed: 27/30 of a circle
-var a       = aMin + (i / 30f) · (aMax - aMin);
-point_i     = centre + (cos(a + time·8), sin(a + time·8)) · radius;
+var time = (float)(this.stopwatch.Elapsed.TotalSeconds / 1.2);
+var start = MathF.Abs(MathF.Sin(time * 1.8f) * (NUM_SEGMENTS - 5));
+var aMin  = MathF.PI * 2.0f * start / NUM_SEGMENTS;
+var aMax  = MathF.PI * 2.0f * (NUM_SEGMENTS - 3) / NUM_SEGMENTS;
+var center = new Vector2(this.Width / 2f, this.Height / 2f);
 ```
 
-- **Two independent motions:** the arc's *sweep start* oscillates via `|sin|` (so `start` ping-pongs between 0 and 25 — a "grow/shrink" pendulum effect), while `+ time * 8` rotates the whole arc continuously at ~8 rad/s (scaled by the `/1.2` factor on `time`). The constants are tuned for look, not for frame-rate independence — `ImGui.GetTime()` is seconds since frame-loop start, so the motion is time-based and therefore frame-rate independent in speed, but its *phase* depends on app start time (no per-instance phase offset, so two spinners animate in lockstep).
-- `aMax` is constant (`27/30` of a turn), so the arc length varies only through `aMin` — the drawn sweep is `aMax - aMin`, between 27/30 and 2/30 of a circle. `NUM_SEGMENTS` stays 30 regardless, so a short sweep is 30 points along a small arc (dense polyline): increasing `NUM_SEGMENTS` only increases tessellation cost, it does not make the arc smoother-looking at a fixed sweep.
-- `PathLineTo` starts a polyline; `PathStroke(color, ImDrawFlags.RoundCornersAll, thickness)` closes the visual with rounded joins. No `PathFill`, so the spinner is an outline only. Note the path is not explicitly closed, so the two ends of the arc are open (with `RoundCornersAll` they get rounded caps).
-- `const int NUM_SEGMENTS = 30;` is a C# 13 `const` local — compile-time inlined, cannot be reassigned; if a caller ever wants variable tessellation, that keyword must go.
+For each `i` in `0..NUM_SEGMENTS - 1` (lines 60–72):
 
-## 5. Statelessness and reuse
+- `angle = aMin + (i / NUM_SEGMENTS) * (aMax - aMin) + time * 8`
+- point on the circle at `center + (cos(angle) * radius, sin(angle) * radius)`
+- `g.DrawLine(this.pen, previous, point)` when a previous point exists — the arc is stroked as 29 segments, not as filled wedges.
 
-- No mutable fields, no events, no `Enabled`-specific logic, no `OnShow()`: the component is a pure function of (position, style, time). It does call `base.Draw()` at the end (`Component.cs.md` §6), so unlike `Button`/`Checkbox`/`Input` it is not a strict leaf — children would be painted.
-- Because nothing here caches geometry, per-frame cost is one dummy item plus 30 path points and one stroke. `Spinner` is safe to construct cheaply (ctor has no side effects), unlike `Common/Input.cs.md` whose ctor registers a Steam handler.
-- There is no "stop" state: to hide the spinner the *caller* must stop calling `Draw()` (`LoadingPage.cs.md` gates on `IsIndeterminate`). Do not add a `Stop()` that mutates hidden state — the class has none.
+Consequences:
 
-## 6. Contract for callers
+- `time` grows without bound; `MathF.Sin(time * 1.8f)` makes the arc's start angle oscillate (the "wobble"), and `time * 8` makes the whole arc rotate. In a 32-bit `float`, `time` loses precision after a long-running session, which degrades the smoothness of the rotation — the animation is long-lived because `LauncherApp` never recreates the page.
+- `center` is recomputed from `Width`/`Height` per paint, so the spinner re-centres when the widget is resized. The size formula reserves `radius * 2 + 32` px, i.e. 16 px padding on both axes, matching the old ImGui dummy.
+- `PenLineCap.Round` / `PenLineJoin.Round` give the rounded segment ends; `PenLineCap` values available in Eto are `Square`, `Butt`, `Round` (`Eto/Drawing/PenLineCap.cs`).
 
-- Position comes solely from the ImGui cursor at call time; there is no size query, so a caller that wants to centre the spinner must replicate the `radius * 2` arithmetic (as `LoadingPage.cs.md` does with its own `private const int SPINNER_RADIUS = 15`). If this file ever changes the padding term in the `Dummy`, the caller's centring arithmetic must be changed in lockstep — the value is **duplicated**, not exposed. A `GetSize()` accessor is the natural fix if that drift matters.
-- `thickness` is an `int` and is passed straight to `PathStroke`; sub-pixel thinning is not available, and `thickness <= 0` would produce an invisible stroke without error.
-- `radius` is a `float`, but the centring helper in `LoadingPage` passes `SPINNER_RADIUS * 2` as an `int` — the int/float mix is caller-side, keep radii integral to avoid rounding drift in the centring call.
+## 4. Redraw model
+
+`timer.Elapsed` calls `Invalidate()`, which schedules a GTK repaint; `Paint` runs on the UI thread with `e.Graphics`. The interval is `1.0 / 30.0` seconds (~33 ms).
+
+- The timer runs on the UI thread, so the paint math is UI-thread work; there is no background thread here.
+- `Visible = false` on the spinner (`LoadingPage.cs:142`) hides the widget, but **the timer keeps running**: GTK skips paint for an invisible widget, so `Invalidate()` becomes a no-op repaint request. `Stop()` exists for the case where animation must be turned off, and **nothing in `src/XIVLauncher.Core` calls it** (grep: only `Visible` is used on the spinner).
+- A `Drawable` with a `Paint` handler never fills its background; the spinner draws only its arc, over whatever is behind it in the page stack.
+
+## 5. Consumers
+
+| Consumer | Site | Use |
+| --- | --- | --- |
+| `LoadingPage` ctor | `LoadingPage.cs:65` | `new Spinner(SPINNER_RADIUS /*15*/, 5, EtoColors.Blue)` |
+| `LoadingPage.Refresh` | `LoadingPage.cs:142` | `this.spinner.Visible = this.IsIndeterminate` |
+
+`SPINNER_RADIUS = 15` and thickness `5` come from `LoadingPage.cs.md`; the colour is `EtoColors.Blue` (`EtoColors.cs.md`). The spinner is placed in `LoadingPage`'s stack with `HorizontalAlignment.Center` (`LoadingPage.cs:108`).
+
+## 6. Quirks
+
+- `Stop()` is public and unused: the spinner is animated for the process lifetime. A long-running launcher (idle on the main page) keeps the timer firing 30 times/second; `Visible = false` does not stop it.
+- `Stopwatch` is never reset, so animation state is continuous across page switches; the spinner does not restart when the loading page is shown.
+- `Draw` allocates `PointF`/`Vector2` values per paint (30 iterations at 30 fps). Allocation is small, but a GTK repaint storm (resize + animation) runs the loop repeatedly.
+- The widget size is derived from `radius` at construction, so changing `radius` after construction does not resize the widget; there is no setter.
+- `Drawable` has no focus, no keyboard handling, and no accessibility semantics: the spinner is decoration.
 
 ## 7. Referenced / referenced-by
 
-Used by: `LoadingPage.cs.md` (constructed with `SPINNER_RADIUS = 15`, `thickness = 5`, colour from `ImGuiCol.ButtonActive`).
-Uses: `Component.cs.md` (`base.Draw()`), `ImGui.GetTime`, `ImGuiListDrawEnlarged`-style draw-list API (Hexa.NET.ImGui), `Math` (stdlib).
-Contrast: the determinate branch of `LoadingPage` uses `ImGui.ProgressBar` instead (see that spec) — `Spinner` deliberately carries no progress value.
+Uses: `Eto.Forms.Drawable`, `Eto.Drawing.Pen`/`PenLineCap`/`PenLineJoin`, `System.Diagnostics.Stopwatch`, `System.Numerics.Vector2`.
+Referenced by: `LoadingPage.cs` (lines 65, 142).

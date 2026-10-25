@@ -78,7 +78,7 @@ public class NewsFrame : Component
         this.Content = new StackLayout
         {
             Spacing = 15,
-            Items = { this.loadingLabel, this.bannerImage, this.newsCaptionLabel, this.listPanel, this.topicsCaptionLabel },
+            Items = { this.loadingLabel, this.bannerImage, this.newsCaptionLabel, this.listPanel },
         };
 
         this.bannerTimer.Interval = BANNER_TIME / 1000.0;

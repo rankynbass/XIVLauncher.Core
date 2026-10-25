@@ -22,6 +22,10 @@ namespace XIVLauncher.Core.Components.SettingsPage;
 /// </remarks>
 public class SettingsEntry<T> : SettingsEntry
 {
+    /// <summary>Label width used by every row. GTK reports unwrapped label text as natural width, so the
+    /// row labels need an explicit width to wrap inside the settings page.</summary>
+    protected const int RowLabelWidth = 1000;
+
     private readonly Func<T?> load;
     private readonly Action<T?> save;
     protected Action applyValue = () => { };
@@ -57,21 +61,33 @@ public class SettingsEntry<T> : SettingsEntry
         {
             Text = this.Name,
             Wrap = WrapMode.Character,
+            Width = RowLabelWidth,
         };
 
         this.input = this.CreateInput();
+
+        this.nameLabel.MouseDown += (_, e) =>
+        {
+            if (e.Buttons == Eto.Forms.MouseButtons.Primary)
+            {
+                this.input.Focus();
+                e.Handled = true;
+            }
+        };
 
         this.descriptionLabel = new Label
         {
             Text = this.Description,
             TextColor = EtoColors.Grey3,
             Wrap = WrapMode.Character,
+            Width = RowLabelWidth,
         };
 
         this.validityLabel = new Label
         {
             TextColor = EtoColors.Red,
             Wrap = WrapMode.Character,
+            Width = RowLabelWidth,
             Visible = false,
         };
 
@@ -79,6 +95,7 @@ public class SettingsEntry<T> : SettingsEntry
         {
             TextColor = EtoColors.Red,
             Wrap = WrapMode.Character,
+            Width = RowLabelWidth,
             Visible = false,
         };
 
@@ -104,7 +121,7 @@ public class SettingsEntry<T> : SettingsEntry
 
         if (type == typeof(DirectoryInfo))
         {
-            var textBox = new TextBox { MaxLength = 10000 };
+            var textBox = new TextBox { MaxLength = 10000, Width = RowLabelWidth };
 
             textBox.TextChanged += (_, _) =>
             {
@@ -119,7 +136,7 @@ public class SettingsEntry<T> : SettingsEntry
 
         if (type == typeof(string))
         {
-            var textBox = new TextBox { MaxLength = 1000 };
+            var textBox = new TextBox { MaxLength = 1000, Width = RowLabelWidth };
 
             textBox.TextChanged += (_, _) =>
             {

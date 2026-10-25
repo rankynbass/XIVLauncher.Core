@@ -22,6 +22,15 @@ public class NumericSettingsEntry : SettingsEntry<int>
         this.MinValue = minValue;
         this.MaxValue = maxValue;
         this.Step = step;
+
+        // The base constructor calls CreateInput() before these fields exist, so the stepper is created with
+        // MinValue/MaxValue/Increment = 0 and would clamp every value to 0. Apply the real range here.
+        if (this.input is NumericStepper stepper)
+        {
+            stepper.MinValue = this.MinValue;
+            stepper.MaxValue = this.MaxValue;
+            stepper.Increment = this.Step;
+        }
     }
 
     protected override Control CreateInput()

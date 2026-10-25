@@ -282,6 +282,7 @@ sealed class Program
             application.MainForm = launcherForm;
             launcherForm.Show();
             Log.Debug("Main form shown");
+
         };
 
         Log.Debug("Eto OK!");

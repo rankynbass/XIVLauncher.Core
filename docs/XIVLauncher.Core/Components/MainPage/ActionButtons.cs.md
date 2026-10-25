@@ -1,87 +1,68 @@
 # ActionButtons.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/ActionButtons.cs` · 58 lines · 1718 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/ActionButtons.cs` · 56 lines · 2,014 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class ActionButtons : Component`
-**Role:** Three icon buttons — account, service status, launcher settings — whose visibility is decided by whether anyone subscribed to their event
+**Role:** The row of three icon buttons under the login frame — account page, service status, launcher settings
 
 ---
 
 ## 1. Purpose
 
-`ActionButtons` is the MainPage's quick-action strip. It is a *pure* component: no state, no children, no geometry of its own. It draws three icon-labelled buttons in the parent's cursor flow and exposes three events; everything behavioural is bound by `MainPage.cs.md`'s ctor:
+Replaces the three immediate-mode icon buttons, whose tooltips were drawn with style pushes and whose icons came from the FontAwesome font atlas. Here each button is a `Common.Button` (`Components/Common/Button.cs.md`) with `ShowIcon(icon)` applied and `ToolTip` set directly, so GTK renders the tooltip and the click.
 
-```csharp
-MainPage.cs:48  this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
-MainPage.cs:49  this.actionButtons.OnStatusButtonClicked  += () => AppUtil.OpenBrowser("https://is.xivup.com/");
-MainPage.cs:50  this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
-```
-
-That is the whole dependency: the class never references `LauncherApp`, `Program`, or `Strings` for behaviour — only for the tooltip caption (`Strings`) and the icon font.
+Usings: `Eto.Forms`, `XIVLauncher.Core.Resources.Localization`.
 
 ## 2. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `OnAccountButtonClicked` | `public event Action?` | person icon → `Strings.MyAccount` tooltip |
-| `OnStatusButtonClicked` | `public event Action?` | heartbeat icon → `Strings.ServiceStatus` |
-| `OnSettingsButtonClicked` | `public event Action?` | cog icon → `Strings.LauncherSettings` |
-| `Draw()` | `override` | three icon buttons + tooltips, then `base.Draw()` |
+| `accountButton`, `statusButton`, `settingsButton` | `private readonly Common.Button` (lines 17–19) | built in ctor (lines 23–25) |
+| `ActionButtons()` | ctor (lines 21–32) | horizontal `StackLayout` with the three buttons (lines 27–31) |
+| `OnAccountButtonClicked` | `public event Action?` (line 35) | |
+| `OnStatusButtonClicked` | `public event Action?` (line 38) | |
+| `OnSettingsButtonClicked` | `public event Action?` (line 41) | |
+| `MakeIconButton(FontAwesomeIcon icon, string toolTip, Action clicked)` | `private static` (lines 43–55) | `new Common.Button(string.Empty) { Width = 80 }` (lines 45–48), `ShowIcon(icon)` (line 50), `ToolTip = toolTip` (line 51), `Click += clicked` (line 52) |
 
-Usings: `System.Numerics`, `Hexa.NET.ImGui`, `XIVLauncher.Core.Resources.Localization` (`Strings`); `Component.cs.md` is the base (this is a plain `Component`, not a `Page` — it never opens its own window and never touches `Padding`).
+`MakeIconButton` is static: it does not touch instance state, and each event is wired by the ctor's lambda (`() => this.OnAccountButtonClicked?.Invoke()`, lines 23–25), so `MakeIconButton` takes `Action` and the instance event raising lives in the ctor.
 
-## 3. `BeginDisabled(event == null)` — subscription decides availability
+## 3. Buttons
 
-```csharp
-ImGui.BeginDisabled(this.OnAccountButtonClicked == null);
-if (ImGui.Button(FontAwesomeIcon.User.ToIconString(), btnSize)) this.OnAccountButtonClicked?.Invoke();
-...
-ImGui.EndDisabled();
-```
+| Button | Icon | Tooltip string | Event |
+| --- | --- | --- | --- |
+| `accountButton` | `FontAwesomeIcon.User` | `Strings.MyAccount` | `OnAccountButtonClicked` |
+| `statusButton` | `FontAwesomeIcon.Heartbeat` | `Strings.ServiceStatus` | `OnStatusButtonClicked` |
+| `settingsButton` | `FontAwesomeIcon.Cog` | `Strings.LauncherSettings` | `OnSettingsButtonClicked` |
 
-The condition is **inverted** relative to the usual "disabled means user cannot act": a button is greyed only when *no handler is attached*, i.e. the class renders "nothing will happen" honestly. Consequences:
+All three are `Width = 80` and start with an empty label, which `ShowIcon` replaces with the glyph — so the visible content is glyph only (no text; §3 of `Components/Common/Button.cs.md`).
 
-- With `MainPage.cs.md` binding all three, **all three are always enabled** in the shipped app; the greying is a composability aid (a future host that binds only the settings button gets two visibly dead buttons rather than three silent ones).
-- `BeginDisabled` only affects **appearance and interaction** in ImGui — the click still evaluates `if (ImGui.Button(...))`, but a disabled item never returns `true`, so the `?.Invoke()` is unreachable when unsubscribed; the `?.` is therefore belt-and-braces, not the mechanism. Keep both: removing the guard is a behavioural change, removing `?.` is not.
-- Contrast the *other* disabled pattern in this package: `Common/Checkbox.cs.md` gates on a user-facing `IsEnabled`, and `OtpEntryPage.cs.md` uses none. The event-emptiness test here is the only "am I wired up?" gate.
+## 4. Consumers
 
-## 4. Font scoping — the tooltip needs the text font
+`MainPage` builds and wires the row (`MainPage.cs.md`):
 
-```
-PushFont(FontManager.IconFont, 0.0f)          ← opens icon scope
-  Button(User icon) …
-  PushFont(FontManager.TextFont, 0.0f)        ← nested: tooltip caption
-  AddTooltip(Strings.MyAccount)
-  PopFont()                                   ← closes TextFont
-  (… same for the other two buttons …)
-PopFont()                                     ← closes IconFont
-```
+| Site | Behaviour |
+| --- | --- |
+| `MainPage.cs:53` | `new ActionButtons()` on the UI thread |
+| `MainPage.cs:59` | `OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings` |
+| `MainPage.cs:60` | `OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/")` |
+| `MainPage.cs:61` | `OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp")` |
+| `MainPage.cs:103` | `layout.Add(this.actionButtons, 0, 1, xscale: false, yscale: true)` — the row is the second column cell and scales vertically |
 
-- `ImGuiHelpers.AddTooltip` (`ImGuiHelpers.cs:37`) fires on `ImGui.IsItemHovered()` **of the item just drawn**, so the call must stay immediately after its `Button` — moving it under the *next* button retargets the tooltip silently. It renders `ImGui.TextUnformatted(text)`, which in an icon font would show boxes/missing glyphs: hence the nested `PushFont(FontManager.TextFont, 0.0f)`. `FontManager.cs.md` §"font roles" covers which faces are loaded.
-- The `0.0f` size argument means "keep the current size" (same convention as `ImGuiHelpers.cs.md` §CenteredText and `OtpEntryPage.cs.md` §paste button) — these two font pushes change face, not size.
-- The stack is balanced (`IconFont` opened once outside, `TextFont` opened/closed once per button, final `PopFont()` closes `IconFont`), so `MainPage.cs.md` §Draw's font state is untouched afterwards. Do not "simplify" to a single `PopFont()` after the third tooltip: the nested `TextFont` pushes would remain unbalanced, which corrupts the font state of every later component (`Component.cs.md` §push/pop discipline for the rule).
-- `ImGui.SameLine()` separates the three blocks: the buttons share one row, so their combined width is `3 × btnSize` and the row is positioned by whatever `MainPage.cs.md`'s `Draw()` left as the cursor — this class contributes no `SetCursorPos`, no `Dummy`, and no centering (contrast `MainPage/NewsFrame.cs.md` and `OtpEntryPage.cs.md`).
+`OnAccountButtonClicked` opens the Square Enix account management page in the browser; the local account picker is the **friends** button in `LoginFrame`, which opens `AccountSwitcher` (`AccountSwitcher.cs.md`, `LoginFrame.cs:117`).
 
-## 5. Geometry and scale
+## 5. Thread / UI rules
 
-```csharp
-var btnSize = new Vector2(80) * ImGuiHelpers.GlobalScale;
-```
+Construction and `ShowIcon`/`ToolTip`/`Click` wiring are UI-thread (native widgets). Click handlers fire on the UI thread; the two `AppUtil.OpenBrowser` calls start a process, and the settings handler changes `App.State`, which marshals via `Ui.Post` in `LauncherApp.SetState` (`LauncherApp.cs.md`). No handler blocks.
 
-- **`Vector2(80)` is the single-vector form** (both axes 80), scaled by `ImGuiHelpers.GlobalScale` (`ImGuiHelpers.cs.md` §scale). Every MainPage icon control in this file family follows the same shape: `MainPage/LoginFrame.cs.md`'s `extraButtonSize = new Vector2(45) * ImGuiHelpers.GlobalScale` and `OtpEntryPage.cs.md`'s unscaled `(28, 28)` — the unscaled OTP paste icon is the odd one out; keep it that way only if the intent is "this icon does not scale", otherwise it is a scaling bug in that other file, not here.
-- **There is no gap** between the three buttons: `SameLine()` places them flush. Any spacing must come from the parent's cursor or an explicit `ImGui.Dummy` in this `Draw()`; adding one inside `BeginDisabled`/`EndDisabled` changes layout in the unsubscribed case too.
-- The buttons are drawn with `ImGui.Button(label, size)` — the **sized overload**, whose label is an id/label string. Because the icon glyph *is* the label (`FontAwesomeIcon.Cog.ToIconString()` etc.), the label doubles as the ImGui id: two such buttons in one window collide. See `Component.cs.md` §5 for the id conventions used elsewhere (`###`-prefixed ids in `Component.cs.md`, `OtpEntryPage.cs.md`, `SettingsEntry.cs.md`).
+## 6. Quirks
 
-## 6. Invariants and extension points
-
-- **`base.Draw()` last** (`Component.cs.md` §Draw chain): the class has no children today, so it is a chain-passthrough hook; keep it even though the loop is empty, because `MainPage.cs.md` may add children (see `Component.cs.md` §children).
-- **The events are `public`**, so subscription is externally composable: a host may also *unsubscribe* (`-=`), which is how the greying can be exercised. `MainPage.cs.md` is the only binder today (grep).
-- **Tooltips are localized, labels are not:** the icon is the label and the caption is `Strings.*`. If a text label is ever added, follow `Common/Button.cs.md` §"Label as ImGui id" rather than the icon-label form here.
-- **No click-handling is defined here**: the three handlers live in `MainPage.cs.md`, which means this class is platform/UI-only and can be re-used with different meanings. Keep new behaviour in the binder, not in the class — but see `LoginFrame.cs.md` §popup for the alternative convention (that class handles its popup inline), so the two MainPage children differ on where handlers live; prefer the binder side for this class since it exposes all three actions.
-- **The class is constructed as `new ActionButtons()` with no app reference** (`MainPage.cs:42`), unlike the pages that take `LauncherApp` (`Page.cs.md` §protected ctor) or `LoginFrame`, which takes the owning `MainPage`. It therefore cannot reach app state — the reason the settings handler is written in `MainPage.cs` and not here, and the reason this class must not start reading `App.Settings`.
+- The row is `Orientation.Horizontal` with default spacing (0), so the three 80 px buttons sit adjacent; HEAD spaced icon buttons with an item-width/spacing trick that has no direct Eto equivalent here.
+- `Width = 80` is fixed regardless of glyph width; GTK centers the glyph in the button.
+- The wrapper's `Click` is `Action?` (`Components/Common/Button.cs.md` §7), so handlers cannot distinguish keyboard activation from a mouse click.
+- `ActionButtons` has a parameterless ctor: it does not take `LauncherApp` (unlike most components), because the events are wired by `MainPage`.
+- `Component.Id` exists on this wrapper (`Components/Component.cs.md` §2) and is unused.
+- Buttons have no `Name`/`AccessibleName` beyond the label glyph, so screen readers announce an icon glyph; the tooltip is GTK's hover text, not an accessibility label.
 
 ## 7. Referenced / referenced-by
 
-Constructed and wired by: `MainPage.cs.md` ctor (`MainPage.cs:41` construction, `:48/:49/:50` handlers).
-Drawn by: `MainPage.cs.md` §Draw (after `loginFrame.Draw()`, inside MainPage's `PushStyleVar(WindowPadding, 32)`).
-Uses: `Component` (`Component.cs.md`), `ImGuiHelpers.cs.md` (`AddTooltip`, `GlobalScale`), `FontAwesomeIcon.cs.md` (`User`, `Heartbeat`, `Cog`), `FontManager.cs.md` (`IconFont`, `TextFont`), `Strings` (`src/XIVLauncher.Core/Resources/Localization/Strings.Designer.cs`), `AppUtil.cs.md` (the browser calls that live in the binder).
-Related: `MainPage/LoginFrame.cs.md` (the other MainPage interactive cluster), `LoginAction.cs.md` (the action vocabulary — distinct from these three events, which carry no payload).
+Uses: `Component` (`Component.cs.md`), `Common.Button` (`Components/Common/Button.cs.md`), `FontAwesomeIcon`, `Strings`.
+Referenced by: `MainPage.cs` (lines 41, 53, 59–61, 103).

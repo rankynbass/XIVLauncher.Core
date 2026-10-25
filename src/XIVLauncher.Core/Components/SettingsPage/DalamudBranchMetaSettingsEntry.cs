@@ -42,6 +42,14 @@ public class DalamudBranchMetaSettingsEntry : SettingsEntry<string>
 
     protected override Control CreateInput()
     {
+        // SettingsEntry<T>.LoadValues() calls applyValue unconditionally, so this row must supply it even
+        // though its items arrive later from the branch fetch.
+        this.applyValue = () =>
+        {
+            var idx = this.Branches.FindIndex(b => b.Track == this.InternalValue as string && !b.Hidden);
+            this.dropDown.SelectedIndex = idx;
+        };
+
         this.dropDown.SelectedIndexChanged += (_, _) =>
         {
             if (this.dropDown.SelectedIndex < 0)

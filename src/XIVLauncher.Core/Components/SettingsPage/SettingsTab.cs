@@ -64,7 +64,10 @@ public abstract class SettingsTab : Component
         foreach (var item in items)
             layout.Items.Add(item);
 
-        this.Content = layout;
+        this.Content = new Scrollable
+        {
+            Content = layout,
+        };
     }
 
     /// <summary>Refreshes tab content that depends on other settings values.</summary>

@@ -1,8 +1,8 @@
 # Program.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Program.cs` · 485 lines · 18,743 bytes
+**File:** `src/XIVLauncher.Core/Program.cs` · 424 lines · 16,608 bytes
 **Namespace:** `XIVLauncher.Core` · **Primary declaration:** `sealed class Program`
-**Role:** Application entry point / global singleton ("the trunk" of the launcher)
+**Role:** Application entry point / global singleton ("the trunk" of the launcher), Eto.Forms host
 
 ---
 
@@ -10,224 +10,171 @@
 
 `Program` is the single root object of the launcher process. It owns:
 
-- process-wide mutable state (config, storage, HTTP client, Steam handle, Dalamud updater, compatibility tools, secret provider, ImGui bindings, SDL window/GPU device handles),
-- the startup sequence (`Main`): storage → logging → config → secrets → Steam → Dalamud → compat tools → SDL/ImGui → UI event loop → teardown,
-- the ImGui event loop that drives `launcherApp.Draw()`,
+- process-wide mutable state (config, storage, HTTP client, Steam handle, Dalamud updater, compatibility tools, secret provider, patch manager),
+- the startup sequence (`Main`): storage → logging → config → secrets → Steam → Dalamud → compat tools → Eto `Application` → GTK main loop → teardown,
+- the Eto UI-thread bridge that the rest of the launcher uses to show/hide the launcher window (`ShowWindow`/`HideWindow`),
 - a family of `Clear*` maintenance routines that wipe launcher state (used as a "reset/troubleshoot" facility).
 
 Everything else in the project hangs off accessors of this class. The class is `sealed` (C# 13), so no type may derive from it and no external extension is permitted.
 
 ## 2. Language / build surface
 
-| Attribute | Value |
-| --- | --- |
-| C# features used | `sealed class`, `unsafe` blocks, native pointer types (`SDLWindow*`, `SDLGPUDevice*`), `const` fields, `??=` defaults, tuple/`switch` expressions, `using`-alias declarations |
-| Requires | `AllowUnsafeBlocks=true`, `LangVersion=latest` (see `XIVLauncher.Core.csproj`) |
-| Platform libs | `Hexa.NET.SDL3` (SDL 3 bindings via HexaGen) |
-| Project libs | `XIVLauncher.Common(.Windows/.Unix)`, `XIVLauncher.Core.*` sub-packages, `Config.Net`, `Serilog` |
-
-Type aliases declared at file scope: `SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice`, `SDLWindow = Hexa.NET.SDL3.SDLWindow`.
+- `sealed class Program`, no access modifier → `internal`; `Main` is `private static void Main(string[] args)` (line 171), the C# entry point.
+- Usings (lines 1–27) include `Eto.Forms` (the Eto UI surface), `Config.Net`, `Serilog`, and the `XIVLauncher.Common*` namespaces, including `XIVLauncher.Common.Unix.*` (Wine/Dxvk/CompatibilityTools), `XIVLauncher.Common.Windows` (`WindowsSteam`) and `XIVLauncher.Common.Http.HappyEyeballs`.
+- No SDL/ImGui using directives remain: the SDL window loop, `SDLGPUDevice`, `ImGuiBindings`, `FontManager`, `ImGuiColors`, `ImGuiHelpers` and `TextureWrap` are gone from the project, replaced by `Eto.Forms` types and by `Ui`, `EtoTheme`, `AppFonts` (`Ui.cs.md`, `EtoTheme.cs.md`, `AppFonts.cs.md`).
+- `mainArgs` is `private static string[] mainArgs = []` (line 36) — the collection-expression form; it survives startup so `ClearLogs(true)` can re-init logging with the original argv (line 410).
 
 ## 3. State surface
 
-### 3.1 Public global accessors (the implicit application API)
+Statics, lines 35–66:
 
-| Member | Type | Kind | Source / notes |
-| --- | --- | --- | --- |
-| `Config` | `ILauncherConfig` | accessor, `get`/`private set` | populated by `LoadConfig`; `null!` until then |
-| `CommonSettings` | `CommonSettings` | get-only accessor | `new(Config)` — view over `Config` (`Configuration/CommonSettings.cs`) |
-| `Steam` | `ISteam?` | accessor, `private set` | `WindowsSteam` or `UnixSteam`; `null` if init failed |
-| `DalamudUpdater` | `DalamudUpdater` | accessor | built by `CreateDalamudUpdater()` |
-| `DalamudLoadInfo` | `DalamudOverlayInfoProxy` | accessor | shared overlay status shown in UI |
-| `CompatibilityTools` | `CompatibilityTools` | accessor | `null` on Windows (see `CreateCompatToolsInstance`) |
-| `Secrets` | `ISecretProvider` | accessor | `FILE` / `KEYRING` / `NONE` |
-| `HttpClient` | `HttpClient` | accessor | constructed at class init (see §5) |
-| `Patcher` | `PatchManager?` | `get`/`set` (public setter) | only externally assigned member; `null` by default |
-| `storage` | `Storage` | static field | `new Storage(APP_NAME)`, first thing in `Main` |
-| `DotnetRuntime` | `DirectoryInfo` | get-only accessor | `storage.GetFolder("runtime")` |
-| `CType` | `string` | static field (initializer) | `CoreEnvironmentSettings.GetCType()` — computed at class init, spawns `sh` (see §7) |
-| `IsSteamDeckHardware` | `bool` | get-only accessor | tri-state env override, else heuristic (see §7) |
-| `GPUDevice` | `SDLGPUDevice*` | accessor | handle to the SDL GPU device |
-| `ImGuiBindings` | `ImGuiBindings` | accessor | the UI controller (`ImGuiBindings.cs`) |
-
-### 3.2 Private backing state
-
-| Member | Type | Notes |
+| Member | Kind | Notes |
 | --- | --- | --- |
-| `APP_NAME` | `const string = "xlcore"` | app/storage name (implicit static const field) |
-| `ClearColor` | `static readonly Vector3 (0.1,0.1,0.1)` | **declared but never referenced in this file** — the clear colour actually used is `ImGuiBindings.clearColor`; treat as dead code |
-| `mainArgs` | `static string[]` | raw `argv`, kept so `SetupLogging` can be re-run by `ClearLogs(true)` |
-| `launcherApp` | `static LauncherApp` | the root UI component |
-| `window` / `gpuDevice` | `static unsafe SDLWindow*` / `SDLGPUDevice*` | raw handles, `null!` until `Main` |
-| `guiBindings` | `static ImGuiBindings` | backing field for the `ImGuiBindings` accessor |
+| `APP_NAME` | `private const string` = `"xlcore"` | used as the `Storage` name (line 174) **and** as `Application.Name` (line 267) |
+| `mainArgs` | `private static string[]` | argv retained for `ClearLogs` |
+| `launcherApp` | `private static LauncherApp` `null!` | created inside `application.Initialized` (line 275) |
+| `launcherForm` | `private static LauncherForm` `null!` | created inside `application.Initialized` (line 278) |
+| `Config` | `public static ILauncherConfig` | built once in `LoadConfig` |
+| `Steam` | `public static ISteam?` | `WindowsSteam`/`UnixSteam` chosen by the `switch` at lines 213–224 |
+| `DalamudUpdater` | `public static DalamudUpdater` | `CreateDalamudUpdater()` (line 250) |
+| `DalamudLoadInfo` | `public static DalamudOverlayInfoProxy` | line 249 |
+| `CompatibilityTools` | `public static CompatibilityTools` | `CreateCompatToolsInstance()` (line 253) |
+| `Secrets` | `public static ISecretProvider` | `GetSecretProvider` (line 192) |
+| `HttpClient` | `public static HttpClient` | lines 45–55, Happy Eyeballs connect callback |
+| `Patcher` | `public static PatchManager?` | assigned by `MainPage` during patching (`MainPage.cs.md`) |
+| `storage` | `public static Storage` | `new Storage(APP_NAME)` (line 174) |
+| `DotnetRuntime` | `public static DirectoryInfo` | expression body → `storage.GetFolder("runtime")` |
+| `CType` | `public static string` | `CoreEnvironmentSettings.GetCType()`, evaluated at type init |
+| `IsSteamDeckHardware` | `public static bool` | expression body (line 63) |
+| `STEAM_APP_ID`/`STEAM_APP_ID_FT` | `public const uint` = `39210`/`312060` (lines 137–138) |
+| `DALAMUD_INJECTOR_NAME` | `public const string` = `"Dalamud.Injector.exe"` (line 144) |
 
-### 3.3 Constants
-
-| Name | Value | Meaning |
-| --- | --- | --- |
-| `STEAM_APP_ID` | `39210u` | Steam AppID, FFXIV retail |
-| `STEAM_APP_ID_FT` | `312060u` | Steam AppID, FFXIV Free Trial |
-| `DALAMUD_INJECTOR_NAME` | `"Dalamud.Injector.exe"` | injector executable name (annotated "TODO: move this somewhere better") |
-
-Both Steam constants are declared `public const uint` in the middle of the class body; declaration order in this file is significant for static initialisation (see §5).
+The two UI fields (`launcherApp`, `launcherForm`) are the only state created inside the UI thread; every consumer that reads them runs after `Main form shown` is logged.
 
 ## 4. Method surface
 
-| Signature | Visibility | Purpose |
+| Method | Line | Notes |
 | --- | --- | --- |
-| `static void Main(string[] args)` | private | entry point (see §6 flow) |
-| `static void SetupLogging(string[] args)` | private | Serilog sink setup at `logs/launcher.log` + version banner |
-| `static void LoadConfig(Storage storage)` | private | Config.Net build + default injection (see §8) |
-| `static DalamudUpdater CreateDalamudUpdater()` | private | manual vs automatic injection decision (see §9) |
-| `static ISecretProvider GetSecretProvider(Storage storage)` | private | provider selection from env (see §7) |
-| `static void CreateCompatToolsInstance()` | public | Wine + DXvk settings instance; no-op on Windows |
-| `static void ShowWindow()` / `HideWindow()` | public | thin SDL window visibility wrappers (`unsafe`) |
-| `static void ClearSettings(bool tsbutton = false)` | public | delete `launcher.ini` |
-| `static void ClearPrefix()` | public | delete `wineprefix` folder (recursive) |
-| `static void ClearPlugins(bool tsbutton = false)` | public | delete Dalamud state, plugins, runtime |
-| `static void ClearTools(bool tsbutton = false)` | public | delete `compatibilitytool` |
-| `static void ClearLogs(bool tsbutton = false)` | public | delete `logs` folder + Dalamud log files |
-| `static void ClearAll(bool tsbutton = false)` | public | the five clears above, in order (`ClearSettings`→`ClearPrefix`→`ClearPlugins`→`ClearTools`→`ClearLogs`); note `ClearPrefix` takes **no** `tsbutton` parameter at all, and `ClearLogs` is always called with `true` here |
-| `static void ResetUIDCache(bool tsbutton = false)` | public | `launcherApp.UniqueIdCache.Reset()` |
-
-All `Clear*` methods re-create the folders/files they deleted (the trailing `storage.GetFolder(...)` calls materialise empty directories), and their `tsbutton` variants re-run the corresponding initialiser so the launcher can continue after a wipe.
+| `SetupLogging(string[] args)` | 68 | `LogInit.Setup(...)` on `logs/launcher.log` + session banner |
+| `LoadConfig(Storage)` | 76 | `Config.Net` builder, ini + cmdline, defaults, `STEAM_COMPAT_*` game-path inference |
+| `CreateDalamudUpdater()` | 154 | manual-injection `RunnerOverride` resolution |
+| `Main(string[] args)` | 171 | startup + Eto run + teardown |
+| `CreateCompatToolsInstance()` | 306 | Wine/Dxvk settings + tool folders; no-op on Windows |
+| `ShowWindow()` | 319 | `Ui.Post(() => launcherForm.ShowWindow())` |
+| `HideWindow()` | 322 | `Ui.Post(() => launcherForm.HideWindow())` |
+| `GetSecretProvider(Storage)` | 324 | `FILE`/`KEYRING`/`NONE` selection |
+| `ClearSettings/ClearPrefix/ClearPlugins/ClearTools/ClearLogs/ClearAll` | 358–419 | on-disk wipes; `tsbutton` variants restart the affected subsystem |
+| `ResetUIDCache(bool)` | 422 | `launcherApp.UniqueIdCache.Reset()` |
 
 ## 5. Initialisation and ordering rules
 
-- `storage` must be assigned **before** anything else touches the class; `Main` does `storage = new Storage(APP_NAME)` as its first statement.
-- Static/`const` field initializers in this class run in declaration order at class initialisation, i.e. before `Main`'s body: `HttpClient` is built, then `CType` is computed, then `IsSteamDeckHardware` (accessor, so it is deferred to access).
-- `CType` therefore performs a subprocess launch (`sh -c "locale -a 2>/dev/null | grep -i utf"`) during class init — before logging exists and before any `CoreEnvironmentSettings` clear happens. On Windows it short-circuits to `""`.
-- `ClearColor`'s `Vector3` value is the same triple used by `ImGuiBindings`, but the two are not linked; changing this file's value has no effect on rendering.
+`Main` (line 171) performs, in order:
+
+1. `mainArgs = args; storage = new Storage(APP_NAME)` (lines 173–174) — `storage` must exist before anything else touches folders.
+2. `ClearAll()`/individual `Clear*` based on `CoreEnvironmentSettings` (lines 176–187). These run **before** logging, so a `ClearLogs` at startup produces no log lines for the clearing itself.
+3. `SetupLogging(mainArgs)` (line 189) then `LoadConfig(storage)` (line 190).
+4. `Secrets = GetSecretProvider(storage)` (line 192).
+5. Steam app-id map (lines 194–210), `switch` on `Environment.OSVersion.Platform` (lines 213–224), then the `Steam.Initialize(app.Key)` loop (lines 226–240) guarded by `Config.IsIgnoringSteam != true || CoreEnvironmentSettings.IsSteamCompatTool`; failures are logged and swallowed (`Log.Error(ex, "Steam couldn't load")`, line 245).
+6. `DalamudLoadInfo` + `CreateDalamudUpdater()` + `DalamudUpdater.Run(...)` (lines 249–251).
+7. `CreateCompatToolsInstance()` (line 253).
+8. Eto bootstrap (lines 255–290).
+9. `application.Run()` (line 290) — blocks for the lifetime of the UI.
+10. Post-loop: `Patcher.StartCancellation()` and `Environment.Exit(0)` inside a `try` (lines 292–298).
 
 ## 6. `Main` control flow (contract)
 
-1. `mainArgs = args`; `storage = new Storage("xlcore")`.
-2. Wipe phase — if `CoreEnvironmentSettings.ClearAll` then `ClearAll()`, else individually: `ClearSettings`, `ClearPrefix`, `ClearPlugins`, `ClearTools`, `ClearLogs` (all driven by env booleans, see §7).
-3. `SetupLogging(mainArgs)` — file sink at `<storage>/logs/launcher.log`, logs a banner and the assembly version + git hash (`AppUtil`).
-4. `LoadConfig(storage)`.
-5. `Secrets = GetSecretProvider(storage)`.
-6. Steam app-id map, insertion order: env `SteamAppId`→`"XLM"`, env `XL_APPID`→`"XL_APPID"` (each added only when non-zero, i.e. only if the env var parsed), then `39210`→`"FFXIV Retail"` and `312060`→`"FFXIV Free Trial"` appended only if not already present (`ContainsKey` guard).
-7. Platform dispatch: `PlatformID.Win32NT` → `WindowsSteam`, `PlatformID.Unix` → `UnixSteam`, else `PlatformNotSupportedException`. Initialization loop runs only if `Config.IsIgnoringSteam != true` **or** `CoreEnvironmentSettings.IsSteamCompatTool`; first successful `Steam.Initialize(appId)` wins (`break`), failures are logged per entry, a total failure logs "Steam couldn't load" and leaves `Steam == null`.
-8. Dalamud: `DalamudLoadInfo = new DalamudOverlayInfoProxy()`, `DalamudUpdater = CreateDalamudUpdater()`, `DalamudUpdater.Run(Config.DalamudBetaKind, Config.DalamudBetaKey)`.
-9. `CreateCompatToolsInstance()` (skipped on Windows).
-10. `unsafe` block, in order, each failure being fatal (`Environment.Exit(1)` after logging `SDL.GetErrorS()`):
-    1. `SDL.Init(Video | Gamepad)`
-    2. `mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay())`
-    3. `SDL.CreateWindow("XIVLauncher {version} ({hash})", 1280*scale, 800*scale, Resizable | Hidden | HighPixelDensity)` then `SDL.SetWindowPosition(..., SDL_WINDOWPOS_CENTERED_MASK, ...)` (window starts **hidden**; shown only in step 12)
-    4. `SDL.CreateGPUDevice(Spirv | Dxil | Metallib, true, null)` — accepts all three shader formats, vsync requested
-    5. `SDL.ClaimWindowForGPUDevice`
-    6. `SDL.SetGPUSwapchainParameters(SDR, Vsync)`
-    7. `guiBindings = new ImGuiBindings(window, gpuDevice, <storage>/launcherUI.ini, Config.FontPxSize ?? 21.0f, mainScale)`
-    8. `StyleModelV1.DalamudStandard.Apply()`
-    9. `LauncherClientConfig.GetAsync().GetAwaiter().GetResult()` — **blocking** network fetch of `frontierUrl` and `cutOffBootver`
-    10. `launcherApp = new LauncherApp(storage, frontierUrl, cutOffBootver)` (this is where the killswitch check runs)
-    11. `SDL.ShowWindow(window)`
-11. Frame loop, until `guiBindings.ProcessExit()` returns `true`:
-    - if window flags include `Minimized` or `Hidden` → `SDL.Delay(10)` and skip the frame (minimised/idle guard),
-    - else `guiBindings.NewFrame()` → `launcherApp.Draw()` → `guiBindings.Render()`.
-12. Teardown: `guiBindings.Dispose()` (disposes referenced textures + shuts ImGui/SDL-GPU backends), `ReleaseWindowFromGPUDevice`, `DestroyGPUDevice`, `DestroyWindow`, `SDL.Quit()`.
-13. Post-loop: if `Patcher != null`, `Patcher.StartCancellation()`, then `Environment.Exit(0)` wrapped in a `try/catch` that logs "Could not uninitialize patch acquisition."
+The Eto block (lines 255–290) is the new UI bootstrap and replaces the previous SDL window + `SDLGPUDevice` + `ImGuiBindings` + `FontManager` + frame loop:
 
-**Quirk:** the `try { Environment.Exit(0); } catch` block is a deliberate workaround — the comment states `PatchManager.UnInitializeAcquisition()` is private and `StartCancellation()` is its only public caller. `Environment.Exit` does not normally throw, so the `catch` is effectively unreachable; the intent is to let `PatchManager` complete its teardown side effect.
+```csharp
+Log.Debug("Creating the Eto application...");
+var version = AppUtil.GetAssemblyVersion();
+var hash = AppUtil.GetGitHash();
+// The launcher forces a dark theme: the previous build shipped a dark ImGui style, and the
+// launcher artwork is dark. Eto 2.13 crashes on GTK3 when asked for Themes.Dark on a system
+// theme with no dark variant, so the theme is chosen through GTK_THEME instead.
+EtoTheme.PreferDarkGtkTheme();
+
+var application = new Application { Name = APP_NAME };
+
+application.Initialized += (_, _) =>
+{
+    AppFonts.Initialize(Config.FontPxSize ?? 21.0f);
+
+    var launcherClientConfig = LauncherClientConfig.GetAsync().GetAwaiter().GetResult();
+    launcherApp = new LauncherApp(storage, launcherClientConfig.frontierUrl, launcherClientConfig.cutOffBootver);
+    Log.Debug("LauncherApp created");
+
+    launcherForm = new LauncherForm(launcherApp, version, hash);
+    launcherApp.AttachForm(launcherForm);
+    Log.Debug("LauncherForm created");
+
+    application.MainForm = launcherForm;
+    launcherForm.Show();
+    Log.Debug("Main form shown");
+};
+
+Log.Debug("Eto OK!");
+
+application.Run();
+```
+
+Contract facts:
+
+- **Theme selection happens before `Application` is constructed** (line 263, `EtoTheme.PreferDarkGtkTheme()`). Eto 2.13's GTK `ThemeHandler` crashes on a system theme that has no dark variant, so the dark look is obtained by setting `GTK_THEME` in the process environment (`EtoTheme.cs.md`), not by `Application.Theme = Themes.Dark`.
+- **All UI construction lives inside `application.Initialized`.** Eto's GTK `ApplicationHandler.Run()` fires `OnInitialized` and then enters `Gtk.Application.Run()`; a handler that blocks here blocks the loop, so the window only appears after the handler returns. The three debug logs (`LauncherApp created`, `LauncherForm created`, `Main form shown`) exist to make that placement observable in `launcher.log`.
+- **`launcherForm.Show()` is explicit.** Setting `application.MainForm` does not show the form; without the explicit `Show()` call the launcher never appears. `launcherApp.AttachForm(launcherForm)` (line 279) wires `LauncherApp.PageShown` to `LauncherForm.ShowPage` before the form is shown, so the first page (`LauncherState.Main`) is hosted at first paint (`LauncherApp.cs.md`, `LauncherForm.cs.md`).
+- **`AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` runs first inside the handler** (line 272). Eto font families must be registered before any control is created, because `Common.Button` icons (`AppFonts.Glyph`) are applied during component construction (`AppFonts.cs.md`, `Components/Common/Button.cs.md`). Note the literal fallback `21.0f` differs from `LoadConfig`'s default `22.0f` (line 116).
+- **`LauncherClientConfig.GetAsync().GetAwaiter().GetResult()` blocks the UI thread** (line 274) on a network fetch (`Net/LauncherClientConfig.cs.md`); this happens on the GTK main thread, so a slow/absent network delays first paint and can throw inside `Initialized` (no `try` around it).
+- **`application.Run()` returns when the UI loop exits** — i.e. when the launcher window is closed/quit. There is no SDL event pump; `MainPage` exits the launcher via `Application.Instance.Quit()` (`MainPage.cs.md`).
+- **`Log.Debug("Eto OK!")` (line 288) is printed before `Run()`**, so it appears in the log before `Main form shown`; the ordering is intentional and useful for spotting a handler that never returned.
 
 ## 7. Environment interface (`CoreEnvironmentSettings` + `Program`)
 
-| Variable | Effect |
-| --- | --- |
-| `XL_CLEAR_SETTINGS` / `PREFIX` / `PLUGINS` / `TOOLS` / `LOGS` / `ALL` | trigger the corresponding `Clear*` routine at startup |
-| `XL_DECK`, `XL_GAMEMODE`, `XL_FIRSTRUN` | tri-state Steam Deck hints (`true`/`1`/`yes`/`y`/`on`, `false`/`0`/`no`/`n`/`off`) |
-| `XL_USE_STEAM` | `false` forces `Config.IsIgnoringSteam = true` ("Fix for Steam Deck users who lock themselves out") |
-| `XL_SCT` | `IsSteamCompatTool` — forces Steam init even when Steam is ignored |
-| `SteamAppId`, `XL_APPID` | extra Steam AppIDs tried before the retail/free-trial IDs |
-| `XL_SECRET_PROVIDER` | `FILE` \| `KEYRING` (default) \| `NONE`; any other value throws `ArgumentException` |
-| `XL_SECRETS_FILE_PATH` | secrets file name, default `"secrets.json"` (resolved through `Storage`, i.e. under the app dir) |
-| `STEAM_COMPAT_INSTALL_PATH`, `STEAM_COMPAT_APP_ID` | read in `LoadConfig` to auto-detect the compat-tool game path |
-
-`IsSteamDeckHardware` contract: `CoreEnvironmentSettings.IsDeck` if set, else `Directory.Exists("/home/deck") || IsDeckGameMode || IsDeckFirstRun`. The adjacent `// TODO` notes there is no Steamworks API backing this detection yet.
+- `CType` (line 60) is a **type-initializer** read of `CoreEnvironmentSettings.GetCType()`, so it is resolved before `Main` starts and is a snapshot: changing env vars later does not change `Program.CType`. Consumers: `MainPage.cs:632–635` (`LC_ALL`/`LC_CTYPE` for the locale hack) and `SettingsTabTroubleshooting.cs:34–35` (locale hack label text).
+- `IsSteamDeckHardware` (line 63) is evaluated **per access** — it is an expression-body property over `CoreEnvironmentSettings.IsDeck` / `/home/deck` / `IsDeckGameMode` / `IsDeckFirstRun`. Consumers: `MainPage.cs:781` (hide launcher on Steam Deck), `FtsPage.cs:81,87`, `OtpEntryPage.cs:128` (gamepad input), `SettingsTabDebug.cs:56`, `AppUtil.cs:63`.
+- `GamePath` inference (lines 85–95) reads `STEAM_COMPAT_INSTALL_PATH`/`STEAM_COMPAT_APP_ID` only when `Config.GamePath` is null, matching only `39210`/`312060`.
+- `IsIgnoringSteam` (line 111) is the only config default written from `CoreEnvironmentSettings.UseSteam` and is assigned unconditionally (not `??=`).
 
 ## 8. Configuration surface
 
-Config is a `ConfigurationBuilder<ILauncherConfig>` composed from: command-line arguments, `<storage>/launcher.ini`, plus type parsers `DirectoryInfoParser` and `AddonListParser` (`Configuration/Parsers`). `AcceptLanguage` is filled from `ApiHelpers.GenerateAcceptLanguage()` when empty.
+`LoadConfig` (line 76) is the sole writer of defaults, in the order: `AcceptLanguage`, `GamePath`, `GameConfigPath`, `ClientLanguage`, `DpiAwareness`, `IsAutologin`, `CompletedFts`, `FontPxSize`, `IsEncryptArgs`, `IsOtpServer`, `IsIgnoringSteam`, `PatchPath`, `DalamudEnabled`, `DalamudLoadMethod`, `GlobalScale`, `GameModeEnabled`, `DxvkVersion`, `DxvkAsyncEnabled`, `WineStartupType`, `WineManagedVersion`, `WineSyncType`, `WineBinaryPath`, `WineDebugVars`, `FixLDP`, `FixIM`, `FixLocale`, `FixError127`, `DontUseSystemTz`.
 
-The full 41-member schema, its three-state (`T?` = unset) convention, and the 13 members this file leaves `null` are specified in `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` §2/§3/§5; the two parsers in `docs/XIVLauncher.Core/Configuration/Parsers/` are the INI codecs for `DirectoryInfo` (4 members) and `List<AddonEntry>` (1 member). The 7-member `CommonSettings` view (`Configuration/CommonSettings.cs.md`) is constructed at `Program.cs:49` and has no consumers.
-
-Defaults asserted by this file (applied with `??=`, except where noted):
-
-| Key | Default |
-| --- | --- |
-| `GamePath` | `STEAM_COMPAT_*` derived dir when AppID is 39210/312060, else `storage.GetFolder("ffxiv")` |
-| `GameConfigPath` | `ffxivConfig` |
-| `ClientLanguage` | `English` |
-| `DpiAwareness` | `Unaware` |
-| `IsAutologin`, `CompletedFts` | `false` |
-| `FontPxSize` | `22.0f` |
-| `IsEncryptArgs` | `true` |
-| `IsOtpServer` | `false` |
-| `IsIgnoringSteam` | plain `=`, not `??=`: `!UseSteam` if `XL_USE_STEAM` set, else existing value or `false` |
-| `PatchPath` | `patch` |
-| `DalamudEnabled` | `true` |
-| `DalamudLoadMethod` | `EntryPoint` |
-| `GlobalScale` | `1.0f` |
-| `GameModeEnabled` | `false` |
-| `DxvkVersion` | `Stable` |
-| `DxvkAsyncEnabled` | `true` |
-| `WineStartupType` | `Managed` |
-| `WineManagedVersion` | `Stable` |
-| `WineSyncType` | `FSync` if `WineUtility.SystemFsyncSupport() == Supported`, else `ESync` |
-| `WineBinaryPath` | `/usr/bin` |
-| `WineDebugVars` | `-all` |
-| `FixLDP`, `FixIM`, `FixLocale`, `FixError127`, `DontUseSystemTz` | `false` |
+- `GlobalScale` (line 119) remains in the config surface but **has no consumer in the Eto UI** — the previous build used it to scale ImGui (`ImGuiHelpers.GlobalScale`); Eto sizes controls natively. It is written and persisted, but nothing reads it any more.
+- `FontPxSize` (default `22.0f`, line 107) is now the font size for Eto fonts via `AppFonts.Initialize` (line 272), replacing `FontManager`'s scaled pixel size (`FontManager.cs` was deleted).
+- `Config.Net` writes ini on property set, so settings tabs write `Program.Config` directly (`SettingsPage.cs.md`).
+- `WineSyncType` default calls `WineUtility.SystemFsyncSupport()` at startup — a side-effecting probe (subprocess/`dlopen` style checks) executed on the main thread before the UI.
 
 ## 9. Manual Dalamud injection contract
 
-`CreateDalamudUpdater()` uses a manual injector only when **all** of: `DalamudManualInjectPath != null`, `DalamudManualInjectionEnabled == true`, the path exists, and it contains a file named `Dalamud.Injector.exe`. Otherwise `RunnerOverride = null` and the normal Dalamud branch resolution applies.
-
-Updater folders: `dalamud` (payload), `runtime` (shared dotnet runtime), `dalamudAssets` (asset cache). `HttpClient` and `DalamudLoadInfo` are injected as the transport and status overlay.
+`CreateDalamudUpdater` (line 154) resolves `RunnerOverride` only when `DalamudManualInjectPath` exists **and** `DalamudManualInjectionEnabled == true` **and** a file named `DALAMUD_INJECTOR_NAME` is present (lines 157–160). `SettingsTabDalamud` writes `Program.DalamudUpdater.RunnerOverride` directly at runtime (`SettingsTabDalamud.cs:33,41,50`), so the updater is reconfigured mid-session; the factory is re-run only by `ClearPlugins(tsbutton: true)` (line 389).
 
 ## 10. On-disk layout (owned by this file)
 
-```
-<storage root "xlcore">/
-  launcher.ini              launcher config (also launcherUI.ini for ImGui, dalamudUI.ini, dalamudConfig.json)
-  launcherUI.ini            ImGui style ini (ImGuiBindings)
-  secrets.json              when XL_SECRET_PROVIDER=FILE
-  logs/                     launcher.log (this file), wine.log (compat tools), dalamud*.{log,old.log}
-  runtime/                  shared dotnet runtime (Dalamud + patcher)
-  ffxiv/ ffxivConfig/       game path / game config path
-  patch/                    patcher data
-  dalamud/ dalamudAssets/ installedPlugins/
-  wineprefix/
-  compatibilitytool/wine, compatibilitytool/dxvk
-```
+Folders/filenames created or consumed through `storage`: `launcher.ini`, `logs/launcher.log`, `logs/wine.log`, `runtime`, `ffxiv`, `ffxivConfig`, `patch`, `dalamud`, `dalamudAssets`, `installedPlugins`, `compatibilitytool/wine`, `compatibilitytool/dxvk`, `wineprefix`, `secrets.json` (overridable via `XL_SECRETS_FILE_PATH`), `dalamudUI.ini`, `dalamudConfig.json`, `dalamud.boot.log`, `dalamud.boot.old.log`, `dalamud.log`, `dalamud.injector.log`.
+
+`ClearPrefix`/`ClearPlugins`/`ClearTools`/`ClearLogs` `Delete(true)` then re-`GetFolder` to recreate empty folders — the recreate calls are required because `Storage.GetFolder` is what creates them (`LauncherApp` and `CreateCompatToolsInstance` rely on that).
 
 ## 11. HTTP client contract
 
-The single shared `HttpClient` (used by Dalamud updater, launcher client config, and everything else in `XIVLauncher.Core.Net`) is configured as:
-
-- `ConnectCallback` = a `HappyEyeballsCallback` instance (`XIVLauncher.Common.Http.HappyEyeballs`), nested handler sets `UseCookies = false`,
-- `AutomaticDecompression = All`,
-- `AllowAutoRedirect = true`, `MaxAutomaticRedirections = 4`.
-
-It is constructed at class init, i.e. before config/logging exist.
+`HttpClient` (lines 45–55) is built once as a static initializer: a `SocketsHttpHandler` whose `ConnectCallback` is itself a nested `SocketsHttpHandler`'s `ConnectCallback`, produced by `new HappyEyeballsCallback().ConnectCallback`. Consumers: `XivAccount.cs:94`, `MainPage.cs:730,1056`, `NewsFrame.cs:109`, `DalamudBranchMetaSettingsEntry.cs:27`, `LauncherClientConfig.cs:25`, `Troubleshooting.cs:85`. The nested construction is intentional — `HappyEyeballsCallback` needs a handler to delegate to — and it means the outer client's connect path is not the default. `AutomaticDecompression = DecompressionMethods.All`, `AllowAutoRedirect = true`, `MaxAutomaticRedirections = 4`.
 
 ## 12. Thread-safety and lifecycle hazards
 
-- All global state is unsynchronised; the design assumes a single-threaded startup and a single frame loop.
-- Raw SDL handles (`window`, `gpuDevice`) are leaked on any early `Environment.Exit(1)` before teardown.
-- `Clear*(tsbutton = true)` is unsound when called before `Main` constructs `launcherApp` — `ClearSettings(true)` touches `launcherApp.State`, `ClearAll(true)` propagates that. From `Main` they are always called with the default `false`.
-- `ResetUIDCache` ignores its `tsbutton` parameter entirely (the parameter is unused), and NPEs if `launcherApp` is null. It reaches the lib cache (`LauncherApp.cs:115` `CommonUniqueIdCache`), *not* the fork's unused `XIVLauncher.Core.Configuration.UniqueIdCache` stub (`Configuration/UniqueIdCache.cs.md` §1) — two same-named classes, one live, one dead.
-- `Config` is `null!` until step 4 (`LoadConfig`) and every one of its 41 members is `get; set;`-public: any read that happens before step 4 sees `null` for the 13 members §8 does not default (`Configuration/ILauncherConfig.cs.md` §5), and the `!` assertions on `GamePath`/`PatchPath`/`GameConfigPath` at `MainPage.cs:185`/`:244`/`:733`/`:860`/`:1049` and `Support/Troubleshooting.cs:73` trap rather than report. Keep ordering inside this file.
-- `ClearPrefix`/`ClearPlugins`/`ClearTools`/`ClearLogs` delete recursive folders without checking in-flight use; they are only safe at startup.
-- `HideWindow`/`ShowWindow` are public but `window` is `null!` before `Main` reaches step 10.
-- `Patcher` is the only global with a public setter — external code may legitimately assign it; nothing in this file does.
+- **UI-thread marshalling is mandatory.** Any code that mutates Eto controls from a background task must go through `Ui.Post`/`Ui.Run` (`Ui.cs.md`). `Program.ShowWindow`/`Program.HideWindow` are the canonical example: they post to the UI thread (lines 319, 322) because they are called from login/patch tasks (`MainPage.cs:1145,1153`).
+- **Blocking in `Initialized` blocks first paint.** `LauncherClientConfig` fetch and `LauncherApp` construction (which starts news loading, patch checks, and `Troubleshooting.LogTroubleshooting`) all run on the UI thread.
+- **`launcherApp`/`launcherForm` are `null!`** until `Initialized` completes; `ClearSettings(true)`/`ClearLogs(true)`/`ClearPlugins(true)`/`ClearTools(true)`/`ClearAll(tsbutton)` called from the UI (troubleshooting buttons) dereference them, so those paths are only safe after startup.
+- **`ResetUIDCache(bool tsbutton)` ignores its parameter's semantics**: it forwards to `launcherApp.UniqueIdCache.Reset()` regardless, and `launcherApp` must be initialized (`MainPage.cs:218`, `SettingsTabGame.cs:61`).
+- **Post-loop teardown is partial:** `Patcher.StartCancellation()` then `Environment.Exit(0)` in a `try` whose body cannot throw (the comment acknowledges `PatchManager.UnInitializeAcquisition()` is private and cannot be called) — so patch acquisition cleanup is effectively `StartCancellation()` + immediate exit.
+- **Window visibility is the app lifetime**: the GTK `GApplication` exits when the last visible window closes, which is why `LauncherForm.HideWindow` minimises instead of hiding (`LauncherForm.cs.md`).
 
 ## 13. Referenced (not defined here)
 
-`Storage`, `ConfigurationBuilder`/`ILauncherConfig` (Config.Net — schema spec: `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md`), `CommonSettings` (`Configuration/CommonSettings.cs.md`), `DirectoryInfoParser`/`AddonListParser` (`Configuration/Parsers/…cs.md`), `UniqueIdCache` (dead stub, `Configuration/UniqueIdCache.cs.md`), `ApiHelpers.GenerateAcceptLanguage`, `DalamudUpdater`, `DalamudOverlayInfoProxy`, `CompatibilityTools`, `WineSettings`, `WineUtility.SystemFsyncSupport`, `WindowsSteam`/`UnixSteam`, `FileSecretProvider`/`KeychainSecretProvider`/`DummySecretProvider`, `LauncherApp`, `ImGuiBindings`, `StyleModelV1`, `LauncherClientConfig`, `AppUtil.GetAssemblyVersion/GetGitHash`, `LogInit.Setup`, `CoreEnvironmentSettings`, SDL3 C ABI (`SDL.Init`, `SDL.CreateWindow`, `SDL.CreateGPUDevice`, `SDL.ClaimWindowForGPUDevice`, `SDL.SetGPUSwapchainParameters`, `SDL.ShowWindow`, `SDL.GetWindowFlags`, `SDL.Delay`, `SDL.PollEvent`…).
+Uses: `Storage`, `LogInit`, `ApiHelpers.GenerateAcceptLanguage`, `ClientLanguage`, `DpiAwareness`, `DalamudLoadMethod`, `DalamudUpdater`, `DalamudOverlayInfoProxy`, `PatchManager`, `WindowsSteam`/`UnixSteam`, `CompatibilityTools`, `WineSettings`, `WineUtility`, `DxvkVersion`, `HappyEyeballsCallback`, `CoreEnvironmentSettings`, `PlatformHelpers`, `AppUtil`, `ILauncherConfig`, `DirectoryInfoParser`, `AddonListParser`, `LauncherClientConfig`, `KeychainSecretProvider`/`FileSecretProvider`/`DummySecretProvider`, `AppFonts`, `EtoTheme`, `Ui`, `LauncherApp`, `LauncherForm`.
+Consumers of this file: `MainPage.cs` (patcher, window show/hide, Steam, compat tools, `ResetUIDCache`), `NewsFrame.cs` (`HttpClient`), `XivAccount.cs` (`Secrets`, `HttpClient`), `AccountManager.cs` (`Config`), `Input.cs` (`Steam`), `FtsPage.cs`/`OtpEntryPage.cs` (`Steam`, `IsSteamDeckHardware`), `AppUtil.cs` (`IsSteamDeckHardware`, `Steam`), all settings tabs (`Config`), `SettingsTabWine.cs:165` (`CreateCompatToolsInstance`), `SettingsTabGame.cs:61` (`ResetUIDCache`), `SettingsTabTroubleshooting.cs:66–67` (`storage`), `Troubleshooting.cs:85` (`HttpClient`), `LauncherClientConfig.cs:25` (`HttpClient`).
 
 ## 14. Extension points / notes for maintainers
 
-- To add a new global, prefer a get-only accessor backed by a `private static` field (the existing pattern) so that assignment stays inside this class; `Patcher` is the deliberate exception.
-- Anything needing `window`/`gpuDevice` handles must live inside an `unsafe` block and must be ordered after step 10 of `Main`.
-- `DALAMUD_INJECTOR_NAME` and the `// TODO: move this somewhere better` marker indicate an intended relocation out of `Program`.
-- `ClearColor` here and `ImGuiBindings.clearColor` are duplicated constants — change both or none.
+- **Do not re-introduce `Application.Theme = Themes.Dark`** on GTK3; use `EtoTheme.PreferDarkGtkTheme()` before `Application` construction, and keep the theme probe's candidate list in sync with installed themes (`EtoTheme.cs.md`).
+- **Keep UI construction inside `application.Initialized`** — creating Eto controls before `Application` exists throws; creating them after `Run()` returns never executes.
+- **New process-wide services belong as statics here**, with `null!` initializers, initialized in `Main` before `application.Run()`; anything UI-facing must be initialized inside `Initialized` so the UI thread owns it.
+- If a second platform (WPF/Cocoa) is added, `EtoTheme` becomes a no-op path and `GTK_THEME` must be dropped; `AppFonts` needs re-verification because Eto font registration is platform-handled (`Eto.Forms` docs: `https://github.com/picoe/Eto`).

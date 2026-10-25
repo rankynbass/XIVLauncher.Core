@@ -1,127 +1,119 @@
-# Input.cs — Specification
+# Input.cs (Common) — Specification
 
-**File:** `src/XIVLauncher.Core/Components/Common/Input.cs` · 123 lines · 3490 bytes
-**Namespace:** `XIVLauncher.Core.Components.Common` · **Declaration:** `public class Input : Component`
-**Role:** Text field with label, hint, keyboard-focus hookup and a Steam-Deck gamepad-overlay fallback path
+**File:** `src/XIVLauncher.Core/Components/Common/Input.cs` · 175 lines · 5,176 bytes
+**Namespace:** `XIVLauncher.Core.Components.Common` · **Declarations:** `public enum InputFlags` (line 11), `public class Input : Component` (line 34)
+**Role:** Labelled text entry — native Eto `TextBox`/`PasswordBox` wrapped with a caption label, plus Steam Deck gamepad input hooks
 
 ---
 
 ## 1. Purpose
 
-`Input` is the launcher's text-entry primitive: it draws its label, then an ImGui text box that spans the containing window, and fires an `Enter` event when the user submits. It also carries the *Steam Deck* branch: when the deck is active, submission is delegated to Steam's gamepad text input overlay instead of ImGui's own box.
+Replaces the immediate-mode ImGui text input, which kept its own text buffer and re-drew the entry every frame. Here typing is handled by the platform entry, `Value` reads `TextControl.Text` directly, and Enter is detected through `KeyDown` when `InputFlags.EnterReturnsTrue` is set.
 
-Instances (all outside this file): exactly **two** — `loginInput` and `passwordInput`, both in `MainPage/LoginFrame.cs.md` (`LoginFrame.cs:72` and `:75`). Other text fields in the package bypass this component and call ImGui directly: `OtpEntryPage.cs.md` uses `ImGui.InputText("###otpInput", ref this.otp, 7, …)` and `SettingsPage/SettingsEntry{T}.cs.md` uses `ImGui.InputText($"###{Id}", …)`. Usings: `System.Numerics`, `Hexa.NET.ImGui`, `Serilog`.
+Usings: `System.Numerics` (`Vector2` spacing), `Eto.Forms`, `Serilog` (digit-stripping log).
 
-## 2. Surface
+## 2. `InputFlags`
+
+`[Flags]` enum (lines 11–23):
+
+| Flag | Value | Effect |
+| --- | --- | --- |
+| `None` | 0 | plain text entry |
+| `Password` | 1 | entry is a `PasswordBox` (masked) — **selects the control type** at construction (line 59) |
+| `Decimal` | 2 | subscribes `SanitizeDecimal` to `TextChanged` (lines 79–81) |
+| `EnterReturnsTrue` | 4 | `Keys.Enter` in `KeyDown` raises `Enter` (lines 84–89) |
+
+`Password` is honoured by creating `PasswordBox` (lines 60–64) instead of `TextBox` (lines 65–70). `TextBox` gets `PlaceholderText = hint` (line 68); `PasswordBox` gets no placeholder.
+
+## 3. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `inputBacking` | `private string = ""` | the only storage; passed **`ref`** to ImGui |
-| `isSteamDeckInputActive` | `private volatile bool` | deck-overlay flag, written by two threads — see §6 |
-| `Label` | `public string`, **`get` only** | drawn as `ImGui.Text`, *not* as the box's id |
-| `Hint` | `public string`, **`get` only** | placeholder text inside the box |
-| `MaxLength` | `public uint`, **`get` only** | ImGui buffer capacity for the value |
-| `Flags` | `public ImGuiInputTextFlags`, **`get` only** | e.g. `Password`, `NoUndoRedo`, `CharsDecimal` |
-| `IsEnabled` | `public bool`, `get`/`set`, `= true` | honoured — see §5 |
-| `Spacing` | `public Vector2`, **`get` only** | trailing `ImGui.Dummy` gap, default `Vector2.Zero` |
-| `HasSteamDeckInput` | `public bool`, `get`/`set` | set by ctor from `Program.IsSteamDeckHardware` |
-| `SteamDeckPrompt` | `public string`, `get`/`set` | defaults to `Hint`; shown in the Steam overlay |
-| `TakeKeyboardFocus` | `public bool`, `get`/`set` | opt-in keyboard focus (default `false`) |
-| `Enter` | `public event Action?` | fired on submit — see §5 |
-| `Value` | `public string`, `get`/`set` | explicit proxy for `inputBacking` |
-| `Input(label, hint, spacing, maxLength = 255, isEnabled = true, flags = None)` | ctor | multi-line parameter list; also binds the Steam handler |
-| `SteamOnOnGamepadTextInputDismissed(bool success)` | `private` | plain method bound by hand in the ctor (not a feature hook) |
+| `input` | `private readonly TextControl` (line 36) | the native entry |
+| `label` | `private readonly Label` (line 37) | caption, `Visible = !string.IsNullOrEmpty(label)` (lines 51–55) |
+| `steamDeckInputActive` | `private bool` (line 39) | set when `ShowGamepadTextInput` succeeds (line 93) |
+| `sanitizing` | `private bool` (line 40) | re-entrancy guard for `SanitizeDecimal` |
+| `Input(string label, string hint, Vector2? spacing, uint maxLength = 255, bool isEnabled = true, InputFlags flags = InputFlags.None)` | ctor (lines 42–112) | |
+| `Label`, `Hint`, `MaxLength`, `Flags`, `Spacing` | `public { get; }` (lines 114, 116, 118, 120, 128) | read-only metadata, assigned once (lines 72–76) |
+| `IsEnabled` | `public bool` (lines 122–126) | forwards `input.Enabled` |
+| `HasSteamDeckInput` | `public bool { get; set; }` (line 130) | gates the gamepad keyboard |
+| `SteamDeckPrompt` | `public string { get; set; }` (line 132) | prompt text for the gamepad keyboard |
+| `TakeKeyboardFocus` | `public bool { get; set; }` (line 135) | declared, **never read** |
+| `InputWidth` | `public int` (lines 141–145) | width of the entry itself, forwarded to `Control.Width` |
+| `Enter` | `public event Action?` (line 148) | raised on Enter when flagged |
+| `Value` | `public string` (lines 150–154) | forwards `input.Text` |
+| `Focus()` | `public new void` (line 157) | forwards `input.Focus()`; opening focus also triggers the gamepad path |
+| `SanitizeDecimal()` | `private` (lines 159–174) | digit filter |
 
-## 3. Constructor contract
+`MaxLength` is `uint` in the launcher API and cast to `int` for the native control (lines 63, 69). Eto exposes `MaxLength` on `TextBox` and `PasswordBox`, **not** on `TextControl` — hence the constructor sets it inside each concrete initializer, and the wrapper's `MaxLength` property is metadata only (line 118).
 
-```csharp
-Label = label;  Hint = hint;  MaxLength = maxLength;  Flags = flags;
-IsEnabled = isEnabled;  Spacing = spacing ?? Vector2.Zero;
-SteamDeckPrompt = hint;
+`InputWidth` targets the entry widget; the wrapper's own `Control.Width` sizes the label+entry panel. HEAD's `SetNextItemWidth` equivalent is `InputWidth`, used by the OTP entry (`OtpEntryPage.cs:45`, 150 px).
 
-if (Program.Steam != null) {
-    Program.Steam.OnGamepadTextInputDismissed += this.SteamOnOnGamepadTextInputDismissed;
-    HasSteamDeckInput = Program.IsSteamDeckHardware;
-}
-```
+## 4. Layout
 
-- **Steam handler registration happens in the constructor.** `Program.Steam.OnGamepadTextInputDismissed += this.SteamOnOnGamepadTextInputDismissed` is added per constructed instance and never removed, so the count of live handlers tracks the number of `Input` instances ever created. Today that is exactly two (`LoginFrame.cs:72/75`), which is bounded and intentional; the constraint is that `Input` must stay a long-lived, constructor-only object — building one per frame or per refresh would accumulate Steam callbacks. The unbinding idiom, where it is needed at all, is shown in `OtpEntryPage.cs.md` §listener teardown.
-- `Program.Steam` is a nullable process handle (`Program.cs.md`), so the null test is required; `HasSteamDeckInput` is then `false`, which keeps the deck branch inert on ordinary desktops.
-- `MaxLength` defaults to **255**; both login instances pass `128` (`MainPage/LoginFrame.cs.md` §ctor). It is `get`-only, so it cannot be retuned after construction.
-- `Flags` is `get`-only too: `passwordInput` passes `ImGuiInputTextFlags.Password | ImGuiInputTextFlags.NoUndoRedo` and `loginInput` takes the default `None` (see `MainPage/LoginFrame.cs.md` §ctor). Components that want `CharsDecimal | EnterReturnsTrue` submit semantics do not use this class (see `OtpEntryPage.cs.md`).
-- `SteamDeckPrompt = hint` is an initial value only: it is `get`/`set`, so pages may re-word the deck prompt without touching the box hint.
+`this.Content = new StackLayout { Spacing = (int)(spacing?.X ?? 10), Items = { this.label, this.input } }` (lines 107–112) — vertical stack: label above entry. The `spacing` parameter is a `Vector2` from HEAD's margin API, and only `X` is used as the stack spacing; `spacing?.Y` is ignored (`spacing` is stored as metadata, line 76, and never read).
 
-## 4. Draw sequence
+Consumers pass `new Vector2(12f, 0f)` for the login/password entries (`LoginFrame.cs:78`, `81`) → 12 px spacing, and `null` for the OTP entry (`OtpEntryPage.cs:43`) → 10 px spacing.
 
-```
-PushStyleVar(FramePadding, (12,10));   PushStyleVar(FrameRounding, 0)
-PushStyleColor(FrameBg, BlueShade1);   PushStyleColor(FrameBgActive, BlueShade2)
-PushStyleColor(FrameBgHovered, BlueShade2); PushStyleColor(TextDisabled, TextDisabled)
-PushStyleColor(Text, Text)
-if (TakeKeyboardFocus && ImGui.IsWindowAppearing()) SetKeyboardFocusHere()
-ImGui.Text(Label)
-if (!IsEnabled || isSteamDeckInputActive) { BeginDisabled(); isDisabled = true; }
-SetNextItemWidth(GetWindowWidth());
-PopStyleColor();                       // <-- pops exactly one colour, mid-function
-ImGui.InputTextWithHint($"###{Id}", Hint, ref inputBacking, MaxLength, Flags)
-if (IsItemFocused() && IsKeyPressed(Enter)) Enter?.Invoke()
-if (IsItemActivated() && HasSteamDeckInput && Steam != null && Steam.IsValid)
-    isSteamDeckInputActive = Steam.ShowGamepadTextInput(Flags.HasFlag(Password), false, SteamDeckPrompt, (int)MaxLength, inputBacking) ?? false
-ImGui.Dummy(Spacing)
-if (isDisabled) EndDisabled()
-PopStyleVar(2); PopStyleColor(4)
-```
+An empty label is hidden (line 53), so the OTP box (label `string.Empty`) reserves no vertical space.
 
-Balance check: 5 colour pushes ↔ 1 mid-function pop + 4 at the end; 2 style-var pushes ↔ `PopStyleVar(2)`. The single mid-function `PopStyleColor()` pops **`Text`** (last pushed), so the *label* is drawn with the local colours while the input box itself is drawn with the enclosing window's colours. Style vars stay pushed across the whole body, so the box's frame padding is 12×10.
+## 5. Steam Deck gamepad input
 
-- **`ImGui.Text(Label)` uses the raw label** (id derived from the string), while the box uses the `###` id-split form (`$"###{Id}"`, empty display text, instance-unique id) — `Component.cs.md` §5. The box can therefore never collide, and the *label* is the identity-bearing one (see §7 hazard).
-- **`SetNextItemWidth(GetWindowWidth())`** makes the box span the full window width — `Input` has no width parameter; its width is whatever window it is drawn into (`LoginFrame`'s child window, `SettingsEntry`'s parent window, `OtpEntryPage`'s auto-resizing child window).
-- No `base.Draw()` call: like `Button`/`Checkbox`, an `Input` is a strict leaf — its `Children` collection is never painted.
-
-## 5. Submission: `Enter`
+`GotFocus` (lines 90–94): when `Program.Steam is { IsValid: true }` and `HasSteamDeckInput` is true, calls
 
 ```csharp
-if (ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGuiKey.Enter))
-    Enter?.Invoke();
+Program.Steam.ShowGamepadTextInput(flags.HasFlag(InputFlags.Password), false, this.SteamDeckPrompt, (int)this.MaxLength, this.Value)
 ```
 
-- Focus is only established when `TakeKeyboardFocus` is set **and** the containing window is appearing (`ImGui.IsWindowAppearing()`), i.e. on the first frame of that window. Neither login instance sets `TakeKeyboardFocus` (grep: no writer anywhere), so `SetKeyboardFocusHere()` is currently never called by this class and the `Enter` branch below is reachable only while some *other* component has set ImGui keyboard focus — see `MainPage/LoginFrame.cs.md` §ctor for what the two live instances actually leave as default.
-- `IsKeyPressed` is a *held* query, so holding `Enter` re-fires `Enter` on every frame after the first; consumers must be idempotent or self-guarding (`MainPage/MainPage.cs.md` guards with `IsLoggingIn`, `OtpEntryPage.cs.md`'s accept path is monotonic through a `TaskCompletionSource`).
-- The mouse path is separate: ImGui's own "clicked → text entered" state, plus `ImGui.IsItemActivated()` for the deck branch.
-- `Enter` is an `event` (`+=`-composable, externally non-assignable); the only binding sites in the project are `this.loginInput.Enter += TriggerLogin` and `this.passwordInput.Enter += TriggerLogin` (`MainPage/LoginFrame.cs.md` §ctor) — the same handler is also bound to `loginButton.Click`, so submit has several routes.
-- **Mouse-driven `InputTextWithHint` returns a bool that this code ignores**: the `Enter` event is keyboard-only (plus the deck branch). A user with no keyboard submits by clicking — see the per-caller specs for how they compensate (`OtpEntryPage.cs.md` adds an explicit OK button; `MainPage/LoginFrame.cs.md` adds a login `Button`).
+and records success in `steamDeckInputActive`. Note `flags` here is the **constructor parameter**, captured by the closure, so the password flag passed to Steam is the flag set at construction.
 
-## 6. The Steam Deck branch
+`Program.Steam?.OnGamepadTextInputDismissed += a => ...` (lines 96–106): if `steamDeckInputActive`, clear it, then on `a == true` and valid Steam, write `Program.Steam.GetEnteredGamepadText()` into `Value`.
 
-```csharp
-isSteamDeckInputActive = Program.Steam?.ShowGamepadTextInput(
-    Flags.HasFlag(ImGuiInputTextFlags.Password), false, SteamDeckPrompt, (int)MaxLength, this.inputBacking) ?? false;
-```
+Key facts:
 
-- `ShowGamepadTextInput(passcode, unlisted?, prompt, maxSize, currentText)` returns whether the Steam overlay input is active; the result is stored as `isSteamDeckInputActive`. Note the argument is **`this.inputBacking`** — the current text is passed as the overlay's starting value.
-- Gate: `ImGui.IsItemActivated()` (the user clicked/activated the box) and `HasSteamDeckInput` and a valid Steam handle. The `?? false` keeps the assignment total even though the null check already happened (the `?.` re-narrows).
-- While `isSteamDeckInputActive` is true, the whole component is wrapped in `BeginDisabled` (via the `|| this.isSteamDeckInputActive` term, §5 of the draw) **except** the label text and the deck call — ImGui's own editing is suppressed so the Steam overlay owns entry.
-- Completion arrives asynchronously through `OnGamepadTextInputDismissed` → `SteamOnOnGamepadTextInputDismissed(success)`:
-  ```csharp
-  if (success && this.isSteamDeckInputActive) inputBacking = Program.Steam!.GetEnteredGamepadText();
-  this.isSteamDeckInputActive = false;
-  ```
-  `inputBacking` is written by whatever thread delivers the Steam callback while the draw thread reads it — hence the field is `volatile`, and it is the *only* mutable field in this class shared across threads.
-- On the deck the `Enter` event is **not** fired by the dismiss callback: the callback only refreshes text. Callers on deck therefore need the submit path to come from a subsequent frame's focus test or from their own button (`MainPage/LoginFrame.cs.md` §Draw, `OtpEntryPage.cs.md`) — a real behavioural difference between desktop and deck that this class encodes implicitly.
-- `Log.Information("SteamDeck Input Active({Name}): {IsActive}", this.Label, this.isSteamDeckInputActive)` uses the project's `Log.*` logging entry point whose format names its arguments (Serilog-side convention; see `Program.cs.md` §logging and `AppUtil.VersionInfo.cs.md` §"logging use"). The label is the log's discriminator, so `Strings.*` keys double as log keys.
+- The subscription is made **per input instance**, in the constructor, on `Program.Steam` (the shared Steam object). Every `Input` constructed while Steam exists keeps a subscription for the process lifetime, and the lambda captures `this`, so all inputs stay alive.
+- The handler writes `Value` (GTK `Text`) **from Steam's callback thread**; nothing marshals through `Ui.Post` (`Ui.cs.md`). `OtpEntryPage` has the same pattern with its own handler, marshalled (`OtpEntryPage.cs:110` uses `Ui.Post`).
+- **`HasSteamDeckInput` is never set by any consumer** (grep in `src/XIVLauncher.Core`: no `HasSteamDeckInput =`), and `SteamDeckPrompt` is only assigned `string.Empty` inside the constructor (line 77). So this gamepad path is inert for all three consumer instances; it is dead code inherited from HEAD (`git grep` at HEAD shows the same).
 
-## 7. Invariants and hazards
+## 6. Decimal sanitization
 
-- **`inputBacking` is passed `ref` into `InputTextWithHint`**: as with `Common/Checkbox.cs.md`, the widget exchanges state with ImGui's per-id store, so external `Value = "x"` writes live in the same channel as the widget's own text and can be republished/overwritten on the next draw. Read `Value` as "last value exchanged", not as a model field (`MainPage/LoginFrame.cs.md` §accessors proxies it, `MainPage/MainPage.cs.md` reads it immediately after a login trigger, which is the safe ordering).
-- **`MaxLength` is a capacity, not a validation rule**: an over-typed value is truncated by ImGui; nothing here validates length or content. `OtpEntryPage.cs.md` §validation is the caller-side check that layers on top.
-- **Label collision:** `ImGui.Text(Label)` makes the label an ImGui id. Two `Input`s sharing a `Label` string in one window share that item's identity, and the label containing `#` characters alters id splitting. The login inputs use distinct `Strings.UsernameInput`/`Strings.PasswordInput`; the settings entries use entry names — keep them unique per window.
-- **No trimming, no case handling, no clipboard handling** here — e.g. `MainPage/LoginFrame.cs.md` §Draw applies `.Trim()`/`.ToLower()` to `Username` after reading it. Do not add such transforms to `Value`'s getter: they break the "text as typed" contract ImGui republishes into `inputBacking`.
-- `isSteamDeckInputActive` is reset **only** by the dismiss callback; if Steam shows the overlay and never dismisses it, the input stays disabled forever until the containing page resets — there is no timeout or explicit cancel in this class (`OtpEntryPage.cs.md` §cancel button and `LoadingPage.cs.md` §cancel show how pages handle their own cancels around this).
-- `TakeKeyboardFocus`, `HasSteamDeckInput`, `IsEnabled`, `SteamDeckPrompt` are `get`/`set` and are the intended per-frame knobs; `Label`, `Hint`, `MaxLength`, `Flags`, `Spacing` are construction-time only. Neither login instance sets `TakeKeyboardFocus` or `IsEnabled`, so both are currently default-valued plumbing (grep: no writer) — unlike `Common/Button.cs.md`, whose `IsEnabled` is additionally unread inside its own draw, whereas `Checkbox` and `Input` both honour their own copy (see `Common/Checkbox.cs.md`, this file §5 of the draw sequence).
-- Nothing here pops/pushes around `ImGui.Dummy(Spacing)`: spacing after the box is the component's contribution to layout, and `Vector2.Zero` default means "no gap" — pages add their own `ImGui.NewLine()`/`ImGui.Dummy` (see `MainPage/LoginFrame.cs.md`, `SettingsPage/SettingsEntry{T}.cs.md`).
+`SanitizeDecimal` (lines 159–174), subscribed only when `InputFlags.Decimal` is set:
 
-## 8. Referenced / referenced-by
+1. Return early if `sanitizing` (re-entrancy guard: the filter writes `input.Text`, which fires `TextChanged` again).
+2. Return if `text.All(char.IsDigit)`.
+3. Set `sanitizing = true`, write `new string(text.Where(char.IsDigit).ToArray())`, clear the guard, then `Log.Debug("Stripped non-digit input from the {Label} entry", this.Label)`.
 
-Constructed by: `MainPage/LoginFrame.cs.md` (username/password), `SettingsPage/SettingsEntry{T}.cs.md` (one per settings entry), `OtpEntryPage.cs.md` (OTP box).
-Uses: `Component`/`Component.Id` (`Component.cs.md`), `ImGuiColors.cs.md`, `Program.cs.md` (`Program.Steam`, `Program.IsSteamDeckHardware`), Hexa.NET ImGui input bindings.
-Related: `Common/Button.cs.md`, `Common/Checkbox.cs.md` (the sibling controls: shared `IsEnabled` name, differing honouring), `ImGuiHelpers.cs.md`.
+Consequences:
+
+- Pasted text with letters is filtered to digits, and the caret position is not preserved (the whole string is replaced).
+- Programmatic `Value = "abc1"` from any thread writes through GTK, and the filter fires on the UI thread; digits-only strings are untouched.
+- The log message names the entry by `Label`, which is `string.Empty` for the OTP box.
+
+## 7. Consumers
+
+| Consumer | Site | Configuration |
+| --- | --- | --- |
+| `loginInput` | `LoginFrame.cs:78`, Enter → `TriggerLogin` (line 79) | label `Strings.UsernameInput`, hint `Strings.UsernameInputHint`, spacing `(12,0)`, `MaxLength = 128`, no flags |
+| `passwordInput` | `LoginFrame.cs:81`, Enter → `TriggerLogin` (line 82) | `Strings.PasswordInput`, `Strings.PasswordInputHint`, spacing `(12,0)`, `MaxLength = 128`, `Password \| EnterReturnsTrue` |
+| `otpInput` | `OtpEntryPage.cs:43-45`, Enter → `TryAcceptOtp` (line 47) | empty label/hint, `spacing = null`, `MaxLength = 7`, `Decimal \| EnterReturnsTrue`, `InputWidth = 150` |
+
+`LoginFrame.Username`/`Password` forward to these inputs' `Value` (`LoginFrame.cs:32–42`), and `MainPage` reads them on the UI thread inside the login path (`MainPage.cs:175`). Settings entries use raw Eto `TextBox` (not this wrapper) — see `Components/SettingsPage/SettingsEntry{T}.cs.md`.
+
+## 8. Thread / UI rules
+
+Construction, `Value` reads/writes, `InputWidth`, `IsEnabled`, `Focus()` are UI-thread operations on GTK widgets. The `Enter` event fires on the UI thread (GTK key event). The decimal filter fires on the UI thread. Only the Steam dismissal callback (line 96) writes from a non-UI thread, and as noted that path is unreachable today.
+
+## 9. Quirks
+
+- **`TakeKeyboardFocus` is dead** — declared (line 135), never read, no consumer sets it. HEAD's "focus the entry when the page is shown" behaviour is not implemented in the Eto path; `OtpEntryPage.Reset` calls `Focus()` explicitly instead (`OtpEntryPage.cs:122`).
+- **`HasSteamDeckInput` / `SteamDeckPrompt` are dead** as described in §5, so Steam Deck users cannot type into the username/password entries with the gamepad keyboard.
+- The per-instance Steam subscription is never unsubscribed, so N inputs ⇒ N permanent handlers on the shared Steam object; a dismissal triggers all of them, each guarded by its own `steamDeckInputActive` flag.
+- `MaxLength` metadata is `uint`, the native control's is `int`; `(int)this.MaxLength` is used for the gamepad call (line 93).
+- `spacing` is stored but only `X` is meaningful; passing a `Vector2` with a `Y` component has no effect.
+- The wrapper inherits `Component`'s `Panel` (`Component.cs.md`), so `Component.Enabled = false` disables the label and the entry together, while `IsEnabled = false` disables only the entry.
+- `Value` never returns `null`: Eto `TextControl.Text` is non-null, so an empty entry reads as `string.Empty`.
+
+## 10. Referenced / referenced-by
+
+Uses: `Component` (`Component.cs.md`), `Eto.Forms.TextBox`/`PasswordBox`/`Label`/`StackLayout`, `Keys.Enter`, `Program.Steam` (`Program.cs.md`), `Log`.
+Referenced by: `LoginFrame.cs` (lines 24–25, 78–82), `OtpEntryPage.cs` (lines 27, 43–47).
