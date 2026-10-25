@@ -37,6 +37,10 @@ public static class EtoColors
     /// <summary>The OTP child box: the previous window background (0.06 grey) at 40% alpha.</summary>
     public static Color OtpChildBackground { get; } = Color.FromArgb(102, 15, 15, 15);
 
+    /// <summary>The OTP child box tint as GTK can draw it: GTK renders no alpha, so the 40% 0.06 grey
+    /// over the dark theme window background (0.14 grey) is baked into one opaque colour.</summary>
+    public static Color OtpChildOpaqueBackground { get; } = Color.FromArgb(28, 28, 28);
+
     private static Color From(float r, float g, float b)
         => Color.FromArgb((int)Math.Round(r * 255), (int)Math.Round(g * 255), (int)Math.Round(b * 255));
 }

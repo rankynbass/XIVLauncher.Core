@@ -1,6 +1,6 @@
 # EtoColors.cs — Specification
 
-**File:** `src/XIVLauncher.Core/EtoColors.cs` · 42 lines · 2111 bytes
+**File:** `src/XIVLauncher.Core/EtoColors.cs` · 46 lines · 2404 bytes
 **TargetFramework:** net10.0 (Linux/GTK3 build)
 **Role:** the launcher palette as Eto `Color` values, kept from the old ImGui style; the replacement for
 `imgui.net` style colors (`ImGuiColors.cs`, deleted).
@@ -31,7 +31,8 @@ Members:
 | `Blue` | launcher button color | spinner color |
 | `BlueShade0..3` | window/frame shades | unused (theme provides them) |
 | `Text` | ImGui text color | unused (theme provides it) |
-| `OtpChildBackground` | `WindowBg` 0.06 grey at 40% alpha | `Color.FromArgb(102, 15, 15, 15)`, alpha = 102/255 ≈ 40% |
+| `OtpChildBackground` | `WindowBg` 0.06 grey at 40% alpha | `Color.FromArgb(102, 15, 15, 15)`, alpha = 102/255 ≈ 40%; no longer consumed (GTK renders no alpha) |
+| `OtpChildOpaqueBackground` | the same tint, composited | `Color.FromArgb(28, 28, 28)` — 40% grey(15) over the dark theme window background, drawn as an opaque bitmap fill |
 
 ## 2. Consumers
 
@@ -44,7 +45,7 @@ Members:
 | `Components/SettingsPage/SettingsPage.cs` | lines 133, 141 | `EtoColors.Grey3` — search results headers / no-results label |
 | `Components/SettingsPage/Tabs/SettingsTabTroubleshooting.cs` | lines 61, 90, 99, 103, 136 (`Grey3`), line 107 (`Red`) | header/explanation labels, destructive warning |
 | `Components/SettingsPage/Tabs/SettingsTabDebug.cs` | lines 40, 47 | `EtoColors.Grey3` section headers |
-| `Components/OtpEntryPage.cs` | line 72 | `EtoColors.OtpChildBackground` — child panel tint |
+| `Components/OtpEntryPage.cs` | line 118 | `EtoColors.OtpChildOpaqueBackground` — the OTP child box tint, filled into a 300×200 bitmap |
 
 ## 3. Quirks
 
@@ -53,12 +54,15 @@ Members:
   not these, paints native widgets, so removing them does not change rendering.
 - `Grey2` duplicates `Grey`; the old style stored them as separate fields.
 - Alpha is available only through `Color.FromArgb(a, r, g, b)`; `From` has no alpha parameter, so
-  `OtpChildBackground` is the only translucent color. Eto/GTK honors the alpha for panel backgrounds,
-  so the tint is composited over the window background, not the desktop.
+  `OtpChildBackground` is the only translucent color. **GTK renders no alpha, and Eto.Gtk never paints
+  a `Panel` background**, so translucent palette entries cannot be used as widget fills: verified on
+  Eto 2.13/GTK3 that `Panel.BackgroundColor` (opaque and alpha) paints nothing, `Label.BackgroundColor`
+  paints opaque colors only, and an `ImageView` shows opaque bitmaps only. Any tint must be baked to an
+  opaque colour, as `OtpChildOpaqueBackground` is.
 
 ## 4. Cross-references
 
 - `docs/XIVLauncher.Core/Components/LoadingPage/Spinner.cs.md` — color drawn by `Graphics.DrawArc`.
-- `docs/XIVLauncher.Core/Components/OtpEntryPage.cs.md` — center tinted panel replacing the ImGui
-  300×200 child window.
+- `docs/XIVLauncher.Core/Components/OtpEntryPage.cs.md` — the opaque bitmap tint behind the centered
+  box replacing the ImGui 300×200 child window.
 - `docs/XIVLauncher.Core/EtoTheme.cs.md` — dark GTK theme selection that supplies the widget colors.
