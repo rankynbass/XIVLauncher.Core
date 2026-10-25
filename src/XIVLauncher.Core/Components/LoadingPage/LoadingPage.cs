@@ -96,6 +96,7 @@ public class LoadingPage : Page
         // bar. The same order, with the same spacers, as a stack.
         this.Content = new StackLayout
         {
+            Spacing = 8,
             Items =
             {
                 new StackLayoutItem(new Panel(), expand: true),

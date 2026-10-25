@@ -1,6 +1,6 @@
 # LoadingPage.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/LoadingPage/LoadingPage.cs` · 149 lines · 5,479 bytes
+**File:** `src/XIVLauncher.Core/Components/LoadingPage/LoadingPage.cs` · 150 lines · 5,504 bytes
 **Namespace:** `XIVLauncher.Core.Components.LoadingPage` · **Declaration:** `public class LoadingPage : Page`
 **Role:** The loading page: three status lines, cancel / disable-auto-login buttons, spinner or progress bar, and a progress label
 
@@ -35,14 +35,14 @@ Usings: `Eto.Forms`, `XIVLauncher.Core.Resources.Localization`.
 | `Progress` | `public float` (lines 47–55) | setter posts `Refresh` via `Ui.Post` |
 | `progress` | `private float` (line 57) | backing field |
 | `Cancelled` | `public event Action?` (line 60) | raised by the cancel button |
-| `LoadingPage(LauncherApp app)` | ctor (lines 62–115) | builds controls + stack |
-| `Reset()` | `public` (lines 117–121) | clears `hasDisabledAutoLogin`, refreshes |
-| `OnShow()` | `public override` (line 123) | `=> this.Refresh()` |
-| `Refresh()` | `public` (lines 126–148) | pushes state onto the controls |
+| `LoadingPage(LauncherApp app)` | ctor (lines 62–116) | builds controls + stack |
+| `Reset()` | `public` (lines 118–122) | clears `hasDisabledAutoLogin`, refreshes |
+| `OnShow()` | `public override` (line 124) | `=> this.Refresh()` |
+| `Refresh()` | `public` (lines 127–149) | pushes state onto the controls |
 
 ## 3. Progress scaling
 
-`Progress` is a `float` in `0..1`; `Refresh()` writes `progressBar.Value = (int)Math.Round(this.Progress * 1000)` (line 144) because Eto's `ProgressBar.Value` is an integer and `MaxValue` is set to 1000. The permille scaling is the only numeric transformation in the file.
+`Progress` is a `float` in `0..1`; `Refresh()` writes `progressBar.Value = (int)Math.Round(this.Progress * 1000)` (line 145) because Eto's `ProgressBar.Value` is an integer and `MaxValue` is set to 1000. The permille scaling is the only numeric transformation in the file.
 
 `Progress`'s setter is the **only** setter that marshals (`Ui.Post(this.Refresh)`, line 52); `Line1/Line2/Line3/ProgressText/IsIndeterminate/CanCancel/CanDisableAutoLogin` are plain auto-properties, so writing them from a background thread does **not** refresh the UI immediately. The refresh happens later via `Refresh()`: `OnShow()` calls it, and `Progress`'s setter (which most patching loops write last) pulls the whole state onto the controls. `StartLoading` never writes `Progress` or `ProgressText` (`LauncherApp.cs:259-270`), so patching/verification loops are responsible for the first `Progress` write that flushes the state.
 
@@ -50,20 +50,20 @@ Usings: `Eto.Forms`, `XIVLauncher.Core.Resources.Localization`.
 
 ## 4. Control visibility rules
 
-`Refresh()` (lines 126–148) is the single place that maps state to widgets:
+`Refresh()` (lines 127–149) is the single place that maps state to widgets:
 
 | Condition | Effect |
 | --- | --- |
-| `Line1` | `line1Label.Text = Line1` (line 128) — always visible |
-| `Line2` non-empty | `line2Label.Text`, `Visible = !IsNullOrEmpty` (lines 130–131) |
-| `Line3` non-empty | `line3Label.Text`, `Visible = !IsNullOrEmpty` (lines 132–133) |
-| `showDisableAutoLogin = CanDisableAutoLogin && (App.Settings.IsAutologin ?? false)` (line 135) | gates the disable button |
-| `CanCancel` | `cancelButton.Visible` (line 137) |
-| `showDisableAutoLogin` | `disableAutoLoginButton.Visible` (line 138) |
-| `hasDisabledAutoLogin && !showDisableAutoLogin` | `autoLoginLabel.Visible` (line 139) |
-| `IsIndeterminate` | `spinner.Visible` (line 142); `progressBar.Visible = !IsIndeterminate` (line 143) |
-| `Progress * 1000` rounded | `progressBar.Value` (line 144) |
-| `!IsIndeterminate && !IsNullOrEmpty(ProgressText)` | `progressLabel` text + visibility (lines 146–147) |
+| `Line1` | `line1Label.Text = Line1` (line 129) — always visible |
+| `Line2` non-empty | `line2Label.Text`, `Visible = !IsNullOrEmpty` (lines 131–132) |
+| `Line3` non-empty | `line3Label.Text`, `Visible = !IsNullOrEmpty` (lines 134–135) |
+| `showDisableAutoLogin = CanDisableAutoLogin && (App.Settings.IsAutologin ?? false)` (line 137) | gates the disable button |
+| `CanCancel` | `cancelButton.Visible` (line 139) |
+| `showDisableAutoLogin` | `disableAutoLoginButton.Visible` (line 140) |
+| `hasDisabledAutoLogin && !showDisableAutoLogin` | `autoLoginLabel.Visible` (line 141) |
+| `IsIndeterminate` | `spinner.Visible` (line 143); `progressBar.Visible = !IsIndeterminate` (line 144) |
+| `Progress * 1000` rounded | `progressBar.Value` (line 145) |
+| `!IsIndeterminate && !IsNullOrEmpty(ProgressText)` | `progressLabel` text + visibility (lines 147–148) |
 
 The disable-auto-login button (lines 86–89) sets `hasDisabledAutoLogin = true`, writes `App.Settings.IsAutologin = false` (Config.Net-backed persistence), then calls `Refresh()`. `Reset()` clears the flag; `LauncherApp.StartLoading` calls `Reset()` (`LauncherApp.cs.md` §7).
 
@@ -71,19 +71,19 @@ The "auto-login disabled next start" label appears only after the user pressed d
 
 ## 5. Stack order
 
-`this.Content = new StackLayout` (lines 97–114) with items in this order, all `HorizontalAlignment.Center`, with expanding `Panel()` spacers first and last (lines 101, 113):
+`this.Content = new StackLayout` (lines 97–115) with `Spacing = 8` (line 99), items in this order, all `HorizontalAlignment.Center`, with expanding `Panel()` spacers first and last (lines 102, 112):
 
-1. `line1Label` (line 102)
+1. `line1Label` (line 103)
 2. `line2Label`
 3. `line3Label`
 4. `cancelButton`
 5. `disableAutoLoginButton`
 6. `autoLoginLabel`
-7. `spinner` (line 108)
+7. `spinner` (line 109)
 8. `progressBar`
 9. `progressLabel`
 
-This reproduces HEAD's immediate-mode draw order (lines, cancel/disable buttons, then the spinner or progress bar), with the spacers reproducing the vertical padding the ImGui layout produced.
+This reproduces HEAD's immediate-mode draw order (lines, cancel/disable buttons, then the spinner or progress bar), with the spacers reproducing the vertical padding the ImGui layout produced. The user-verified layout on GTK: the centered stack has visible spacing between lines, buttons, bar, and label, so `Spacing = 8` replaces the immediate-mode spacing the ImGui layout produced.
 
 ## 6. Consumers
 
