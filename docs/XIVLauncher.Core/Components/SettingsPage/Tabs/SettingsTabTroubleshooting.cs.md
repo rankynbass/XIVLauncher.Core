@@ -58,9 +58,9 @@ Footer actions:
 - **Clear Dalamud** (line 342) → `Program.ClearPlugins(true)` (`Program.cs:375`, deletes dalamud assets/runtime,
   UI/config files, recreates folders, `DalamudLoadInfo = new DalamudOverlayInfoProxy()`,
   `DalamudUpdater = CreateDalamudUpdater()`, `DalamudUpdater.Run(Config.DalamudBetaKind, Config.DalamudBetaKey)`).
-- **Clear all logs** (line 354) → `Program.ClearLogs(true)` (`Program.cs:403`, deletes/recreates `logs`,
+- **Clear all logs** (line 354) → `Program.ClearLogs(true)` (`Program.cs:452`, deletes/recreates `logs`,
   deletes four dalamud log files, `SetupLogging(mainArgs)`).
-- **Reset settings** (line 366) → `Program.ClearSettings(true)` (`Program.cs:359`, deletes `launcher.ini`,
+- **Reset settings** (line 366) → `Program.ClearSettings(true)` (`Program.cs:408`, deletes `launcher.ini`,
   reloads config, opens Settings state).
 - **Reset all** (line 390) → `Program.ClearAll(true)` (`Program.cs:414`, destructive: settings, plugins,
   tools, prefix, logs).

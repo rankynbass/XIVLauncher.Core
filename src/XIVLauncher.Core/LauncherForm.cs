@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -47,18 +49,62 @@ public class LauncherForm : Form
         Ui.AssertUIThread("LauncherForm.ShowWindow");
         this.Visible = true;
         this.WindowState = WindowState.Normal;
+        ReleaseApplication();
     }
 
     public void HideWindow()
     {
         Ui.AssertUIThread("LauncherForm.HideWindow");
 
-        // The GTK GApplication exits when its last visible window closes, so the launcher cannot
-        // hide the main window while the game starts. Minimising is the Eto equivalent of the SDL
-        // window hide used by the login pipeline.
-        this.WindowState = WindowState.Minimized;
+        // The launcher stays alive while the game runs, with the window hidden (unmapped), not
+        // minimised. Unmapping the main window drops the GApplication's window count, so the
+        // application is held across the hidden period and released when the window comes back.
+        HoldApplication();
+        this.Visible = false;
     }
 
     /// <summary>The form that owns modal dialogs.</summary>
     public Window ModalOwner => this;
+
+#if LINUX
+    private static int appHolds;
+
+    [DllImport("libgio-2.0.so.0")]
+    private static extern void g_application_hold(IntPtr app);
+
+    [DllImport("libgio-2.0.so.0")]
+    private static extern void g_application_release(IntPtr app);
+
+    /// <summary>The native GApplication behind Eto's GTK application handler. Eto keeps
+    /// <c>Gtk.Application</c> on its internal handler, so it is read through reflection.</summary>
+    private static IntPtr GApplicationHandle()
+    {
+        var handler = Application.Instance.Handler;
+        var control = handler.GetType().GetProperty("Control")?.GetValue(handler);
+        return control is null ? IntPtr.Zero : (IntPtr)control.GetType().GetProperty("Handle")!.GetValue(control)!;
+    }
+
+    private static void HoldApplication()
+    {
+        var handle = GApplicationHandle();
+        if (handle == IntPtr.Zero)
+            return;
+
+        g_application_hold(handle);
+        appHolds++;
+    }
+
+    private static void ReleaseApplication()
+    {
+        if (appHolds == 0)
+            return;
+
+        var handle = GApplicationHandle();
+        if (handle == IntPtr.Zero)
+            return;
+
+        g_application_release(handle);
+        appHolds--;
+    }
+#endif
 }

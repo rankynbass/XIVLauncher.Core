@@ -307,6 +307,21 @@ sealed class Program
                     }
 
                     launcherApp.StartLoading("Now repairing files", "current file", "0/10", false, false, false);
+
+                    // Hide/show: MainPage hides the launcher window when the game starts and restores it
+                    // on Reactivate(), so the GTK loop must stay alive with no mapped window.
+                    Ui.Run(() => Program.HideWindow());
+                    Ui.Run(() => Console.WriteLine($"[selftest] after hide: form.Visible={launcherForm.Visible}"));
+
+                    for (var i = 0; i < 20; i++)
+                        Ui.Post(() => launcherApp.LoadingPage.Line2 = $"hidden heartbeat {i}");
+
+                    Thread.Sleep(2000);
+                    Ui.Run(() => Console.WriteLine($"[selftest] last UI post while hidden: {launcherApp.LoadingPage.Line2}"));
+
+                    Ui.Run(() => Program.ShowWindow());
+                    Ui.Run(() => Console.WriteLine($"[selftest] after restore: form.Visible={launcherForm.Visible}"));
+
                     Log.Information("selftest complete: patching and repair status driven from a worker thread");
                     Environment.Exit(0);
                 });

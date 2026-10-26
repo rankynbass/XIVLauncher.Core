@@ -43,7 +43,7 @@ Usings: `System.Diagnostics` (`Debug.Assert`, `Process`), `System.Threading.Task
 | `PatcherOnFail(patch, context)` | `private` | 1022–1027 | |
 | `InstallerOnFail()` | `private` | 1028–1033 | |
 | `RepairGame(loginResult)` | `private async Task<bool>` | 1034–1142 | |
-| `Hide()` | `private` | 1143–1146 | `Program.HideWindow()` |
+| `Hide()` | `private` | 1155–1158 | `Program.HideWindow()` |
 | `Reactivate()` | `private` | 1148–1153 | `IsLoggingIn = false`, `State = Main`, `Program.ShowWindow()` |
 
 `LoginAction` (7 members) lives in `Components/MainPage/LoginAction.cs.md`.
@@ -165,7 +165,7 @@ Lines 556–839. Highlights:
 | compatibility tool ensure | 728–750 — `ManualResetEvent` (726) + `isFailed` flag (729) + `Task.Run(... Program.CompatibilityTools.EnsureTool(Program.HttpClient, tempPath) ...).ContinueWith(... signal.Set())` (731–742), `App.StartLoading(Strings.PreparingForCompatTool, Strings.PleaseBePatient)` (line 743), `signal.WaitOne()` (744), `signal.Dispose()` (745), `isFailed` → `return null!` (747–748), then `App.StartLoading(Strings.StartingGame, Strings.HaveFun)` (line 750) |
 | `UserPath` | 758–763 — `Program.CompatibilityTools.UnixToWinePath(App.Settings.GameConfigPath!.FullName)` (758), appended as ` UserPath=...` unquoted when `IsEncryptArgs` is true (759–760) and quoted when false (761–762), then `gameArgs.Trim()` (763) |
 | launch | 770–779 — `App.Launcher.LaunchGame(runner, loginResult.UniqueId, loginResult.OauthLogin.Region, loginResult.OauthLogin.MaxExpansion, isSteam, gameArgs, App.Settings.GamePath, App.Settings.ClientLanguage.GetValueOrDefault(English), IsEncryptArgs.GetValueOrDefault(true), DpiAwareness.GetValueOrDefault(Unaware))` |
-| window state | 783–790 — `!Program.IsSteamDeckHardware \|\| CoreEnvironmentSettings.IsSteamCompatTool` → `this.Hide()` (line 785); else `App.State = LauncherState.SteamDeckPrompt` (line 789, `SteamDeckPromptPage.cs.md`) |
+| window state | 792–800 — `!Program.IsSteamDeckHardware \|\| CoreEnvironmentSettings.IsSteamCompatTool` → `this.Hide()` (line 795); else `App.State = LauncherState.SteamDeckPrompt` (line 799, `SteamDeckPromptPage.cs.md`) |
 | null process | 793–798 — `Log.Information("GameProcess was null...")` (794), `IsLoggingIn = false` (796), `return null!` (797) |
 | addons | 800–814 — `AddonManager` (800), `App.Settings.Addons ??= new List<AddonEntry>()` (804), enabled entries cast to `IAddon` (806), `addonMgr.RunAddons(launchedProcess.Id, addons)` (808); on exception `IsLoggingIn = false` (811), `StopAddons()` (812), rethrow (813) |
 | game wait | 816–823 — `Log.Debug("Waiting for game to exit")` (816), `await Task.Run(() => launchedProcess!.WaitForExit())` (818), `Log.Verbose("Game has exited")` (820), `StopAddons()` when `addonMgr.IsRunning` (822–823) |
@@ -228,8 +228,8 @@ Result handling (`switch (verify.State)`, 1097–1138): `Done` (1099) → messag
 
 ## 12. `Hide()` / `Reactivate()`
 
-- `Hide()` (1145–1148) → `Program.HideWindow()`, which minimizes the launcher window so the GTK application stays alive (`Program.cs.md` §5; the GTK `GApplication` exits when the last visible window closes).
-- `Reactivate()` (1150–1155) → `IsLoggingIn = false`, `App.State = LauncherState.Main` (marshalled), `Program.ShowWindow()` (restores `WindowState.Normal`). Called from `ProcessLogin`'s failure paths (lines 159, 170, 188, 196) and as the login-failure recovery signal observed in smoke tests (`Log.Verbose("Reactivated after Login() != true")`, line 187).
+- `Hide()` (1155–1158) → `Program.HideWindow()` (line 1157), which hides (unmaps) the launcher window while the game runs: the GTK `GApplication` is held across the hidden period so the loop stays alive (`Program.cs.md` §5; `LauncherForm.cs.md` §3).
+- `Reactivate()` (1160–1165): `IsLoggingIn = false` (1162), `App.State = LauncherState.Main` (1163, marshalled), `Program.ShowWindow()` (1165) — restores visibility (`Visible = true`, `WindowState.Normal`) and releases the `GApplication` hold. Called from `ProcessLogin`'s failure paths (lines 168, 179, 197, 202) and as the login-failure recovery signal observed in smoke tests (`Log.Verbose("Reactivated after Login() != true")`, line 196).
 
 ## 13. Consumers
 

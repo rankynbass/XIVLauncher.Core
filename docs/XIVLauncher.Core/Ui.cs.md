@@ -64,8 +64,8 @@ need marshalling as much as writes).
 | `LauncherApp.cs` | line 193 | `Ui.Post` opens the modal dialog on the UI thread |
 | `Program.cs` | line 320 | `Ui.MarkUIThread()` before `application.Run()` |
 | `Program.cs` | line 195 | `Ui.CaptureUIThreadWarnings()` (`#if DEBUG`) |
-| `Program.cs` | line 354 | `Ui.Post(() => launcherForm.ShowWindow())` |
-| `Program.cs` | line 357 | `Ui.Post(() => launcherForm.HideWindow())` |
+| `Program.cs` | line 369 | `Ui.Post(() => launcherForm.ShowWindow())` |
+| `Program.cs` | line 372 | `Ui.Post(() => launcherForm.HideWindow())` |
 
 `Program.ShowWindow()` / `Program.HideWindow()` keep the login pipeline's hide/restore calls
 (`MainPage.cs` lines 1155/1163) thread-safe, so the game-start path can call them from a worker thread.
@@ -84,8 +84,12 @@ need marshalling as much as writes).
   semantics work (`LauncherApp.cs`), and is exactly what previously dead-locked the `MainPage`
   constructor when a `Task(...).Result` continuation was queued to the GTK loop. Blocking waits on
   background work must never be issued from the UI thread.
-- Under GTK, `GApplication` exits when the last visible window closes; posts that hide a window
-  (`Program.HideWindow`) must minimize, not hide (`LauncherForm.HideWindow`).
+- Under GTK, `GApplication` exits when its last window closes, so posts that hide a window
+  (`Program.HideWindow` → `LauncherForm.HideWindow`) unmap it **and** hold the `GApplication`
+  (`g_application_hold` on `libgio-2.0.so.0`) across the hidden period; `LauncherForm.ShowWindow`
+  releases it. Verified in an Eto 2.13/GTK3 probe: after hide the window reports
+  `IsMapped=False` for 6s, UI posts keep being processed, restore returns `IsMapped=True`, and the
+  loop survives (`LauncherForm.cs.md` §3).
 - `AssertUIThread` logs and continues; it does not throw, so a Debug run keeps going after a
   violation and the stack lands in `launcher.log`. Eto's own check has the same policy in the default
   `UIThreadCheckMode.Warning`; setting `Application.Instance.UIThreadCheckMode = Error` makes every
