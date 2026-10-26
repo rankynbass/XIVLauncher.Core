@@ -1,6 +1,6 @@
 # MainPage.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1,157 lines · 47,178 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1,167 lines · 47,687 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class MainPage : Page`
 **Role:** The launcher's login → patch → launch → wait-for-game machine plus the main page UI composition
 
@@ -15,7 +15,7 @@ Two halves in one file:
 - **UI half:** the `TableLayout` composition built in the constructor (`MainPage.cs:84-107`) of `LoginFrame` (`LoginFrame.cs.md`), `NewsFrame` (`NewsFrame.cs.md`), `ActionButtons` (`ActionButtons.cs.md`), and the public `AccountSwitcher` (`AccountSwitcher.cs.md`).
 - **Pipeline half:** `ProcessLogin` → `Login` → `TryLoginToGame` → `TryProcessLoginResult` → `StartGameAndAddon`, plus patching (`HandleBootCheck`, `InstallGamePatch`, `TryHandlePatchAsync`) and repair (`RepairGame`).
 
-In HEAD the pipeline lived inside the immediate-mode draw loop with SDL quit events; in the Eto path the UI half became Eto controls and the quit push became `Ui.Post(() => Application.Instance.Quit())` (`MainPage.cs:182`, `Ui.cs.md`). `MainPage` has **no** `OnShow()` override, so `LauncherApp.cs:80` calls `Page.OnShow()`'s empty base (`Components/Page.cs.md` §3).
+In HEAD the pipeline lived inside the immediate-mode draw loop with SDL quit events; in the Eto path the UI half became Eto controls and the quit push became `Ui.Post(() => Application.Instance.Quit())` (`MainPage.cs:192`, `Ui.cs.md`). `MainPage` has **no** `OnShow()` override, so `LauncherApp.cs:80` calls `Page.OnShow()`'s empty base (`Components/Page.cs.md` §3).
 
 Usings: `System.Diagnostics` (`Debug.Assert`, `Process`), `System.Threading.Tasks`, `Eto.Drawing` (`Size`), `Eto.Forms` (`Application`), `Serilog`, the `XIVLauncher.Common` game/patch/compatibility namespaces (submodule `lib/FFXIVQuickLauncher`, out of docs scope), `XIVLauncher.Core.Accounts`, localization, `XIVLauncher.Core.Support`.
 
@@ -80,21 +80,24 @@ Eto 2.13 scales columns/rows with boolean flags rather than proportions (`Launch
 
 `MainPage.cs:103` sets `Rows[0].ScaleHeight = true`, so the login/news row grows vertically and the button row keeps its natural height directly under the columns. Scaling `Rows[1]` floats the buttons midway between the column bottom and the window bottom, because Eto.Gtk's `StackLayout` packs items at the top with no expand flag; `LoginFrame` and `NewsFrame` each end with a `VerticalAlignment.Stretch` spacer so the columns fill their scaled rows (`LoginFrame.cs.md` §5, `NewsFrame.cs.md` §3).
 
+> **Line-number note:** the login snapshot inserted 10 lines at line 149, so references below §5 (`Login` at 206, `TryLoginToGame` at 248, `TryProcessLoginResult` at 289, `StartGameAndAddon` at 561, patching at 955+, repair at 1046+, `Hide`/`Reactivate` at 1155/1163) are +10 relative to the older notes.
+
 ## 5. `ProcessLogin(LoginAction action)`
 
-Lines 142–197 — the entry point from `LoginFrame` (`LoginFrame.cs.md` §6, `LoginFrame.cs:58`):
+Lines 142–205 — the entry point from `LoginFrame` (`LoginFrame.cs.md` §6, `LoginFrame.cs:58`):
 
 1. Gate: `if (this.IsLoggingIn) return;` (lines 144–146)
 2. `App.StartLoading(Strings.LoggingIn, canDisableAutoLogin: true)` (line 147) — switches to `LoadingPage` (`Components/LoadingPage/LoadingPage.cs.md`); `canCancel` keeps the default `false`, so no cancel button appears.
-3. `Task.Run(async () => ...)` (line 154):
-   - `GameHelpers.CheckIsGameOpen() && action == Repair` → `App.ShowMessageBlocking(Strings.RepairOfficialLauncherOpenError, Strings.XIVLauncherError)` then `this.Reactivate()` and return (lines 156–162)
-   - `Repository.Ffxiv.GetVer(GamePath) == Constants.BASE_GAME_VERSION && IsUidCacheEnabled == true` → `App.ShowMessageBlocking(Strings.ReinstallUIDCacheError, ...)` + `Reactivate()` + return (lines 164–173)
-   - `this.IsLoggingIn = true` (line 174)
-   - `App.Settings.IsAutologin = this.loginFrame.IsAutoLogin` (line 176)
-   - `Login(loginFrame.Username, loginFrame.Password, loginFrame.IsOtp, loginFrame.IsSteam, loginFrame.IsFreeTrial, false, action)` (line 178)
-   - `result == true` → `Ui.Post(() => Application.Instance.Quit())` (lines 180–185): HEAD pushed an SDL quit event, ending the render loop and exiting the app.
-   - `result == false` → `Log.Verbose("Reactivated after Login() != true")` + `Reactivate()` (lines 186–190)
-4. `.ContinueWith(t => { if (!App.HandleContinuationBlocking(t)) this.Reactivate(); })` (lines 193–196) — `LauncherApp.HandleContinuationBlocking` handles faulted/cancelled continuations, showing modals (`LauncherApp.cs.md` §6).
+3. **Login widget snapshot** (lines 152–157): `username`, `password`, `isOtp`, `isSteam`, `isFreeTrial`, `isAutoLogin` are read from `loginFrame` on the UI thread, *before* `Task.Run`. Eto reads are UI-object accesses, not just writes: reading `Checkbox.Value`/`Input.Value` calls `Control.Handler` → `Application.EnsureUIThread`, and the pre-fix code did it inside `Task.Run` on a `.NET TP Worker` thread, so GTK read label/checkbox handlers off-thread (`Ui.cs.md` §2 documents the stack Eto reports). The snapshot hands plain values to the background task, so nothing in the task touches a widget.
+4. `Task.Run(async () => ...)` (line 162):
+   - `GameHelpers.CheckIsGameOpen() && action == Repair` → `App.ShowMessageBlocking(Strings.RepairOfficialLauncherOpenError, Strings.XIVLauncherError)` then `this.Reactivate()` and return (lines 164–170)
+   - `Repository.Ffxiv.GetVer(GamePath) == Constants.BASE_GAME_VERSION && IsUidCacheEnabled == true` → `App.ShowMessageBlocking(Strings.ReinstallUIDCacheError, ...)` + `Reactivate()` + return (lines 172–181)
+   - `this.IsLoggingIn = true` (line 183)
+   - `App.Settings.IsAutologin = isAutoLogin` (line 185) — the snapshot, not the checkbox
+   - `Login(username, password, isOtp, isSteam, isFreeTrial, false, action)` (line 187)
+   - `result == true` → `Ui.Post(() => Application.Instance.Quit())` (lines 189–194): HEAD pushed an SDL quit event, ending the render loop and exiting the app.
+   - `result == false` → `Log.Verbose("Reactivated after Login() != true")` + `Reactivate()` (lines 195–199)
+5. `.ContinueWith(t => { if (!App.HandleContinuationBlocking(t)) this.Reactivate(); })` (lines 201–204) — `LauncherApp.HandleContinuationBlocking` handles faulted/cancelled continuations, showing modals (`LauncherApp.cs.md` §6).
 
 `ProcessLogin` is private; `RunLoginTest()` wrappers used during smoke-testing have been removed (`LauncherApp.cs.md`).
 
@@ -219,7 +222,7 @@ The timer callback writes, per `verify.State`:
 - `VerifyAndRepair` (1077–1080): `Line2 = CurrentFile` (1078), `Line3 = patch set + task + bytes` (1079), `Progress` (1080)
 - default (1083–1086): `Line2 = ""` (1084), `Line3 = task count` (1085), `Progress = 1.0` when `Done` else `0` (1086)
 
-`Components/LoadingPage/LoadingPage.cs.md` §4 is the relevant rule: `Line2`/`Line3` are plain auto-properties (no widget writes), while `Progress`'s setter posts `Refresh` through `Ui.Post` — so the timer callback is safe with respect to GTK: only `Progress` touches widgets, and it marshals.
+`Components/LoadingPage/LoadingPage.cs.md` §3 is the relevant rule: every `LoadingPage` property setter stores the value and posts `ApplyState` through `Ui.Post`, so the timer callback runs the widget writes on the UI thread. The repair timer writes (`Line2`/`Line3`/`Progress`) are safe by construction; the pre-fix version marshalled only `Progress`, and `App.StartLoading(..., isIndeterminate: false)` at line 1072 drove `Reset() → Refresh() → Label.Text` on the timer thread.
 
 Result handling (`switch (verify.State)`, 1097–1138): `Done` (1099) → message built from `NumBrokenFiles` (`Strings.RepairAllFilesValid` / `RepairFixedSingularFile` / `RepairFixedPluralFiles`, lines 1102–1106) plus moved-file text (`RepairSingleFileMoved`/`RepairPluralFilesMoved`, lines 1109–1113), `App.ShowMessageBlocking(mainText + additionalText)` (1116), stop looping (1118); `Error` (1121) → `doLogin = false`, `NoVersionReferenceException` → `Strings.RepairGameVerUnsupportedError` (1124–1126), else `verify.LastException + "\n\n" + Strings.RepairFailureError` (1130), stop looping (1133); `Cancelled` (1136) → `doLogin = doVerify = false` (1137). `return doLogin` (1142) — `RepairGame` returns `true` only when `doLogin` was never cleared, i.e. after a successful verify loop; `TryProcessLoginResult` then sets `State = Ok` and continues to the launch path (`MainPage.cs:322-324`).
 

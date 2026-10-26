@@ -35,17 +35,24 @@ public class LauncherForm : Form
         layout.Add(this.pageHost, 0, 0);
     }
 
-    /// <summary>Hosts the given page, replacing the currently displayed page.</summary>
-    public void ShowPage(Page page) => this.pageHost.Content = page;
+    /// <summary>Hosts the given page, replacing the currently displayed page. UI thread only.</summary>
+    public void ShowPage(Page page)
+    {
+        Ui.AssertUIThread("LauncherForm.ShowPage");
+        this.pageHost.Content = page;
+    }
 
     public void ShowWindow()
     {
+        Ui.AssertUIThread("LauncherForm.ShowWindow");
         this.Visible = true;
         this.WindowState = WindowState.Normal;
     }
 
     public void HideWindow()
     {
+        Ui.AssertUIThread("LauncherForm.HideWindow");
+
         // The GTK GApplication exits when its last visible window closes, so the launcher cannot
         // hide the main window while the game starts. Minimising is the Eto equivalent of the SDL
         // window hide used by the login pipeline.

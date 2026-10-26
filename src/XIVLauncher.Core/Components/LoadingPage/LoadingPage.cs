@@ -1,6 +1,5 @@
 using Eto.Forms;
 
-
 using XIVLauncher.Core.Resources.Localization;
 
 namespace XIVLauncher.Core.Components.LoadingPage;
@@ -30,31 +29,75 @@ public class LoadingPage : Page
 
     private bool hasDisabledAutoLogin;
 
-    public bool IsIndeterminate { get; set; }
+    private bool isIndeterminate;
+    private bool canCancel = true;
+    private bool canDisableAutoLogin;
+    private string line1 = "Loading text line 1";
+    private string? line2;
+    private string? line3;
+    private string? progressText;
+    private float progress;
 
-    public bool CanCancel { get; set; } = true;
+    public bool IsIndeterminate
+    {
+        get => this.isIndeterminate;
+        set => this.SetStateField(ref this.isIndeterminate, value);
+    }
 
-    public bool CanDisableAutoLogin { get; set; }
+    public bool CanCancel
+    {
+        get => this.canCancel;
+        set => this.SetStateField(ref this.canCancel, value);
+    }
 
-    public string Line1 { get; set; } = "Loading text line 1";
+    public bool CanDisableAutoLogin
+    {
+        get => this.canDisableAutoLogin;
+        set => this.SetStateField(ref this.canDisableAutoLogin, value);
+    }
 
-    public string? Line2 { get; set; }
+    public string Line1
+    {
+        get => this.line1;
+        set => this.SetStateField(ref this.line1, value);
+    }
 
-    public string? Line3 { get; set; }
+    public string? Line2
+    {
+        get => this.line2;
+        set => this.SetStateField(ref this.line2, value);
+    }
 
-    public string? ProgressText { get; set; }
+    public string? Line3
+    {
+        get => this.line3;
+        set => this.SetStateField(ref this.line3, value);
+    }
+
+    public string? ProgressText
+    {
+        get => this.progressText;
+        set => this.SetStateField(ref this.progressText, value);
+    }
 
     public float Progress
     {
         get => this.progress;
-        set
-        {
-            this.progress = value;
-            Ui.Post(this.Refresh);
-        }
+        set => this.SetStateField(ref this.progress, value);
     }
 
-    private float progress;
+    /// <summary>Stores the value and posts the resulting widget update.
+    /// Every one of these properties is written from login, patching, Dalamud, and repair threads, so the
+    /// widget write that follows has to be marshalled: a direct <c>Label.Text</c> on a worker thread
+    /// segfaults inside pango/GTK size negotiation.</summary>
+    private void SetStateField<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return;
+
+        field = value;
+        Ui.Post(this.ApplyState);
+    }
 
     /// <summary>Raises when the cancel button is pressed.</summary>
     public event Action? Cancelled;
@@ -118,14 +161,19 @@ public class LoadingPage : Page
     public void Reset()
     {
         this.hasDisabledAutoLogin = false;
-        this.Refresh();
+        Ui.Post(this.ApplyState);
     }
 
-    public override void OnShow() => this.Refresh();
+    public override void OnShow() => Ui.Post(this.ApplyState);
 
-    /// <summary>Pushes the current line/progress/cancel state onto the controls.</summary>
-    public void Refresh()
+    /// <summary>Pushes the current line/progress/cancel state onto the controls, posted to the UI thread.</summary>
+    public void Refresh() => Ui.Post(this.ApplyState);
+
+    /// <summary>Writes the state onto the controls. UI thread only.</summary>
+    private void ApplyState()
     {
+        Ui.AssertUIThread("LoadingPage.ApplyState");
+
         this.line1Label.Text = this.Line1;
 
         this.line2Label.Text = this.Line2 ?? string.Empty;

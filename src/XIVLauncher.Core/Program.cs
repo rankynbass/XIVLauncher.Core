@@ -189,6 +189,12 @@ sealed class Program
         SetupLogging(mainArgs);
         LoadConfig(storage);
 
+#if DEBUG
+        // Eto warns about widget access from a background thread with Debug.WriteLine; hook it so the
+        // offending managed stack is logged, which is the only way to identify the call site.
+        Ui.CaptureUIThreadWarnings();
+#endif
+
         Secrets = GetSecretProvider(storage);
 
         Dictionary<uint, string> apps = [];
@@ -283,7 +289,35 @@ sealed class Program
             launcherForm.Show();
             Log.Debug("Main form shown");
 
+#if DEBUG
+            // Debug-only selftest (XLCORE_SELFTEST=1): drives the patching and repair status loop from a
+            // worker thread, so the LoadingPage marshalling is exercised without a real patch queue.
+            if (Environment.GetEnvironmentVariable("XLCORE_SELFTEST") == "1")
+            {
+                Task.Run(() =>
+                {
+                    launcherApp.StartLoading("Working on patch 0", "left to download", "left to install", false, true, true);
+
+                    for (var i = 0; i < 200; i++)
+                    {
+                        launcherApp.LoadingPage.Line2 = $"Working on patch {i}";
+                        launcherApp.LoadingPage.Line3 = $"left to download: {i} patch(es), {(long)i * 33000000} MiB, 200 MiB in 0s\n1.0 MiB/s";
+                        launcherApp.LoadingPage.Progress = i / 200f;
+                        Thread.Sleep(30);
+                    }
+
+                    launcherApp.StartLoading("Now repairing files", "current file", "0/10", false, false, false);
+                    Log.Information("selftest complete: patching and repair status driven from a worker thread");
+                    Environment.Exit(0);
+                });
+            }
+#endif
         };
+
+        // The Eto UI thread is the thread that calls Application.Run. The login, patching, and startup
+        // threads marshal every widget write through Ui, so record the owner before the loop starts;
+        // Ui.IsUIThread then detects unmarshalled widget writes in Debug builds.
+        Ui.MarkUIThread();
 
         Log.Debug("Eto OK!");
 

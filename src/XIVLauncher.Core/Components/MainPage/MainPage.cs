@@ -146,6 +146,16 @@ public class MainPage : Page
 
         this.App.StartLoading(Strings.LoggingIn, canDisableAutoLogin: true);
 
+        // Eto controls may only be touched from the UI thread, so the login widgets are snapshotted here
+        // and handed to the background task as plain values. Reading them inside Task.Run made GTK read a
+        // label/checkbox handler off-thread, which is the pango/GTK size-negotiation crash.
+        var username = this.loginFrame.Username;
+        var password = this.loginFrame.Password;
+        var isOtp = this.loginFrame.IsOtp;
+        var isSteam = this.loginFrame.IsSteam;
+        var isFreeTrial = this.loginFrame.IsFreeTrial;
+        var isAutoLogin = this.loginFrame.IsAutoLogin;
+
         // if (Program.UsesFallbackSteamAppId && this.loginFrame.IsSteam)
         //     throw new Exception("Doesn't own Steam AppId on this account.");
 
@@ -172,9 +182,9 @@ public class MainPage : Page
 
             this.IsLoggingIn = true;
 
-            App.Settings.IsAutologin = this.loginFrame.IsAutoLogin;
+            App.Settings.IsAutologin = isAutoLogin;
 
-            var result = await Login(this.loginFrame.Username, this.loginFrame.Password, this.loginFrame.IsOtp, this.loginFrame.IsSteam, this.loginFrame.IsFreeTrial, false, action).ConfigureAwait(false);
+            var result = await Login(username, password, isOtp, isSteam, isFreeTrial, false, action).ConfigureAwait(false);
 
             if (result)
             {
