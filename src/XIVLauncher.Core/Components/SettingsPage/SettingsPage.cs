@@ -1,7 +1,10 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 
 using Eto.Drawing;
 using Eto.Forms;
+
+using Serilog;
 
 using XIVLauncher.Core.Components.SettingsPage.Tabs;
 using XIVLauncher.Core.Resources.Localization;
@@ -21,16 +24,30 @@ namespace XIVLauncher.Core.Components.SettingsPage;
 /// </remarks>
 public class SettingsPage : Page
 {
-    private readonly SettingsTab[] tabs =
-    [
-        new SettingsTabGame(),
-        new SettingsTabPatching(),
-        new SettingsTabWine(),
-        new SettingsTabDalamud(),
-        new SettingsTabAbout(),
-        new SettingsTabDebug(),
-        new SettingsTabTroubleshooting(),
-    ];
+    private readonly SettingsTab[] tabs = BuildTabs();
+
+    /// <summary>Builds the tab list. The Wine tab is built only on Linux: its entries, validators,
+    /// footer actions, and Save() reference XIVLauncher.Common.Unix types (Program.CompatibilityTools,
+    /// WineUtility, Wine/Dxvk enums), which do not exist on Windows — Program.CompatibilityTools is
+    /// null there, so constructing the tab would dereference Unix state.</summary>
+    private static SettingsTab[] BuildTabs()
+    {
+        var list = new List<SettingsTab>
+        {
+            new SettingsTabGame(),
+            new SettingsTabPatching(),
+        };
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            list.Add(new SettingsTabWine());
+
+        list.Add(new SettingsTabDalamud());
+        list.Add(new SettingsTabAbout());
+        list.Add(new SettingsTabDebug());
+        list.Add(new SettingsTabTroubleshooting());
+
+        return [.. list];
+    }
 
     private readonly TabControl tabControl = new();
     private readonly TextBox searchBox;
@@ -84,13 +101,17 @@ public class SettingsPage : Page
 
     public override void OnShow()
     {
+        Log.Debug("[settings] OnShow: loading values");
+
         foreach (SettingsTab tab in this.tabs)
             tab.LoadValues();
 
         this.searchInput = string.Empty;
         this.searchBox.Text = string.Empty;
 
+        Log.Debug("[settings] OnShow: rebuilding pages");
         this.RebuildPages();
+        Log.Debug("[settings] pages rebuilt");
 
         base.OnShow();
     }
@@ -112,8 +133,10 @@ public class SettingsPage : Page
         {
             foreach (SettingsTab tab in VisibleTabs())
             {
+                Log.Debug("[settings] refreshing tab {Title}", tab.Title);
                 tab.RefreshEntries();
-                this.tabControl.Pages.Add(new TabPage { Text = tab.Title, Content = new Scrollable { Content = tab } });
+                this.tabControl.Pages.Add(new TabPage { Text = tab.Title, Content = SettingsTab.WrapScrollable(tab) });
+                Log.Debug("[settings] tab {Title} added to the TabControl", tab.Title);
             }
         }
         else
@@ -140,7 +163,7 @@ public class SettingsPage : Page
             if (!any)
                 results.Items.Add(new StackLayoutItem(new Label { Text = Strings.NoResultsFound, TextColor = EtoColors.Grey3 }, expand: true));
 
-            this.tabControl.Pages.Add(new TabPage { Text = Strings.SearchResults, Content = new Scrollable { Content = results } });
+            this.tabControl.Pages.Add(new TabPage { Text = Strings.SearchResults, Content = SettingsTab.WrapScrollable(results) });
         }
 
         this.UpdateFinishButton();

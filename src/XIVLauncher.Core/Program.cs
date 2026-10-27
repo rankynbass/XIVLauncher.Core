@@ -123,7 +123,9 @@ sealed class Program
 
         Config.WineStartupType ??= WineStartupType.Managed;
         Config.WineManagedVersion ??= WineManagedVersion.Stable;
-        Config.WineSyncType ??= WineUtility.SystemFsyncSupport() == FsyncSupport.Supported ? WineSyncType.FSync : WineSyncType.ESync;
+        Config.WineSyncType ??= RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+            ? WineUtility.SystemFsyncSupport() == FsyncSupport.Supported ? WineSyncType.FSync : WineSyncType.ESync
+            : WineSyncType.FSync;
         Config.WineBinaryPath ??= "/usr/bin";
         Config.WineDebugVars ??= "-all";
 
@@ -168,6 +170,7 @@ sealed class Program
         };
     }
 
+    [STAThread]
     private static void Main(string[] args)
     {
         mainArgs = args;

@@ -106,5 +106,12 @@ public class LauncherForm : Form
         g_application_release(handle);
         appHolds--;
     }
+#else
+    // The GTK application-hold machinery keeps the GApplication alive while the main window is
+    // unmapped. WinForms app lifetime is not tied to a window count, so hiding the form is safe
+    // and the hold/release pair is a no-op on Windows.
+    private static void HoldApplication() { }
+
+    private static void ReleaseApplication() { }
 #endif
 }

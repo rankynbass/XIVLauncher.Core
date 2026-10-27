@@ -213,12 +213,17 @@ public class NewsFrame : Component
     /// a child label.</summary>
     private static void CapNewsEntryWidth(Control entry)
     {
+#if LINUX
         var handler = ((Eto.IHandlerSource)entry).Handler;
         var controlProp = handler.GetType().GetProperty("Control", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!;
         var widget = (Gtk.Widget)controlProp.GetValue(handler)!;
 
         var label = widget is Gtk.LinkButton link ? (Gtk.Label)link.Children[0]! : (Gtk.Label)widget;
         label.MaxWidthChars = NEWS_ENTRY_MAX_WIDTH_CHARS;
+#else
+        // WinForms labels have no width-chars cap; the entry Width set at creation time and
+        // WrapMode.Word already keep titles wrapping at the column edge.
+#endif
     }
 
     private static Control NewsEntry(News newsEntry)

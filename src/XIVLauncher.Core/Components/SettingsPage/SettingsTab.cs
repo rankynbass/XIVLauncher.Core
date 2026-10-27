@@ -1,3 +1,6 @@
+using System.Runtime.InteropServices;
+
+using Eto.Drawing;
 using Eto.Forms;
 
 namespace XIVLauncher.Core.Components.SettingsPage;
@@ -64,11 +67,15 @@ public abstract class SettingsTab : Component
         foreach (var item in items)
             layout.Items.Add(item);
 
-        this.Content = new Scrollable
-        {
-            Content = layout,
-        };
+        this.Content = WrapScrollable(layout);
     }
+
+    /// <summary>Wraps page content in a Scrollable on Linux only. Eto's WinForms Scrollable
+    /// (CustomScrollable) loops forever when laid out inside a TabPage: OnLayout calls
+    /// UpdateScrollSize, which sets the content MinimumSize, which fires resize -> PerformLayout
+    /// -> OnLayout again; the UI thread never returns to the message loop ("Not Responding").</summary>
+    internal static Control WrapScrollable(Control content)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? new Scrollable { Content = content } : content;
 
     /// <summary>Refreshes tab content that depends on other settings values.</summary>
     protected virtual void RefreshDynamic() { }

@@ -56,9 +56,14 @@ public class OtpEntryPage : Page
         pasteButton.ShowIcon(FontAwesomeIcon.Paste);
         pasteButton.Click += () =>
         {
+#if LINUX
             // Eto.Gtk binds Clipboard.Text to a write-only GtkSharp property, so the Eto read is always
             // null; the synchronous GtkSharp request is the one that sees the clipboard.
             this.otpInput.Value = Gtk.Clipboard.Get(Gdk.Selection.Clipboard).WaitForText() ?? string.Empty;
+#else
+            // The Eto clipboard reads correctly on the WinForms platform.
+            this.otpInput.Value = Clipboard.Instance.Text ?? string.Empty;
+#endif
             this.TryAcceptOtp(this.otpInput.Value);
         };
 
