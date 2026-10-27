@@ -1,10 +1,10 @@
 # XIVLauncher.Core.csproj — Specification
 
-**File:** `src/XIVLauncher.Core/XIVLauncher.Core.csproj` · 161 lines · 7,472 bytes
-**SDK:** `Microsoft.NET.Sdk` · **OutputType:** `Exe` · **TargetFramework:** `net10.0`
+**File:** `src/XIVLauncher.Core/XIVLauncher.Core.csproj` · 74 lines · 3,262 bytes
+**SDK:** `Microsoft.NET.Sdk` · **OutputType:** `Exe` · **TargetFramework:** `net10.0-windows` when `-r win-x64`, `net10.0` otherwise
 **Role:** Build definition of the launcher executable — version pipeline, platform/RID model, resource packaging, native Steam binary deployment, and the Git-metadata injection that the UI reports.
 
-The project directory contains 63 `.cs` files and 90 files total. Nothing in this file is
+The project directory contains 61 `.cs` files and 88 files total (excluding bin/obj). Nothing in this file is
 consumed at run time except what it *emits*: embedded resources, `Content` binaries, the
 generated `AppUtil.VersionInfo` constructor, and two `AssemblyMetadata` attributes.
 
@@ -14,9 +14,11 @@ generated `AppUtil.VersionInfo` constructor, and two `AssemblyMetadata` attribut
 
 This project file owns six contracts:
 
-1. **Executable shape** — `Exe`, `net10.0`, self-contained single-file publish for
-   `win-x64`/`linux-x64`/`osx-x64`.
-2. **Version identity** — `Version`/`FileVersion`/`AssemblyVersion` at `1.4.0`, plus the
+1. **Executable shape** — `Exe`, conditional `TargetFramework` (`net10.0-windows` when
+   `-r win-x64`, `net10.0` otherwise; the Windows TFM is required by
+   `Eto.Platform.Windows`, which targets `net10.0-windows7.0`), self-contained
+   single-file publish for `win-x64`/`linux-x64`/`osx-x64`.
+2. **Version identity** — `Version`/`FileVersion`/`AssemblyVersion` at `1.5.0`, plus the
    `XIVLauncher.VersionGenerator` source generator that materialises
    `AppUtil.VersionInfo`'s constructor.
 3. **Platform model** — `IsWindows`/`IsOSX`/`IsLinux` and the `WIN32`/`OSX`/`LINUX`
@@ -34,14 +36,14 @@ This project file owns six contracts:
 | Attribute | Value | Notes |
 | --- | --- | --- |
 | `OutputType` | `Exe` | app host; `Program.Main` (`docs/XIVLauncher.Core/Program.cs.md`) |
-| `TargetFramework` | `net10.0` | overrides `src/Directory.Build.props` (no `TargetFramework` there) |
+| `TargetFramework` | `net10.0-windows` when `-r win-x64`, `net10.0` otherwise | two conditional `PropertyGroup`s; overrides `src/Directory.Build.props` (no `TargetFramework` there) |
 | `LangVersion` | `latest` | overrides `src/Directory.Build.props` `LangVersion=8.0` |
 | `ImplicitUsings` | `enable` | |
 | `Nullable` | `enable` | contrast: `XIVLauncher.Common.Unix` is `disable` |
-| `AllowUnsafeBlocks` | `true` | required by `Program.cs` SDL/GPU pointer handling |
+| `AllowUnsafeBlocks` | `true` | retained from the SDL era; used for `IntPtr` handle marshalling in `LauncherForm`'s `GApplicationHandle()` reflection |
 | `ApplicationIcon` | `Resources\dalamud_icon.ico` | Win32 resource icon; not an embedded resource |
-| `Version` | `1.4.0` | `FileVersion`/`AssemblyVersion` are `$(Version)` |
-| `RuntimeIdentifiers` | `win-x64;linux-x64;osx-x64` | plural property: restore fetches all three |
+| `Version` | `1.5.0` | `FileVersion`/`AssemblyVersion` are `$(Version)` |
+| `RuntimeIdentifiers` | `win-x64;linux-x64;osx-x64` | applies **only when `-r`/`RuntimeIdentifier` is passed** (condition `'$(RuntimeIdentifier)' != ''`); a plain `dotnet build` restores no RID packs and compiles `net10.0` |
 | `PublishSingleFile` | `true` | |
 | `SelfContained` | `true` | required by `PublishSingleFile` on modern SDKs |
 | `Configurations` | `Debug;Release` | restricts the solution configuration set |
@@ -79,18 +81,21 @@ Consequences, exactly as the MSBuild property engine resolves them:
 - `IsOSX`: true **only** when RID is `osx-x64` — the SDK's host name for macOS is
   `IsMacOS`, which this file never reads, so an OS host build (macOS, no RID) gets **no**
   `OSX` define and no `libsteam_api64.dylib` copy.
-- A plain `dotnet build` with no RID therefore behaves as a host-platform build; a
-  cross-`publish` to `win-x64` on Linux defines `WIN32` and copies the Windows Steam
+- A plain `dotnet build` with no RID therefore behaves as a host-platform build and compiles
+  `net10.0` — `Eto.Platform.Windows` is not restored and `RuntimeInformation.IsOSPlatform`
+  gates in the source decide behaviour. `-r win-x64` defines `WIN32`, compiles
+  `net10.0-windows`, restores `Eto.Platform.Windows`, and copies the Windows Steam
   content path.
 
 Define consumers in this repo (`grep '#if'` over `src/`):
 
 | Define | Where read | Effect |
 | --- | --- | --- |
-| `WIN32` | `Components/MainPage/MainPage.cs:897`, `:1032` | Windows-specific UI/behaviour branches |
-| `FLATPAK` | `Components/SettingsPage/Tabs/SettingsTabDebug.cs:24` (`ImGui.Text("Running as a Flatpak")`), `LauncherApp.cs:253` (`RunStartupTasks` → `ftsPage.OpenFtsIfNeeded()`) | **not** produced by this file; must be injected as `-p:ExtraDefineConstants=FLATPAK` |
-| `LINUX`, `OSX` | **never read** in `src/` | defined, unused — dead defines |
-| `DEBUG` | `ImGuiBindings.cs:59`, `MainPage.cs:221,338` (`#if !DEBUG`), `LauncherApp.cs:158` | standard, not from this file |
+| `WIN32` | `Components/MainPage/MainPage.cs:930`, `:1051` | Windows-specific UI/behaviour branches |
+| `FLATPAK` | `Components/SettingsPage/Tabs/SettingsTabDebug.cs:44`, `LauncherApp.cs:279` (`RunStartupTasks` → FTS path) | **not** produced by this file; must be injected as `-p:ExtraDefineConstants=FLATPAK` |
+| `LINUX` | `AppFonts.cs:39,71`, `LauncherForm.cs:69`, `Components/MainPage/NewsFrame.cs:216`, `Components/OtpEntryPage.cs:59` | read by the GTK-only code: `libgio` application-hold P/Invoke, `Gtk.Label.MaxWidthChars` news cap, clipboard, `FontFamily.FromStreams` registration — the `#else` branches carry the Windows behaviour |
+| `OSX` | **never read** in `src/` | defined, unused — dead define |
+| `DEBUG` | `MainPage.cs:253,370` (`#if !DEBUG`), `LauncherApp.cs:170`, `Program.cs:195,295` | standard, not from this file; gates the UI-thread warning capture and the `XLCORE_SELFTEST` selftest |
 
 The submodule adds two further defines that this repo never supplies:
 `XIVLauncher.Common.Unix/Compatibility/CompatibilityTools.cs:25` reads
@@ -103,7 +108,7 @@ editing this file.
 ## 5. Reference graph
 
 ```
-XIVLauncher.Core (net10.0, Exe)
+XIVLauncher.Core (net10.0-windows on win-x64, net10.0 otherwise, Exe)
 ├─ XIVLauncher.VersionGenerator   (netstandard2.0, referenced as Analyzer, ReferenceOutputAssembly=false)
 ├─ src/XIVLauncher.Common.Unix    (net10.0, fork-local copy — spec: docs/XIVLauncher.Common.Unix/XIVLauncher.Common.Unix.csproj.md)
 ├─ lib/…/XIVLauncher.Common.Windows (net9.0, submodule)
@@ -119,10 +124,13 @@ Load-bearing facts:
 - **Both** platform libraries are referenced unconditionally: `XIVLauncher.Common.Windows`
   is compiled into Linux/macOS builds. `Program.cs` selects `WindowsSteam` vs `UnixSteam`
   at run time via `PlatformID`, so the Windows lib is dead weight on Unix, not absent.
-- Target-framework skew is intentional: `net10.0` app referencing `net9.0` libs. The
+- Target-framework skew is intentional: `net10.0(-windows)` app referencing `net9.0` libs. The
   submodule's `src/Directory.Packages.props` sets `ManagePackageVersionsCentrally=true`,
   so submodule projects get versions from that file while this project uses inline
   `Version=` attributes.
+- `Eto.Platform.Windows` declares `net10.0-windows7.0` — lower-case seven — so restoring it
+  into the `net10.0-windows` app produces the NU1201 downgrade warning; expected and
+  harmless, the package restores and builds.
 - The fork-local `XIVLauncher.Common.Unix` assembly name **collides** with the submodule's
   own `XIVLauncher.Common.Unix` project, which is not referenced. Only the local copy
   ships.
@@ -131,16 +139,20 @@ Load-bearing facts:
 
 | Package | Version | Role |
 | --- | --- | --- |
+| `Eto.Forms` | 2.13.0 | UI surface (`Application`, `Form`, `Control`) |
+| `Eto.Drawing.Skia` | 2.13.0 | Skia drawing backend for `Eto.Drawing` (`Image`, `Bitmap`) |
 | `Config.Net` | 4.19.0 | `ILauncherConfig` binding (`Configuration/ILauncherConfig.cs.md`) |
 | `KeySharp` | 1.0.5 | key-registry helper (`Accounts/Secrets/Providers/KeychainSecretProvider.cs.md`) |
 | `Serilog` | 4.3.0 | logging core |
 | `Serilog.Enrichers.Thread` | 4.0.0 | |
 | `Serilog.Sinks.Console` | 6.0.0 | |
 | `Serilog.Sinks.File` | 7.0.0 | `logs/launcher.log` |
-| `Hexa.NET.ImGui` | 2.2.9 | `ImGuiBindings.cs.md` |
-| `Hexa.NET.ImGui.Backends.SDL3` | 1.0.18 | |
-| `Hexa.NET.SDL3` | 1.2.16 | SDL 3 C-ABI bindings used by `Program.cs` |
-| `Hexa.NET.SDL3.Image` | 1.0.0 | |
+| `Eto.Platform.Gtk` | 2.13.0 | GTK backend; included **only when `RuntimeIdentifier != 'win-x64'`** |
+| `Eto.Platform.Windows` | 2.13.0 | WinForms backend; included **only when `RuntimeIdentifier == 'win-x64'`**, declared `net10.0-windows7.0` (see §5 NU1201 note) |
+
+The Hexa.NET SDL3/ImGui stack (`Hexa.NET.ImGui`, `Hexa.NET.ImGui.Backends.SDL3`,
+`Hexa.NET.SDL3`, `Hexa.NET.SDL3.Image`) is gone — `Eto.Forms` replaced the SDL window loop
+(§1, `Program.cs.md` §6).
 
 No test packages, no `Microsoft.NET.Test.Sdk` — the CI `dotnet test` step has no test
 project to run.
@@ -166,10 +178,10 @@ bare name through `AppUtil.GetEmbeddedResourceBytes` (`AppUtil.cs.md`), which ca
 
 | Resource name requested | Requested by |
 | --- | --- |
-| `NotoSansCJKjp-Regular.otf` | `FontManager.cs:25` (`TEXT_FONT_NAME`) |
-| `FontAwesome5FreeSolid.otf` | `FontManager.cs:26` (`ICON_FONT_NAME`) |
-| `logo.png` | `Components/SettingsPage/Tabs/SettingsTabAbout.cs:20` |
-| `bg_logo.png` | `Components/Background.cs:13` |
+| `NotoSansCJKjp-Regular.otf` | `AppFonts.cs:19` (`TEXT_FONT_NAME`), opened at `AppFonts.cs:40` (`#if LINUX`, `FontFamily.FromStreams`) / `AppFonts.cs:43` (Windows, `RegisterWindowsFont`) |
+| `FontAwesome5FreeSolid.otf` | `AppFonts.cs:20` (`ICON_FONT_NAME`), opened at `AppFonts.cs:41` / `AppFonts.cs:44` |
+| `logo.png` | `Components/SettingsPage/Tabs/SettingsTabAbout.cs:39` |
+| `bg_logo.png` | `Components/Background.cs:21` |
 | `steamdeck_fts.png` | `Components/FtsPage.cs:17` |
 | `steamdeck_fterror.png` | `Components/FtsPage.cs:18` |
 | `steamdeck_switchprompt.png` | `Components/SteamDeckPromptPage.cs:14` |
@@ -232,7 +244,7 @@ generated** — the build fails at `new VersionInfo()`, not at compile time of t
 
 ## 8. Version pipeline
 
-`Version`, `FileVersion`, `AssemblyVersion` are all `1.4.0` (`$(Version)`).
+`Version`, `FileVersion`, `AssemblyVersion` are all `1.5.0` (`$(Version)`).
 
 `XIVLauncher.VersionGenerator` (`VersionSourceGenerator.cs`, an `ISourceGenerator`) emits
 `AppUtil.VersionInfo.g.cs` when the `AssemblyVersion` build property is visible:
@@ -244,19 +256,19 @@ public VersionInfo() {
 ```
 
 so the generated ctor is
-`Version = ("XIVLauncher.Core", new Version("1.4.0"))` — `AssemblyName`, not the
+`Version = ("XIVLauncher.Core", new Version("1.5.0"))` — `AssemblyName`, not the
 `Product`/`FileVersion` value. `AppUtil.VersionInfo` (`AppUtil.VersionInfo.cs.md`) is the
 partial half that declares the singleton `Instance()`; `AppUtil.GetAssemblyVersion()`
 returns `VersionInfo.Instance().Version.FileVersion.ToString()`.
 
-Note the interaction: `new Version("1.4.0")` is a 3-part version, so `ToString()` prints
-`1.4.0` (no `.0` revision), and `AssemblyVersion` is what the generator sees — bumping
+Note the interaction: `new Version("1.5.0")` is a 3-part version, so `ToString()` prints
+`1.5.0` (no `.0` revision), and `AssemblyVersion` is what the generator sees — bumping
 `Version` alone moves `AssemblyVersion` too because it is defined as `$(Version)`.
 
-Version appears in the SDL window title (`Program.cs`), the log banner
-(`Program.cs:83`), `SettingsTabAbout.cs:27`
+Version appears in the launcher window title (`LauncherForm.cs:24`), the log banner
+(`Program.cs:84`), `SettingsTabAbout.cs:31`
 (`XIVLauncher Core v{GetAssemblyVersion()}({GetGitHash()})`),
-`OtpEntryPage.cs:83` (`OtpListener("core-" + GetAssemblyVersion())`) and
+`OtpEntryPage.cs:84` (`OtpListener("core-" + GetAssemblyVersion())`) and
 `Support/Troubleshooting.cs:124`.
 
 ## 9. Git metadata targets
@@ -275,7 +287,7 @@ Runtime readers (`AppUtil.cs.md`):
 
 | Attribute | Reader | Consumers |
 | --- | --- | --- |
-| `GitHash` | `AppUtil.GetGitHash()` | `Program.cs:83` log banner, `SettingsTabAbout.cs:27`, `Support/Troubleshooting.cs:125` (`<unavailable>` fallback) |
+| `GitHash` | `AppUtil.GetGitHash()` | `Program.cs:84` log banner, `SettingsTabAbout.cs:31`, `Support/Troubleshooting.cs:125` (`<unavailable>` fallback) |
 | `BuildOrigin` | `AppUtil.GetBuildOrigin()` | `Support/Troubleshooting.cs:126`: `Official = AppUtil.GetBuildOrigin() == "goatcorp/XIVLauncher.Core"` |
 
 **Contract and consequence:** `BuildOrigin` comes from the `GITHUB_REPOSITORY` **environment
@@ -329,6 +341,10 @@ runs the same two publishes, then generates `nuget-dependencies.json` with
 `PackageReference` version here is mirrored into the Flatpak manifest (see
 `generate_flatpak_nuget_deps.yml`).
 
+Windows builds run `dotnet build src/XIVLauncher.Core/XIVLauncher.Core.csproj -r win-x64 -c Debug`
+(verified end-to-end: conditional TFM picks `net10.0-windows`, `Eto.Platform.Windows` restores,
+output lands in `bin/Debug/net10.0-windows/win-x64/`).
+
 Three concrete mismatches to keep in mind:
 
 1. **`win10-x64` is not a publish target.** `RuntimeIdentifiers` lists `win-x64`, CI
@@ -358,8 +374,10 @@ culture (§7.2). `PathMap` applies only under `Configuration=Release`.
   assumptions differ per project.
 - `IsOSX` naming asymmetry (§4): macOS host builds with no RID silently lose both the
   `OSX` define and the `.dylib` copy.
-- `LINUX`/`OSX` defines are emitted and unread; `WINE_XIV_ARCH_LINUX` is read and never
-  defined. Both directions of dead code exist.
+- `OSX` define is emitted and unread in `src/`; `LINUX` is read in five files (GTK P/Invoke
+  hold, news width cap, clipboard, `FromStreams` font registration — §4).
+  `WINE_XIV_ARCH_LINUX` is read (submodule) and never defined. Both directions of dead code
+  exist.
 - `FLATPAK` is not defined by this file; the Flatpak-specific UI text and FTS startup path
   only exist in builds that pass `ExtraDefineConstants=FLATPAK`.
 - `Resources/binaries/aria2c-xl.exe`, `libsteam_api64.so`, `libsteam_api64.dylib` are
@@ -381,7 +399,10 @@ culture (§7.2). `PathMap` applies only under `Configuration=Release`.
 - **New build flavour**: pass `-p:ExtraDefineConstants=<DEFINE>`, then add the `#if` site.
   This is the supported hook; do not add `DefineConstants` groups for flavour flags.
 - **New embedded asset**: `EmbeddedResource Include=` **and** `LogicalName=`, then add the
-  name constant in the consumer (`FontManager` uses `TEXT_FONT_NAME`/`ICON_FONT_NAME`).
+  name constant in the consumer (`AppFonts` uses `TEXT_FONT_NAME`/`ICON_FONT_NAME`; on
+  Windows a font family must be registered via `AppFonts.RegisterWindowsFont` before any
+  control is created, so `AppFonts.Initialize` runs at `Program.cs:281` before the form
+  is built).
 - **New locale**: add `Strings.<code>.resx` with a valid two-letter culture code matching
   Crowdin's `%two_letters_code%`; do not add custom codes like `tw`.
 - **Version bump**: change `Version` only — `FileVersion`/`AssemblyVersion` follow, and the
@@ -391,10 +412,10 @@ culture (§7.2). `PathMap` applies only under `Configuration=Release`.
 
 ## 14. Cross-references
 
-- `docs/XIVLauncher.Core/Program.cs.md` — startup order, SDL window title version/hash, `PlatformID` dispatch
+- `docs/XIVLauncher.Core/Program.cs.md` — startup order, window title version/hash, `PlatformID` dispatch, `RuntimeInformation.IsOSPlatform` gates
 - `docs/XIVLauncher.Core/AppUtil.cs.md` — `GetEmbeddedResourceBytes`, `GetGitHash`, `GetBuildOrigin`, `GetAssemblyVersion`
 - `docs/XIVLauncher.Core/AppUtil.VersionInfo.cs.md` — the partial half of the generated ctor
-- `docs/XIVLauncher.Core/FontManager.cs.md`, `docs/XIVLauncher.Core/Resources/Localization/*` — resource consumers
+- `docs/XIVLauncher.Core/AppFonts.cs.md`, `docs/XIVLauncher.Core/Resources/Localization/*` — resource consumers
 - `docs/XIVLauncher.Core/Support/Troubleshooting.cs.md` — `Official`/`LauncherHash` consumers
 - `docs/XIVLauncher.Common.Unix/XIVLauncher.Common.Unix.csproj.md` — the sibling project spec
 - `docs/XIVLauncher.Core/Configuration/ILauncherConfig.cs.md` — `Config.Net`-backed schema

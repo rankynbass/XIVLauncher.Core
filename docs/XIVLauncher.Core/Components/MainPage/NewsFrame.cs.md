@@ -1,6 +1,6 @@
 # NewsFrame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 243 lines · 9,045 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 248 lines · 9,483 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class NewsFrame : Component`
 **Role:** The news column: rotating headline banner, news list, and topics list, loaded from the game API
 
@@ -39,10 +39,10 @@ Usings: `Eto.Drawing`, `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`), `XI
 Three mechanisms drive the column geometry:
 
 - `bannerImage.Size = new Size(384, 192)` (line 59) keeps HEAD's fixed banner box; the column around it stretches.
-- `listPanel.Width = NEWS_ENTRY_WIDTH` (line 84) plus per-entry `Width = NEWS_ENTRY_WIDTH` on every label/link (lines 231, 238) give the column a natural width that does not come from an unwrapped title.
-- `listPanel.SizeChanged` (line 89) re-applies `entry.Width = listPanel.Width` for every tracked entry (`ApplyNewsEntryWidth`, lines 201–212), so widths follow the allocation as the window is resized.
+- `listPanel.Width = NEWS_ENTRY_WIDTH` (line 84) plus per-entry `Width = NEWS_ENTRY_WIDTH` on every label/link (lines 236, 243) give the column a natural width that does not come from an unwrapped title.
+- `listPanel.SizeChanged` (line 89) re-applies `entry.Width = listPanel.Width` for every tracked entry (`ApplyNewsEntryWidth`, lines 201–209), so widths follow the allocation as the window is resized.
 
-GTK reports an unwrapped label's full text width as its natural width, so a label can never be made to wrap at a narrower column. `CapNewsEntryWidth` (lines 214–222) sets the native `Gtk.Label.MaxWidthChars` to `NEWS_ENTRY_MAX_WIDTH_CHARS` through the Eto.Gtk handler, which makes GTK allocate the column width to the label. Eto 2.13 has no width-chars property, so the cap reaches GTK via reflection on the handler's internal `Control` property, and a `Gtk.LinkButton`'s text lives in its child label (`link.Children[0]`).
+GTK reports an unwrapped label's full text width as its natural width, so a label can never be made to wrap at a narrower column. `CapNewsEntryWidth` (lines 214–227) is `#if LINUX`: it sets the native `Gtk.Label.MaxWidthChars` to `NEWS_ENTRY_MAX_WIDTH_CHARS` through the Eto.Gtk handler, which makes GTK allocate the column width to the label. Eto 2.13 has no width-chars property, so the cap reaches GTK via reflection on the handler's internal `Control` property, and a `Gtk.LinkButton`'s text lives in its child label (`link.Children[0]`). The `#else` branch is a no-op: WinForms labels have no width-chars cap, and the entry `Width` set at creation time plus `WrapMode.Word` already keep titles wrapping at the column edge.
 
 The trailing `new StackLayoutItem(new Panel(), VerticalAlignment.Stretch)` (line 103) takes the leftover column height. Eto.Gtk's `StackLayout` packs items at the top with no expand flag, so this expander is what keeps the page's action button row below the columns (`MainPage.cs.md` §4, `LoginFrame.cs.md` §5).
 
@@ -77,20 +77,20 @@ Lines 153–198, executed on the UI thread via `Ui.Post`:
 1. `headlines = loadedHeadlines` (line 155), `loadingLabel.Visible = false` (line 157)
 2. If `banners.Length > 0`: `bannerImage.Visible = true` and `Image = banners[currentBanner]` (lines 159–162)
 3. `layout = new DynamicLayout { Spacing = new Size(0, 5) }` (line 167), `newsEntries.Clear()` (line 168)
-4. If `headlines.News.Length > 0`: show `newsCaptionLabel`, add it, then for each news entry `NewsEntry(newsEntry)` → `CapNewsEntryWidth(entry)` → `newsEntries.Add(entry)` → `layout.Add(entry)` (lines 170–179)
-5. If `headlines.Topics.Length > 0`: same pattern for topic entries (lines 182–191)
+4. If `headlines.News.Length > 0`: show `newsCaptionLabel`, add it, then for each news entry `NewsEntry(newsEntry)` → `CapNewsEntryWidth(entry)` → `newsEntries.Add(entry)` → `layout.Add(entry)` (lines 170–181)
+5. If `headlines.Topics.Length > 0`: same pattern for topic entries (lines 183–194)
 6. `listPanel.Content = layout` (line 196), then `ApplyNewsEntryWidth()` (line 197) — replaces the previous list and widthens the new entries to the current column allocation; old `LinkButton`s are discarded with the panel content.
 
 Note `.Length` (arrays) is used, not `.Count`: `Headlines.News` and `Headlines.Topics` are `News[]` (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Headlines.cs`), while `banners.Count` (line 130) is a `List<Banner>` count. `Headlines.Pinned` is not read here.
 
 ## 7. `NewsEntry(News)`
 
-Lines 224–242, static:
+Lines 229–247, static:
 
-- When `newsEntry.Url` is null/empty → plain `Label` with `Wrap = WrapMode.Word`, `Width = NEWS_ENTRY_WIDTH` (lines 226–232).
-- Otherwise → `LinkButton` with the same wrap/width (lines 234–238) and `link.Click += (_, _) => AppUtil.OpenBrowser(newsEntry.Url)` (line 239).
+- When `newsEntry.Url` is null/empty → plain `Label` with `Wrap = WrapMode.Word`, `Width = NEWS_ENTRY_WIDTH` (lines 231–237).
+- Otherwise → `LinkButton` with the same wrap/width (lines 239–244) and `link.Click += (_, _) => AppUtil.OpenBrowser(newsEntry.Url)` (line 245).
 
-Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<EventArgs>` so the lambda discards sender/args (`AppUtil.cs.md` documents `OpenBrowser`'s `UseShellExecute` process launch). `CapNewsEntryWidth` is applied by the caller before the entry is added to the layout, so the cap is set before GTK realizes the widget.
+Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<EventArgs>` so the lambda discards sender/args (`AppUtil.cs.md` documents `OpenBrowser`'s `UseShellExecute` process launch). `CapNewsEntryWidth` is applied by the caller before the entry is added to the layout, so the GTK cap is set before GTK realizes the widget.
 
 ## 8. Banner click
 
@@ -116,7 +116,7 @@ Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<Even
 
 ## 11. Quirks
 
-- `CapNewsEntryWidth` uses reflection on the internal `Control` property of the Eto.Gtk handler (`handler.GetType().GetProperty("Control", ... | NonPublic)`). `Assembly.Load("Eto.GtkSharp")` fails (`System.IO.FileNotFoundException`: the assembly is `Eto.Gtk`), and `Eto.GtkSharp.GtkControl` is not public API, so reflection is the only way to reach `Gtk.Label.MaxWidthChars`. If Eto's handler internals rename `Control`, the cap silently disappears (the `!`-guarded lookup throws on a null handler).
+- `CapNewsEntryWidth` is `#if LINUX` (lines 216–222): reflection on the internal `Control` property of the Eto.Gtk handler (`handler.GetType().GetProperty("Control", ... | NonPublic)`). `Assembly.Load("Eto.GtkSharp")` fails (`System.IO.FileNotFoundException`: the assembly is `Eto.Gtk`), and `Eto.GtkSharp.GtkControl` is not public API, so reflection is the only way to reach `Gtk.Label.MaxWidthChars`. If Eto's handler internals rename `Control`, the cap silently disappears (the `!`-guarded lookup throws on a null handler). The `#else` (lines 223–226) is a no-op comment; WinForms relies on the entry `Width` + `WrapMode.Word`.
 - `this.topicsCaptionLabel` is added to the `listPanel` layout after the news entries (lines 183–184); the outer stack ends at `listPanel`, so the visible topics caption is the one inside the panel, and the outer trailing caption from HEAD's immediate-mode layout is gone.
 - `ShowNews` never resets `newsCaptionLabel`/`topicsCaptionLabel` to hidden: once shown, they stay visible even if a later reload has no news.
 - `Ui.Run(() => new Bitmap(bannerBytes))` blocks the background loop for every banner, i.e. N blocking UI-thread round-trips during a reload (`Ui.cs.md`).

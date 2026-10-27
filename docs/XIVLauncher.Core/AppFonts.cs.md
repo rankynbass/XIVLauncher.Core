@@ -1,7 +1,7 @@
 # AppFonts.cs — Specification
 
-**File:** `src/XIVLauncher.Core/AppFonts.cs` · 54 lines · 2400 bytes
-**TargetFramework:** net10.0 (Linux/GTK3 build)
+**File:** `src/XIVLauncher.Core/AppFonts.cs` · 116 lines · 5,715 bytes
+**TargetFramework:** conditional per RID (`XIVLauncher.Core.csproj` lines 5–6): `net10.0-windows` on win-x64, `net10.0` on Linux builds
 **Role:** registers the launcher's embedded Noto CJK and Font Awesome fonts with Eto
 (`Eto.Forms`, https://github.com/picoe/Eto); the replacement for the SDL/ImGui `FontManager` (deleted).
 
@@ -9,18 +9,26 @@
 
 ## 1. Purpose
 
-- `Initialize(float pxSize)` — loads `NotoSansCJKjp-Regular.otf` and `FontAwesome5FreeSolid.otf`
-  from embedded resources via `FontFamily.FromStreams(OpenResource(...))`, stores the configured size
-  (lines 25–28).
-- `TextFont` — `new Font(textFamily, size)`; throws if `Initialize` has not run (line 33).
-- `IconFont` — `new Font(iconFamily, size)`; throws if `Initialize` has not run (line 36).
+- `Initialize(float pxSize)` — stores the configured size; `#if LINUX` loads `NotoSansCJKjp-Regular.otf`
+  and `FontAwesome5FreeSolid.otf` from embedded resources via `FontFamily.FromStreams(OpenResource(...))`,
+  `#else` registers both through `RegisterWindowsFont` (lines 35–46).
+- `TEXT_FAMILY_NAME` / `ICON_FAMILY_NAME` — the family names GDI enumerates the embedded fonts by
+  ("Noto Sans CJK JP Regular", "Font Awesome 5 Free Solid"): name-table ID 1, the full font name, not the
+  preferred family name ID 16 that `InstalledFontCollection` reports for installed fonts (lines 22–28).
+  `FontAwesome5FreeSolid.otf` carries only the Solid face.
+- `TextFont` — `new Font(textFamily, size)`; throws if `Initialize` has not run (line 49).
+- `IconFont` — `new Font(iconFamily, size)`; throws if `Initialize` has not run (line 52).
 - `IconFontAt(float size)` — the icon family at an explicit size, for glyphs that must fit a fixed-size
-  button (line 40).
+  button (line 56).
 - `Glyph(FontAwesomeIcon icon)` — `icon.ToIconString()`, the same private-use glyph string the ImGui
-  font atlas rendered (line 42).
+  font atlas rendered (line 59).
 - `ApplyGlyph(Button, FontAwesomeIcon)` — sets `Font = IconFont` and `Text = Glyph(icon)` on an Eto
-  `Button` (line 46).
-- `OpenResource(string)` — `new MemoryStream(AppUtil.GetEmbeddedResourceBytes(resourceName))` (line 52).
+  `Button` (lines 62–66).
+- `OpenResource(string)` — `new MemoryStream(AppUtil.GetEmbeddedResourceBytes(resourceName))` (lines 68–69).
+- `RegisterWindowsFont(resourceName, familyName)` — `#if !LINUX` block, lines 71–115: writes the embedded
+  bytes to `%TEMP%\xlcore-fonts\<name>.otf`, calls gdi32 `AddFontResourceEx(path, 0, IntPtr.Zero)` (plain
+  flags, not `FR_PRIVATE`), verifies the family appears in `InstalledFontCollection`, returns
+  `new FontFamily(familyName)`; on failure logs a warning and falls back to `FontFamily.FromStreams`.
 
 Fonts must be registered once, on the UI thread, before any control is built that uses them.
 
@@ -28,8 +36,8 @@ Fonts must be registered once, on the UI thread, before any control is built tha
 
 | Consumer | Site | API |
 | --- | --- | --- |
-| `Program.cs` | line 272 | `AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` inside `application.Initialized`, before `LauncherApp`/`LauncherForm` are built |
-| `Components/Common/Button.cs` | line 57 | `AppFonts.IconFont` / `AppFonts.IconFontAt(size)` and `AppFonts.Glyph(icon)` in `ShowIcon(FontAwesomeIcon, float?)` |
+| `Program.cs` | line 281 | `AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` inside `application.Initialized`, before `LauncherApp`/`LauncherForm` are built |
+| `Components/Common/Button.cs` | lines 55–58 | `AppFonts.IconFont` / `AppFonts.IconFontAt(size)` and `AppFonts.Glyph(icon)` in `ShowIcon(FontAwesomeIcon, float?)` |
 
 No consumer uses `TextFont` or `ApplyGlyph`: native Eto controls take their font from the GTK theme,
 so the launcher text font is registered to make CJK glyphs resolvable in themed labels, and
@@ -41,16 +49,23 @@ wrapper.
 - Eto `FontFamily.FromStreams` registers the family with the platform font manager (Pango/Freetype on
   GTK). The launcher loads exactly the two families the old `FontManager` loaded, in the same order,
   and never unregisters them.
+- Windows: Eto's WinForms platform loads stream fonts through a GDI+ `PrivateFontCollection`
+  (`AddMemoryFont`), which GDI cannot see; GDI-based controls — `Button`, `Label` — draw text with GDI,
+  so a glyph font loaded only from memory renders as tofu boxes on buttons. Private fonts
+  (`FR_PRIVATE`) are not enumerated by `InstalledFontCollection`, so `RegisterWindowsFont` registers
+  with the plain session font table: the font is then enumerable by family name and visible to every
+  control, and is removed when the process exits. A font as large as Noto CJK can exceed the font
+  table, in which case `AddFontResourceEx` returns 0, a warning is logged, and registration falls back
+  to `FontFamily.FromStreams` (GDI+ serves the family for the controls that use it).
 - `Glyph` returns the private-use codepoint as a string. Rendering depends on the family being
-  registered first; if `Initialize` is skipped, `IconFont` throws `InvalidOperationException`, which is
-  what the launcher's debug log (`Log.Debug("Fonts initialised")` path in `Program.cs`) guards.
+  registered first; if `Initialize` is skipped, `IconFont` throws `InvalidOperationException`.
 - The old ImGui font manager applied glyph ranges (Japanese ranges, `GlyphRangesJapanese.cs`) and an
   icon font at a configured pixel size. Eto/GTK has no glyph-range concept: the whole family is
   registered, so glyph coverage comes from the `.otf` itself.
 - `Config.FontPxSize` is a float from `launcher.ini`; the same value feeds both `TextFont` and
   `IconFont`, so the icon buttons scale with the launcher font-size setting. `IconFontAt` is the
-  override for fixed-size buttons: GTK sizes a button's height from its font, so HEAD's 45 px caret and
-  account buttons need a 14 pt glyph (`LoginFrame.cs.md`).
+  override for fixed-size buttons: both GTK and WinForms size a button's height from its font, so
+  HEAD's 45 px caret and account buttons need a 14 pt glyph (`LoginFrame.cs.md`).
 - `ApplyGlyph` takes `Eto.Forms.Button` fully qualified, so the file compiles with the launcher's own
   `Components/Common/Button.cs` wrapper in scope (`docs/XIVLauncher.Core/Components/Common/Button.cs.md`).
 

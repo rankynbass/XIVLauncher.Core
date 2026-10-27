@@ -1,6 +1,6 @@
 # Program.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Program.cs` · 473 lines · 19,270 bytes
+**File:** `src/XIVLauncher.Core/Program.cs` · 476 lines · 19,859 bytes
 **Namespace:** `XIVLauncher.Core` · **Primary declaration:** `sealed class Program`
 **Role:** Application entry point / global singleton ("the trunk" of the launcher), Eto.Forms host
 
@@ -19,10 +19,10 @@ Everything else in the project hangs off accessors of this class. The class is `
 
 ## 2. Language / build surface
 
-- `sealed class Program`, no access modifier → `internal`; `Main` is `private static void Main(string[] args)` (line 171), the C# entry point.
-- Usings (lines 1–27) include `Eto.Forms` (the Eto UI surface), `Config.Net`, `Serilog`, and the `XIVLauncher.Common*` namespaces, including `XIVLauncher.Common.Unix.*` (Wine/Dxvk/CompatibilityTools), `XIVLauncher.Common.Windows` (`WindowsSteam`) and `XIVLauncher.Common.Http.HappyEyeballs`.
+- `sealed class Program`, no access modifier → `internal`; `Main` is `private static void Main(string[] args)` (line 174) carrying `[STAThread]` (line 173), the C# entry point. WinForms requires a main-thread STA for OLE drag-and-drop; a non-STA main thread throws `ThreadStateException` at startup.
+- Usings (lines 1–27) include `Eto.Forms` (the Eto UI surface), `Config.Net`, `Serilog`, `System.Runtime.InteropServices` (`RuntimeInformation` for platform gates, `[STAThread]`), and the `XIVLauncher.Common*` namespaces, including `XIVLauncher.Common.Unix.*` (Wine/Dxvk/CompatibilityTools), `XIVLauncher.Common.Windows` (`WindowsSteam`) and `XIVLauncher.Common.Http.HappyEyeballs`. The `XIVLauncher.Common.Unix.*` imports stay on Windows builds too — the namespace is referenced, but the code path is gated (see `CreateCompatToolsInstance`, §5).
 - No SDL/ImGui using directives remain: the SDL window loop, `SDLGPUDevice`, `ImGuiBindings`, `FontManager`, `ImGuiColors`, `ImGuiHelpers` and `TextureWrap` are gone from the project, replaced by `Eto.Forms` types and by `Ui`, `EtoTheme`, `AppFonts` (`Ui.cs.md`, `EtoTheme.cs.md`, `AppFonts.cs.md`).
-- `mainArgs` is `private static string[] mainArgs = []` (line 36) — the collection-expression form; it survives startup so `ClearLogs(true)` can re-init logging with the original argv (line 410).
+- `mainArgs` is `private static string[] mainArgs = []` (line 36) — the collection-expression form; it survives startup so `ClearLogs(true)` can re-init logging with the original argv (line 463).
 
 ## 3. State surface
 
@@ -30,24 +30,24 @@ Statics, lines 35–66:
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `APP_NAME` | `private const string` = `"xlcore"` | used as the `Storage` name (line 174) **and** as `Application.Name` (line 267) |
+| `APP_NAME` | `private const string` = `"xlcore"` | used as the `Storage` name (line 177) **and** as `Application.Name` (line 276) |
 | `mainArgs` | `private static string[]` | argv retained for `ClearLogs` |
-| `launcherApp` | `private static LauncherApp` `null!` | created inside `application.Initialized` (line 275) |
-| `launcherForm` | `private static LauncherForm` `null!` | created inside `application.Initialized` (line 278) |
+| `launcherApp` | `private static LauncherApp` `null!` | created inside `application.Initialized` (line 284) |
+| `launcherForm` | `private static LauncherForm` `null!` | created inside `application.Initialized` (line 287) |
 | `Config` | `public static ILauncherConfig` | built once in `LoadConfig` |
-| `Steam` | `public static ISteam?` | `WindowsSteam`/`UnixSteam` chosen by the `switch` at lines 213–224 |
-| `DalamudUpdater` | `public static DalamudUpdater` | `CreateDalamudUpdater()` (line 250) |
-| `DalamudLoadInfo` | `public static DalamudOverlayInfoProxy` | line 249 |
-| `CompatibilityTools` | `public static CompatibilityTools` | `CreateCompatToolsInstance()` (line 253) |
-| `Secrets` | `public static ISecretProvider` | `GetSecretProvider` (line 192) |
+| `Steam` | `public static ISteam?` | `WindowsSteam`/`UnixSteam` chosen by the `switch` at lines 222–234 |
+| `DalamudUpdater` | `public static DalamudUpdater` | `CreateDalamudUpdater()` (line 259) |
+| `DalamudLoadInfo` | `public static DalamudOverlayInfoProxy` | line 258 |
+| `CompatibilityTools` | `public static CompatibilityTools` | `CreateCompatToolsInstance()` (line 262); stays `null!` on Windows — the factory returns early, the whole `XIVLauncher.Common.Unix` section is Linux-only |
+| `Secrets` | `public static ISecretProvider` | `GetSecretProvider` (line 201) |
 | `HttpClient` | `public static HttpClient` | lines 45–55, Happy Eyeballs connect callback |
 | `Patcher` | `public static PatchManager?` | assigned by `MainPage` during patching (`MainPage.cs.md`) |
-| `storage` | `public static Storage` | `new Storage(APP_NAME)` (line 174) |
+| `storage` | `public static Storage` | `new Storage(APP_NAME)` (line 177) |
 | `DotnetRuntime` | `public static DirectoryInfo` | expression body → `storage.GetFolder("runtime")` |
 | `CType` | `public static string` | `CoreEnvironmentSettings.GetCType()`, evaluated at type init |
 | `IsSteamDeckHardware` | `public static bool` | expression body (line 63) |
-| `STEAM_APP_ID`/`STEAM_APP_ID_FT` | `public const uint` = `39210`/`312060` (lines 137–138) |
-| `DALAMUD_INJECTOR_NAME` | `public const string` = `"Dalamud.Injector.exe"` (line 144) |
+| `STEAM_APP_ID`/`STEAM_APP_ID_FT` | `public const uint` = `39210`/`312060` (lines 139–140) |
+| `DALAMUD_INJECTOR_NAME` | `public const string` = `"Dalamud.Injector.exe"` (line 146) |
 
 The two UI fields (`launcherApp`, `launcherForm`) are the only state created inside the UI thread; every consumer that reads them runs after `Main form shown` is logged.
 
@@ -57,35 +57,35 @@ The two UI fields (`launcherApp`, `launcherForm`) are the only state created ins
 | --- | --- | --- |
 | `SetupLogging(string[] args)` | 68 | `LogInit.Setup(...)` on `logs/launcher.log` + session banner |
 | `LoadConfig(Storage)` | 76 | `Config.Net` builder, ini + cmdline, defaults, `STEAM_COMPAT_*` game-path inference |
-| `CreateDalamudUpdater()` | 154 | manual-injection `RunnerOverride` resolution |
-| `Main(string[] args)` | 171 | startup + Eto run + teardown |
-| `CreateCompatToolsInstance()` | 356 | Wine/Dxvk settings + tool folders; no-op on Windows |
-| `ShowWindow()` | 369 | `Ui.Post(() => launcherForm.ShowWindow())` |
-| `HideWindow()` | 372 | `Ui.Post(() => launcherForm.HideWindow())` |
-| `GetSecretProvider(Storage)` | 374 | `FILE`/`KEYRING`/`NONE` selection |
-| `ClearSettings/ClearPrefix/ClearPlugins/ClearTools/ClearLogs/ClearAll` | 393–454 | on-disk wipes; `tsbutton` variants restart the affected subsystem |
-| `ResetUIDCache(bool)` | 457 | `launcherApp.UniqueIdCache.Reset()` |
+| `CreateDalamudUpdater()` | 156 | manual-injection `RunnerOverride` resolution |
+| `Main(string[] args)` | 174 | startup + Eto run + teardown; `[STAThread]` at line 173 |
+| `CreateCompatToolsInstance()` | 359 | Wine/Dxvk settings + tool folders; returns early on Windows (line 361), Linux-only section gated at the call site |
+| `ShowWindow()` | 372 | `Ui.Post(() => launcherForm.ShowWindow())` |
+| `HideWindow()` | 375 | `Ui.Post(() => launcherForm.HideWindow())` |
+| `GetSecretProvider(Storage)` | 377 | `FILE`/`KEYRING`/`NONE` selection |
+| `ClearSettings/ClearPrefix/ClearPlugins/ClearTools/ClearLogs/ClearAll` | 396–457 | on-disk wipes; `tsbutton` variants restart the affected subsystem |
+| `ResetUIDCache(bool)` | 475 | `launcherApp.UniqueIdCache.Reset()` |
 
 ## 5. Initialisation and ordering rules
 
-`Main` (line 171) performs, in order:
+`Main` (line 174, `[STAThread]` at line 173) performs, in order:
 
-1. `mainArgs = args; storage = new Storage(APP_NAME)` (lines 173–174) — `storage` must exist before anything else touches folders.
-2. `ClearAll()`/individual `Clear*` based on `CoreEnvironmentSettings` (lines 176–187). These run **before** logging, so a `ClearLogs` at startup produces no log lines for the clearing itself.
-3. `SetupLogging(mainArgs)` (line 189) then `LoadConfig(storage)` (line 190).
-4. **Debug-only UI-thread warning capture** (lines 192–196, `#if DEBUG`): `Ui.CaptureUIThreadWarnings()` — a `TraceListener` that catches Eto's "Accessing UI object from a non-UI thread" warning and logs the offending managed stack (`Ui.cs.md` §2). It has to be installed before the Eto application exists, which is why it sits here, not in `Initialized`.
-5. `Secrets = GetSecretProvider(storage)` (line 198).
-6. Steam app-id map (lines 200–216), `switch` on `Environment.OSVersion.Platform` (lines 219–230), then the `Steam.Initialize(app.Key)` loop (lines 232–246) guarded by `Config.IsIgnoringSteam != true || CoreEnvironmentSettings.IsSteamCompatTool`; failures are logged and swallowed (`Log.Error(ex, "Steam couldn't load")`, line 251).
-7. `DalamudLoadInfo` + `CreateDalamudUpdater()` + `DalamudUpdater.Run(...)` (lines 255–257).
-8. `CreateCompatToolsInstance()` (line 259).
-9. Eto bootstrap (lines 261–337), including the Debug-only `XLCORE_SELFTEST` selftest (lines 293–327) inside `Initialized`.
-10. `Ui.MarkUIThread()` (line 335) — records the thread that owns the UI loop, before the loop starts (`Ui.cs.md` §2).
-11. `application.Run()` (line 339) — blocks for the lifetime of the UI.
-12. Post-loop: `Patcher.StartCancellation()` (line 343) and `Environment.Exit(0)` inside a `try` (lines 341–348).
+1. `mainArgs = args; storage = new Storage(APP_NAME)` (lines 176–177) — `storage` must exist before anything else touches folders.
+2. `ClearAll()`/individual `Clear*` based on `CoreEnvironmentSettings` (lines 179–190). These run **before** logging, so a `ClearLogs` at startup produces no log lines for the clearing itself.
+3. `SetupLogging(mainArgs)` (line 192) then `LoadConfig(storage)` (line 193).
+4. **Debug-only UI-thread warning capture** (lines 195–199, `#if DEBUG`): `Ui.CaptureUIThreadWarnings()` — a `TraceListener` that catches Eto's "Accessing UI object from a non-UI thread" warning and logs the offending managed stack (`Ui.cs.md` §2). It has to be installed before the Eto application exists, which is why it sits here, not in `Initialized`.
+5. `Secrets = GetSecretProvider(storage)` (line 201).
+6. Steam app-id map (lines 203–219), `switch` on `Environment.OSVersion.Platform` (lines 222–234), then the `Steam.Initialize(app.Key)` loop (lines 237–251) guarded by `Config.IsIgnoringSteam != true || CoreEnvironmentSettings.IsSteamCompatTool`; failures are logged and swallowed (`Log.Error(ex, "Steam couldn't load")`, line 254).
+7. `DalamudLoadInfo` + `CreateDalamudUpdater()` + `DalamudUpdater.Run(...)` (lines 258–260).
+8. `CreateCompatToolsInstance()` (line 262) — on Windows it returns at once (`if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;`, line 361), so `CompatibilityTools` stays `null!`; `WineUtility`, `WineSettings` and `DxvkVersion` are Linux-only `XIVLauncher.Common.Unix` code that must never be reached on Windows, gated at this call site.
+9. Eto bootstrap (lines 264–340), including the Debug-only `XLCORE_SELFTEST` selftest (lines 296–330) inside `Initialized`.
+10. `Ui.MarkUIThread()` (line 338) — records the thread that owns the UI loop, before the loop starts (`Ui.cs.md` §2).
+11. `application.Run()` (line 342) — blocks for the lifetime of the UI.
+12. Post-loop: `Patcher.StartCancellation()` (line 346) and `Environment.Exit(0)` inside a `try` (lines 344–356).
 
 ## 6. `Main` control flow (contract)
 
-The Eto block (lines 255–290) is the new UI bootstrap and replaces the previous SDL window + `SDLGPUDevice` + `ImGuiBindings` + `FontManager` + frame loop:
+The Eto block (lines 258–293) is the new UI bootstrap and replaces the previous SDL window + `SDLGPUDevice` + `ImGuiBindings` + `FontManager` + frame loop:
 
 ```csharp
 Log.Debug("Creating the Eto application...");
@@ -165,15 +165,16 @@ application.Run();
 
 Contract facts:
 
-- **Theme selection happens before `Application` is constructed** (line 269, `EtoTheme.PreferDarkGtkTheme()`). Eto 2.13's GTK `ThemeHandler` crashes on a system theme that has no dark variant, so the dark look is obtained by setting `GTK_THEME` in the process environment (`EtoTheme.cs.md`), not by `Application.Theme = Themes.Dark`.
+- **`Main` is `[STAThread]`** (line 173): Eto WinForms registers OLE drag-and-drop at startup, which requires a Windows STA main thread; without the attribute startup throws `System.Threading.ThreadStateException` (verified via probe on Windows).
+- **Theme selection happens before `Application` is constructed** (line 272, `EtoTheme.PreferDarkGtkTheme()`). Eto 2.13's GTK `ThemeHandler` crashes on a system theme that has no dark variant, so the dark look is obtained by setting `GTK_THEME` in the process environment (`EtoTheme.cs.md`), not by `Application.Theme = Themes.Dark`. On Windows the call is inert (`EtoTheme.IsLinux` is false): GTK does not read the environment, so the probe never runs there.
 - **All UI construction lives inside `application.Initialized`.** Eto's GTK `ApplicationHandler.Run()` fires `OnInitialized` and then enters `Gtk.Application.Run()`; a handler that blocks here blocks the loop, so the window only appears after the handler returns. The three debug logs (`LauncherApp created`, `LauncherForm created`, `Main form shown`) exist to make that placement observable in `launcher.log`.
-- **`launcherForm.Show()` is explicit.** Setting `application.MainForm` does not show the form; without the explicit `Show()` call the launcher never appears. `launcherApp.AttachForm(launcherForm)` (line 285) wires `LauncherApp.PageShown` to `LauncherForm.ShowPage` before the form is shown, so the first page (`LauncherState.Main`) is hosted at first paint (`LauncherApp.cs.md`, `LauncherForm.cs.md`).
-- **`AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` runs first inside the handler** (line 278). Eto font families must be registered before any control is created, because `Common.Button` icons (`AppFonts.Glyph`) are applied during component construction (`AppFonts.cs.md`, `Components/Common/Button.cs.md`). Note the literal fallback `21.0f` differs from `LoadConfig`'s default `22.0f` (line 116).
-- **`LauncherClientConfig.GetAsync().GetAwaiter().GetResult()` blocks the UI thread** (line 280) on a network fetch (`Net/LauncherClientConfig.cs.md`); this happens on the GTK main thread, so a slow/absent network delays first paint and can throw inside `Initialized` (no `try` around it).
+- **`launcherForm.Show()` is explicit.** Setting `application.MainForm` does not show the form; without the explicit `Show()` call the launcher never appears. `launcherApp.AttachForm(launcherForm)` (line 288) wires `LauncherApp.PageShown` to `LauncherForm.ShowPage` before the form is shown, so the first page (`LauncherState.Main`) is hosted at first paint (`LauncherApp.cs.md`, `LauncherForm.cs.md`).
+- **`AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` runs first inside the handler** (line 281). Eto font families must be registered before any control is created, because `Common.Button` icons (`AppFonts.Glyph`) are applied during component construction (`AppFonts.cs.md`, `Components/Common/Button.cs.md`). Note the literal fallback `21.0f` differs from `LoadConfig`'s default `22.0f` (line 107).
+- **`LauncherClientConfig.GetAsync().GetAwaiter().GetResult()` blocks the UI thread** (line 283) on a network fetch (`Net/LauncherClientConfig.cs.md`); this happens on the GTK main thread, so a slow/absent network delays first paint and can throw inside `Initialized` (no `try` around it).
 - **`application.Run()` returns when the UI loop exits** — i.e. when the launcher window is closed/quit. There is no SDL event pump; `MainPage` exits the launcher via `Application.Instance.Quit()` (`MainPage.cs.md`).
-- **`Log.Debug("Eto OK!")` (line 337) is printed before `Run()`** (line 339), so it appears in the log before `Main form shown`; the ordering is intentional and useful for spotting a handler that never returned.
-- **`Ui.MarkUIThread()` (line 335) runs immediately before `application.Run()`** (line 339): Eto's UI thread is the thread that enters `Gtk.Application.Run()`, so recording it here makes `Ui.IsUIThread` match Eto's notion, which is what `Ui.AssertUIThread` guards check (`Ui.cs.md` §2).
-- **The Debug-only selftest (lines 293–327) is the reproduction harness for the login crash.** `XLCORE_SELFTEST=1` starts `StartLoading` plus 200 `Line2`/`Line3`/`Progress` writes from a `Task.Run` worker, mirroring the patching loop (`MainPage.cs:955`, `970–974`) and the repair timer (`MainPage.cs:1072`); then it drives `Program.HideWindow()` → 20 posted UI writes → `Program.ShowWindow()`, mirroring the game-start/`Reactivate()` window path (`LauncherForm.cs.md` §3), and exits. On the pre-fix code this run logged 32 Eto warnings with the `StartLoading → Reset → Refresh → TextControl.set_Text` stack; on the marshalled code it logs 0, and the hide/show stage reports `form.Visible=False` after hide, the last post processed while hidden, `form.Visible=True` after restore. It exists because forcing a real pending patch, which is the only natural way to exercise that path, is not practical.
+- **`Log.Debug("Eto OK!")` (line 340) is printed before `Run()`** (line 342), so it appears in the log before `Main form shown`; the ordering is intentional and useful for spotting a handler that never returned.
+- **`Ui.MarkUIThread()` (line 338) runs immediately before `application.Run()`** (line 342): Eto's UI thread is the thread that enters `Gtk.Application.Run()`, so recording it here makes `Ui.IsUIThread` match Eto's notion, which is what `Ui.AssertUIThread` guards check (`Ui.cs.md` §2).
+- **The Debug-only selftest (lines 296–330) is the reproduction harness for the login crash.** `XLCORE_SELFTEST=1` starts `StartLoading` plus 200 `Line2`/`Line3`/`Progress` writes from a `Task.Run` worker, mirroring the patching loop (`MainPage.cs:955`, `970–974`) and the repair timer (`MainPage.cs:1072`); then it drives `Program.HideWindow()` → 20 posted UI writes → `Program.ShowWindow()`, mirroring the game-start/`Reactivate()` window path (`LauncherForm.cs.md` §3), and exits. On the pre-fix code this run logged 32 Eto warnings with the `StartLoading → Reset → Refresh → TextControl.set_Text` stack; on the marshalled code it logs 0, and the hide/show stage reports `form.Visible=False` after hide, the last post processed while hidden, `form.Visible=True` after restore. It exists because forcing a real pending patch, which is the only natural way to exercise that path, is not practical.
 
 ## 7. Environment interface (`CoreEnvironmentSettings` + `Program`)
 
@@ -187,13 +188,13 @@ Contract facts:
 `LoadConfig` (line 76) is the sole writer of defaults, in the order: `AcceptLanguage`, `GamePath`, `GameConfigPath`, `ClientLanguage`, `DpiAwareness`, `IsAutologin`, `CompletedFts`, `FontPxSize`, `IsEncryptArgs`, `IsOtpServer`, `IsIgnoringSteam`, `PatchPath`, `DalamudEnabled`, `DalamudLoadMethod`, `GlobalScale`, `GameModeEnabled`, `DxvkVersion`, `DxvkAsyncEnabled`, `WineStartupType`, `WineManagedVersion`, `WineSyncType`, `WineBinaryPath`, `WineDebugVars`, `FixLDP`, `FixIM`, `FixLocale`, `FixError127`, `DontUseSystemTz`.
 
 - `GlobalScale` (line 119) remains in the config surface but **has no consumer in the Eto UI** — the previous build used it to scale ImGui (`ImGuiHelpers.GlobalScale`); Eto sizes controls natively. It is written and persisted, but nothing reads it any more.
-- `FontPxSize` (default `22.0f`, line 107) is now the font size for Eto fonts via `AppFonts.Initialize` (line 272), replacing `FontManager`'s scaled pixel size (`FontManager.cs` was deleted).
+- `FontPxSize` (default `22.0f`, line 107) is now the font size for Eto fonts via `AppFonts.Initialize` (line 281), replacing `FontManager`'s scaled pixel size (`FontManager.cs` was deleted).
 - `Config.Net` writes ini on property set, so settings tabs write `Program.Config` directly (`SettingsPage.cs.md`).
-- `WineSyncType` default calls `WineUtility.SystemFsyncSupport()` at startup — a side-effecting probe (subprocess/`dlopen` style checks) executed on the main thread before the UI.
+- `WineSyncType` default calls `WineUtility.SystemFsyncSupport()` only when `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` (lines 126–128); on Windows `WineSyncType.FSync` is assigned with no probe. `SystemFsyncSupport` lives in `XIVLauncher.Common.Unix` — the Linux-only section must never run on Windows (its checks are kernel-level `fsync` probes), so the call is gated at this default site.
 
 ## 9. Manual Dalamud injection contract
 
-`CreateDalamudUpdater` (line 154) resolves `RunnerOverride` only when `DalamudManualInjectPath` exists **and** `DalamudManualInjectionEnabled == true` **and** a file named `DALAMUD_INJECTOR_NAME` is present (lines 157–160). `SettingsTabDalamud` writes `Program.DalamudUpdater.RunnerOverride` directly at runtime (`SettingsTabDalamud.cs:33,41,50`), so the updater is reconfigured mid-session; the factory is re-run only by `ClearPlugins(tsbutton: true)` (line 439).
+`CreateDalamudUpdater` (line 156) resolves `RunnerOverride` only when `DalamudManualInjectPath` exists **and** `DalamudManualInjectionEnabled == true` **and** a file named `DALAMUD_INJECTOR_NAME` is present (lines 159–162). `SettingsTabDalamud` writes `Program.DalamudUpdater.RunnerOverride` directly at runtime (`SettingsTabDalamud.cs:33,41,50`), so the updater is reconfigured mid-session; the factory is re-run only by `ClearPlugins(tsbutton: true)` (line 443).
 
 ## 10. On-disk layout (owned by this file)
 
@@ -207,12 +208,12 @@ Folders/filenames created or consumed through `storage`: `launcher.ini`, `logs/l
 
 ## 12. Thread-safety and lifecycle hazards
 
-- **UI-thread marshalling is mandatory, for reads as well as writes.** Any code that touches Eto controls from a background task must go through `Ui.Post`/`Ui.Run` (`Ui.cs.md`). `Program.ShowWindow`/`Program.HideWindow` are the canonical example: they post to the UI thread (lines 369, 372) because they are called from login/patch tasks (`MainPage.cs:1157,1165`). Reads count: Eto's `Control.Handler` accessor calls `Application.EnsureUIThread`, so `Input.Value`/`Checkbox.Value` on a worker thread is the same class of violation as a `Label.Text` write, and the login crash needed both fixed (`MainPage.cs.md` §5, `LoadingPage.cs.md` §3).
+- **UI-thread marshalling is mandatory, for reads as well as writes.** Any code that touches Eto controls from a background task must go through `Ui.Post`/`Ui.Run` (`Ui.cs.md`). `Program.ShowWindow`/`Program.HideWindow` are the canonical example: they post to the UI thread (lines 372, 375) because they are called from login/patch tasks (`MainPage.cs:1157,1165`). Reads count: Eto's `Control.Handler` accessor calls `Application.EnsureUIThread`, so `Input.Value`/`Checkbox.Value` on a worker thread is the same class of violation as a `Label.Text` write, and the login crash needed both fixed (`MainPage.cs.md` §5, `LoadingPage.cs.md` §3).
 - **Blocking in `Initialized` blocks first paint.** `LauncherClientConfig` fetch and `LauncherApp` construction (which starts news loading, patch checks, and `Troubleshooting.LogTroubleshooting`) all run on the UI thread.
 - **`launcherApp`/`launcherForm` are `null!`** until `Initialized` completes; `ClearSettings(true)`/`ClearLogs(true)`/`ClearPlugins(true)`/`ClearTools(true)`/`ClearAll(tsbutton)` called from the UI (troubleshooting buttons) dereference them, so those paths are only safe after startup.
 - **`ResetUIDCache(bool tsbutton)` ignores its parameter's semantics**: it forwards to `launcherApp.UniqueIdCache.Reset()` regardless, and `launcherApp` must be initialized (`MainPage.cs:218`, `SettingsTabGame.cs:61`).
 - **Post-loop teardown is partial:** `Patcher.StartCancellation()` then `Environment.Exit(0)` in a `try` whose body cannot throw (the comment acknowledges `PatchManager.UnInitializeAcquisition()` is private and cannot be called) — so patch acquisition cleanup is effectively `StartCancellation()` + immediate exit.
-- **Window visibility is the app lifetime**: the GTK `GApplication` exits when its last window closes, so `LauncherForm.HideWindow` unmaps the window **and** holds the `GApplication` across the hidden period, which is what keeps the launcher alive while the game runs (`LauncherForm.cs.md` §3).
+- **Window visibility is the app lifetime** on GTK: the `GApplication` exits when its last window closes, so `LauncherForm.HideWindow` unmaps the window **and** holds the `GApplication` across the hidden period, which is what keeps the launcher alive while the game runs (`LauncherForm.cs.md` §3). On Windows there is no `GApplication`; `HoldApplication`/`ReleaseApplication` are no-op stubs and `launcherForm.HideWindow()` just hides the form.
 
 ## 13. Referenced (not defined here)
 
@@ -225,3 +226,4 @@ Consumers of this file: `MainPage.cs` (patcher, window show/hide, Steam, compat 
 - **Keep UI construction inside `application.Initialized`** — creating Eto controls before `Application` exists throws; creating them after `Run()` returns never executes.
 - **New process-wide services belong as statics here**, with `null!` initializers, initialized in `Main` before `application.Run()`; anything UI-facing must be initialized inside `Initialized` so the UI thread owns it.
 - If a second platform (WPF/Cocoa) is added, `EtoTheme` becomes a no-op path and `GTK_THEME` must be dropped; `AppFonts` needs re-verification because Eto font registration is platform-handled (`Eto.Forms` docs: `https://github.com/picoe/Eto`).
+- Windows is a supported platform: `[STAThread]` on `Main` (STA for OLE drag-drop), `RuntimeInformation.IsOSPlatform` gates on `WineSyncType`, `CreateCompatToolsInstance` and the news width cap, `AppFonts` registers fonts on Windows through `AddFontResourceExW` (`AppFonts.cs.md`), `EtoTheme` is inert there, and `LauncherForm`'s GTK `GApplication` hold calls are stubbed (`LauncherForm.cs.md`).
