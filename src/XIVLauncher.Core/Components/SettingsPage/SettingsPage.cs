@@ -44,7 +44,11 @@ public class SettingsPage : Page
         list.Add(new SettingsTabDalamud());
         list.Add(new SettingsTabAbout());
         list.Add(new SettingsTabDebug());
-        list.Add(new SettingsTabTroubleshooting());
+
+        // Troubleshooting is Linux-only: every entry is a Unix hack, and the cleanup actions
+        // (ClearPrefix, ClearTools) operate on Program.CompatibilityTools, which is null on Windows.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            list.Add(new SettingsTabTroubleshooting());
 
         return [.. list];
     }

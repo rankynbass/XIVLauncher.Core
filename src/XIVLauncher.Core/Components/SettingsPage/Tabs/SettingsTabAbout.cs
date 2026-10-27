@@ -3,6 +3,7 @@ using Eto.Forms;
 
 using XIVLauncher.Common.Util;
 using XIVLauncher.Core.Resources.Localization;
+using XIVLauncher.Core.Support;
 
 namespace XIVLauncher.Core.Components.SettingsPage.Tabs;
 
@@ -54,7 +55,34 @@ public class SettingsTabAbout : SettingsTab
                 CreateBrowserButton(Strings.SeeSoftwareLicensesButton, null),
             },
         },
+
+        // Same action as the Troubleshooting tab's log-pack button; About is available on Windows,
+        // where the Troubleshooting tab is not built.
+        new StackLayout
+        {
+            Orientation = Orientation.Horizontal,
+            Items = { CreateTSPackButton() },
+        },
+        new Label
+        {
+            Text = Strings.GenerateTSPackTroubleshooting,
+            TextColor = EtoColors.Grey3,
+            Wrap = WrapMode.Character,
+        },
     ];
+
+    private static Button CreateTSPackButton()
+    {
+        var button = new Button { Text = Strings.GenerateTSPackTroubleshootingButton };
+
+        button.Click += (_, _) =>
+        {
+            PackGenerator.SavePack(Program.storage);
+            PlatformHelpers.OpenBrowser(Path.Combine(Program.storage.GetFolder("logs").FullName));
+        };
+
+        return button;
+    }
 
     private static Button CreateBrowserButton(string label, string? url)
     {
