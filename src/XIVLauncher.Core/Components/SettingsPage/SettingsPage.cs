@@ -87,14 +87,26 @@ public class SettingsPage : Page
             foreach (SettingsEntry entry in tab.Entries)
                 entry.Changed += this.UpdateFinishButton;
 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // WinForms StackLayout sizes items to their natural width (GTK stretches them to full
+            // width), so the tab control needs an explicit width matching the rows' RowLabelWidth;
+            // the tab strip must be multiline, as six tab titles overflow a single row.
+            this.tabControl.Width = 1000;
+
+            var winformsTab = this.tabControl.Handler.GetType().GetProperty("Control")?.GetValue(this.tabControl.Handler);
+            winformsTab?.GetType().GetProperty("Multiline")?.SetValue(winformsTab, true);
+        }
+
         this.Content = new StackLayout
         {
+            Padding = 10,
             Spacing = 10,
             Items =
             {
-                new StackLayoutItem(this.searchBox, HorizontalAlignment.Right),
-                new StackLayoutItem(this.tabControl, expand: true),
-                new StackLayoutItem(this.finishButton, HorizontalAlignment.Right),
+                new StackLayoutItem(this.searchBox, HorizontalAlignment.Center),
+                new StackLayoutItem(this.tabControl) { HorizontalAlignment = HorizontalAlignment.Center, Expand = true },
+                new StackLayoutItem(this.finishButton, HorizontalAlignment.Center),
             },
         };
     }
