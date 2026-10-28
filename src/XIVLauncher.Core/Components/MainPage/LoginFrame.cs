@@ -20,8 +20,9 @@ namespace XIVLauncher.Core.Components.MainPage;
 public class LoginFrame : Component
 {
     /// <summary>HEAD drew the entries with SetNextItemWidth(window width): each entry fills the login
-    /// column, which is 400 px wide inside the page's 32 px padding.</summary>
-    private const int LoginInputWidth = 400 - 2 * 32;
+    /// column, inset 32 px on the left; the right side is flush because the login column is pinned to
+    /// the window's right edge.</summary>
+    private const int LoginInputWidth = 400 - 32;
 
     /// <summary>HEAD sized the login-action caret and account picker buttons as 45x45 squares.</summary>
     private const int ExtraButtonSize = 45;
