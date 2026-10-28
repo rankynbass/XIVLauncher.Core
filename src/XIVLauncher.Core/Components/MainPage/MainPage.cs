@@ -95,12 +95,16 @@ public class MainPage : Page
         // absorbs all extra width and the login column stays pinned to the right edge. The buttons
         // sit at the column's bottom edge, 10 px from the window bottom, on the left.
         layout.BeginVertical(xscale: true, yscale: true);
+        layout.BeginScrollable(BorderType.None, xscale: true, yscale: true);
         layout.Add(this.newsFrame, xscale: true, yscale: true);
+        layout.EndScrollable();
         layout.Add(this.actionButtons, xscale: false, yscale: false);
         layout.EndVertical();
 
         // Login column: 400 px max, 200 px floor, flush right.
+        layout.BeginScrollable(BorderType.None, xscale: false, yscale: true);
         layout.Add(this.loginFrame, xscale: false, yscale: true);
+        layout.EndScrollable();
 
         layout.EndHorizontal();
 
