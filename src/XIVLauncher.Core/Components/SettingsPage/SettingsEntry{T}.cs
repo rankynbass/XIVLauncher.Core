@@ -206,31 +206,36 @@ public class SettingsEntry<T> : SettingsEntry
                                      .Select(x => x.GetAttribute<SettingsDescriptionAttribute>() ?? new SettingsDescriptionAttribute(x.ToString(), string.Empty))
                                      .ToArray();
 
-            var dropDown = new DropDown();
+            // A read-only combo box: it shows the current choice in a text field, but ReadOnly
+            // blocks typing — the drop-down list is the only way to change it.
+            var comboBox = new ComboBox { ReadOnly = true };
 
-            foreach (int value in values)
+            // keys[SelectedIndex] is the numeric value of the item, since ComboBox items are plain strings.
+            var keys = values.Cast<object>().Select(v => (int)v).ToArray();
+
+            foreach (int value in keys)
             {
                 var desc = descriptions[value].Description;
                 desc = desc == string.Empty || desc == "dummy" ? string.Empty : " - " + desc;
-                dropDown.Items.Add(new ListItem { Text = descriptions[value].FriendlyName + desc, Key = value.ToString() });
+                comboBox.Items.Add(descriptions[value].FriendlyName + desc);
             }
 
-            dropDown.SelectedIndexChanged += (_, _) =>
+            comboBox.SelectedIndexChanged += (_, _) =>
             {
-                if (dropDown.SelectedIndex < 0)
+                if (comboBox.SelectedIndex < 0)
                     return;
 
-                this.InternalValue = (T)Enum.ToObject(type, int.Parse(dropDown.Items[dropDown.SelectedIndex].Key));
+                this.InternalValue = (T)Enum.ToObject(type, keys[comboBox.SelectedIndex]);
                 this.UpdateState();
             };
 
             this.applyValue = () =>
             {
                 var idx = (int)(this.InternalValue ?? 0);
-                dropDown.SelectedIndex = idx;
+                comboBox.SelectedIndex = idx;
             };
 
-            return dropDown;
+            return comboBox;
         }
 
         throw new InvalidOperationException($"No settings input for {type}");

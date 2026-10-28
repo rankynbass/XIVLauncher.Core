@@ -1,6 +1,6 @@
 # SettingsEntry{T}.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsEntry{T}.cs` · 272 lines · 8,514 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsEntry{T}.cs` · 277 lines · 8,821 bytes
 
 ## Purpose
 
@@ -37,7 +37,7 @@ typeable rows (text, numeric, drop-down, check) reachable from the label as well
 | `Value` | 53 | `InternalValue == default ? default : (T)InternalValue`. |
 | Constructor | 55-112 | Stores delegates and name/description, builds labels, calls `CreateInput()`, wires `nameLabel.MouseDown`, assembles the row layout. |
 
-## Control factories (`CreateInput()`, 116-237)
+## Control factories (`CreateInput()`, 116-242)
 
 - `typeof(T) == typeof(DirectoryInfo)` (120-166): `FilePicker` with `FileAction = FileAction.SelectFolder`
   (line 126), a native folder chooser (GtkFileChooserAction.SelectFolders on GTK, Vista folder dialog on
@@ -52,26 +52,28 @@ typeable rows (text, numeric, drop-down, check) reachable from the label as well
 - `typeof(T) == typeof(bool)` (184-200): `CheckBox` whose `Text` is the setting name, so the separate
   `nameLabel` is hidden. `CheckedChanged` stores the bool, then `UpdateState()`. `applyValue` writes
   `Checked`.
-- `type.IsEnum` (202-234): `DropDown`. `Enum.GetValues(type)` is enumerated; each item's text is
-  `FriendlyName + " - " + Description` from `SettingsDescriptionAttribute`
+- `type.IsEnum` (202-238): read-only `ComboBox` (`ReadOnly = true`, line 211 — typing is blocked, the
+  drop-down list is the only way to change it). `Enum.GetValues(type)` is enumerated; items are the plain
+  strings `FriendlyName + " - " + Description` from `SettingsDescriptionAttribute`
   (via `XIVLauncher.Common.Util` `GetAttribute`, line 206, with fallback `FriendlyName = enum name,
-  Description = ""`). A `Description` of `""` or `"dummy"` renders no suffix. `SelectedIndexChanged` parses the
-  selected item's `Key` (the numeric value string), boxes it with `Enum.ToObject`, stores, `UpdateState()`.
-  `applyValue` sets `SelectedIndex` to the enum's int value.
-- Any other `T` throws `InvalidOperationException($"No settings input for {type}")` (line 236).
+  Description = ""`). A `Description` of `""` or `"dummy"` renders no suffix. `keys` (213, `int[]`) keeps
+  each item's numeric value at the same index. `SelectedIndexChanged` (223-230) boxes `keys[SelectedIndex]`
+  with `Enum.ToObject`, stores, `UpdateState()`. `applyValue` (232-236) sets `SelectedIndex` to the enum's
+  int value.
+- Any other `T` throws `InvalidOperationException($"No settings input for {type}")` (line 241).
 
 ## State updates
 
-`UpdateState()` (239-261):
+`UpdateState()` (244-266):
 - With `CheckValidity`: computes message; `IsValid` is true when the message is null/empty; validity label
   text and visibility update.
 - Without `CheckValidity`: `IsValid = true`, validity label hidden.
 - Warning: `CheckWarning?.Invoke(Value)`; the warning label shows the message when non-null.
 - Finally `RaiseChanged()`, which notifies the settings page.
 
-`LoadValues()` (263-269): `InternalValue = load()`, `applyValue()`, `UpdateState()`.
+`LoadValues()` (268-274): `InternalValue = load()`, `applyValue()`, `UpdateState()`.
 
-`Save()` (271): `save(Value)`.
+`Save()` (276): `save(Value)`.
 
 ## Consumers
 
@@ -118,7 +120,11 @@ event to `UpdateFinishButton` and rebuilds rows on search. Key consumers:
   `CheckValidity`. The GTK chooser button displays only the folder's name, never the full path, and cannot be
   typed into; the grey `pathLabel` below the picker mirrors the full path, and typed paths work on Windows
   (WinForms/WPF text box + Browse) only.
-- **Enum `Key` is a numeric string**, parsed with `int.Parse`; items must always be created in numeric order.
+- **Enum items are plain strings:** `ComboBox.Items` holds strings; the parallel `keys` array (int) maps
+  `SelectedIndex` back to the enum value, boxed with `Enum.ToObject(type, int)`. Items must always be created
+  in numeric order (index == enum value).
+- **`ReadOnly = true` on `ComboBox`:** blocks typing in the text portion; selection via the list still works.
+  `applyValue`'s `SelectedIndex` write fires `SelectedIndexChanged` and the store, for enums.
 - **Labels have no explicit width.** The row `DynamicLayout` stretches every control to the tab width, so
   `WrapMode.Character` labels wrap at the column width; labels report no natural width when unwrapped, which
   is what kept the old explicit `RowLabelWidth = 1000` — the stretching layout replaces it. Rows follow the
