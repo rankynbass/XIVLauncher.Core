@@ -22,7 +22,7 @@ public class LoginFrame : Component
     /// <summary>HEAD drew the entries with SetNextItemWidth(window width): each entry fills the login
     /// column, inset 32 px on the left; the right side is flush because the login column is pinned to
     /// the window's right edge.</summary>
-    private const int LoginInputWidth = 400 - 32;
+    private const int LoginInputWidth = 240 - 32;
 
     /// <summary>HEAD sized the login-action caret and account picker buttons as 45x45 squares.</summary>
     private const int ExtraButtonSize = 45;
@@ -135,7 +135,7 @@ public class LoginFrame : Component
             Wrap = WrapMode.Word,
             // Without an explicit width, GTK sizes the wrapped label to the whole message, and that
             // natural width becomes the login column's width, pushing the news column off-screen.
-            Width = 400,
+            Width = 240,
             Visible = Program.Secrets is DummySecretProvider,
         };
 

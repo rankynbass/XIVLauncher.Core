@@ -86,7 +86,7 @@ public class MainPage : Page
         // exactly the layout width at the window's minimum, so the columns never overlap.
         this.newsFrame.MinimumSize = new Size(200, 0);
         this.loginFrame.MinimumSize = new Size(200, 0);
-        this.loginFrame.Width = 400;
+        this.loginFrame.Width = 240;
 
         var layout = new DynamicLayout { Spacing = new Size(16, 16) };
 
@@ -102,7 +102,7 @@ public class MainPage : Page
         layout.Add(this.actionButtons, xscale: false, yscale: false);
         layout.EndVertical();
 
-        // Login column: 400 px fixed, flush right. No scrollable wrapper: the DynamicScrollable cell
+        // Login column: 240 px fixed, flush right. No scrollable wrapper: the DynamicScrollable cell
         // expands with the row and the login frame covers the news column and the bottom buttons.
         layout.Add(this.loginFrame, xscale: false, yscale: true);
 
