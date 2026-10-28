@@ -19,7 +19,16 @@ public abstract class SettingsEntry : Component
 
     public bool IsValid { get; protected set; } = true;
 
-    public abstract bool IsVisible { get; }
+    /// <summary>Rows gated out by the platform (they can never be enabled there) are hidden entirely
+    /// at page build; conditional gates use <see cref="IsEnabled"/> so the row stays visible, disabled.</summary>
+    public virtual bool IsVisible => true;
+
+    /// <summary>Rows are always shown; a gated row reports false here and renders disabled.
+    /// Gates are re-evaluated on every entry change via <see cref="RefreshState()"/>.</summary>
+    public virtual bool IsEnabled => true;
+
+    /// <summary>Recomputes validity, warning, and enabled state without raising <see cref="Changed"/>.</summary>
+    public abstract void RefreshState();
 
     public abstract void LoadValues();
 

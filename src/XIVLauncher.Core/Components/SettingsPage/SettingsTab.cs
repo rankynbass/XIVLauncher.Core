@@ -59,10 +59,8 @@ public abstract class SettingsTab : Component
             layout.Add(control);
 
         foreach (SettingsEntry settingsEntry in Entries)
-        {
             if (settingsEntry.IsVisible)
                 layout.Add(settingsEntry);
-        }
 
         foreach (var control in this.FooterContent)
             layout.Add(control);

@@ -46,9 +46,18 @@ public class SettingsEntry<T> : SettingsEntry
 
     public Func<T?, string?>? CheckWarning { get; init; }
 
+    public Func<bool>? CheckEnabled { get; init; }
+
+    /// <summary>Platform gates (rows that can never be enabled on this OS) hide the row entirely;
+    /// evaluated at page build. Conditional gates use <see cref="CheckEnabled"/>.</summary>
     public Func<bool>? CheckVisibility { get; init; }
 
+    public override bool IsEnabled => CheckEnabled?.Invoke() ?? true;
+
     public override bool IsVisible => CheckVisibility?.Invoke() ?? true;
+
+    /// <summary>Gate re-evaluation without raising <see cref="Changed"/> (see SettingsPage.RefreshAllStates).</summary>
+    public override void RefreshState() => this.UpdateState(notifyChanged: false);
 
     public T? Value => this.InternalValue == default ? default : (T)this.InternalValue;
 
@@ -241,8 +250,12 @@ public class SettingsEntry<T> : SettingsEntry
         throw new InvalidOperationException($"No settings input for {type}");
     }
 
-    protected void UpdateState()
+    protected void UpdateState(bool notifyChanged = true)
     {
+        // Rows are never hidden; a gated row renders disabled, cascading to all its children
+        // (GTK container sensitivity, WinForms Panel.Enabled).
+        this.Enabled = this.IsEnabled;
+
         if (this.CheckValidity != null)
         {
             var validityMsg = this.CheckValidity.Invoke(this.Value);
@@ -262,7 +275,8 @@ public class SettingsEntry<T> : SettingsEntry
         this.warningLabel.Text = warningMessage ?? string.Empty;
         this.warningLabel.Visible = warningMessage != null;
 
-        this.RaiseChanged();
+        if (notifyChanged)
+            this.RaiseChanged();
     }
 
     public override void LoadValues()

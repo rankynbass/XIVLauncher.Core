@@ -50,7 +50,7 @@ public class SettingsTabDalamud : SettingsTab
                 Program.DalamudUpdater.RunnerOverride = new FileInfo(Path.Combine(input.FullName, Program.DALAMUD_INJECTOR_NAME));
             })
             {
-                CheckVisibility = () => this.enableManualInjection.Value,
+                CheckEnabled = () => this.enableManualInjection.Value,
                 CheckValidity = input =>
                 {
                     if (input is null || !input.Exists)

@@ -50,7 +50,7 @@ new DalamudBranchMetaSettingsEntry(Strings.DalamudBranchSwitcher, Strings.Dalamu
 `Strings.DalamudBranchSwitcher` at `Strings.Designer.cs:672`,
 `Strings.DalamudBranchSwitcherDescription` at `Strings.Designer.cs:678`. The `save` delegate is empty:
 saving happens through `Save()`'s side effects. `SettingsPage.OnShow()` calls `LoadValues()` on it
-(`SettingsPage.cs:88`), the page saves it through `tab.Save()` (finish button, `SettingsPage.cs:63`).
+(`SettingsPage.cs:140`), the page saves it through `tab.Save()` (finish button, `SettingsPage.cs:82-84`).
 
 Base behavior: `SettingsEntry<string>`, `SettingsEntry`, `Component`, `ListItem`, `Ui.Post`, `Program.HttpClient`,
 `DalamudBranchMeta.FetchBranchesAsync`, `DalamudBranchMeta.Branch` (`DisplayName`, `Track`, `Key`, `Hidden`

@@ -23,7 +23,7 @@ Usings: `System.Net.Http.Json` (`:2` — the JSON flavour of the shared HTTP cli
 | `flags` | `public uint { get; init; }` (`:19`) | modelled, **never read** anywhere in fork or lib (§6) |
 | `GetAsync()` | `public static async Task<LauncherClientConfig>` (`:21`–`:35`) | the only member anyone calls; `static` on a record type, so the record has no factory beyond the deserialiser or `new LauncherClientConfig { … }` |
 
-`const` fields are a fork-wide spelling (`Program.cs:39`, `Program.cs:147`–`:148`, `../Accounts/Secrets/Providers/KeychainSecretProvider.cs:9`–`:10`, `FontManager.cs:9`–`:11`) — initialise-once, and usable inside a `static` member such as `GetAsync()`. The accessor form with `{ get; init; }` (also at `../Components/Page.cs:9`, `../Components/SettingsPage/SettingsEntry{T}.cs:17`–`:21`) is this style's write-once field: an `init` setter assignable only via designated initialisers in `new T { field = value }`, with no `set;`, so all three fields are frozen after construction. `readonly struct` additionally makes the record itself immutable.
+`const` fields are a fork-wide spelling (`Program.cs:39`, `Program.cs:147`–`:148`, `../Accounts/Secrets/Providers/KeychainSecretProvider.cs:9`–`:10`, `FontManager.cs:9`–`:11`) — initialise-once, and usable inside a `static` member such as `GetAsync()`. The accessor form with `{ get; init; }` (also at `../Components/Page.cs:9`, `../Components/SettingsPage/SettingsEntry{T}.cs:45`–`:53`) is this style's write-once field: an `init` setter assignable only via designated initialisers in `new T { field = value }`, with no `set;`, so all three fields are frozen after construction. `readonly struct` additionally makes the record itself immutable.
 
 ## 3. Record shape vs. payload
 

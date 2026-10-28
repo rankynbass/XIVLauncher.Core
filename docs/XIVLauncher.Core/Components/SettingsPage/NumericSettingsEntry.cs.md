@@ -26,7 +26,7 @@ Ctor signature: `(string name, string description, Func<int> load, Action<int> s
 
 ## 3. Construction order (the important constraint)
 
-`SettingsEntry<T>`'s constructor calls the virtual `CreateInput()` (`SettingsEntry{T}.cs:62`) **before** `NumericSettingsEntry`'s constructor body runs. During `CreateInput()` the auto-properties `MinValue`/`MaxValue`/`Step` are still `0`, so the object initializer at lines 39-43 sets `MinValue = 0`, `MaxValue = 0`, `Increment = 0`.
+`SettingsEntry<T>`'s constructor calls the virtual `CreateInput()` (`SettingsEntry{T}.cs:77`) **before** `NumericSettingsEntry`'s constructor body runs. During `CreateInput()` the auto-properties `MinValue`/`MaxValue`/`Step` are still `0`, so the object initializer at lines 39-43 sets `MinValue = 0`, `MaxValue = 0`, `Increment = 0`.
 
 The Eto GTK handler applies these directly to the spin button's adjustment:
 
@@ -41,10 +41,10 @@ With `Lower == Upper == 0`, every value write clamps to `0`; a verified Eto run 
 
 ## 4. Value flow
 
-- `this.applyValue = () => stepper.Value = this.Value` (45) — registered during `CreateInput`, invoked by `SettingsEntry<T>.LoadValues()` (`SettingsEntry{T}.cs:218`), i.e. on `SettingsTab.LoadValues()` from `SettingsPage.OnShow()` (`SettingsPage.cs:86-88`).
+- `this.applyValue = () => stepper.Value = this.Value` (45) — registered during `CreateInput`, invoked by `SettingsEntry<T>.LoadValues()` (`SettingsEntry{T}.cs:282`), i.e. on `SettingsTab.LoadValues()` from `SettingsPage.OnShow()` (`SettingsPage.cs:139-140`).
 - `stepper.ValueChanged` (47-51): `InternalValue = Math.Max(MinValue, Math.Min(MaxValue, (int)stepper.Value))` (49), then `UpdateState()` (50) → validity/warning labels + `Changed` event (`SettingsEntry.cs.md` §4).
 - `NumericStepper.Value` is a `double`; the cast at line 49 truncates.
-- Persistence happens only in `SettingsEntry<T>.Save()` (`SettingsEntry{T}.cs:222`), triggered by the finish button (`SettingsPage.cs:61-63`).
+- Persistence happens only in `SettingsEntry<T>.Save()` (`SettingsEntry{T}.cs:290`), triggered by the finish button (`SettingsPage.cs:80-88`).
 
 ## 5. Consumers
 
@@ -60,7 +60,7 @@ With `Lower == Upper == 0`, every value write clamps to `0`; a verified Eto run 
 - The row keeps the name label (the base entry's `nameLabel`) because the input is not a check box; the label sits above the stepper (`SettingsEntry{T}.cs.md` §6).
 - `WidthChars = 5` is the Eto GTK default (`NumericStepperHandler.cs:9`), so a value of `2147483647` (10 digits) is wider than the default width request.
 - No `CheckValidity`/`CheckWarning` hooks are wired in this subclass; validity is driven only by the base `UpdateState` path (always valid when no `CheckValidity` is set).
-- The row is a `SettingsEntry<int>`, so `Value` is `int?`; `SettingsEntry<T>.Value` casts `InternalValue` (`SettingsEntry{T}.cs:47`).
+- The row is a `SettingsEntry<int>`, so `Value` is `int?`; `SettingsEntry<T>.Value` casts `InternalValue` (`SettingsEntry{T}.cs:62`).
 
 ## 7. Cross-references
 

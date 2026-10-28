@@ -1,6 +1,6 @@
 # SettingsTabWine.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabWine.cs` · 167 lines · 7,227 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabWine.cs` · 167 lines · 7,215 bytes
 
 ## Purpose
 
@@ -36,12 +36,12 @@ Entries, in order:
    load `Program.Config.WineStartupType ?? WineStartupType.Managed`; save writes it.
 2. **WINE Version** (lines 36-40): `SettingsEntry<WineManagedVersion>`,
    `Strings.WineVersionSetting`/`...Description` (`Strings.Designer.cs:102`/`108`);
-   load `Program.Config.WineManagedVersion ?? WineManagedVersion.Stable`; save writes it; visible only when
-   startup type is `Managed` (line 39).
+   load `Program.Config.WineManagedVersion ?? WineManagedVersion.Stable`; save writes it; enabled only when
+   startup type is `Managed` (`CheckEnabled`, line 39).
 3. **Custom Wine binary path** (lines 41-46): `SettingsEntry<string>`,
    `Strings.WineBinaryPathSetting`/`Strings.WineBinarySettingDescription`
-   (`Strings.Designer.cs:114`/`120`); load `Program.Config.WineBinaryPath`; save writes it; visible only when
-   startup type is `Custom` (line 45).
+   (`Strings.Designer.cs:114`/`120`); load `Program.Config.WineBinaryPath`; save writes it; enabled only when
+   startup type is `Custom` (`CheckEnabled`, line 45).
 4. **WINE Sync Method** (lines 47-62): `SettingsEntry<WineSyncType>`,
    `Strings.WineSyncMethodSetting`/`...Description` (`Strings.Designer.cs:1050`/`1056`);
    load `Program.Config.WineSyncType ?? WineSyncType.FSync`; save writes it.
@@ -60,12 +60,12 @@ Entries, in order:
    load `Program.Config.DxvkHudType`; save writes it.
 8. **DXVK Async** (lines 68-71): `SettingsEntry<bool>`,
    `Strings.DXVKEnableAsyncSetting`/`...Description` (`Strings.Designer.cs:138`/`144`);
-   load `Program.Config.DxvkAsyncEnabled ?? true`; save writes it; visible only when DXVK version is not
-   `Disabled` (line 70).
+   load `Program.Config.DxvkAsyncEnabled ?? true`; save writes it; enabled only when DXVK version is not
+   `Disabled` (`CheckEnabled`, line 70).
 9. **Feral GameMode** (lines 74-83): `SettingsEntry<bool>`,
    `Strings.EnableFeralGameModeSetting`/`...Description` (`Strings.Designer.cs:150`/`156`);
    load `Program.Config.GameModeEnabled ?? true`; save writes it.
-   `CheckVisibility` = Linux only (line 76). `CheckValidity`: enabled + GameMode library missing →
+   `CheckEnabled` = Linux only (line 76). `CheckValidity`: enabled + GameMode library missing →
    `Strings.EnableFeralGameModeNotFoundValidation` (`Strings.Designer.cs:162`).
 
 Footer/action buttons (86-122):
@@ -79,8 +79,9 @@ Footer/action buttons (86-122):
 
 ## Consumers
 
-`SettingsPage` constructs the tab (`SettingsPage.cs:28`) and includes it only on Unix
-(`SettingsPage.cs:102`). `Program.CompatibilityTools` (`Program.cs:43`, created at `Program.cs:307-316`)
+`SettingsPage` constructs the tab in `BuildTabs()` (line 41, appended on Linux only). `VisibleTabs()` (gate
+line 157) keeps it in the pages on Unix. `Program.CompatibilityTools` (`Program.cs:43`, created at
+`Program.cs:307-316`)
 supplies prefix paths, `RunInPrefix`, `Kill`, `IsToolDownloaded`. `Program.CreateCompatToolsInstance()`
 (`Program.cs:307`) is called after save (line 165) and during startup (`Program.cs:253`) and UID cache resets
 (`Program.cs:400`).
@@ -93,8 +94,8 @@ launching on Unix.
 - **The footer panel is reused, not recreated.** `FooterContent` returns the single `toolActionPanel` field,
   so `RefreshEntries()` re-parents the same widget tree; the label and buttons keep state.
 - **Group enablement is per button.** `RefreshDynamic()` disables each of the four buttons individually; the
-  surrounding `StackLayout` is never disabled, because a wrapping panel does not propagate `Enabled` to
-  children in this Eto/GTK path.
+  surrounding `StackLayout` is never disabled by the tab code. Entry rows use `CheckEnabled` (`SettingsEntry{T}.cs.md`
+  §2): the row's `Enabled` cascades to all child controls (GTK container sensitivity, WinForms `Panel.Enabled`).
 - **`notSetupLabel` is assigned after construction.** `this.notSetupLabel = null!` is a field initializer that
   runs before the constructor body sets the real label (line 122); during base construction
   (`SettingsTab` field initialization order) the field is null, so any base member that touched
@@ -110,8 +111,8 @@ launching on Unix.
 - **`Save()` rebuilds the compatibility tools instance** (`Program.CreateCompatToolsInstance()`), which
   constructs a new `CompatibilityTools` with the just-saved `DxvkVersion`, `DxvkHudType`, `GameModeEnabled`,
   `DxvkAsyncEnabled` values.
-- **The Wine tab is Unix-exclusive** (`IsUnixExclusive => true`), so Windows builds save its rows through the
-  finish button (all tabs save) even though the tab is not visible.
+- **The Wine tab is Unix-exclusive** (`IsUnixExclusive => true`): it is appended to `tabs` on Linux only
+  (`BuildTabs()`), so Windows builds never construct it and its rows are never saved.
 - **Buttons are raw Eto `Button`s**, not the launcher's `Common.Button`, so they use text labels, not
   FontAwesome glyphs.
 - **Prefix/configuration/explorer/kill actions run on the UI thread.** `RunInPrefix("winecfg")` and

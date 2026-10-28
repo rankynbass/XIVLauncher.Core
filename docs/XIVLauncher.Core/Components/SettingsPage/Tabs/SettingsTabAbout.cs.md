@@ -67,9 +67,9 @@ Usings: `Eto.Drawing` (`Size`), `Eto.Forms`, `XIVLauncher.Common.Util` (`Platfor
 | Consumer | Line | Use |
 | --- | --- | --- |
 | `SettingsPage.tabs` | `SettingsPage.cs:45` | added in `BuildTabs()` on all platforms (Windows has no Troubleshooting tab, so About carries its button) |
-| `SettingsPage.OnShow` | `SettingsPage.cs:121-123` | `tab.LoadValues()` — no entries, so no values are loaded |
-| `SettingsPage.RebuildPages` | `SettingsPage.cs:153-154` | `RefreshEntries()` + `TabPage(Text = Title, SettingsTab.WrapScrollable(tab))` |
-| `SettingsPage.RebuildPages` | `SettingsPage.cs:165` | `tab.Entries` search filter — always empty, so About never matches a search |
+| `SettingsPage.OnShow` | `SettingsPage.cs:139-140` | `tab.LoadValues()` — no entries, so no values are loaded |
+| `SettingsPage.RebuildPages` | `SettingsPage.cs:170, 171-178` | `RefreshEntries()` + `TabPage(Text = Title, Scrollable(tab))` |
+| `SettingsPage.RebuildPages` | `SettingsPage.cs:195` | `tab.Entries` search filter — always empty, so About never matches a search |
 
 ## 8. Quirks
 

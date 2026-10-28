@@ -36,13 +36,13 @@ public class SettingsTabWine : SettingsTab
             new SettingsEntry<WineManagedVersion>(Strings.WineVersionSetting, Strings.WineVersionSettingDescription, () => Program.Config.WineManagedVersion ?? WineManagedVersion.Stable,
                 x => Program.Config.WineManagedVersion = x)
             {
-                CheckVisibility = () => this.startupTypeSetting.Value == WineStartupType.Managed
+                CheckEnabled = () => this.startupTypeSetting.Value == WineStartupType.Managed
             },
             new SettingsEntry<string>(Strings.WineBinaryPathSetting,
                 Strings.WineBinarySettingDescription,
                 () => Program.Config.WineBinaryPath, s => Program.Config.WineBinaryPath = s)
             {
-                CheckVisibility = () => this.startupTypeSetting.Value == WineStartupType.Custom
+                CheckEnabled = () => this.startupTypeSetting.Value == WineStartupType.Custom
             },
             new SettingsEntry<WineSyncType>(Strings.WineSyncMethodSetting, Strings.WineSyncMethodSettingDescription, () => Program.Config.WineSyncType ?? WineSyncType.FSync, x => Program.Config.WineSyncType = x)
             {
@@ -67,13 +67,13 @@ public class SettingsTabWine : SettingsTab
             new SettingsEntry<DxvkHudType>(Strings.EnableDXVKOverlaySetting, Strings.EnableDXVKOverlaySettingDescription, () => Program.Config.DxvkHudType, type => Program.Config.DxvkHudType = type),
             new SettingsEntry<bool>(Strings.DXVKEnableAsyncSetting, Strings.DXVKEnableAsyncSettingDescription, () => Program.Config.DxvkAsyncEnabled ?? true, b => Program.Config.DxvkAsyncEnabled = b)
             {
-                CheckVisibility = () => this.dxvkVersionSetting.Value != DxvkVersion.Disabled
+                CheckEnabled = () => this.dxvkVersionSetting.Value != DxvkVersion.Disabled
             },
 
             // GameMode
             new SettingsEntry<bool>(Strings.EnableFeralGameModeSetting, Strings.EnableFeralGameModeSettingDescription, () => Program.Config.GameModeEnabled ?? true, b => Program.Config.GameModeEnabled = b)
             {
-                CheckVisibility = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+                CheckEnabled = () => RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
                 CheckValidity = b =>
                 {
                     if (b == true && FeralGameModeFound == false)

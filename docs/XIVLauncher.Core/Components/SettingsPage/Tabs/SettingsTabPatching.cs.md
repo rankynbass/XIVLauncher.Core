@@ -26,12 +26,12 @@ Using: `XIVLauncher.Core.Resources.Localization` (`Strings`).
 
 | Consumer | Line(s) | Use |
 | --- | --- | --- |
-| `SettingsPage.tabs` | `SettingsPage.cs:27` | second tab |
+| `SettingsPage.tabs` | `SettingsPage.cs:38` | second tab |
 | `MainPage` boot patch | `MainPage.cs:870-875` | `App.Settings.PatchPath` existence + default `Paths.RoamingPath/patches` (`Components/MainPage/MainPage.cs.md` §6) |
 | `MainPage` patching | `MainPage.cs:936-939` | `PatchInstaller(gamePath, keepPatches)`, `PatchManager(..., speedLimitBps, ..., patchStore)` |
 | `MainPage` repair | `MainPage.cs:1056` | `Program.Config.PatchPath` passed to `PatchVerifier` |
 
-`App.Settings` is `Program.Config` (`LauncherApp.cs:121`), so tab changes take effect for patching only after the finish button's `Save()` pass (`SettingsPage.cs:61-63`).
+`App.Settings` is `Program.Config` (`LauncherApp.cs:121`), so tab changes take effect for patching only after the finish button's `Save()` pass (`SettingsPage.cs:82-84`).
 
 ## 4. Quirks
 

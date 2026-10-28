@@ -31,7 +31,7 @@ Usings: `Eto.Forms` only.
 | Override | Site | Behaviour |
 | --- | --- | --- |
 | `LoadingPage.OnShow()` | `LoadingPage.cs:123` | `=> this.Refresh()` — recomputes control visibility from the current flags |
-| `SettingsPage.OnShow()` | `SettingsPage.cs:85`, `base.OnShow()` at 95 | loads tab values, resets search, rebuilds pages |
+| `SettingsPage.OnShow()` | `SettingsPage.cs:135`, `base.OnShow()` at 149 | loads tab values, resets search, rebuilds pages |
 | `FtsPage.OnShow()` | `FtsPage.cs:105` | first-run / Steam Deck checks, may switch state |
 | `Page.OnShow()` | `Page.cs:22` | empty body |
 | `MainPage`, `OtpEntryPage`, `SteamDeckPromptPage` | — | no override; inherit the base no-op |

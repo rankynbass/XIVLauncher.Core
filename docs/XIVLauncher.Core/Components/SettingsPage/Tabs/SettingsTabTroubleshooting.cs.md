@@ -1,6 +1,6 @@
 # SettingsTabTroubleshooting.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabTroubleshooting.cs` · 141 lines · 6,463 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabTroubleshooting.cs` · 141 lines · 6,448 bytes
 
 ## Purpose
 
@@ -28,7 +28,7 @@ destructive warning is red (`EtoColors.Red`).
 | `FooterContent` | 124 | Returns `footerItems` (field-backed, reused). |
 | `ActionRow` | 127-140 | `StackLayout` (horizontal): button, grey wrapping description label. |
 
-Entries, in order (all Unix-only visibility, lines 24/28/32/38/51):
+Entries, in order (all Unix-only enablement, `CheckEnabled`, lines 24/28/32/38/51):
 
 1. **Disable gameoverlayrenderer.so** (line 22): `Strings.DisableGameoverlayRendererHack`/`...Description`
    (`Strings.Designer.cs:234`/`240`); load `Program.Config.FixLDP ?? false`; save writes `FixLDP`.
@@ -71,9 +71,9 @@ Footer actions:
 
 ## Consumers
 
-`SettingsPage` constructs the tab (`SettingsPage.cs:32`), loads row values on show, saves rows on finish,
-shows the tab on all platforms, includes rows in search results (they match Unix visibility checks at rebuild),
-and scans validity. Rows' saved values are read during game launch through `MainPage.StartGameAndAddon` env
+`SettingsPage` constructs the tab in `BuildTabs()` (`SettingsPage.cs:51`, appended on Linux only), loads row
+values on show, saves rows on finish, includes rows in search results, and scans validity. On Linux the rows
+are enabled; rows' saved values are read during game launch through `MainPage.StartGameAndAddon` env
 manipulation (`FixLDP`, `FixIM`, `FixError127`, `FixLocale`, `DontUseSystemTz`).
 
 Cleanup buttons call `Program.Clear*` functions, which mutate storage folders, config, the Dalamud updater,
@@ -87,10 +87,12 @@ compatibility tools, and logging state. `Reset settings` opens Settings state di
 - **Header/footer items are field-backed and reused**, unlike About/Debug. They are re-parented to a fresh
   `StackLayout` in `SettingsTab.RefreshEntries()` on every rebuild, so buttons, labels, and action rows keep
   state (button enablement, label text) across rebuilds.
-- **The tab is not Unix-exclusive** (`IsUnixExclusive => false`), so Windows/macOS show the tab, the "Fixes"
-  header, the log/cleanup footer actions, and the red warning. Its five hack rows are Unix-only, so on non-Unix
-  the tab has no visible entries, and `Entries` is scanned by `UpdateFinishButton` via `IsVisible`
-  (`Environment.OSVersion.Platform == PlatformID.Unix` → false).
+- **The tab is not Unix-exclusive** (`IsUnixExclusive => false`): `IsUnixExclusive` gates page inclusion via
+  `VisibleTabs()`, but `BuildTabs()` appends the tab on Linux only (`SettingsPage.cs:51`), so Windows builds
+  never construct it. Its five hack rows carry `CheckEnabled = PlatformID.Unix` gates: on Linux they are
+  enabled; a non-Unix build that ever constructed the tab would show the rows disabled, never hidden.
+  `UpdateFinishButton` scans `IsVisible && IsEnabled` (`SettingsPage.cs:254`), so disabled rows never block
+  saving.
 - **The locale row's name and description are computed once at construction.** `Program.CType`
   (`Program.cs:60`) is read when the tab is constructed, so the row text reflects the launcher process's
   detected locale at startup; environment changes later do not update the text.

@@ -48,7 +48,7 @@ public class SettingsTabGame : SettingsTab
         new SettingsEntry<bool>(Strings.UseXLAuthMacrosSetting, Strings.UseXLAuthMacrosSettingDescription, () => Program.Config.IsOtpServer ?? false, x => Program.Config.IsOtpServer = x),
         new SettingsEntry<bool>(Strings.IgnoreSteamSetting, Strings.IgnoreSteamSettingDescription, () => Program.Config.IsIgnoringSteam ?? false, x => Program.Config.IsIgnoringSteam = x)
         {
-            CheckVisibility = () => !CoreEnvironmentSettings.IsSteamCompatTool,
+            CheckEnabled = () => !CoreEnvironmentSettings.IsSteamCompatTool,
         },
         new SettingsEntry<bool>(Strings.UseUIDCacheSetting, Strings.UseUIDCacheSettingDescription, () => Program.Config.IsUidCacheEnabled ?? false, x => Program.Config.IsUidCacheEnabled = x),
     ];

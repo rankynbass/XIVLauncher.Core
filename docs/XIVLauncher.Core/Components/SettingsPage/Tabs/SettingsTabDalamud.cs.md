@@ -1,6 +1,6 @@
 # SettingsTabDalamud.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabDalamud.cs` · 70 lines · 3,625 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabDalamud.cs` · 70 lines · 3,622 bytes
 
 ## Purpose
 
@@ -48,8 +48,8 @@ Entries, in order:
    load `Program.Config.DalamudManualInjectPath`. Save skips when manual injection is off (`this.enableManualInjection.Value == false`,
    line 47) or input is null (line 48), then stores the directory and sets `Program.DalamudUpdater.RunnerOverride`
    (lines 49-50).
-   `CheckVisibility = () => this.enableManualInjection.Value` (line 53): the row appears only when manual
-   injection is enabled.
+   `CheckEnabled = () => this.enableManualInjection.Value` (line 53): the row is always shown; its controls
+   are enabled only when manual injection is enabled.
    `CheckValidity` (lines 54-66): `null`/missing directory →
    `Strings.DalamudLocalInjectionPathSettingNoDirValidation` (`Strings.Designer.cs:660`); directory without
    the injector file → `Strings.DalamudLocalInjectionPathSettingNoInjValidation`
@@ -57,9 +57,9 @@ Entries, in order:
 
 ## Consumers
 
-`SettingsPage` constructs the tab (`SettingsPage.cs:29`), loads values on show, saves on finish, shows it as
-the Dalamud tab when visible (the tab is not Unix-exclusive), includes its entries in search results, and
-scans its rows for finish-button validity.
+`SettingsPage` constructs the tab in `BuildTabs()` (`SettingsPage.cs:44`, appended on all platforms), loads
+values on show, saves on finish, shows it as the Dalamud tab when visible (the tab is not Unix-exclusive),
+includes its entries in search results, and scans its rows for finish-button validity.
 
 `Program`/launcher-side consumers of the saved config values:
 - `Program.Config.DalamudEnabled`, `DalamudLoadMethod`, `DalamudLoadDelay`, `DalamudBetaKind`,
@@ -80,9 +80,10 @@ scans its rows for finish-button validity.
   unchecked never writes `RunnerOverride`.
 - **Validation checks the file system on each value change.** `CheckValidity` calls `input.Exists` and
   `GetFiles()`, so typing a path performs disk enumeration on the UI thread.
-- **Visibility is checked eagerly by readers.** `CheckVisibility` reads the enable checkbox's current value;
-  toggling it does not rebuild the page immediately, so the path row appears only on the next rebuild
-  (search change, page show).
+- **Enablement is refreshed live.** `CheckEnabled` (line 53) reads the enable checkbox's value; the page's
+  `RefreshAllStates()` sweep (`SettingsPage.cs:97, 245-250`) runs on every entry change, so toggling the
+  checkbox enables/disables the path row immediately, without a page rebuild. The row is never hidden —
+  disabled rows stay visible with all child controls insensitive.
 - **The branch row's `load` fallback is `"release"`**; a configured `DalamudBetaKind` value that is not in the
   fetched branch list leaves the drop-down unselected.
 - **The numeric row uses the repaired `NumericSettingsEntry`**, so the base zero-range stepper problem is

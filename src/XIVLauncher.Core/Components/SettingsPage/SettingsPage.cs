@@ -89,7 +89,13 @@ public class SettingsPage : Page
 
         foreach (SettingsTab tab in this.tabs)
             foreach (SettingsEntry entry in tab.Entries)
+            {
                 entry.Changed += this.UpdateFinishButton;
+
+                // Rows are always shown; gates flip Enabled. Any entry change re-evaluates every row's
+                // CheckEnabled, so checkbox/combo gates update live without a page rebuild.
+                entry.Changed += this.RefreshAllStates;
+            }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -234,9 +240,18 @@ public class SettingsPage : Page
         native?.GetType().GetProperty("AutoScroll")?.SetValue(native, true);
     }
 
+    /// <summary>Re-evaluates every entry's validity, warning, and enabled state. Runs on every entry
+    /// change; entries whose gate reads another entry's value (checkbox, combo) update live.</summary>
+    private void RefreshAllStates()
+    {
+        foreach (SettingsTab tab in this.tabs)
+            foreach (SettingsEntry entry in tab.Entries)
+                entry.RefreshState();
+    }
+
     private void UpdateFinishButton()
     {
-        var invalid = this.tabs.Any(x => x.Entries.Any(y => y.IsVisible && !y.IsValid));
+        var invalid = this.tabs.Any(x => x.Entries.Any(y => y.IsVisible && y.IsEnabled && !y.IsValid));
 
         this.finishButton.IsEnabled = !invalid;
         this.finishButton.ShowIcon(invalid ? FontAwesomeIcon.Ban : FontAwesomeIcon.Check);

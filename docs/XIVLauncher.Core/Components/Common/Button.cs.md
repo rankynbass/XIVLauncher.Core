@@ -43,7 +43,7 @@ The nullable wrapper encodes Eto's "unset width" sentinel: `button.Width` is `in
 - `Width` getter → `null` when `button.Width < 0`
 - `Width` setter → `value ?? -1`
 
-This lets callers write `button.Width = 45` (fixed) and leave the natural size (`Width = null`). Consumers use both forms: `Width = 45, Height = 45` for the login caret/friends buttons (`LoginFrame.cs:122`, `126`), `Width = 40` for the settings finish button (`SettingsPage.cs:56`), `Width = 28, Height = 28` for the OTP paste button and `89x30` for OK/Cancel (`OtpEntryPage.cs:55`, `65`, `68`), `Width = 80, Height = 80` for the action icons (`ActionButtons.cs:49-52`), `Width = 320` for the loading-page buttons (`LoadingPage.cs:83`, `87`).
+This lets callers write `button.Width = 45` (fixed) and leave the natural size (`Width = null`). Consumers use both forms: `Width = 45, Height = 45` for the login caret/friends buttons (`LoginFrame.cs:122`, `126`), `Width = 40` for the settings finish button (`SettingsPage.cs:77`), `Width = 28, Height = 28` for the OTP paste button and `89x30` for OK/Cancel (`OtpEntryPage.cs:55`, `65`, `68`), `Width = 80, Height = 80` for the action icons (`ActionButtons.cs:49-52`), `Width = 320` for the loading-page buttons (`LoadingPage.cs:83`, `87`).
 
 ## 5. Consumers
 
@@ -52,7 +52,7 @@ This lets callers write `button.Width = 45` (fixed) and leave the natural size (
 | `ActionButtons` | `ActionButtons.cs:47-58` | `MakeIconButton(FontAwesomeIcon, string toolTip, Action clicked)` builds `new Common.Button(string.Empty)` with `Width = IconButtonSize, Height = IconButtonSize` (80x80, lines 49–52), then `ShowIcon(icon)` (line 55), `ToolTip` (line 56), `Click += clicked` (line 57) |
 | `LoginFrame` | `LoginFrame.cs:116`, `122`, `126` | login button (`Strings.LoginButton`), caret button (`45x45`, `ShowIcon(CaretDown, 14f)`), friends button (`45x45`, `ShowIcon(UserFriends, 14f)`) |
 | `LoadingPage` | `LoadingPage.cs:82`, `86` | cancel (`Strings.CancelLabel`), disable-auto-login, both `Width = 320` |
-| `SettingsPage` | `SettingsPage.cs:56` | finish button, `Width = 40`, `ShowIcon(FontAwesomeIcon.Check/Ban)` (lines 57, 154) |
+| `SettingsPage` | `SettingsPage.cs:77` | finish button, `Width = 40`, `ShowIcon(FontAwesomeIcon.Check/Ban)` (lines 78, 257) |
 | `OtpEntryPage` | `OtpEntryPage.cs:55`, `65`, `68` | paste (`28x28`), OK, Cancel (`89x30`) |
 
 Consumers that use raw Eto buttons instead of this wrapper: `ModalDialog` (the modal OK button) and the settings tab action panels (`SettingsTabAbout.cs:61`, `SettingsTabGame.cs:60`, `SettingsTabTroubleshooting.cs:63-85`, `SettingsTabWine.cs:92-101`) — those need only `Text` + `Click`, so the wrapper adds nothing.

@@ -21,21 +21,21 @@ public class SettingsTabTroubleshooting : SettingsTab
     [
         new SettingsEntry<bool>(Strings.DisableGameoverlayRendererHack, Strings.DisableGameoverlayRendererHackDescription, () => Program.Config.FixLDP ?? false, x => Program.Config.FixLDP = x)
         {
-            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+            CheckEnabled = () => Environment.OSVersion.Platform == PlatformID.Unix,
         },
         new SettingsEntry<bool>(Strings.XModifiersHack, Strings.XModifiersHackDescription, () => Program.Config.FixIM ?? false, x => Program.Config.FixIM = x)
         {
-            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+            CheckEnabled = () => Environment.OSVersion.Platform == PlatformID.Unix,
         },
         new SettingsEntry<bool>(Strings.FixLibICUUCErrorHack, Strings.FixLibICUUCErrorHackDescription, () => Program.Config.FixError127 ?? false, x => Program.Config.FixError127 = x)
         {
-            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+            CheckEnabled = () => Environment.OSVersion.Platform == PlatformID.Unix,
         },
         new SettingsEntry<bool>(string.Format(Strings.ForceLocaleHack, (!string.IsNullOrEmpty(Program.CType) ? Program.CType : Strings.ForceLocaleHackCUTF8)),
                                 !string.IsNullOrEmpty(Program.CType) ? string.Format(Strings.ForceLocaleHackDescription, Program.CType) : "Hack Disabled. Could not find a UTF-8 C locale. You may have to set LC_ALL manually if LANG is not a UTF-8 type.",
                                 () => Program.Config.FixLocale ?? false, b => Program.Config.FixLocale = b)
         {
-            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+            CheckEnabled = () => Environment.OSVersion.Platform == PlatformID.Unix,
             CheckWarning = b =>
             {
                 var lang = CoreEnvironmentSettings.GetCleanEnvironmentVariable("LANG");
@@ -48,7 +48,7 @@ public class SettingsTabTroubleshooting : SettingsTab
         },
         new SettingsEntry<bool>(Strings.ForceDontUseSystemTZ, Strings.ForceDontUseSystemDescription, () => Program.Config.DontUseSystemTz ?? true, x => Program.Config.DontUseSystemTz = x)
         {
-            CheckVisibility = () => Environment.OSVersion.Platform == PlatformID.Unix,
+            CheckEnabled = () => Environment.OSVersion.Platform == PlatformID.Unix,
         },
     ];
 
