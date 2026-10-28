@@ -93,26 +93,23 @@ public class SettingsPage : Page
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // WinForms StackLayout sizes items to their natural width (GTK stretches them to full
-            // width), so the tab control needs an explicit width matching the rows' RowLabelWidth;
-            // the tab strip must be multiline, as six tab titles overflow a single row.
-            this.tabControl.Width = 1000;
-
+            // The tab strip must be multiline, as six tab titles overflow a single row; DynamicLayout
+            // stretches the tab control to the layout width, so no explicit width is needed.
             var winformsTab = this.tabControl.Handler.GetType().GetProperty("Control")?.GetValue(this.tabControl.Handler);
             winformsTab?.GetType().GetProperty("Multiline")?.SetValue(winformsTab, true);
         }
 
-        this.Content = new StackLayout
+        var pageLayout = new DynamicLayout
         {
-            Padding = 10,
-            Spacing = 10,
-            Items =
-            {
-                new StackLayoutItem(this.searchBox, HorizontalAlignment.Center),
-                new StackLayoutItem(this.tabControl) { HorizontalAlignment = HorizontalAlignment.Center, Expand = true },
-                new StackLayoutItem(this.finishButton, HorizontalAlignment.Center),
-            },
+            Padding = new Padding(10),
+            Spacing = new Size(10, 10),
         };
+
+        pageLayout.AddCentered(this.searchBox);
+        pageLayout.Add(this.tabControl, xscale: true, yscale: true);
+        pageLayout.AddCentered(this.finishButton);
+
+        this.Content = pageLayout;
     }
 
     public override void OnShow()
@@ -151,13 +148,26 @@ public class SettingsPage : Page
             {
                 Log.Debug("[settings] refreshing tab {Title}", tab.Title);
                 tab.RefreshEntries();
-                this.tabControl.Pages.Add(new TabPage { Text = tab.Title, Content = SettingsTab.WrapScrollable(tab) });
+                var page = new TabPage
+                {
+                    Text = tab.Title,
+                    Content = new Scrollable
+                    {
+                        Content = tab,
+                        Border = BorderType.None,
+                        ExpandContentHeight = true,
+                        ExpandContentWidth = false,
+                    },
+                };
+                EnableNativeAutoScroll(page);
+                this.tabControl.Pages.Add(page);
                 Log.Debug("[settings] tab {Title} added to the TabControl", tab.Title);
             }
         }
         else
         {
-            var results = new StackLayout { Spacing = 10 };
+            var results = new DynamicLayout { Spacing = new Size(10, 10) };
+            results.MinimumSize = new Size(500, 500);
             var any = false;
 
             foreach (SettingsTab tab in VisibleTabs())
@@ -169,20 +179,45 @@ public class SettingsPage : Page
 
                 any = true;
 
-                results.Items.Add(new StackLayoutItem(new Label { Text = tab.Title, TextColor = EtoColors.Grey3 }, expand: true));
+                results.Add(new Label { Text = tab.Title, TextColor = EtoColors.Grey3 });
 
                 foreach (SettingsEntry settingsEntry in eligible)
                     if (settingsEntry.IsVisible)
-                        results.Items.Add(new StackLayoutItem(settingsEntry, expand: true));
+                        results.Add(settingsEntry);
             }
 
             if (!any)
-                results.Items.Add(new StackLayoutItem(new Label { Text = Strings.NoResultsFound, TextColor = EtoColors.Grey3 }, expand: true));
+                results.Add(new Label { Text = Strings.NoResultsFound, TextColor = EtoColors.Grey3 });
 
-            this.tabControl.Pages.Add(new TabPage { Text = Strings.SearchResults, Content = SettingsTab.WrapScrollable(results) });
+            var resultPage = new TabPage
+            {
+                Text = Strings.SearchResults,
+                Content = new Scrollable
+                {
+                    Content = results,
+                    Border = BorderType.None,
+                    ExpandContentHeight = true,
+                    ExpandContentWidth = false,
+                },
+            };
+            EnableNativeAutoScroll(resultPage);
+            this.tabControl.Pages.Add(resultPage);
         }
 
         this.UpdateFinishButton();
+    }
+
+    /// <summary>Enables AutoScroll on the native WinForms TabPage: a TabPage is a Panel, and
+    /// AutoScroll shows scrollbars when its content exceeds the page. Eto's Scrollable cannot be
+    /// used on WinForms (its CustomScrollable layout loop hangs the UI). The content's
+    /// MinimumSize is the floor that triggers the scrollbars.</summary>
+    private static void EnableNativeAutoScroll(TabPage page)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
+
+        var native = page.Handler?.GetType().GetProperty("Control")?.GetValue(page.Handler);
+        native?.GetType().GetProperty("AutoScroll")?.SetValue(native, true);
     }
 
     private void UpdateFinishButton()

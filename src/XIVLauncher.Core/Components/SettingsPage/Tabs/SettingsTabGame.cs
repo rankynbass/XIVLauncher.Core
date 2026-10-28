@@ -60,15 +60,10 @@ public class SettingsTabGame : SettingsTab
         var resetUidButton = new Button { Text = Strings.ResetUIDCacheButton };
         resetUidButton.Click += (_, _) => Program.ResetUIDCache();
 
-        this.resetUidPanel = new StackLayout
-        {
-            Spacing = 10,
-            Items =
-            {
-                new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character },
-                resetUidButton,
-            },
-        };
+        var uidLayout = new DynamicLayout { Spacing = new Size(10, 10) };
+        uidLayout.Add(new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character });
+        uidLayout.Add(resetUidButton);
+        this.resetUidPanel = uidLayout;
     }
 
     protected override List<Control> FooterContent => [this.resetUidPanel];

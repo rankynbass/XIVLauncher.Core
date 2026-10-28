@@ -48,34 +48,26 @@ public abstract class SettingsTab : Component
     {
         this.RefreshDynamic();
 
-        var items = new List<StackLayoutItem>();
+        var layout = new DynamicLayout { Spacing = new Size(10, 10) };
 
         foreach (var control in this.HeaderContent)
-            items.Add(new StackLayoutItem(control, expand: true));
+            layout.Add(control);
 
         foreach (SettingsEntry settingsEntry in Entries)
         {
             if (settingsEntry.IsVisible)
-                items.Add(new StackLayoutItem(settingsEntry, expand: true));
+                layout.Add(settingsEntry);
         }
 
         foreach (var control in this.FooterContent)
-            items.Add(new StackLayoutItem(control, expand: true));
+            layout.Add(control);
 
-        var layout = new StackLayout { Spacing = 10 };
+        // Content floor: drives the Scrollable's vertical scrollbars. Below this size, the tab
+        // content scrolls instead of being clipped.
+        layout.MinimumSize = new Size(500, 500);
 
-        foreach (var item in items)
-            layout.Items.Add(item);
-
-        this.Content = WrapScrollable(layout);
+        this.Content = layout;
     }
-
-    /// <summary>Wraps page content in a Scrollable on Linux only. Eto's WinForms Scrollable
-    /// (CustomScrollable) loops forever when laid out inside a TabPage: OnLayout calls
-    /// UpdateScrollSize, which sets the content MinimumSize, which fires resize -> PerformLayout
-    /// -> OnLayout again; the UI thread never returns to the message loop ("Not Responding").</summary>
-    internal static Control WrapScrollable(Control content)
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? new Scrollable { Content = content } : content;
 
     /// <summary>Refreshes tab content that depends on other settings values.</summary>
     protected virtual void RefreshDynamic() { }

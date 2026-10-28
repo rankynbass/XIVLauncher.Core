@@ -22,9 +22,8 @@ namespace XIVLauncher.Core.Components.SettingsPage;
 /// </remarks>
 public class SettingsEntry<T> : SettingsEntry
 {
-    /// <summary>Label width used by every row. GTK reports unwrapped label text as natural width, so the
-    /// row labels need an explicit width to wrap inside the settings page.</summary>
-    protected const int RowLabelWidth = 1000;
+    /// <summary>DynamicLayout stretches each row's controls to the tab width, so the wrapped labels
+    /// wrap at the column width; no explicit label widths are needed.</summary>
 
     private readonly Func<T?> load;
     private readonly Action<T?> save;
@@ -61,7 +60,6 @@ public class SettingsEntry<T> : SettingsEntry
         {
             Text = this.Name,
             Wrap = WrapMode.Character,
-            Width = RowLabelWidth,
         };
 
         this.input = this.CreateInput();
@@ -80,14 +78,12 @@ public class SettingsEntry<T> : SettingsEntry
             Text = this.Description,
             TextColor = EtoColors.Grey3,
             Wrap = WrapMode.Character,
-            Width = RowLabelWidth,
         };
 
         this.validityLabel = new Label
         {
             TextColor = EtoColors.Red,
             Wrap = WrapMode.Character,
-            Width = RowLabelWidth,
             Visible = false,
         };
 
@@ -95,22 +91,21 @@ public class SettingsEntry<T> : SettingsEntry
         {
             TextColor = EtoColors.Red,
             Wrap = WrapMode.Character,
-            Width = RowLabelWidth,
             Visible = false,
         };
 
-        this.Content = new StackLayout
+        var rowLayout = new DynamicLayout
         {
-            Spacing = 5,
-            Items =
-            {
-                this.nameLabel,
-                this.input,
-                this.descriptionLabel,
-                this.validityLabel,
-                this.warningLabel,
-            },
+            Spacing = new Size(5, 5),
         };
+
+        rowLayout.Add(this.nameLabel);
+        rowLayout.Add(this.input);
+        rowLayout.Add(this.descriptionLabel);
+        rowLayout.Add(this.validityLabel);
+        rowLayout.Add(this.warningLabel);
+
+        this.Content = rowLayout;
     }
 
     /// <summary>Creates the input control for the value type, plus the delegate that pushes a loaded
@@ -121,7 +116,7 @@ public class SettingsEntry<T> : SettingsEntry
 
         if (type == typeof(DirectoryInfo))
         {
-            var textBox = new TextBox { MaxLength = 10000, Width = RowLabelWidth };
+            var textBox = new TextBox { MaxLength = 10000 };
 
             textBox.TextChanged += (_, _) =>
             {
@@ -136,7 +131,7 @@ public class SettingsEntry<T> : SettingsEntry
 
         if (type == typeof(string))
         {
-            var textBox = new TextBox { MaxLength = 1000, Width = RowLabelWidth };
+            var textBox = new TextBox { MaxLength = 1000 };
 
             textBox.TextChanged += (_, _) =>
             {

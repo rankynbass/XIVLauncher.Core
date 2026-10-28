@@ -45,7 +45,13 @@ public class SettingsTabDebug : SettingsTab
         new Label { Text = "Running as a Flatpak" },
 #endif
         new Label { Text = "Environment Information", TextColor = EtoColors.Grey3 },
-        SettingsTab.WrapScrollable(this.envVarsTable),
+        new Scrollable
+        {
+            Content = this.envVarsTable,
+            Border = BorderType.None,
+            ExpandContentHeight = true,
+            ExpandContentWidth = false,
+        },
     ];
 
     protected override void RefreshDynamic()
