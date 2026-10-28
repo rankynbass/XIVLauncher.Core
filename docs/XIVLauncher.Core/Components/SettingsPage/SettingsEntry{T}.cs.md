@@ -1,6 +1,6 @@
 # SettingsEntry{T}.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsEntry{T}.cs` · 235 lines · 7,312 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsEntry{T}.cs` · 272 lines · 8,514 bytes
 
 ## Purpose
 
@@ -12,61 +12,66 @@ typeable rows (text, numeric, drop-down, check) reachable from the label as well
 
 ## Declaration
 
-`public class SettingsEntry<T> : SettingsEntry` (line 23), namespace `XIVLauncher.Core.Components.SettingsPage`.
+`public class SettingsEntry<T> : SettingsEntry` (line 26), namespace `XIVLauncher.Core.Components.SettingsPage`.
 
 ## Members
 
 | Member | Line | Notes |
 | --- | --- | --- |
-| label-width comment | 25-26 | doc comment: `DynamicLayout` stretches each row's controls to the tab width, so wrapped labels wrap at the column width; no explicit label widths are needed (the old `RowLabelWidth = 1000` const is gone) |
-| `load` | 28 | `Func<T?>` supplied by the tab; reads the config value. |
-| `save` | 29 | `Action<T?>` supplied by the tab; writes the config value. |
-| `applyValue` | 30 | `Action`, defaults to no-op; pushes the current `InternalValue` into the input control. Subclasses replace it in `CreateInput()`. |
-| `nameLabel` | 32, 59-63 | Label with the setting name, `WrapMode.Character`, no explicit width (stretched by the row layout). Primary mouse clicks focus `input` (67-74). Hidden for `bool` rows (line 152). |
-| `input` | 33, 65 | The control created by `CreateInput()`. Focus target for `nameLabel` clicks. |
-| `descriptionLabel` | 34, 76-81 | Grey (`EtoColors.Grey3`) description, wraps. |
-| `validityLabel` | 35, 83-88 | Red (`EtoColors.Red`), wraps, starts hidden. |
-| `warningLabel` | 36, 90-95 | Red, wraps, starts hidden. |
-| `Content` | 97-108 | `DynamicLayout` with `Spacing = new Size(5, 5)` (97-100), name, input, description, validity, warning added in order (102-106), `this.Content = rowLayout` (108). |
-| `Name` | 38 | Set once in the constructor. |
-| `Description` | 40 | Set once in the constructor. |
-| `CheckValidity` | 42 | `Func<T?, string?>?`, init-only; `null` message means valid. |
-| `CheckWarning` | 44 | `Func<T?, string?>?`, init-only; non-null message shows the warning. |
-| `CheckVisibility` | 46 | `Func<bool>?`, init-only. |
-| `IsVisible` | 48 | `CheckVisibility?.Invoke() ?? true`; evaluated on every read, never cached. |
-| `Value` | 50 | `InternalValue == default ? default : (T)InternalValue`. |
-| Constructor | 52-109 | Stores delegates and name/description, builds labels, calls `CreateInput()`, wires `nameLabel.MouseDown`, assembles the row layout. |
+| label-width comment | 28-29 | doc comment: `DynamicLayout` stretches each row's controls to the tab width, so wrapped labels wrap at the column width; no explicit label widths are needed (the old `RowLabelWidth = 1000` const is gone) |
+| `load` | 31 | `Func<T?>` supplied by the tab; reads the config value. |
+| `save` | 32 | `Action<T?>` supplied by the tab; writes the config value. |
+| `applyValue` | 33 | `Action`, defaults to no-op; pushes the current `InternalValue` into the input control. Subclasses replace it in `CreateInput()`. |
+| `nameLabel` | 35, 62-66 | Label with the setting name, `WrapMode.Character`, no explicit width (stretched by the row layout). Primary mouse clicks focus `input` (70-77). Hidden for `bool` rows (line 168). |
+| `input` | 36, 68 | The control created by `CreateInput()`. Focus target for `nameLabel` clicks. |
+| `descriptionLabel` | 37, 79-84 | Grey (`EtoColors.Grey3`) description, wraps. |
+| `validityLabel` | 38, 86-91 | Red (`EtoColors.Red`), wraps, starts hidden. |
+| `warningLabel` | 39, 93-98 | Red, wraps, starts hidden. |
+| `Content` | 100-111 | `DynamicLayout` with `Spacing = new Size(5, 5)` (100-103), name, input, description, validity, warning added in order (105-109), `this.Content = rowLayout` (111). |
+| `Name` | 41 | Set once in the constructor. |
+| `Description` | 43 | Set once in the constructor. |
+| `CheckValidity` | 45 | `Func<T?, string?>?`, init-only; `null` message means valid. |
+| `CheckWarning` | 47 | `Func<T?, string?>?`, init-only; non-null message shows the warning. |
+| `CheckVisibility` | 49 | `Func<bool>?`, init-only. |
+| `IsVisible` | 51 | `CheckVisibility?.Invoke() ?? true`; evaluated on every read, never cached. |
+| `Value` | 53 | `InternalValue == default ? default : (T)InternalValue`. |
+| Constructor | 55-112 | Stores delegates and name/description, builds labels, calls `CreateInput()`, wires `nameLabel.MouseDown`, assembles the row layout. |
 
-## Control factories (`CreateInput()`, 113-200)
+## Control factories (`CreateInput()`, 116-237)
 
-- `typeof(T) == typeof(DirectoryInfo)` (117-130): `TextBox` with `MaxLength = 10000`, no explicit width (the row layout stretches it).
-  `TextChanged` stores `new DirectoryInfo(text)` when non-empty, `null` when empty, then `UpdateState()`.
-  `applyValue` writes `FullName` (or empty string).
-- `typeof(T) == typeof(string)` (132-145): `TextBox` with `MaxLength = 1000`, no explicit width.
+- `typeof(T) == typeof(DirectoryInfo)` (120-166): `FilePicker` with `FileAction = FileAction.SelectFolder`
+  (line 126), a native folder chooser (GtkFileChooserAction.SelectFolders on GTK, Vista folder dialog on
+  WinForms). A grey `pathLabel` (130-134) mirrors the full path as `Path: <path>` below the chooser
+  button, which shows only the folder's name and is not editable on GTK; `ShowPath` (136-140) sets its text
+  and hides it when empty.
+  `FilePathChanged` (142-151) shows the path, stores `new DirectoryInfo(path)` when non-empty, `null` when
+  empty, then `UpdateState()`. `applyValue` (155-160) seeds `FilePath` with `FullName` and mirrors it. The
+  picker and label are stacked in a `DynamicLayout` with `Spacing = new Size(0, 2)` (162-164).
+- `typeof(T) == typeof(string)` (169-182): `TextBox` with `MaxLength = 1000`, no explicit width.
   `TextChanged` stores the text, then `UpdateState()`. `applyValue` writes the string.
-- `typeof(T) == typeof(bool)` (147-163): `CheckBox` whose `Text` is the setting name, so the separate
+- `typeof(T) == typeof(bool)` (184-200): `CheckBox` whose `Text` is the setting name, so the separate
   `nameLabel` is hidden. `CheckedChanged` stores the bool, then `UpdateState()`. `applyValue` writes
   `Checked`.
-- `type.IsEnum` (165-197): `DropDown`. `Enum.GetValues(type)` is enumerated; each item's text is
+- `type.IsEnum` (202-234): `DropDown`. `Enum.GetValues(type)` is enumerated; each item's text is
   `FriendlyName + " - " + Description` from `SettingsDescriptionAttribute`
-  (via `XIVLauncher.Common.Util` `GetAttribute`, line 169, with fallback `FriendlyName = enum name,
+  (via `XIVLauncher.Common.Util` `GetAttribute`, line 206, with fallback `FriendlyName = enum name,
   Description = ""`). A `Description` of `""` or `"dummy"` renders no suffix. `SelectedIndexChanged` parses the
   selected item's `Key` (the numeric value string), boxes it with `Enum.ToObject`, stores, `UpdateState()`.
   `applyValue` sets `SelectedIndex` to the enum's int value.
-- Any other `T` throws `InvalidOperationException($"No settings input for {type}")` (line 199).
+- Any other `T` throws `InvalidOperationException($"No settings input for {type}")` (line 236).
 
 ## State updates
 
-`UpdateState()` (202-224):
+`UpdateState()` (239-261):
 - With `CheckValidity`: computes message; `IsValid` is true when the message is null/empty; validity label
   text and visibility update.
 - Without `CheckValidity`: `IsValid = true`, validity label hidden.
 - Warning: `CheckWarning?.Invoke(Value)`; the warning label shows the message when non-null.
 - Finally `RaiseChanged()`, which notifies the settings page.
 
-`LoadValues()` (226-232): `InternalValue = load()`, `applyValue()`, `UpdateState()`.
+`LoadValues()` (263-269): `InternalValue = load()`, `applyValue()`, `UpdateState()`.
 
-`Save()` (234): `save(Value)`.
+`Save()` (271): `save(Value)`.
 
 ## Consumers
 
@@ -88,12 +93,12 @@ event to `UpdateFinishButton` and rebuilds rows on search. Key consumers:
 ## Quirks
 
 - **Virtual `CreateInput()` runs before derived constructors.** The base constructor calls
-  `CreateInput()` (line 65), so derived classes see uninitialised fields. `NumericSettingsEntry` uses this to
+  `CreateInput()` (line 68), so derived classes see uninitialised fields. `NumericSettingsEntry` uses this to
   repair the stepper range in its constructor.
-- **Label clicks focus the input** (`MouseDown`, 67-74) for all typed rows, including the numeric row, text
+- **Label clicks focus the input** (`MouseDown`, 70-77) for all typed rows, including the numeric row, text
   row, enum row, and the hidden-label check row. The handler checks primary button only and marks the event
   handled, so clicking the label should not leave keyboard focus on the default Patch Path control.
-- **`bool` rows hide the name label** (line 152): the `CheckBox` carries the name as `Text`, so the row's
+- **`bool` rows hide the name label** (line 189): the `CheckBox` carries the name as `Text`, so the row's
   name label occupies no space.
 - **`applyValue` fires the input's change handler.** Writing text/checked/selected index raises
   `TextChanged`/`CheckedChanged`/`SelectedIndexChanged`, which re-store the same value and call
@@ -102,14 +107,17 @@ event to `UpdateFinishButton` and rebuilds rows on search. Key consumers:
 - **Enum `applyValue` assumes `SelectedIndex == int value`.** The factory assumes the enum has dense values
   `0..n-1` in the same order as `Enum.GetValues`, so `SelectedIndex` equals the enum's numeric value.
   `ClientLanguage` and `DpiAwareness` satisfy this. A sparse enum (e.g. `[Flags]`) would select the wrong item.
-- **`descriptions[value]` indexes by enum number** (line 176): same dense-enum assumption; an out-of-range
+- **`descriptions[value]` indexes by enum number** (line 213): same dense-enum assumption; an out-of-range
   number throws `IndexOutOfRange` when building items.
 - **`IsVisible` is evaluated on every read.** `CheckVisibility` runs in `SettingsPage`, tab layout, search
   rebuild, finish-button scan; the result is only acted on at rebuild time.
 - **`Value` compares against `default`.** If `InternalValue` is `null`, `Value` returns `default(T)`; for
   reference types `T` this is `null`; for value types the zero value.
-- **`DirectoryInfo` text boxes accept any text, not paths.** Free text is wrapped in `DirectoryInfo`
-  immediately, so a bogus path is stored as the value and reported by `CheckValidity`.
+- **`DirectoryInfo` rows store the picked folder verbatim.** The folder chooser yields a path; it is wrapped
+  in `DirectoryInfo` immediately, so a non-existent folder is stored as the value and reported by
+  `CheckValidity`. The GTK chooser button displays only the folder's name, never the full path, and cannot be
+  typed into; the grey `pathLabel` below the picker mirrors the full path, and typed paths work on Windows
+  (WinForms/WPF text box + Browse) only.
 - **Enum `Key` is a numeric string**, parsed with `int.Parse`; items must always be created in numeric order.
 - **Labels have no explicit width.** The row `DynamicLayout` stretches every control to the tab width, so
   `WrapMode.Character` labels wrap at the column width; labels report no natural width when unwrapped, which

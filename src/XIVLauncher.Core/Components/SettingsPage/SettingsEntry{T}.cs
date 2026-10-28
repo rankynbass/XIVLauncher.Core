@@ -1,3 +1,6 @@
+using System.IO;
+
+using Eto;
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -116,17 +119,51 @@ public class SettingsEntry<T> : SettingsEntry
 
         if (type == typeof(DirectoryInfo))
         {
-            var textBox = new TextBox { MaxLength = 10000 };
+            // Eto 2.13's FilePicker supports FileAction.SelectFolder, which opens a native folder
+            // chooser (GtkFileChooserAction.SelectFolders on GTK, VistaFolderBrowserDialog on WinForms).
+            var picker = new FilePicker();
 
-            textBox.TextChanged += (_, _) =>
+            picker.FileAction = FileAction.SelectFolder;
+
+            // The chooser button only shows the picked folder's name (and is not editable on GTK),
+            // so mirror the full path in a label below the picker.
+            var pathLabel = new Label
             {
-                this.InternalValue = !string.IsNullOrEmpty(textBox.Text) ? new DirectoryInfo(textBox.Text) : null;
+                Wrap = WrapMode.Character,
+                TextColor = EtoColors.Grey3,
+            };
+
+            void ShowPath(string path)
+            {
+                pathLabel.Text = string.IsNullOrEmpty(path) ? string.Empty : "Path: " + path;
+                pathLabel.Visible = !string.IsNullOrEmpty(path);
+            }
+
+            picker.FilePathChanged += (_, _) =>
+            {
+                var path = picker.FilePath;
+
+                ShowPath(path);
+
+                this.InternalValue = string.IsNullOrEmpty(path)
+                    ? null
+                    : new DirectoryInfo(path);
+
                 this.UpdateState();
             };
 
-            this.applyValue = () => textBox.Text = (this.Value as DirectoryInfo)?.FullName ?? string.Empty;
+            this.applyValue = () =>
+            {
+                var dir = this.Value as DirectoryInfo;
+                picker.FilePath = dir?.FullName ?? string.Empty;
+                ShowPath(picker.FilePath);
+            };
 
-            return textBox;
+            var pickerRow = new DynamicLayout { Spacing = new Size(0, 2) };
+            pickerRow.Add(picker);
+            pickerRow.Add(pathLabel);
+
+            return pickerRow;
         }
 
         if (type == typeof(string))
