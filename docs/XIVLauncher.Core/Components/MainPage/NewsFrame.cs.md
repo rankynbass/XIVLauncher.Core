@@ -1,6 +1,6 @@
 # NewsFrame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 248 lines · 9,483 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 248 lines · 9,235 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class NewsFrame : Component`
 **Role:** The news column: rotating headline banner, news list, and topics list, loaded from the game API
 
@@ -26,7 +26,7 @@ Usings: `Eto.Drawing`, `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`), `XI
 | `currentBanner` | `private int` (line 35) | rotation index |
 | `newsLoaded` | `private bool` (line 36) | gate for banner clicks and rotation |
 | `loadingLabel` | `private readonly Label` (line 38) | `Strings.NewsLoading` |
-| `bannerImage` | `private readonly ImageView` (line 39) | `Size(384, 192)`, starts `Visible = false` (lines 57–61) |
+| `bannerImage` | `private readonly ImageView` (line 39) | `Size(576, 288)`, starts `Visible = false` (lines 57–61) |
 | `newsCaptionLabel`, `topicsCaptionLabel` | `private readonly Label` (lines 40–41) | `Strings.NewsCaption` / `Strings.TopicsCaption`, `TextColor = EtoColors.Grey3`, start `Visible = false` (lines 68–80) |
 | `listPanel` | `private readonly Panel` (line 42) | `Width = NEWS_ENTRY_WIDTH` (line 84); `SizeChanged → ApplyNewsEntryWidth` (line 89) |
 | `newsEntries` | `private readonly List<Control>` (line 45) | the entries currently in `listPanel`, re-widthed on resize |
@@ -38,7 +38,7 @@ Usings: `Eto.Drawing`, `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`), `XI
 
 Three mechanisms drive the column geometry:
 
-- `bannerImage.Size = new Size(384, 192)` (line 59) keeps HEAD's fixed banner box; the column around it stretches.
+- `bannerImage.Size = new Size(576, 288)` (line 59) doubles the banner box from ImGui's 384×192; the column around it stretches. The box's natural width floors the news column, so the window cannot shrink below it.
 - `listPanel.Width = NEWS_ENTRY_WIDTH` (line 84) plus per-entry `Width = NEWS_ENTRY_WIDTH` on every label/link (lines 236, 243) give the column a natural width that does not come from an unwrapped title.
 - `listPanel.SizeChanged` (line 89) re-applies `entry.Width = listPanel.Width` for every tracked entry (`ApplyNewsEntryWidth`, lines 201–209), so widths follow the allocation as the window is resized.
 
@@ -94,7 +94,7 @@ Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<Even
 
 ## 8. Banner click
 
-`bannerImage.MouseDown` (lines 62–66): primary button only (`MouseButtons.Primary`), only when `newsLoaded`, opens `bannerList[currentBanner].Link.ToString()` (`AppUtil.OpenBrowser`). `ImageView` on GTK is a `DrawingArea` — mouse events reach it; the image is scaled by `Math.Min(scaleWidth, scaleHeight)` and centered inside the widget, so with `Size(384, 192)` the click target is the whole widget, not the drawn pixels.
+`bannerImage.MouseDown` (lines 62–66): primary button only (`MouseButtons.Primary`), only when `newsLoaded`, opens `bannerList[currentBanner].Link.ToString()` (`AppUtil.OpenBrowser`). `ImageView` on GTK is a `DrawingArea` — mouse events reach it; the image is scaled by `Math.Min(scaleWidth, scaleHeight)` and centered inside the widget, so with `Size(576, 288)` the click target is the whole widget, not the drawn pixels.
 
 ## 9. Consumers
 

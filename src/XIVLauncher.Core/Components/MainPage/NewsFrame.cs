@@ -56,7 +56,7 @@ public class NewsFrame : Component
         // stretches with the window.
         this.bannerImage = new ImageView
         {
-            Size = new Size(384, 192),
+            Size = new Size(576, 288),
             Visible = false,
         };
         this.bannerImage.MouseDown += (_, e) =>
