@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Eto.Drawing;
@@ -68,7 +69,9 @@ public class MainPage : Page
 
         if (savedAccount != null) this.SwitchAccount(savedAccount, false);
 
-        if (PlatformHelpers.IsElevated())
+        // Wine reports every process token as elevated, so the admin warning fires spuriously
+        // there; suppress it under wine (see IsRunningUnderWine at the end of this file).
+        if (!IsRunningUnderWine() && PlatformHelpers.IsElevated())
             App.ShowMessage(Strings.XLElevatedWarning, "XIVLauncher");
 
         // The troubleshooting payload hashes the game files and awaits a network reference fetch with
@@ -1167,5 +1170,30 @@ public class MainPage : Page
         this.App.State = LauncherApp.LauncherState.Main;
 
         Program.ShowWindow();
+    }
+
+    // Wine reports every process as elevated (its default token is admin), so elevation-based
+    // warnings fire spuriously under wine. Detection: wine's ntdll.dll exports wine_get_version,
+    // which native Windows ntdll lacks (EntryPointNotFoundException), and native Linux has no
+    // ntdll at all (DllNotFoundException) — both fall through to false. XL_WINEONLINUX=1 is the opt-in.
+    private static bool IsRunningUnderWine()
+    {
+        if (EnvironmentSettings.IsWine)
+            return true;
+
+        try
+        {
+            return WineNtdll.wine_get_version() != IntPtr.Zero;
+        }
+        catch (Exception e) when (e is EntryPointNotFoundException || e is DllNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    private static class WineNtdll
+    {
+        [DllImport("ntdll.dll")]
+        public static extern IntPtr wine_get_version();
     }
 }
