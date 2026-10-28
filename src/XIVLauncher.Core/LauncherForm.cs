@@ -23,18 +23,27 @@ public class LauncherForm : Form
     {
         this.Title = $"XIVLauncher {version} ({hash})";
         this.ClientSize = new Size(1280, 800);
+        this.MinimumSize = new Size(640, 480);
 
         this.Content = new PixelLayout();
 
         var layout = (PixelLayout)this.Content;
 
-        // The background artwork is added first so the page host paints over it. The window size is
-        // fixed, so the fixed layout can place both children at the full window size.
+        // The background artwork is added first so the page host paints over it. The window is
+        // resizable down to 640x480; the host and background follow the client size in the resize
+        // handler, so the page lays out against the real window width.
         var background = new Background { Size = new Size(1280, 800) };
         layout.Add(background, 0, 0);
 
         this.pageHost.Size = new Size(1280, 800);
         layout.Add(this.pageHost, 0, 0);
+
+        this.SizeChanged += (_, _) =>
+        {
+            var size = this.ClientSize;
+            background.Size = size;
+            this.pageHost.Size = size;
+        };
     }
 
     /// <summary>Hosts the given page, replacing the currently displayed page. UI thread only.</summary>

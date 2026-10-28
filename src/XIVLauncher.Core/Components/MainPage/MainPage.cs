@@ -60,7 +60,7 @@ public class MainPage : Page
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
         this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
 
-        this.Padding = new Padding(32, 32);
+        this.Padding = new Padding(10, 32, 32, 10);
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -76,33 +76,32 @@ public class MainPage : Page
         // on a background thread, as it is in HEAD where no sync context exists.
         Task.Run(Troubleshooting.LogTroubleshooting);
 
-        // The old draw order (news beside login, then the action button row) becomes a table: the login
-        // frame and the news column in one row, the buttons under it.
-        //
-        // Eto 2.13 scales columns with a per-column flag, not a proportion, so the split is expressed
-        // with explicit widths on unscaled columns.
-        var topRow = new TableLayout(2, 1)
-        {
-            Spacing = new Size(16, 0),
-        };
+        // The old draw order (news beside login, then the action button row) becomes a dynamic layout:
+        // a scalable news column with the button row at its bottom edge, and the login column fixed on
+        // the right. DynamicLayout sizes columns independently, and MinimumSize keeps the login column
+        // from collapsing when the window shrinks: news is the lowest priority and shrinks first,
+        // login floors at 200 px.
+        var newsScroll = MakeScrollable(this.newsFrame, 384);
+        var loginScroll = MakeScrollable(this.loginFrame, 400);
 
-        // The login frame keeps its fixed width; the news column scales, so the news list and banner
-        // get the remaining window width instead of being clipped past the right edge.
-        topRow.Add(this.loginFrame, 0, 0, xscale: false, yscale: false);
-        topRow.Add(this.newsFrame, 1, 0, xscale: true, yscale: false);
+        newsScroll.MinimumSize = new Size(240, 0);
+        loginScroll.MinimumSize = new Size(200, 0);
 
-        this.loginFrame.Width = 400;
+        var layout = new DynamicLayout { Spacing = new Size(16, 16) };
 
-        var layout = new TableLayout(1, 2)
-        {
-            Spacing = new Size(0, 16),
-        };
+        layout.BeginHorizontal();
 
-        // HEAD sized the news column to the viewport height, so the columns scale and the button row
-        // stays under them. Scaling the button row instead floats it in the middle of the page.
-        layout.Rows[0].ScaleHeight = true;
-        layout.Add(topRow, 0, 0, xscale: true, yscale: false);
-        layout.Add(this.actionButtons, 0, 1, xscale: false, yscale: true);
+        // News column: the scalable column gets the remaining width; the buttons sit at its bottom
+        // edge, 10 px from the window bottom, on the left.
+        layout.BeginVertical();
+        layout.Add(newsScroll, xscale: true, yscale: true);
+        layout.Add(this.actionButtons, xscale: false, yscale: false);
+        layout.EndVertical();
+
+        // Login column: fixed 400 px, never below 200 px.
+        layout.Add(loginScroll, xscale: false, yscale: true);
+
+        layout.EndHorizontal();
 
         this.Content = layout;
     }
@@ -116,6 +115,41 @@ public class MainPage : Page
     }
 
     public void ReloadNews() => this.newsFrame.ReloadNews();
+
+    /// <summary>Wrap a page column in a scrollable so it scrolls when the window is resized below the
+    /// content size. GTK gets an Eto Scrollable; Eto WinForms' CustomScrollable hangs in a layout loop,
+    /// so Windows wraps the content in a native WinForms Panel with AutoScroll: the content stays a
+    /// direct native child, so Eto's fill semantics never shrink it below the laid-out content.</summary>
+    private Panel MakeScrollable(Panel content, int width)
+    {
+#if LINUX
+        var scroll = new Scrollable { Content = content };
+
+        if (width > 0)
+            scroll.Width = width;
+
+        return scroll;
+#else
+        var outer = new Panel { Content = content };
+
+        // The outer panel must not AutoSize: an AutoSize panel shrinks it to the children-preferred
+        // size, feeding back into the table layout on every resize.
+        var handler = ((Eto.IHandlerSource)outer).Handler;
+
+        var outerNative = (System.Windows.Forms.Panel)handler.GetType()
+            .GetProperty("Control", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(handler)!;
+
+        outerNative.AutoScroll = true;
+        outerNative.AutoSize = false;
+
+        if (width > 0)
+            outer.Width = width;
+
+        return outer;
+#endif
+    }
 
     private void SwitchAccount(XivAccount account, bool saveAsCurrent)
     {
