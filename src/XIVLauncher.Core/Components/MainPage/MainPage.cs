@@ -60,7 +60,9 @@ public class MainPage : Page
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
         this.actionButtons.OnAccountButtonClicked += () => AppUtil.OpenBrowser("https://sqex.to/Msp");
 
-        this.Padding = new Padding(10, 32, 32, 10);
+        // The login column is pinned to the right edge: zero right padding; the news/login gap comes
+        // from the layout Spacing.
+        this.Padding = new Padding(10, 32, 0, 10);
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -82,7 +84,7 @@ public class MainPage : Page
         // from collapsing when the window shrinks: news is the lowest priority and shrinks first,
         // login floors at 200 px.
         var newsScroll = MakeScrollable(this.newsFrame, 384);
-        var loginScroll = MakeScrollable(this.loginFrame, 400);
+        var loginScroll = MakeScrollable(this.loginFrame, 400, 400);
 
         newsScroll.MinimumSize = new Size(240, 0);
         loginScroll.MinimumSize = new Size(200, 0);
@@ -91,14 +93,15 @@ public class MainPage : Page
 
         layout.BeginHorizontal();
 
-        // News column: the scalable column gets the remaining width; the buttons sit at its bottom
-        // edge, 10 px from the window bottom, on the left.
-        layout.BeginVertical();
+        // News column: BeginVertical scales the section cell in the row table, so the news column
+        // absorbs all extra width and the login column stays pinned to the right edge. The buttons
+        // sit at the column's bottom edge, 10 px from the window bottom, on the left.
+        layout.BeginVertical(xscale: true, yscale: true);
         layout.Add(newsScroll, xscale: true, yscale: true);
         layout.Add(this.actionButtons, xscale: false, yscale: false);
         layout.EndVertical();
 
-        // Login column: fixed 400 px, never below 200 px.
+        // Login column: 400 px max, 200 px floor, flush right.
         layout.Add(loginScroll, xscale: false, yscale: true);
 
         layout.EndHorizontal();
@@ -119,8 +122,9 @@ public class MainPage : Page
     /// <summary>Wrap a page column in a scrollable so it scrolls when the window is resized below the
     /// content size. GTK gets an Eto Scrollable; Eto WinForms' CustomScrollable hangs in a layout loop,
     /// so Windows wraps the content in a native WinForms Panel with AutoScroll: the content stays a
-    /// direct native child, so Eto's fill semantics never shrink it below the laid-out content.</summary>
-    private Panel MakeScrollable(Panel content, int width)
+    /// direct native child, so Eto's fill semantics never shrink it below the laid-out content.
+    /// Eto has no MaximumSize, so the max width is applied to the native control.</summary>
+    private Panel MakeScrollable(Panel content, int width, int maxWidth = 0)
     {
 #if LINUX
         var scroll = new Scrollable { Content = content };
@@ -146,6 +150,11 @@ public class MainPage : Page
 
         if (width > 0)
             outer.Width = width;
+
+        // Native MaximumSize is in physical pixels, so reuse the native width the handler applied for
+        // the width parameter — clamping to the logical width requested (maxWidth == width here).
+        if (maxWidth > 0)
+            outerNative.MaximumSize = new System.Drawing.Size(outerNative.Width, 0);
 
         return outer;
 #endif
