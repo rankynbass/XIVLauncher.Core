@@ -1,6 +1,6 @@
 # SettingsPage.cs
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsPage.cs` · 195 lines · 7,208 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsPage.cs` · 244 lines · 8,821 bytes
 
 ## Purpose
 
@@ -27,31 +27,24 @@ Constructor `SettingsPage(LauncherApp app) : base(app)` (line 62).
 - `searchBox.TextChanged` (71–75): stores `searchInput`, calls `RebuildPages()`.
 - `finishButton.Click` (80–88): `Save()` on every tab, then `App.State = LauncherState.Main`.
 - Every entry in every tab is subscribed to `UpdateFinishButton` (90–92) at construction.
-- Windows-only block (lines 94–103): `tabControl.Width = 1000` (line 99) — WinForms `StackLayout` sizes items to their natural width (GTK stretches to full width), so the tab control needs an explicit width matching the rows' `RowLabelWidth`; `Multiline` is set to `true` via reflection on the WinForms `TabControl` control (lines 101–102), because six tab titles overflow a single strip row and Eto exposes no `Multiline` property.
-- Content (105–116): vertical `StackLayout`, `Padding = 10`, spacing 10: search box centered, tab control centered with `Expand = true`, finish button centered.
+- Windows-only block (lines 94–100): `Multiline` is set to `true` via reflection on the WinForms `TabControl` control (lines 98–99), because six tab titles overflow a single strip row and Eto exposes no `Multiline` property. No explicit width is set: `DynamicLayout` stretches the tab control to the layout width (comment lines 96–97).
+- Content (102–126): `pageLayout` is a `DynamicLayout` with `Padding = new Padding(10)`, `Spacing = new Size(10, 10)`. The search row (110–115) and finish row (119–124) each live in their own nested `BeginVertical`/`BeginHorizontal` section — nesting rows directly in one table makes sibling rows share columns, stretching the button to the search box's width (comment 108–109). Each row is `AddSpace(xscale: true)` + `Add(control, xscale: false, yscale: false)`, so the search box (113) and finish button (122) sit at the right edge. The tab control is added expand in both axes (117). `this.Content = pageLayout` (126).
 
 ## Lifecycle
 
-`OnShow()` (118–133): `LoadValues()` on all tabs, clears `searchInput` and `searchBox.Text`,
-`RebuildPages()`, then `base.OnShow()`. Serilog progress logging at lines 120, 128, 130
-(`[settings] OnShow: loading values` / `rebuilding pages` / `pages rebuilt` — this proved the
-settings page opens in ~27 ms on WinForms).
+`OnShow()` (129–143): `LoadValues()` on all tabs (133–134), clears `searchInput` (136) and `searchBox.Text` (137), `RebuildPages()` (140), then `base.OnShow()` (143). Serilog progress logging at lines 131, 139, 141 (`[settings] OnShow: loading values` / `rebuilding pages` / `pages rebuilt` — this proved the settings page opens in ~27 ms on WinForms).
 
-`VisibleTabs()` (135–142): yields a tab if it is not Unix-exclusive, or the OS is Unix.
-`SettingsTabWine` is the Unix-exclusive tab, so non-Unix builds hide it.
+`VisibleTabs()` (146–153): yields a tab if it is not Unix-exclusive, or the OS is Unix (gate line 150). `SettingsTabWine` is the Unix-exclusive tab, so non-Unix builds hide it.
 
-`RebuildPages()` (144–186):
-- Clears `tabControl.Pages`.
-- Empty search: `RefreshEntries()` per visible tab, then add `TabPage { Text = tab.Title, Content = SettingsTab.WrapScrollable(tab) }` (line 154) — `WrapScrollable` returns a `Scrollable` on Linux, a plain `Panel` on Windows (`SettingsTab.cs.md`); per-tab Serilog debug lines 152, 155.
-- Non-empty search: build one results `StackLayout` (spacing 10). For each visible tab, entries whose `Name`
-  contains the trimmed search text (case-insensitive) are re-parented into the results layout, preceded by a
-  grey tab-title label. If nothing matched, a grey `Strings.NoResultsFound` label is added. The results layout
-  goes into `TabPage { Text = Strings.SearchResults, Content = SettingsTab.WrapScrollable(results) }` (line 182).
-- Calls `UpdateFinishButton()` (line 185).
+`RebuildPages()` (155–223):
+- Clears `tabControl.Pages` (157).
+- Empty search: per visible tab, `RefreshEntries()` (164), then `TabPage { Text = tab.Title, Content = new Scrollable { Content = tab, Border = BorderType.None, ExpandContentHeight = true, ExpandContentWidth = false } }` (165–172), `EnableNativeAutoScroll(page)` (176), `Pages.Add(page)` (177); per-tab Serilog debug lines 162, 178.
+- Non-empty search: build one results `DynamicLayout` (spacing `Size(10, 10)`, 183) with `MinimumSize = new Size(500, 500)` (184). For each visible tab, entries whose `Name` contains the trimmed search text (case-insensitive, 189) are re-parented into the results layout, preceded by a grey tab-title label (195), gated on `IsVisible` (199). If nothing matched, a grey `Strings.NoResultsFound` label is added (203). The results go into `TabPage { Text = Strings.SearchResults, Content = new Scrollable { ... } }` (206–214), `EnableNativeAutoScroll(resultPage)` (217), `Pages.Add(resultPage)` (218).
+- Calls `UpdateFinishButton()` (221).
 
-`UpdateFinishButton()` (188–194): `invalid = any visible entry that is not valid` across all tabs
-(visibility is checked, not search inclusion). Sets `finishButton.IsEnabled = !invalid` and swaps the icon
-between `Ban` and `Check`.
+`EnableNativeAutoScroll(page)` (228–234, doc comment 224–227): Windows-only — reads the native WinForms `TabPage` control through reflection and sets `AutoScroll = true`. A `TabPage` is a Panel; AutoScroll shows scrollbars when its content exceeds the page. Eto's `Scrollable` cannot be used as the WinForms scrolling mechanism inside a `TabPage` (its `CustomScrollable` layout loop hangs the UI), so the content's `MinimumSize` floor (500×500, set by the tab layout and results layout) is what triggers the native scrollbars. The Eto `Scrollable` page content (165–172, 206–214) is active on both platforms; this flag complements it on Windows.
+
+`UpdateFinishButton()` (237–243): `invalid = any visible entry that is not valid` across all tabs (239; visibility is checked, not search inclusion). Sets `finishButton.IsEnabled = !invalid` (241) and swaps the icon between `Ban` and `Check` (242).
 
 ## Consumers
 
@@ -77,7 +70,7 @@ Consumes `EtoColors.Grey3` for the grey labels, `Strings.SearchForSettings`, `St
 
 - **Entries are re-parented for search.** `RebuildPages()` moves entry controls into the results panel.
   An entry is a `Panel` (a `SettingsEntry<T>` row), so its whole label+input+description row moves. When the
-  search is cleared, `RefreshEntries()` re-parents each entry into its own tab's fresh `StackLayout`; Eto/GTK
+  search is cleared, `RefreshEntries()` re-parents each entry into its own tab's fresh `DynamicLayout`; Eto/GTK
   reparents widgets, so a row is always attached to exactly one parent.
 - **Search matches names only, visibility checked at build time.** Entries are matched by `Name`, and only
   entries currently reporting `IsVisible` are shown in results. A row that becomes visible later is not added
@@ -89,8 +82,9 @@ Consumes `EtoColors.Grey3` for the grey labels, `Strings.SearchForSettings`, `St
   including tabs hidden by `VisibleTabs()`. A Windows build saving Wine settings, for example, writes them
   to config.
 - **Pages are rebuilt on every search keystroke.** `TextChanged` fires per keystroke, and each rebuild
-  clears all tab pages, calls `RefreshEntries()` (fresh `StackLayout` per tab), and recreates `TabPage` +
-  `WrapScrollable` wrappers. The tab control's selection resets to the first tab as a side effect.
+  clears all tab pages, calls `RefreshEntries()` (fresh `DynamicLayout` per tab), and recreates `TabPage` +
+  `Scrollable` wrappers. The tab control's selection resets to the first tab as a side effect. Serilog
+  debug lines 162, 178 trace the rebuilds.
 - **Search box text is cleared on show.** Leaving settings and re-entering resets `searchInput` and
   `searchBox.Text` before rebuild, so a saved search filter never persists.
 - **Entry `Changed` subscriptions are permanent.** Each entry's `Changed` event is wired to
@@ -100,10 +94,11 @@ Consumes `EtoColors.Grey3` for the grey labels, `Strings.SearchForSettings`, `St
 - **`Common.Button` empty label + icon** renders the glyph as the button text; the finish button has no
   text label.
 - **Tab control content wrappers are recreated each rebuild**: `TabPage.Content` is a fresh
-  `SettingsTab.WrapScrollable` wrapper — a `Scrollable` on Linux, a plain `Panel` on Windows (Eto
-  WinForms' `CustomScrollable` loops forever inside a `TabPage`, so scrolling is not available
-  there; `SettingsTab.cs.md`), so scrolling state (scroll position) is reset on every rebuild.
-- **The Windows tab strip is width-pinned and multiline** (lines 94–103): `Width = 1000` matches
-  the rows' `RowLabelWidth` because WinForms `StackLayout` sizes to natural width, and `Multiline`
-  is set through reflection on the underlying WinForms control — Eto has no `Multiline` property,
-  and six tab titles do not fit one strip row.
+  `Scrollable` wrapper on both platforms (165–172, 206–214), so scrolling state (scroll position) is
+  reset on every rebuild. On Windows the native `AutoScroll` flag (`EnableNativeAutoScroll`, 228) complements
+  it: Eto WinForms' `CustomScrollable` layout loop hangs the UI thread inside a `TabPage`
+  (`SettingsTab.cs.md` §6), so scrolling relies on the native WinForms Panel scrollbar.
+- **The Windows tab strip is multiline** (lines 94–100): `Multiline` is set through reflection on the
+  underlying WinForms control (98–99) — Eto has no `Multiline` property, and six tab titles do not fit one
+  strip row. No explicit width: the `DynamicLayout` stretches the tab control to the layout width, so the
+  strip follows window resize.

@@ -1,6 +1,6 @@
 # SettingsTabGame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabGame.cs` · 80 lines · 3,699 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/Tabs/SettingsTabGame.cs` · 75 lines · 3,686 bytes
 **Namespace:** `XIVLauncher.Core.Components.SettingsPage.Tabs` · **Declaration:** `public class SettingsTabGame : SettingsTab` (line 17)
 **Role:** Game tab — game path, config path, extra arguments, language, DPI, auth toggles, UID-cache reset action
 
@@ -10,7 +10,7 @@
 
 Replaces the immediate-mode game tab, which checked the UID-cache visibility flag every frame. Here the reset section is a panel whose `Visible` flag is recomputed in `RefreshDynamic()`, and each row persists through `Program.Config` on the settings page's Save pass.
 
-Usings: `Eto.Drawing` (`Size`? not used here — `WrapMode`), `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`, `DpiAwareness`, `CoreEnvironmentSettings`), `XIVLauncher.Core.Resources.Localization` (`Strings`).
+Usings: `Eto.Drawing` (`Size` for the reset panel's `DynamicLayout` spacing, `WrapMode`), `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`, `DpiAwareness`, `CoreEnvironmentSettings`), `XIVLauncher.Core.Resources.Localization` (`Strings`).
 
 ## 2. Entries (8 rows, lines 21-54)
 
@@ -29,36 +29,36 @@ Usings: `Eto.Drawing` (`Size`? not used here — `WrapMode`), `Eto.Forms`, `XIVL
 
 ## 3. Reset section
 
-Constructor (58-72):
+Constructor (58-66):
 
 - `var resetUidButton = new Button { Text = Strings.ResetUIDCacheButton }` (60) (`Strings.Designer.cs:582`)
 - `resetUidButton.Click += (_, _) => Program.ResetUIDCache()` (61) → `Program.cs:422` (`launcherApp.UniqueIdCache.Reset()`)
-- `this.resetUidPanel = new StackLayout { Spacing = 10, Items = { new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character }, resetUidButton } }` (63-71) (`Strings.Designer.cs:576`)
+- `var uidLayout = new DynamicLayout { Spacing = new Size(10, 10) }` (63); `uidLayout.Add(new Label { Text = Strings.ResetUIDCacheInfo, Wrap = WrapMode.Character })` (64); `uidLayout.Add(resetUidButton)` (65); `this.resetUidPanel = uidLayout` (66) (`Strings.Designer.cs:576`)
 
-`FooterContent => [this.resetUidPanel]` (74) — the panel and its widgets are created once and reused across rebuilds.
+`FooterContent => [this.resetUidPanel]` (69) — the panel and its widgets are created once and reused across rebuilds.
 
-`RefreshDynamic()` (76-79) sets `this.resetUidPanel.Visible = Program.Config.IsUidCacheEnabled == true` (78). `RefreshDynamic` is called by `SettingsTab.RefreshEntries()` (`SettingsTab.cs.md` §4), i.e. on page show / search rebuild, so the section appears only when the tab layout is rebuilt after the UID-cache checkbox changes.
+`RefreshDynamic()` (71-74) sets `this.resetUidPanel.Visible = Program.Config.IsUidCacheEnabled == true` (73). `RefreshDynamic` is called by `SettingsTab.RefreshEntries()` (`SettingsTab.cs.md` §4), i.e. on page show / search rebuild, so the section appears only when the tab layout is rebuilt after the UID-cache checkbox changes.
 
 ## 4. Consumers
 
 | Consumer | Line(s) | Use |
 | --- | --- | --- |
-| `SettingsPage.tabs` | `SettingsPage.cs:26` | first tab |
-| `MainPage` login | `MainPage.cs:175, 262` | reads `App.Settings.GamePath`, `ClientLanguage` (`Components/MainPage/MainPage.cs.md` §3) |
-| `MainPage` patching | `MainPage.cs:870-875, 943` | `App.Settings.PatchPath`, patch progress |
-| `MainPage` launch | `MainPage.cs:205, 261` | `App.Settings.GamePath`, `IsUidCacheEnabled` |
+| `SettingsPage.tabs` | `SettingsPage.cs:37` | first tab in `BuildTabs()` |
+| `MainPage` login | `MainPage.cs:176, 262` | reads `App.Settings.GamePath` (version check), `ClientLanguage` (`Components/MainPage/MainPage.cs.md` §5) |
+| `MainPage` patching | `MainPage.cs:886-891, 955` | `App.Settings.PatchPath`, patch progress |
+| `MainPage` launch | `MainPage.cs:176-177, 280-281` | `App.Settings.GamePath`, `IsUidCacheEnabled` |
 | `Program` | `Program.cs:39` | `Program.Config` is the `ILauncherConfig` the entries read/write |
 
 `App.Settings` and `Program.Config` are the same object: `LauncherApp.Settings` is `Program.Config` (`LauncherApp.cs:121`).
 
 ## 5. Quirks
 
-- **Persistence is Save-time, not keystroke-time.** The `save` delegate runs only in `SettingsEntry<T>.Save()` (`SettingsEntry{T}.cs:222`), called by the finish button (`SettingsPage.cs:61-63`). Typing in the game-path box updates `InternalValue` and validity labels immediately, but `Program.Config.GamePath` is written only when the user presses Finish.
+- **Persistence is Save-time, not keystroke-time.** The `save` delegate runs only in `SettingsEntry<T>.Save()` (`SettingsEntry{T}.cs:234`), called by the finish button (`SettingsPage.cs:80-88`). Typing in the game-path box updates `InternalValue` and validity labels immediately, but `Program.Config.GamePath` is written only when the user presses Finish.
 - `CheckValidity` for the game path reads `x.Name` (30) after the whitespace guard returns, so a `null` `DirectoryInfo` never reaches it.
-- The config-path row is Unix-only (42); on Windows it never appears in the tab and never appears in search results (`IsVisible` gate at `SettingsPage.cs:136`).
+- The config-path row is Unix-only (42); on Windows it never appears in the tab and never appears in search results (`IsVisible` gate at `SettingsPage.cs:199`).
 - `CoreEnvironmentSettings.IsSteamCompatTool` (lib API, out of docs scope) is evaluated at rebuild time, so launching the launcher under a Steam compat tool and changing env mid-session does not re-show the row.
-- The reset button calls `Program.ResetUIDCache()` with the default `tsbutton: false` (`Program.cs:422`).
-- The footer panel is a `Panel` field typed as `Panel` (19) holding a `StackLayout`; hiding the panel hides both label and button.
+- The reset button calls `Program.ResetUIDCache()` with the default `tsbutton: false` (`Program.cs:475`).
+- The footer panel is a `Panel` field typed as `Panel` (19) holding a `DynamicLayout`; hiding the panel hides both label and button. (`DynamicLayout` is a `Panel` subclass in Eto, so the field type is unchanged.)
 
 ## 6. Cross-references
 

@@ -1,6 +1,6 @@
 # XIVLauncher.Core.csproj — Specification
 
-**File:** `src/XIVLauncher.Core/XIVLauncher.Core.csproj` · 74 lines · 3,262 bytes
+**File:** `src/XIVLauncher.Core/XIVLauncher.Core.csproj` · 162 lines · 7,770 bytes
 **SDK:** `Microsoft.NET.Sdk` · **OutputType:** `Exe` · **TargetFramework:** `net10.0-windows` when `-r win-x64`, `net10.0` otherwise
 **Role:** Build definition of the launcher executable — version pipeline, platform/RID model, resource packaging, native Steam binary deployment, and the Git-metadata injection that the UI reports.
 
@@ -18,7 +18,7 @@ This project file owns six contracts:
    `-r win-x64`, `net10.0` otherwise; the Windows TFM is required by
    `Eto.Platform.Windows`, which targets `net10.0-windows7.0`), self-contained
    single-file publish for `win-x64`/`linux-x64`/`osx-x64`.
-2. **Version identity** — `Version`/`FileVersion`/`AssemblyVersion` at `1.5.0`, plus the
+2. **Version identity** — `Version`/`FileVersion`/`AssemblyVersion` at `1.5.1`, plus the
    `XIVLauncher.VersionGenerator` source generator that materialises
    `AppUtil.VersionInfo`'s constructor.
 3. **Platform model** — `IsWindows`/`IsOSX`/`IsLinux` and the `WIN32`/`OSX`/`LINUX`
@@ -42,7 +42,7 @@ This project file owns six contracts:
 | `Nullable` | `enable` | contrast: `XIVLauncher.Common.Unix` is `disable` |
 | `AllowUnsafeBlocks` | `true` | retained from the SDL era; used for `IntPtr` handle marshalling in `LauncherForm`'s `GApplicationHandle()` reflection |
 | `ApplicationIcon` | `Resources\dalamud_icon.ico` | Win32 resource icon; not an embedded resource |
-| `Version` | `1.5.0` | `FileVersion`/`AssemblyVersion` are `$(Version)` |
+| `Version` | `1.5.1` | `FileVersion`/`AssemblyVersion` are `$(Version)` |
 | `RuntimeIdentifiers` | `win-x64;linux-x64;osx-x64` | applies **only when `-r`/`RuntimeIdentifier` is passed** (condition `'$(RuntimeIdentifier)' != ''`); a plain `dotnet build` restores no RID packs and compiles `net10.0` |
 | `PublishSingleFile` | `true` | |
 | `SelfContained` | `true` | required by `PublishSingleFile` on modern SDKs |
@@ -244,7 +244,7 @@ generated** — the build fails at `new VersionInfo()`, not at compile time of t
 
 ## 8. Version pipeline
 
-`Version`, `FileVersion`, `AssemblyVersion` are all `1.5.0` (`$(Version)`).
+`Version`, `FileVersion`, `AssemblyVersion` are all `1.5.1` (`$(Version)`).
 
 `XIVLauncher.VersionGenerator` (`VersionSourceGenerator.cs`, an `ISourceGenerator`) emits
 `AppUtil.VersionInfo.g.cs` when the `AssemblyVersion` build property is visible:
@@ -256,19 +256,19 @@ public VersionInfo() {
 ```
 
 so the generated ctor is
-`Version = ("XIVLauncher.Core", new Version("1.5.0"))` — `AssemblyName`, not the
+`Version = ("XIVLauncher.Core", new Version("1.5.1"))` — `AssemblyName`, not the
 `Product`/`FileVersion` value. `AppUtil.VersionInfo` (`AppUtil.VersionInfo.cs.md`) is the
 partial half that declares the singleton `Instance()`; `AppUtil.GetAssemblyVersion()`
 returns `VersionInfo.Instance().Version.FileVersion.ToString()`.
 
-Note the interaction: `new Version("1.5.0")` is a 3-part version, so `ToString()` prints
-`1.5.0` (no `.0` revision), and `AssemblyVersion` is what the generator sees — bumping
+Note the interaction: `new Version("1.5.1")` is a 3-part version, so `ToString()` prints
+`1.5.1` (no `.0` revision), and `AssemblyVersion` is what the generator sees — bumping
 `Version` alone moves `AssemblyVersion` too because it is defined as `$(Version)`.
 
 Version appears in the launcher window title (`LauncherForm.cs:24`), the log banner
-(`Program.cs:84`), `SettingsTabAbout.cs:31`
+(`Program.cs:73`), `SettingsTabAbout.cs:28`
 (`XIVLauncher Core v{GetAssemblyVersion()}({GetGitHash()})`),
-`OtpEntryPage.cs:84` (`OtpListener("core-" + GetAssemblyVersion())`) and
+`OtpEntryPage.cs:195` (`OtpListener("core-" + GetAssemblyVersion())`) and
 `Support/Troubleshooting.cs:124`.
 
 ## 9. Git metadata targets
@@ -287,7 +287,7 @@ Runtime readers (`AppUtil.cs.md`):
 
 | Attribute | Reader | Consumers |
 | --- | --- | --- |
-| `GitHash` | `AppUtil.GetGitHash()` | `Program.cs:84` log banner, `SettingsTabAbout.cs:31`, `Support/Troubleshooting.cs:125` (`<unavailable>` fallback) |
+| `GitHash` | `AppUtil.GetGitHash()` | `Program.cs:73` log banner, `SettingsTabAbout.cs:28`, `Support/Troubleshooting.cs:125` (`<unavailable>` fallback) |
 | `BuildOrigin` | `AppUtil.GetBuildOrigin()` | `Support/Troubleshooting.cs:126`: `Official = AppUtil.GetBuildOrigin() == "goatcorp/XIVLauncher.Core"` |
 
 **Contract and consequence:** `BuildOrigin` comes from the `GITHUB_REPOSITORY` **environment
