@@ -105,9 +105,23 @@ public class SettingsPage : Page
             Spacing = new Size(10, 10),
         };
 
-        pageLayout.AddCentered(this.searchBox);
+        // Each row lives in its own nested section: nesting BeginHorizontal directly in one table
+        // makes sibling rows share columns, stretching the button to the search box's width.
+        pageLayout.BeginVertical(xscale: true, yscale: false);
+        pageLayout.BeginHorizontal();
+        pageLayout.AddSpace(xscale: true, yscale: false);
+        pageLayout.Add(this.searchBox, xscale: false, yscale: false);
+        pageLayout.EndHorizontal();
+        pageLayout.EndVertical();
+
         pageLayout.Add(this.tabControl, xscale: true, yscale: true);
-        pageLayout.AddCentered(this.finishButton);
+
+        pageLayout.BeginVertical(xscale: true, yscale: false);
+        pageLayout.BeginHorizontal();
+        pageLayout.AddSpace(xscale: true, yscale: false);
+        pageLayout.Add(this.finishButton, xscale: false, yscale: false);
+        pageLayout.EndHorizontal();
+        pageLayout.EndVertical();
 
         this.Content = pageLayout;
     }
