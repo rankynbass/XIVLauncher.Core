@@ -1,6 +1,6 @@
 # SettingsTab.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsTab.cs` · 74 lines · 2,252 bytes
+**File:** `src/XIVLauncher.Core/Components/SettingsPage/SettingsTab.cs` · 79 lines · 2,392 bytes
 **Namespace:** `XIVLauncher.Core.Components.SettingsPage` · **Declaration:** `public abstract class SettingsTab : Component` (line 16)
 **Role:** Settings tab container — entry list, tab-specific header/footer widgets, and a rebuildable `DynamicLayout` with a 500×500 content floor
 
@@ -10,9 +10,9 @@
 
 Replaces the immediate-mode tab, which drew each visible entry every frame. A tab is an Eto `Panel` (via `Component`, `Components/Component.cs.md`): its entries and header/footer widgets are built once, and the tab rebuilds its layout (`RefreshEntries`) when the settings page shows, so visibility checks (which depend on other settings) run at the same point they used to.
 
-Each rebuild replaces the tab's `Content` with a fresh `DynamicLayout` (line 69) whose `MinimumSize` floor is 500×500 (line 67); scrolling is not the tab's job — the settings page puts each tab inside a `Scrollable` tab page and enables native `AutoScroll` on Windows (see §4, §6).
+Each rebuild replaces the tab's `Content` with a fresh `DynamicLayout` (line 74) whose `MinimumSize` floor is 500×500 (line 72) and whose `Padding` is 10 px on all edges (line 56); scrolling is not the tab's job — the settings page puts each tab inside a `Scrollable` tab page and enables native `AutoScroll` on Windows (see §4, §6).
 
-Using: `System.Runtime.InteropServices` (import left over from the removed `WrapScrollable` gate; `RuntimeInformation` is no longer referenced here), `Eto.Forms` (`DynamicLayout`, `Control`), `Eto.Drawing` (`Size`).
+Using: `System.Runtime.InteropServices` (import left over from the removed `WrapScrollable` gate; `RuntimeInformation` is no longer referenced here), `Eto.Forms` (`DynamicLayout`, `Control`), `Eto.Drawing` (`Size`, `Padding`).
 
 ## 2. Surface
 
@@ -25,8 +25,8 @@ Using: `System.Runtime.InteropServices` (import left over from the removed `Wrap
 | `FooterContent` | `protected virtual List<Control>` | 28 | widgets below entries; default empty |
 | `LoadValues()` | `public` | 30-36 | calls `LoadValues()` on every entry (line 34) |
 | `Save()` | `public virtual` | 38-44 | calls `Save()` on every entry (line 42) |
-| `RefreshEntries()` | `public` | 47-70 | rebuilds `Content` (see §4) |
-| `RefreshDynamic()` | `protected virtual` | 73 | hook for tab state that depends on other settings; empty base |
+| `RefreshEntries()` | `public` | 47-75 | rebuilds `Content` (see §4) |
+| `RefreshDynamic()` | `protected virtual` | 78 | hook for tab state that depends on other settings; empty base |
 
 ## 3. Value load/save flow
 
@@ -34,17 +34,17 @@ Using: `System.Runtime.InteropServices` (import left over from the removed `Wrap
 
 ## 4. `RefreshEntries()`
 
-Order inside `RefreshEntries` (47–70):
+Order inside `RefreshEntries` (47–75):
 
 1. `this.RefreshDynamic()` (49) — tab-specific state refresh first.
-2. `var layout = new DynamicLayout { Spacing = new Size(10, 10) }` (51).
-3. Every `HeaderContent` control → `layout.Add(control)` (53–54).
-4. Every entry with `IsVisible` true → `layout.Add(settingsEntry)` (56–60).
-5. Every `FooterContent` control → `layout.Add(control)` (62–63).
-6. `layout.MinimumSize = new Size(500, 500)` (67; comment 65–66: "drives the Scrollable's vertical scrollbars. Below this size, the tab content scrolls instead of being clipped").
-7. `this.Content = layout` (69).
+2. `var layout = new DynamicLayout { Spacing = new Size(10, 10), Padding = new Padding(10) }` (52–56; comment 51: "10 px edge padding so controls sit clear of the tab borders").
+3. Every `HeaderContent` control → `layout.Add(control)` (58–59).
+4. Every entry with `IsVisible` true → `layout.Add(settingsEntry)` (61–65).
+5. Every `FooterContent` control → `layout.Add(control)` (67–68).
+6. `layout.MinimumSize = new Size(500, 500)` (72; comment 70–71: "drives the Scrollable's vertical scrollbars. Below this size, the tab content scrolls instead of being clipped").
+7. `this.Content = layout` (74).
 
-`DynamicLayout` adds expand by default, so entries and header/footer widgets take the full width; spacing is 10 px both axes. The tab itself never scrolls: the settings page puts the tab inside a `Scrollable` tab page and enables native `AutoScroll` on Windows (`SettingsPage.cs.md` §4/§6). The 500×500 floor is what makes the scrollbars engage in a small window.
+`DynamicLayout` adds expand by default, so entries and header/footer widgets take the full width; spacing is 10 px both axes, and `Padding = new Padding(10)` keeps every control 10 px clear of the tab edges. The tab itself never scrolls: the settings page puts the tab inside a `Scrollable` tab page and enables native `AutoScroll` on Windows (`SettingsPage.cs.md` §4/§6). The 500×500 floor is what makes the scrollbars engage in a small window.
 
 ## 5. Consumers
 

@@ -48,7 +48,12 @@ public abstract class SettingsTab : Component
     {
         this.RefreshDynamic();
 
-        var layout = new DynamicLayout { Spacing = new Size(10, 10) };
+        // 10 px edge padding so controls sit clear of the tab borders.
+        var layout = new DynamicLayout
+        {
+            Spacing = new Size(10, 10),
+            Padding = new Padding(10),
+        };
 
         foreach (var control in this.HeaderContent)
             layout.Add(control);
