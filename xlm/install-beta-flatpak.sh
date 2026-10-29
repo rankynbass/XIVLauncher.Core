@@ -8,13 +8,13 @@ curl -L https://github.com/Blooym/xlm/releases/latest/download/xlm-x86_64-unknow
 
 echo "[Step: 2] Configuring XLM as a Steam Tool using XIVLauncher-RB"
 chmod +x /tmp/xlm
-mkdir -p /tmp/xlm-rb
-/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-web-release-url-base=\"https://github.com/rankynbass/XLCoreTestReleases/releases/download/RB-LatestBeta/\"" --steam-compat-path /tmp/xlm-rb
-sed -i 's/XLCore/XLCore-RB-beta/' /tmp/xlm-rb/XLM/compatibilitytool.vdf
-sed -i 's/"xlm"/"xlm-rb-beta"/' /tmp/xlm-rb/XLM/compatibilitytool.vdf
-sed -i 's/"xlm"/"xlm-rb-beta"/' /tmp/xlm-rb/XLM/toolmanifest.vdf
-mkdir -p ~/.var/app/com.valvesoftware.Steam/.steam/root/compatibilitytools.d/XLM-RB
-mv /tmp/xlm-rb/XLM/* ~/.var/app/com.valvesoftware.Steam/.steam/root/compatibilitytools.d/XLM-RB/
+mkdir -p /tmp/xlm-eto
+/tmp/xlm install-steam-tool --extra-launch-args="--xlcore-web-release-url-base=\"https://github.com/rankynbass/XLCoreTestReleases/releases/download/eto-2.0.0-beta1/\"" --steam-compat-path /tmp/xlm-eto
+sed -i 's/XLCore/XLCore-Eto-beta/' /tmp/xlm-eto/XLM/compatibilitytool.vdf
+sed -i 's/"xlm"/"xlm-eto-beta"/' /tmp/xlm-eto/XLM/compatibilitytool.vdf
+sed -i 's/"xlm"/"xlm-eto-beta"/' /tmp/xlm-eto/XLM/toolmanifest.vdf
+mkdir -p ~/.var/app/com.valvesoftware.Steam/.steam/root/compatibilitytools.d/XLM-Eto-beta
+mv /tmp/xlm-eto/XLM/* ~/.var/app/com.valvesoftware.Steam/.steam/root/compatibilitytools.d/XLM-Eto-beta/
 
 echo "[Step: 3] Cleanup XLM binary"
 rm /tmp/xlm
