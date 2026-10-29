@@ -1,6 +1,6 @@
 # MainPage.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1,199 lines · 49,476 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/MainPage.cs` · 1,199 lines · 49,465 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class MainPage : Page`
 **Role:** The launcher's login → patch → launch → wait-for-game machine plus the main page UI composition
 
@@ -78,12 +78,12 @@ this.Content = DynamicLayout(Spacing 16x16, line 94)
       EndScrollable                                        (104)
       Add(actionButtons, xscale: false, yscale: false)     (105)   <- buttons at column bottom
     EndVertical                                            (106)
-    Add(loginFrame, xscale: false, yscale: true)           (110)   <- login column, Width=240 pinned, flush right
+    Add(loginFrame, xscale: false, yscale: true)           (110)   <- login column, Width=300 pinned, flush right
   EndHorizontal                                            (112)
   this.Content = layout                                    (114)
 ```
 
-Eto `DynamicLayout` scales with boolean flags (`LauncherForm.cs.md` on the resizable window, `MinimumSize = new Size(640, 480)`), so the split is expressed as: the news column section is scaled (`BeginVertical(xscale: true, yscale: true)`, line 98) and takes the remaining width and height, the login column is added `xscale: false` (line 110) with the login frame width-pinned `Width = 240` (line 89), zero right padding (line 66), and MinimumSize floors on both frames (lines 90–91, 200 px each) so the columns cannot overlap at the window minimum.
+Eto `DynamicLayout` scales with boolean flags (`LauncherForm.cs.md` on the resizable window, `MinimumSize = new Size(640, 480)`), so the split is expressed as: the news column section is scaled (`BeginVertical(xscale: true, yscale: true)`, line 98) and takes the remaining width and height, the login column is added `xscale: false` (line 110) with the login frame width-pinned `Width = 300` (line 92), zero right padding (line 66), and MinimumSize floors on both frames (lines 90–91, 200 px each) so the columns cannot overlap at the window minimum (news min 200 + 20 px news padding + 16 px spacing + login 300 = 536 < 640).
 
 The action buttons are added inside the news column's `BeginVertical` below the scrollable news frame with `xscale: false, yscale: false` (line 105), so they keep natural size at the column bottom, 10 px above the window bottom edge. `newsFrame` is wrapped in `BeginScrollable` (lines 99–104) so it can shrink independently; the login column has no scrollable wrapper because DynamicScrollable cells expand to the row size, and a scrollable login frame would cover the news column and the bottom buttons (comment at lines 108–109).
 

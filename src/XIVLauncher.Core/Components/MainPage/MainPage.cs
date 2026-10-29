@@ -85,11 +85,11 @@ public class MainPage : Page
         // a scalable news column with the button row at its bottom edge, and the login column fixed on
         // the right. DynamicLayout sizes columns independently, and MinimumSize keeps the login column
         // from collapsing when the window shrinks: news is the lowest priority and shrinks first,
-        // login floors at 200 px. News min + its 20 px padding + 16 px spacing + login 400 = 636,
-        // exactly the layout width at the window's minimum, so the columns never overlap.
+        // login floors at 200 px. News min + its 20 px padding + 16 px spacing + login width 300 = 536,
+        // under the 640 px window minimum, so the columns never overlap.
         this.newsFrame.MinimumSize = new Size(200, 0);
         this.loginFrame.MinimumSize = new Size(200, 0);
-        this.loginFrame.Width = 240;
+        this.loginFrame.Width = 300;
 
         var layout = new DynamicLayout { Spacing = new Size(16, 16) };
 
@@ -105,7 +105,7 @@ public class MainPage : Page
         layout.Add(this.actionButtons, xscale: false, yscale: false);
         layout.EndVertical();
 
-        // Login column: 240 px fixed, flush right. No scrollable wrapper: the DynamicScrollable cell
+        // Login column: 300 px fixed, flush right. No scrollable wrapper: the DynamicScrollable cell
         // expands with the row and the login frame covers the news column and the bottom buttons.
         layout.Add(this.loginFrame, xscale: false, yscale: true);
 

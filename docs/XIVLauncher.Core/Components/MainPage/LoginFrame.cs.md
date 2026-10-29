@@ -12,13 +12,13 @@ Replaces the immediate-mode login child window. The right-click login-action pop
 
 Usings: `System.Numerics` (`Vector2` input spacing), `Eto.Forms`, `XIVLauncher.Core.Accounts.Secrets.Providers` (`DummySecretProvider` test for the warning label), `XIVLauncher.Core.Resources.Localization`.
 
-Two size constants drive the login column geometry: `LoginInputWidth = 240 - 32` (line 25; each entry fills the 240 px login column, inset 32 px on the left — the right side is flush because the login column is pinned to the window's right edge) and `ExtraButtonSize = 45` (line 28; HEAD's `new Vector2(45) * GlobalScale` caret and account buttons).
+Two size constants drive the login column geometry: `LoginInputWidth = 300 - 32` (line 25; each entry fills the 300 px login column, inset 32 px on the left — the right side is flush because the login column is pinned to the window's right edge) and `ExtraButtonSize = 45` (line 28; HEAD's `new Vector2(45) * GlobalScale` caret and account buttons).
 
 ## 2. Surface
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `LoginInputWidth` | `private const int` (line 25) | 208 = 240 − 32, the login column inner width |
+| `LoginInputWidth` | `private const int` (line 25) | 268 = 300 − 32, the login column inner width |
 | `ExtraButtonSize` | `private const int` (line 28) | 45, HEAD's square caret/account buttons |
 | `mainPage` | `private readonly MainPage` (line 30) | used to reach `AccountSwitcher` |
 | `loginInput`, `passwordInput` | `private readonly Common.Input` (lines 32–33) | `Components/Common/Input.cs.md` |
@@ -50,11 +50,11 @@ All six state properties forward directly to widgets, so every read and write is
 | `loginButton` | `LoginFrame.cs:117` | `Strings.LoginButton`; `Click += TriggerLogin` (line 118); `ContextMenu = loginActionMenu` (line 119) |
 | `caretButton` | `LoginFrame.cs:123-125` | empty label, `Width = ExtraButtonSize, Height = ExtraButtonSize` (45x45), `ShowIcon(FontAwesomeIcon.CaretDown, 14f)`, `Click += () => loginActionMenu.Show(this.loginButton)` |
 | `friendsButton` | `LoginFrame.cs:127-129` | empty label, `Width = ExtraButtonSize, Height = ExtraButtonSize` (45x45), `ShowIcon(FontAwesomeIcon.UserFriends, 14f)`, `Click += () => this.mainPage.AccountSwitcher.Open(this.loginButton)` |
-| `secretsWarningLabel` | `LoginFrame.cs:131-140` | `Strings.NoSecretsProviderWarning`, `TextColor = EtoColors.Red`, `Wrap = WrapMode.Word`, `Width = 240`, `Visible = Program.Secrets is DummySecretProvider` |
+| `secretsWarningLabel` | `LoginFrame.cs:131-140` | `Strings.NoSecretsProviderWarning`, `TextColor = EtoColors.Red`, `Wrap = WrapMode.Word`, `Width = 300`, `Visible = Program.Secrets is DummySecretProvider` |
 
 None of the four checkboxes has an `OnChange` handler: the values are read by `MainPage` when the login action fires (`MainPage.cs:189`, `MainPage.cs:126-133`).
 
-`secretsWarningLabel.Width = 240` is deliberate: without an explicit width, GTK sizes the wrapped label to the message's natural width, and that natural width becomes the login column's width, pushing the news column off-screen (`EtoColors.cs.md`, `Components/LoadingPage/NewsFrame.cs.md` §4 on the same effect). The explicit 240 matches `loginFrame.Width` (`MainPage.cs:89`), and `MinimumSize (200, 0)` (`MainPage.cs:88`) keeps the column from shrinking below 200 px.
+`secretsWarningLabel.Width = 300` is deliberate: without an explicit width, GTK sizes the wrapped label to the message's natural width, and that natural width becomes the login column's width, pushing the news column off-screen (`EtoColors.cs.md`, `Components/LoadingPage/NewsFrame.cs.md` §4 on the same effect). The explicit 300 matches `loginFrame.Width` (`MainPage.cs:92`), and `MinimumSize (200, 0)` (`MainPage.cs:91`) keeps the column from shrinking below 200 px.
 
 ## 4. Login-action menu
 
@@ -88,7 +88,7 @@ The menu is used in three ways: as `loginButton.ContextMenu` (right-click, line 
 9. `secretsWarningLabel` (line 159)
 10. `new StackLayoutItem(new Panel(), VerticalAlignment.Stretch)` (line 163) — an empty expander that takes the leftover column height
 
-The frame's width is set by `MainPage`: `this.loginFrame.Width = 240` with `MinimumSize = new Size(200, 0)` (`MainPage.cs:88-89`), and the page layout adds it as the right column, fixed width (`xscale: false`) stretched vertically (`yscale: true`), pinned to the window's right edge (`MainPage.cs:107`, `MainPage.cs.md` §4). Eto.Gtk's `StackLayout` packs items at the top with no expand flag, so items top-pack; the trailing stretch item absorbs the leftover column height (the news column has the same trailing expander, `Components/MainPage/NewsFrame.cs.md` §5).
+The frame's width is set by `MainPage`: `this.loginFrame.Width = 300` with `MinimumSize = new Size(200, 0)` (`MainPage.cs:91-92`), and the page layout adds it as the right column, fixed width (`xscale: false`) stretched vertically (`yscale: true`), pinned to the window's right edge (`MainPage.cs:110`, `MainPage.cs.md` §4). Eto.Gtk's `StackLayout` packs items at the top with no expand flag, so items top-pack; the trailing stretch item absorbs the leftover column height (the news column has the same trailing expander, `Components/MainPage/NewsFrame.cs.md` §5).
 
 ## 6. Consumers
 
@@ -98,7 +98,7 @@ The frame's width is set by `MainPage`: `this.loginFrame.Width = 240` with `Mini
 | --- | --- |
 | `MainPage.cs:50` | `new LoginFrame(this)` |
 | `MainPage.cs:58` | `this.loginFrame.OnLogin += this.ProcessLogin` |
-| `MainPage.cs:88-89` | `loginFrame.MinimumSize = new Size(200, 0)` + `loginFrame.Width = 240` |
+| `MainPage.cs:91-92` | `loginFrame.MinimumSize = new Size(200, 0)` + `loginFrame.Width = 300` |
 | `MainPage.cs:118` | auto-login gate: `(App.Settings.IsAutologin ?? false) && !IsNullOrEmpty(loginFrame.Username) && !IsNullOrEmpty(loginFrame.Password)` |
 | `MainPage.cs:126-133` | `SwitchAccount` writes `Username`, `IsOtp`, `IsFreeTrial`, `IsSteam`, `IsAutoLogin`, `Password` (password only when `account.SavePassword`) |
 | `MainPage.cs:189` | `App.Settings.IsAutologin = isAutoLogin` (value from the login snapshot, `MainPage.cs:161`) |
