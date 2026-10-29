@@ -57,8 +57,8 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Dotnet Build
-        working-directory: src/XIVLauncher.Core
         run: |
+          cd src/XIVLauncher.Core
           dotnet restore
           dotnet publish -r win-x64 --sc --configuration Release -o ./dist/XIVLauncher.Core-win -p:BuildHash=$(git rev-parse --short HEAD)
 
