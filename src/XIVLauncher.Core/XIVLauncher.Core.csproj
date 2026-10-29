@@ -59,6 +59,10 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10-windows'">
+        <PackageReference Include="Microsoft.WindowsDesktop.App.Ref" Version="10.0.*" ExcludeAssets="runtime" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="../XIVLauncher.VersionGenerator/XIVLauncher.VersionGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\XIVLauncher.Common.Unix\XIVLauncher.Common.Unix.csproj" />
