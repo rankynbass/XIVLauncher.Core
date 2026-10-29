@@ -24,15 +24,19 @@ jobs:
         with:
           dotnet-version: 10.0.x # Set this to be the same as the projects required dotnet version.
 
-      - name: Dotnet Build
+      - name: Dotnet Restore
         working-directory: src/XIVLauncher.Core/
-        run: |
-          dotnet restore
-          dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core -p:BuildHash=$(git rev-parse --short HEAD)
-          dotnet publish -r win-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core-win -p:BuildHash=$(git rev-parse --short HEAD)
+        run: dotnet restore
 
+      - name: Dotnet Build (Linux)
+        working-directory: src/XIVLauncher.Core/
+        run: dotnet publish -r linux-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core -p:BuildHash=$(git rev-parse --short HEAD)
 
-      - name: Make tarball
+      - name: Dotnet Build (Windows)
+        working-directory: src/XIVLauncher.Core/
+        run: dotnet publish -r win-x64 --sc --configuration Release --no-restore -o ./dist/XIVLauncher.Core-win -p:BuildHash=$(git rev-parse --short HEAD)
+
+      - name: Compress files
         run: |
           cp README.md LICENSE src/XIVLauncher.Core/dist/XIVLauncher.Core/
           cp README.md LICENSE src/XIVLauncher.Core/dist/XIVLauncer.Core-win/
