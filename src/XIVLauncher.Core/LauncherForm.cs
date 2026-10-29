@@ -24,6 +24,8 @@ public class LauncherForm : Form
         this.Title = $"XIVLauncher {version} ({hash})";
         this.ClientSize = new Size(1280, 800);
         this.MinimumSize = new Size(640, 480);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            this.BackgroundColor = EtoColors.Background;
 
         this.Content = new PixelLayout();
 

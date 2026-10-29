@@ -32,6 +32,9 @@ public static class EtoColors
     public static Color BlueShade2 { get; } = From(0.2705882352941176f, 0.3019607843137255f, 0.3725490196078431f);
     public static Color BlueShade3 { get; } = From(0.2980392156862745f, 0.3843137254901961f, 0.5803921568627451f);
 
+    /// <summary>Launcher window background (Linux).</summary>
+    public static Color Background { get; } = Color.FromArgb(38, 42, 50);
+
     public static Color Text { get; } = From(0.7843137254901961f, 0.796078431372549f, 0.8196078431372549f);
 
     /// <summary>The OTP child box: the previous window background (0.06 grey) at 40% alpha.</summary>

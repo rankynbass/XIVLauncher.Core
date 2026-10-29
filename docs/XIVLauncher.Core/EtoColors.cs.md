@@ -1,6 +1,6 @@
 # EtoColors.cs — Specification
 
-**File:** `src/XIVLauncher.Core/EtoColors.cs` · 46 lines · 2404 bytes
+**File:** `src/XIVLauncher.Core/EtoColors.cs` · 49 lines · 2542 bytes
 **TargetFramework:** net10.0 (Linux/GTK3 build)
 **Role:** the launcher palette as Eto `Color` values, kept from the old ImGui style; the replacement for
 `imgui.net` style colors (`ImGuiColors.cs`, deleted).
@@ -15,7 +15,7 @@ theme; these values are used only where text is explicitly coloured — errors, 
 the spinner, and the OTP tint.
 
 Every color is stored as RGB bytes; `From` converts the old ImGui 0..1 floats with
-`(int)Math.Round(r * 255)` (line 40).
+`(int)Math.Round(r * 255)` (line 48).
 
 Members:
 
@@ -30,6 +30,7 @@ Members:
 | `Violet` | `0.770,0.700,0.965` | unused |
 | `Blue` | launcher button color | spinner color |
 | `BlueShade0..3` | window/frame shades | unused (theme provides them) |
+| `Background` | `Color.FromArgb(38, 42, 50)` | launcher window background (Linux-only, via `LauncherForm`) |
 | `Text` | ImGui text color | unused (theme provides it) |
 | `OtpChildBackground` | `WindowBg` 0.06 grey at 40% alpha | `Color.FromArgb(102, 15, 15, 15)`, alpha = 102/255 ≈ 40%; no longer consumed (GTK renders no alpha) |
 | `OtpChildOpaqueBackground` | the same tint, composited | `Color.FromArgb(28, 28, 28)` — 40% grey(15) over the dark theme window background, drawn as an opaque bitmap fill |
@@ -39,6 +40,7 @@ Members:
 | Consumer | Site | Member |
 | --- | --- | --- |
 | `Components/LoadingPage/LoadingPage.cs` | line 65 | `EtoColors.Blue` — `Spinner` color |
+| `LauncherForm.cs` | lines 27–28 | `EtoColors.Background` — `this.BackgroundColor`, Linux-only via `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` |
 | `Components/MainPage/LoginFrame.cs` | line 122 | `EtoColors.Red` — dummy-secrets warning label |
 | `Components/MainPage/NewsFrame.cs` | lines 63, 70 | `EtoColors.Grey3` — caption labels |
 | `Components/SettingsPage/SettingsEntry{T}.cs` | line 67 (description), lines 73, 80 (validity/warning labels) | `EtoColors.Grey3`, `EtoColors.Red` |
