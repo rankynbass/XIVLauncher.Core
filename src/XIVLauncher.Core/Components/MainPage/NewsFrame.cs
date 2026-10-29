@@ -36,6 +36,7 @@ public class NewsFrame : Component
     private bool newsLoaded;
 
     private readonly Label loadingLabel;
+    private readonly Panel headerSlot;
     private readonly ImageView bannerImage;
     private readonly Label newsCaptionLabel;
     private readonly Label topicsCaptionLabel;
@@ -52,11 +53,15 @@ public class NewsFrame : Component
 
         this.loadingLabel = new Label { Text = Strings.NewsLoading };
 
-        // The banner keeps the fixed box the ImGui version drew it in; the news column around it
-        // stretches with the window.
+        // Single header slot: carries the loading label until news arrives, then its Content is
+        // swapped to the banner, so the label leaves the layout tree entirely.
+        this.headerSlot = new Panel { Content = this.loadingLabel };
+
+        // The banner box matches the source image's natural size (640x250 from the news API),
+        // so it renders at 1:1 with no scaling; the news column around it stretches with the window.
         this.bannerImage = new ImageView
         {
-            Size = new Size(576, 288),
+            Size = new Size(640, 250),
             Visible = false,
         };
         this.bannerImage.MouseDown += (_, e) =>
@@ -90,11 +95,10 @@ public class NewsFrame : Component
 
         this.Content = new StackLayout
         {
-            Spacing = 15,
+            Spacing = 10,
             Items =
             {
-                this.loadingLabel,
-                this.bannerImage,
+                this.headerSlot,
                 this.newsCaptionLabel,
                 this.listPanel,
                 // The news column scales with the window in the page's table. Eto.Gtk packs items at the
@@ -154,7 +158,9 @@ public class NewsFrame : Component
     {
         this.headlines = loadedHeadlines;
 
-        this.loadingLabel.Visible = false;
+        // Component swap: the header slot carried the loading label; it now carries the banner,
+        // so the label is removed from the widget tree, not just hidden.
+        this.headerSlot.Content = this.banners.Length > 0 ? this.bannerImage : null;
 
         if (this.banners.Length > 0)
         {
