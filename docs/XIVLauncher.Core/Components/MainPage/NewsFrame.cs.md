@@ -105,7 +105,7 @@ Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<Even
 | --- | --- | --- |
 | `MainPage` ctor | `MainPage.cs:52` | `new NewsFrame(app)` — construction starts the network fetch and the timer |
 | `MainPage.ReloadNews` | `MainPage.cs:125` | `this.newsFrame.ReloadNews()`, invoked by `LauncherApp` when leaving `LauncherState.Settings` (`LauncherApp.cs.md` §3), so news refreshes after a language change |
-| `MainPage` layout | `MainPage.cs:103` | `layout.Add(this.newsFrame, xscale: true, yscale: true)` inside `BeginScrollable(BorderType.None, new Padding(0, 10, 10, 10), ...)` (`MainPage.cs:102`) — news column scales, top flush with the window |
+| `MainPage` layout | `MainPage.cs:103` | `layout.Add(this.newsFrame, xscale: true, yscale: true)` inside `BeginScrollable(BorderType.None, new Padding(10, 0, 10, 10), ...)` (`MainPage.cs:102`; Eto `Padding` ctor order is left, top, right, bottom) — top padding 0, news column flush with the window top |
 
 `NewsFrame` has no `OnShow()` override, so entering `Main` state never re-fetches news; `MainPage.DoAutoLoginIfApplicable` asserts the state (`MainPage.cs:117`) and is separate from news loading.
 

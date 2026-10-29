@@ -73,7 +73,7 @@ Order matters, because some steps touch the UI thread during app startup (`Progr
 this.Content = DynamicLayout(Spacing 16x16, line 94)
   BeginHorizontal()                                        (96)
     BeginVertical(xscale: true, yscale: true)              (101)   <- news column section
-      BeginScrollable(BorderType.None, Padding (0, 10, 10, 10), xscale/yscale true) (102)
+      BeginScrollable(BorderType.None, Padding (10, 0, 10, 10), xscale/yscale true) (102)
         newsFrame (xscale: true, yscale: true)             (103)
       EndScrollable                                        (104)
       Add(actionButtons, xscale: false, yscale: false)     (105)   <- buttons at column bottom
@@ -85,7 +85,7 @@ this.Content = DynamicLayout(Spacing 16x16, line 94)
 
 Eto `DynamicLayout` scales with boolean flags (`LauncherForm.cs.md` on the resizable window, `MinimumSize = new Size(640, 480)`), so the split is expressed as: the news column section is scaled (`BeginVertical(xscale: true, yscale: true)`, line 98) and takes the remaining width and height, the login column is added `xscale: false` (line 110) with the login frame width-pinned `Width = 300` (line 92), zero right padding (line 66), and MinimumSize floors on both frames (lines 90–91, 200 px each) so the columns cannot overlap at the window minimum (news min 200 + 20 px news padding + 16 px spacing + login 300 = 536 < 640).
 
-The action buttons are added inside the news column's `BeginVertical` below the scrollable news frame with `xscale: false, yscale: false` (line 105), so they keep natural size at the column bottom, 10 px above the window bottom edge. `newsFrame` is wrapped in `BeginScrollable` (lines 99–104) so it can shrink independently; its padding is `(0, 10, 10, 10)` — top, right, bottom, left (Eto `Padding` uses CSS order) — so the news column is flush with the window top edge, where `NewsFrame`'s header slot puts the loading label and then the banner (`NewsFrame.cs.md` §3). The login column has no scrollable wrapper because DynamicScrollable cells expand to the row size, and a scrollable login frame would cover the news column and the bottom buttons (comment at lines 108–109).
+The action buttons are added inside the news column's `BeginVertical` below the scrollable news frame with `xscale: false, yscale: false` (line 105), so they keep natural size at the column bottom, 10 px above the window bottom edge. `newsFrame` is wrapped in `BeginScrollable` (lines 99–104) so it can shrink independently; its padding is `(10, 0, 10, 10)` — **Eto `Padding` ctor order is (left, top, right, bottom)** (`pages.picoe.ca` Padding ctor docs) — so top is 0, the news column is flush with the window top edge, where `NewsFrame`'s header slot puts the loading label and then the banner (`NewsFrame.cs.md` §3), and the column keeps 10 px on left, right, bottom. The login column has no scrollable wrapper because DynamicScrollable cells expand to the row size, and a scrollable login frame would cover the news column and the bottom buttons (comment at lines 108–109).
 
 > **Line-number note:** all line references in this document are verified against the current working tree (1,199 lines). Baseline commit ccc1ca9 (1,167 lines) → HEAD → working tree: ctor layout rewrite 84–110 → 94–116, login snapshot 145–208 → 152–215, Login 213, TryLoginToGame 258, TryProcessLoginResult 298, StartGameAndAddon 573, patching 885+, repair 1053+, Hide/Reactivate 1162/1167; the wine elevation gate (72–75) adds +3 above it, and the `IsRunningUnderWine` helper (1179–1198) adds +28 at the tail.
 
