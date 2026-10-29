@@ -31,7 +31,12 @@ public static class AppFonts
     private static FontFamily? iconFamily;
     private static float size = 21f;
 
-    /// <summary>Registers the embedded fonts. Call once on the UI thread before building UI.</summary>
+    /// <summary>The launcher-wide default text size: every control that carries no explicit font
+    /// draws with the embedded Noto font at this size.</summary>
+    private const float DEFAULT_TEXT_SIZE = 11f;
+
+    /// <summary>Registers the embedded fonts, then replaces the platform default font with the
+    /// embedded Noto font. Call once on the UI thread before building UI.</summary>
     public static void Initialize(float pxSize)
     {
         size = pxSize;
@@ -42,6 +47,40 @@ public static class AppFonts
 #else
         textFamily = RegisterWindowsFont(TEXT_FONT_NAME, TEXT_FAMILY_NAME);
         iconFamily = RegisterWindowsFont(ICON_FONT_NAME, ICON_FAMILY_NAME);
+#endif
+        ApplyDefaultTextFont();
+    }
+
+    /// <summary>Replaces the platform default font with the embedded Noto font at 11pt. Runs on the
+    /// UI thread before any control is created, so every font-less control picks up the new default.</summary>
+    private static void ApplyDefaultTextFont()
+    {
+#if LINUX
+        // The gtk-font-name setting drives the default font of every widget Eto does not give an
+        // explicit font; the family is fontconfig-visible because FontFamily.FromStreams added the
+        // file through FcConfigAppFontAddFile (Eto.Gtk FontTypefaceHandler).
+        var settingsType = Type.GetType("Gtk.Settings, GtkSharp")!;
+        var settings = settingsType.GetProperty("Default")!.GetValue(null)!;
+        settingsType.GetProperty("FontName")!.SetValue(settings, $"Noto Sans CJK JP {DEFAULT_TEXT_SIZE}");
+#else
+        // WinForms Control.DefaultFont drives every control created after this point; Eto's WinForms
+        // handlers leave a control's font at the default until one is set explicitly. Types are read
+        // through reflection: the project references Eto.WinForms, not System.Windows.Forms directly.
+        var appType = Type.GetType("System.Windows.Forms.Application, System.Windows.Forms")!;
+        var familyType = Type.GetType("System.Drawing.FontFamily, System.Drawing.Common")!;
+        var styleType = Type.GetType("System.Drawing.FontStyle, System.Drawing.Common")!;
+        var unitType = Type.GetType("System.Drawing.GraphicsUnit, System.Drawing.Common")!;
+        try
+        {
+            var family = Activator.CreateInstance(familyType, TEXT_FAMILY_NAME)!;
+            // FontStyle.Regular = 0, GraphicsUnit.Point = 3.
+            appType.GetMethod("SetDefaultFont", new[] { familyType, typeof(float), styleType, unitType })!
+                .Invoke(null, new object[] { family, DEFAULT_TEXT_SIZE, Enum.GetValues(styleType).GetValue(0), Enum.GetValues(unitType).GetValue(3) });
+        }
+        catch (Exception e)
+        {
+            Log.Warning("SetDefaultFont failed for {Family}: {Message}", TEXT_FAMILY_NAME, e.Message);
+        }
 #endif
     }
 

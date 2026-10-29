@@ -24,7 +24,7 @@ Members:
 | `Red` | `1,0,0` | errors, destructive labels |
 | `Grey`, `Grey2` | `0.7,0.7,0.7` | duplicate values, both kept |
 | `Grey3` | `0.5,0.5,0.5` | section headers, captions |
-| `White` | `1,1,1` | unused |
+| `White` | `1,1,1` | news entry titles on Linux (`NewsFrame.cs` lines 247–248) |
 | `Orange` | `1,0.709,0` | unused |
 | `Yellow` | `1,1,0.4` | unused |
 | `Violet` | `0.770,0.700,0.965` | unused |
@@ -43,6 +43,8 @@ Members:
 | `LauncherForm.cs` | lines 27–28 | `EtoColors.Background` — `this.BackgroundColor`, Linux-only via `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` |
 | `Components/MainPage/LoginFrame.cs` | line 122 | `EtoColors.Red` — dummy-secrets warning label |
 | `Components/MainPage/NewsFrame.cs` | lines 63, 70 | `EtoColors.Grey3` — caption labels |
+| `Components/MainPage/NewsFrame.cs` | lines 247–248 | `EtoColors.White` — news entry titles, Linux-only via `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` |
+| `Components/MainPage/NewsFrame.cs` | line 253 | `EtoColors.Grey3` — news entry hover highlight background (`MouseEnter`/`MouseLeave` on entries with URLs) |
 | `Components/SettingsPage/SettingsEntry{T}.cs` | line 67 (description), lines 73, 80 (validity/warning labels) | `EtoColors.Grey3`, `EtoColors.Red` |
 | `Components/SettingsPage/SettingsPage.cs` | lines 133, 141 | `EtoColors.Grey3` — search results headers / no-results label |
 | `Components/SettingsPage/Tabs/SettingsTabTroubleshooting.cs` | lines 61, 90, 99, 103, 136 (`Grey3`), line 107 (`Red`) | header/explanation labels, destructive warning |
@@ -51,7 +53,7 @@ Members:
 
 ## 3. Quirks
 
-- The unused members (`White`, `Orange`, `Yellow`, `Violet`, `BlueShade0..3`, `Text`, `Grey`) exist
+- The unused members (`Orange`, `Yellow`, `Violet`, `BlueShade0..3`, `Text`, `Grey`) exist
   only to keep the palette values from the deleted `ImGuiColors.cs` retrievable; the active theme,
   not these, paints native widgets, so removing them does not change rendering.
 - `Grey2` duplicates `Grey`; the old style stored them as separate fields.

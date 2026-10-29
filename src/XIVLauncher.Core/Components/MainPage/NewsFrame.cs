@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -234,21 +236,23 @@ public class NewsFrame : Component
 
     private static Control NewsEntry(News newsEntry)
     {
-        if (string.IsNullOrEmpty(newsEntry.Url))
-            return new Label
-            {
-                Text = newsEntry.Title,
-                Wrap = WrapMode.Word,
-                Width = NEWS_ENTRY_WIDTH,
-            };
-
-        var link = new LinkButton
+        // A plain Label, not a LinkButton: GTK draws link-button text as underlined markup, and the
+        // underline cannot be removed from Eto. MouseDown keeps the click-to-open behaviour.
+        var label = new Label
         {
             Text = newsEntry.Title,
             Wrap = WrapMode.Word,
             Width = NEWS_ENTRY_WIDTH,
         };
-        link.Click += (_, _) => AppUtil.OpenBrowser(newsEntry.Url);
-        return link;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            label.TextColor = EtoColors.White;
+        if (!string.IsNullOrEmpty(newsEntry.Url))
+        {
+            var normalBackground = label.BackgroundColor;
+            label.MouseDown += (_, e) => { if (e.Buttons == MouseButtons.Primary) AppUtil.OpenBrowser(newsEntry.Url); };
+            label.MouseEnter += (_, _) => label.BackgroundColor = EtoColors.Grey3;
+            label.MouseLeave += (_, _) => label.BackgroundColor = normalBackground;
+        }
+        return label;
     }
 }

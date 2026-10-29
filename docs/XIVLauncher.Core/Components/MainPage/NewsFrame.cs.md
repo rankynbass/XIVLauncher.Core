@@ -1,6 +1,6 @@
 # NewsFrame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 254 lines · 9,759 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/NewsFrame.cs` · 258 lines · 10,220 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class NewsFrame : Component`
 **Role:** The news column: rotating headline banner, news list, and topics list, loaded from the game API
 
@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Replaces the immediate-mode news child window. The banner rotates on a `UITimer` (a `System.Threading.Timer` cannot touch widgets, so the old pattern needed a redraw-flag; here the timer runs on the UI thread and sets `ImageView.Image` directly), and clickable news entries become Eto `LinkButton`s, keeping the "title opens the news page" behaviour.
+Replaces the immediate-mode news child window. The banner rotates on a `UITimer` (a `System.Threading.Timer` cannot touch widgets, so the old pattern needed a redraw-flag; here the timer runs on the UI thread and sets `ImageView.Image` directly), and clickable news entries are `Label`s whose `MouseDown` opens the news page, keeping the "title opens the news page" behaviour.
 
 Usings: `Eto.Drawing`, `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`), `XIVLauncher.Common.Game` (`Headlines`, `Banner`, `News`), `XIVLauncher.Core.Resources.Localization`.
 
@@ -16,36 +16,36 @@ Usings: `Eto.Drawing`, `Eto.Forms`, `XIVLauncher.Common` (`ClientLanguage`), `XI
 
 | Member | Kind | Notes |
 | --- | --- | --- |
-| `BANNER_TIME` | `private const int = 8000` (line 20) | banner rotation period in ms; the timer interval is `BANNER_TIME / 1000.0` = 8 s (line 107) |
-| `NEWS_ENTRY_WIDTH` | `private const int = 780` (line 23) | initial title width: 800 px column minus 20 px gutter |
-| `NEWS_ENTRY_MAX_WIDTH_CHARS` | `private const int = 10` (line 28) | GTK cap on a wrapped label's natural width, so GTK allocates the column width to the label |
-| `app` | `private readonly LauncherApp` (line 30) | used for `Launcher` and `Settings.ClientLanguage` |
-| `bannerList` | `private IReadOnlyList<Banner>` (line 32) | banner metadata (link URLs), starts as an empty list |
-| `banners` | `private Bitmap[]` (line 33) | decoded banner bitmaps, starts empty |
-| `headlines` | `private Headlines?` (line 34) | last loaded news set |
-| `currentBanner` | `private int` (line 35) | rotation index |
-| `newsLoaded` | `private bool` (line 36) | gate for banner clicks and rotation |
-| `loadingLabel` | `private readonly Label` (line 38) | `Strings.NewsLoading`; lives inside `headerSlot` until news arrives |
-| `headerSlot` | `private readonly Panel` (line 39) | `Content = loadingLabel` (line 58); `ShowNews` swaps its Content to the banner (line 163) |
-| `bannerImage` | `private readonly ImageView` (line 40) | `Size(640, 250)` — the news API's natural banner size, rendered 1:1; starts `Visible = false` (lines 62–66) |
-| `newsCaptionLabel`, `topicsCaptionLabel` | `private readonly Label` (lines 41–42) | `Strings.NewsCaption` / `Strings.TopicsCaption`, `TextColor = EtoColors.Grey3`, start `Visible = false` (lines 73–85) |
-| `listPanel` | `private readonly Panel` (line 43) | `Width = NEWS_ENTRY_WIDTH` (line 89); `SizeChanged → ApplyNewsEntryWidth` (line 94) |
-| `newsEntries` | `private readonly List<Control>` (line 46) | the entries currently in `listPanel`, re-widthed on resize |
-| `bannerTimer` | `private readonly UITimer` (line 48) | interval 8 s, `Elapsed → RotateBanner` (lines 111–112), `Start()` at line 116 |
+| `BANNER_TIME` | `private const int = 8000` (line 22) | banner rotation period in ms; the timer interval is `BANNER_TIME / 1000.0` = 8 s (line 109) |
+| `NEWS_ENTRY_WIDTH` | `private const int = 780` (line 25) | initial title width: 800 px column minus 20 px gutter |
+| `NEWS_ENTRY_MAX_WIDTH_CHARS` | `private const int = 10` (line 30) | GTK cap on a wrapped label's natural width, so GTK allocates the column width to the label |
+| `app` | `private readonly LauncherApp` (line 32) | used for `Launcher` and `Settings.ClientLanguage` |
+| `bannerList` | `private IReadOnlyList<Banner>` (line 34) | banner metadata (link URLs), starts as an empty list |
+| `banners` | `private Bitmap[]` (line 35) | decoded banner bitmaps, starts empty |
+| `headlines` | `private Headlines?` (line 36) | last loaded news set |
+| `currentBanner` | `private int` (line 37) | rotation index |
+| `newsLoaded` | `private bool` (line 38) | gate for banner clicks and rotation |
+| `loadingLabel` | `private readonly Label` (line 40) | `Strings.NewsLoading`; lives inside `headerSlot` until news arrives |
+| `headerSlot` | `private readonly Panel` (line 41) | `Content = loadingLabel` (line 60); `ShowNews` swaps its Content to the banner (line 165) |
+| `bannerImage` | `private readonly ImageView` (line 42) | `Size(640, 250)` — the news API's natural banner size, rendered 1:1; starts `Visible = false` (lines 64–68) |
+| `newsCaptionLabel`, `topicsCaptionLabel` | `private readonly Label` (lines 43–44) | `Strings.NewsCaption` / `Strings.TopicsCaption`, `TextColor = EtoColors.Grey3`, start `Visible = false` (lines 75–87) |
+| `listPanel` | `private readonly Panel` (line 45) | `Width = NEWS_ENTRY_WIDTH` (line 91); `SizeChanged → ApplyNewsEntryWidth` (line 96) |
+| `newsEntries` | `private readonly List<Control>` (line 48) | the entries currently in `listPanel`, re-widthed on resize |
+| `bannerTimer` | `private readonly UITimer` (line 50) | interval 8 s, `Elapsed → RotateBanner` (lines 113–114), `Start()` at line 118 |
 
 ## 3. Layout
 
-`this.Content = new StackLayout { Spacing = 10, Items = { headerSlot, newsCaptionLabel, listPanel, <stretch spacer> } }` (lines 96–109) — vertical stack. `listPanel` sits after the news caption, so both news and topics entries render inside the same panel: `ShowNews` puts the news caption, news entries, topics caption, and topic entries into one `DynamicLayout` and assigns it as the panel content (lines 173–202), i.e. the topics caption appears **inside** the list panel, after the news entries. The outer stack does not include `topicsCaptionLabel`.
+`this.Content = new StackLayout { Spacing = 10, Items = { headerSlot, newsCaptionLabel, listPanel, <stretch spacer> } }` (lines 98–111) — vertical stack. `listPanel` sits after the news caption, so both news and topics entries render inside the same panel: `ShowNews` puts the news caption, news entries, topics caption, and topic entries into one `DynamicLayout` and assigns it as the panel content (lines 175–204), i.e. the topics caption appears **inside** the list panel, after the news entries. The outer stack does not include `topicsCaptionLabel`.
 
 `headerSlot` (lines 56–58) is the single top item: it carries `loadingLabel` until news arrives, then `ShowNews` swaps its Content to the banner (line 163), so the label leaves the widget tree entirely — a component swap, not a hide — and the banner takes the slot's position flush at the column top (the scrollable's top padding is 0, `MainPage.cs.md` §4).
 
 Three mechanisms drive the column geometry:
 
-- `bannerImage.Size = new Size(640, 250)` (line 64) matches the news API's natural banner size (all `lsb_banner` images are 640×250), so the image renders 1:1 with no scaling; the column around it stretches. The box's natural width floors the news column, so the window cannot shrink below it.
-- `listPanel.Width = NEWS_ENTRY_WIDTH` (line 89) plus per-entry `Width = NEWS_ENTRY_WIDTH` on every label/link (lines 242, 249) give the column a natural width that does not come from an unwrapped title.
-- `listPanel.SizeChanged` (line 94) re-applies `entry.Width = listPanel.Width` for every tracked entry (`ApplyNewsEntryWidth`, lines 207–215), so widths follow the allocation as the window is resized.
+- `bannerImage.Size = new Size(640, 250)` (line 66) matches the news API's natural banner size (all `lsb_banner` images are 640×250), so the image renders 1:1 with no scaling; the column around it stretches. The box's natural width floors the news column, so the window cannot shrink below it.
+- `listPanel.Width = NEWS_ENTRY_WIDTH` (line 91) plus per-entry `Width = NEWS_ENTRY_WIDTH` on every label (line 245) give the column a natural width that does not come from an unwrapped title.
+- `listPanel.SizeChanged` (line 96) re-applies `entry.Width = listPanel.Width` for every tracked entry (`ApplyNewsEntryWidth`, lines 209–217), so widths follow the allocation as the window is resized.
 
-GTK reports an unwrapped label's full text width as its natural width, so a label can never be made to wrap at a narrower column. `CapNewsEntryWidth` (lines 220–233) is `#if LINUX`: it sets the native `Gtk.Label.MaxWidthChars` to `NEWS_ENTRY_MAX_WIDTH_CHARS` through the Eto.Gtk handler, which makes GTK allocate the column width to the label. Eto 2.13 has no width-chars property, so the cap reaches GTK via reflection on the handler's internal `Control` property, and a `Gtk.LinkButton`'s text lives in its child label (`link.Children[0]`). The `#else` branch is a no-op: WinForms labels have no width-chars cap, and the entry `Width` set at creation time plus `WrapMode.Word` already keep titles wrapping at the column edge.
+GTK reports an unwrapped label's full text width as its natural width, so a label can never be made to wrap at a narrower column. `CapNewsEntryWidth` (lines 222–235) is `#if LINUX`: it sets the native `Gtk.Label.MaxWidthChars` to `NEWS_ENTRY_MAX_WIDTH_CHARS` through the Eto.Gtk handler, which makes GTK allocate the column width to the label. Eto 2.13 has no width-chars property, so the cap reaches GTK via reflection on the handler's internal `Control` property, and a `Gtk.LinkButton`'s text lives in its child label (`link.Children[0]`). The `#else` branch is a no-op: WinForms labels have no width-chars cap, and the entry `Width` set at creation time plus `WrapMode.Word` already keep titles wrapping at the column edge.
 
 The trailing `new StackLayoutItem(new Panel(), VerticalAlignment.Stretch)` (line 107) takes the leftover column height. Eto.Gtk's `StackLayout` packs items at the top with no expand flag, so this expander is what keeps the page's action button row below the columns (`MainPage.cs.md` §4, `LoginFrame.cs.md` §5).
 
@@ -53,51 +53,52 @@ The cap alone is not enough to make titles re-wrap when the window shrinks: GTK 
 
 ## 4. `ReloadNews()`
 
-`ReloadNews()` (lines 120–146) runs everything inside `Task.Run`, leaving the UI thread:
+`ReloadNews()` (lines 122–148) runs everything inside `Task.Run`, leaving the UI thread:
 
-1. `newsLoaded = false` (line 124)
-2. `Headlines.GetWorlds`, `GetBanners`, `GetMessage`, `GetNews`, each with `this.app.Settings.ClientLanguage ?? ClientLanguage.English` and `ConfigureAwait(false)` (lines 126–130)
-3. `bitmaps = new Bitmap[banners.Count]` (line 132), then per banner: `Program.HttpClient.GetByteArrayAsync(banners[i].LsbBanner)` and `Ui.Run(() => new Bitmap(bannerBytes))` (lines 134–138) — the bitmap is constructed **on the UI thread** through `Ui.Run` (`Ui.cs.md`), because Eto `Bitmap` creation is platform-bound.
-4. `newsLoaded = true`, `bannerList = banners`, `banners = bitmaps` (lines 140–142)
-5. `Ui.Post(() => this.ShowNews(headlines))` (line 144)
+1. `newsLoaded = false` (line 126)
+2. `Headlines.GetWorlds`, `GetBanners`, `GetMessage`, `GetNews`, each with `this.app.Settings.ClientLanguage ?? ClientLanguage.English` and `ConfigureAwait(false)` (lines 128–132)
+3. `bitmaps = new Bitmap[banners.Count]` (line 134), then per banner: `Program.HttpClient.GetByteArrayAsync(banners[i].LsbBanner)` and `Ui.Run(() => new Bitmap(bannerBytes))` (lines 136–140) — the bitmap is constructed **on the UI thread** through `Ui.Run` (`Ui.cs.md`), because Eto `Bitmap` creation is platform-bound.
+4. `newsLoaded = true`, `bannerList = banners`, `banners = bitmaps` (lines 142–144)
+5. `Ui.Post(() => this.ShowNews(headlines))` (line 146)
 
 Consequences:
 
-- `bannerList`/`banners` are written from the background task and read from UI-thread code (`RotateBanner`, banner click), without locks. The rotation timer sees the new arrays as soon as they are assigned; a rotation landing between line 140 and line 142 can read new `banners` against the old `bannerList`, i.e. an index that exists in both lists is fine, and `RotateBanner`'s guard uses `banners.Length` only.
+- `bannerList`/`banners` are written from the background task and read from UI-thread code (`RotateBanner`, banner click), without locks. The rotation timer sees the new arrays as soon as they are assigned; a rotation landing between line 142 and line 144 can read new `banners` against the old `bannerList`, i.e. an index that exists in both lists is fine, and `RotateBanner`'s guard uses `banners.Length` only.
 - The list assignments are reference swaps, so a reader in `RotateBanner` may see the new array while `bannerList` is still the old one, and the banner click uses `bannerList[this.currentBanner].Link` — a rotation during a click can pair a new bitmap index with old banner metadata.
 - A failed fetch (exception inside `Task.Run`) leaves `newsLoaded = false`, the loading label in the header slot, and the `Task`'s exception unobserved: nothing awaits the `Task.Run` result, so the fault is silent in this file.
 
 ## 5. `RotateBanner()`
 
-Lines 148–155: returns when `!newsLoaded` or `banners.Length == 0` (lines 150–151); otherwise `currentBanner = (currentBanner + 1) % banners.Length` (line 153) and `bannerImage.Image = banners[currentBanner]` (line 154). Runs on the UI timer, i.e. UI thread, so widget writes are safe.
+Lines 148–155: returns when `!newsLoaded` or `banners.Length == 0` (lines 152–153); otherwise `currentBanner = (currentBanner + 1) % banners.Length` (line 155) and `bannerImage.Image = banners[currentBanner]` (line 156). Runs on the UI timer, i.e. UI thread, so widget writes are safe.
 
-`ShowNews` also sets `bannerImage.Image` when banners exist (lines 165–169), so the first banner is shown without waiting for a rotation tick, and the timer keeps rotating afterwards.
+`ShowNews` also sets `bannerImage.Image` when banners exist (lines 167–171), so the first banner is shown without waiting for a rotation tick, and the timer keeps rotating afterwards.
 
 ## 6. `ShowNews(Headlines)`
 
 Lines 157–204, executed on the UI thread via `Ui.Post`:
 
-1. `headlines = loadedHeadlines` (line 159); header slot swap: `headerSlot.Content = banners.Length > 0 ? bannerImage : null` (lines 161–163) — the loading label leaves the widget tree
-2. If `banners.Length > 0`: `bannerImage.Visible = true` and `Image = banners[currentBanner]` (lines 165–169)
-3. `layout = new DynamicLayout { Spacing = new Size(0, 5) }` (line 173), `newsEntries.Clear()` (line 174)
-4. If `headlines.News.Length > 0`: show `newsCaptionLabel`, add it, then for each news entry `NewsEntry(newsEntry)` → `CapNewsEntryWidth(entry)` → `newsEntries.Add(entry)` → `layout.Add(entry)` (lines 176–187)
-5. If `headlines.Topics.Length > 0`: same pattern for topic entries (lines 189–200)
-6. `listPanel.Content = layout` (line 202), then `ApplyNewsEntryWidth()` (line 203) — replaces the previous list and widthens the new entries to the current column allocation; old `LinkButton`s are discarded with the panel content.
+1. `headlines = loadedHeadlines` (line 161); header slot swap: `headerSlot.Content = banners.Length > 0 ? bannerImage : null` (lines 163–165) — the loading label leaves the widget tree
+2. If `banners.Length > 0`: `bannerImage.Visible = true` and `Image = banners[currentBanner]` (lines 167–171)
+3. `layout = new DynamicLayout { Spacing = new Size(0, 5) }` (line 175), `newsEntries.Clear()` (line 176)
+4. If `headlines.News.Length > 0`: show `newsCaptionLabel`, add it, then for each news entry `NewsEntry(newsEntry)` → `CapNewsEntryWidth(entry)` → `newsEntries.Add(entry)` → `layout.Add(entry)` (lines 178–189)
+5. If `headlines.Topics.Length > 0`: same pattern for topic entries (lines 191–202)
+6. `listPanel.Content = layout` (line 204), then `ApplyNewsEntryWidth()` (line 205) — replaces the previous list and widthens the new entries to the current column allocation; old entry labels are discarded with the panel content.
 
-Note `.Length` (arrays) is used, not `.Count`: `Headlines.News` and `Headlines.Topics` are `News[]` (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Headlines.cs`), while `banners.Count` (line 132) is a `List<Banner>` count. `Headlines.Pinned` is not read here.
+Note `.Length` (arrays) is used, not `.Count`: `Headlines.News` and `Headlines.Topics` are `News[]` (`lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Headlines.cs`), while `banners.Count` (line 134) is a `List<Banner>` count. `Headlines.Pinned` is not read here.
 
 ## 7. `NewsEntry(News)`
 
-Lines 235–253, static:
+Lines 237–257, static:
 
-- When `newsEntry.Url` is null/empty → plain `Label` with `Wrap = WrapMode.Word`, `Width = NEWS_ENTRY_WIDTH` (lines 238–243).
-- Otherwise → `LinkButton` with the same wrap/width (lines 245–250) and `link.Click += (_, _) => AppUtil.OpenBrowser(newsEntry.Url)` (line 251).
+- Every entry is one plain `Label` (not a `LinkButton`) with `Wrap = WrapMode.Word`, `Width = NEWS_ENTRY_WIDTH` (lines 241–246): GTK renders `LinkButton` text as an underlined markup link, and that underline is not removable through Eto, so `MouseDown` plays the part of the click (comment at lines 239–240).
+- On Linux the entry titles are white: `TextColor = EtoColors.White`, gated by `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` (lines 247–248); on Windows entries keep the theme default.
+- When `newsEntry.Url` is non-empty (lines 249–255): `label.MouseDown` opens the URL on primary button (`MouseButtons.Primary`, line 252), `label.MouseEnter` sets `BackgroundColor = EtoColors.Grey3` (line 253), and `label.MouseLeave` restores the original background captured at line 251 (`Control.BackgroundColor` is non-nullable in Eto 2.13, so `null` cannot reset it). Entries with no URL are plain non-clickable text with no hover highlight.
 
-Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<EventArgs>` so the lambda discards sender/args (`AppUtil.cs.md` documents `OpenBrowser`'s `UseShellExecute` process launch). `CapNewsEntryWidth` is applied by the caller before the entry is added to the layout, so the GTK cap is set before GTK realizes the widget.
+Eto `Label` receives mouse events through the Eto.Gtk `EventBox` wrapper (`LabelHandler` sets `EventControl`/`ContainerControl` to the box, so enter/leave fire on the box and the background paints behind the label); `MouseDown` passes a `MouseButtonEventArgs`, so the handler checks `e.Buttons == MouseButtons.Primary` (`AppUtil.cs.md` documents `OpenBrowser`'s `UseShellExecute` process launch). `CapNewsEntryWidth` is applied by the caller before the entry is added to the layout, so the GTK cap is set before GTK realizes the widget.
 
 ## 8. Banner click
 
-`bannerImage.MouseDown` (lines 67–71): primary button only (`MouseButtons.Primary`), only when `newsLoaded`, opens `bannerList[currentBanner].Link.ToString()` (`AppUtil.OpenBrowser`). `ImageView` on GTK is a `DrawingArea` — mouse events reach it; the image is scaled by `Math.Min(scaleWidth, scaleHeight)` and centered inside the widget. With `Size(640, 250)` equal to the source image size the scale factor is 1, so the drawn pixels fill the widget and the click target is the whole widget.
+`bannerImage.MouseDown` (lines 69–73): primary button only (`MouseButtons.Primary`), only when `newsLoaded`, opens `bannerList[currentBanner].Link.ToString()` (`AppUtil.OpenBrowser`). `ImageView` on GTK is a `DrawingArea` — mouse events reach it; the image is scaled by `Math.Min(scaleWidth, scaleHeight)` and centered inside the widget. With `Size(640, 250)` equal to the source image size the scale factor is 1, so the drawn pixels fill the widget and the click target is the whole widget.
 
 ## 9. Consumers
 
@@ -119,8 +120,8 @@ Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<Even
 
 ## 11. Quirks
 
-- `CapNewsEntryWidth` is `#if LINUX` (lines 222–228): reflection on the internal `Control` property of the Eto.Gtk handler (`handler.GetType().GetProperty("Control", ... | NonPublic)`). `Assembly.Load("Eto.GtkSharp")` fails (`System.IO.FileNotFoundException`: the assembly is `Eto.Gtk`), and `Eto.GtkSharp.GtkControl` is not public API, so reflection is the only way to reach `Gtk.Label.MaxWidthChars`. If Eto's handler internals rename `Control`, the cap silently disappears (the `!`-guarded lookup throws on a null handler). The `#else` (lines 229–232) is a no-op comment; WinForms relies on the entry `Width` + `WrapMode.Word`.
-- `this.topicsCaptionLabel` is added to the `listPanel` layout after the news entries (lines 191–192); the outer stack ends at `listPanel`, so the visible topics caption is the one inside the panel, and the outer trailing caption from HEAD's immediate-mode layout is gone.
+- `CapNewsEntryWidth` is `#if LINUX` (lines 224–230): reflection on the internal `Control` property of the Eto.Gtk handler (`handler.GetType().GetProperty("Control", ... | NonPublic)`). `Assembly.Load("Eto.GtkSharp")` fails (`System.IO.FileNotFoundException`: the assembly is `Eto.Gtk`), and `Eto.GtkSharp.GtkControl` is not public API, so reflection is the only way to reach `Gtk.Label.MaxWidthChars`. If Eto's handler internals rename `Control`, the cap silently disappears (the `!`-guarded lookup throws on a null handler). The `#else` (lines 231–234) is a no-op comment; WinForms relies on the entry `Width` + `WrapMode.Word`.
+- `this.topicsCaptionLabel` is added to the `listPanel` layout after the news entries (lines 193–194); the outer stack ends at `listPanel`, so the visible topics caption is the one inside the panel, and the outer trailing caption from HEAD's immediate-mode layout is gone.
 - The `headerSlot` swap makes the loading label a one-shot widget: it is detached from the panel content on load, so a later `ReloadNews` never re-shows it — the slot then holds the banner, and `ShowNews` swaps `Content` to `null` when a reload yields no banners.
 - `ShowNews` never resets `newsCaptionLabel`/`topicsCaptionLabel` to hidden: once shown, they stay visible even if a later reload has no news.
 - `Ui.Run(() => new Bitmap(bannerBytes))` blocks the background loop for every banner, i.e. N blocking UI-thread round-trips during a reload (`Ui.cs.md`).
@@ -132,5 +133,5 @@ Eto `LinkButton` renders as a clickable text link; `Click` is `EventHandler<Even
 
 ## 12. Referenced / referenced-by
 
-Uses: `Component` (`Component.cs.md`), `LauncherApp` (`LauncherApp.cs.md`), `Headlines`/`Banner`/`News`/`ClientLanguage` (submodule `XIVLauncher.Common` — out of scope for docs), `Program.HttpClient` (`Program.cs.md`), `Ui` (`Ui.cs.md`), `EtoColors.Grey3` (`EtoColors.cs.md`), `AppUtil.OpenBrowser` (`AppUtil.cs.md`), `Strings`, `Eto.Forms.ImageView`/`LinkButton`/`DynamicLayout`/`UITimer`.
+Uses: `Component` (`Component.cs.md`), `LauncherApp` (`LauncherApp.cs.md`), `Headlines`/`Banner`/`News`/`ClientLanguage` (submodule `XIVLauncher.Common` — out of scope for docs), `Program.HttpClient` (`Program.cs.md`), `Ui` (`Ui.cs.md`), `EtoColors.Grey3`/`EtoColors.White` (`EtoColors.cs.md`), `AppUtil.OpenBrowser` (`AppUtil.cs.md`), `Strings`, `System.Runtime.InteropServices.RuntimeInformation`, `Eto.Forms.ImageView`/`Label`/`DynamicLayout`/`UITimer`.
 Referenced by: `MainPage.cs` (lines 41, 52, 90, 103, 125).

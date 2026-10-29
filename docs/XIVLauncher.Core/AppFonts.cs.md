@@ -1,6 +1,6 @@
 # AppFonts.cs — Specification
 
-**File:** `src/XIVLauncher.Core/AppFonts.cs` · 116 lines · 5,715 bytes
+**File:** `src/XIVLauncher.Core/AppFonts.cs` · 155 lines · 8,008 bytes
 **TargetFramework:** conditional per RID (`XIVLauncher.Core.csproj` lines 5–6): `net10.0-windows` on win-x64, `net10.0` on Linux builds
 **Role:** registers the launcher's embedded Noto CJK and Font Awesome fonts with Eto
 (`Eto.Forms`, https://github.com/picoe/Eto); the replacement for the SDL/ImGui `FontManager` (deleted).
@@ -11,21 +11,23 @@
 
 - `Initialize(float pxSize)` — stores the configured size; `#if LINUX` loads `NotoSansCJKjp-Regular.otf`
   and `FontAwesome5FreeSolid.otf` from embedded resources via `FontFamily.FromStreams(OpenResource(...))`,
-  `#else` registers both through `RegisterWindowsFont` (lines 35–46).
+  `#else` registers both through `RegisterWindowsFont` (lines 40–52).
+- `DEFAULT_TEXT_SIZE` = `11f` — the launcher-wide default text size for every control that carries no explicit font (line 36).
+- `ApplyDefaultTextFont()` — called at the end of `Initialize` (line 51), on the UI thread before any control is built. `#if LINUX` (lines 58–64) sets `Gtk.Settings.Default.FontName` to `"Noto Sans CJK JP 11"` (interpolated from `DEFAULT_TEXT_SIZE`) through reflection on GtkSharp: `gtk-font-name` drives the default font of every widget Eto does not give an explicit font, and the family is fontconfig-visible because `FontFamily.FromStreams` registered the file through `FcConfigAppFontAddFile`. `#else` (lines 65–84) calls WinForms `Application.SetDefaultFont` (FontFamily, size, FontStyle.Regular, GraphicsUnit.Point) via reflection on `System.Windows.Forms`/`System.Drawing.Common` — types the project does not reference directly — with the family `TEXT_FAMILY_NAME`, after `RegisterWindowsFont` has put it in the session font table; a failed `FontFamily` lookup is caught and logged as a warning, leaving the platform default in place.
 - `TEXT_FAMILY_NAME` / `ICON_FAMILY_NAME` — the family names GDI enumerates the embedded fonts by
   ("Noto Sans CJK JP Regular", "Font Awesome 5 Free Solid"): name-table ID 1, the full font name, not the
   preferred family name ID 16 that `InstalledFontCollection` reports for installed fonts (lines 22–28).
   `FontAwesome5FreeSolid.otf` carries only the Solid face.
-- `TextFont` — `new Font(textFamily, size)`; throws if `Initialize` has not run (line 49).
-- `IconFont` — `new Font(iconFamily, size)`; throws if `Initialize` has not run (line 52).
+- `TextFont` — `new Font(textFamily, size)`; throws if `Initialize` has not run (line 88).
+- `IconFont` — `new Font(iconFamily, size)`; throws if `Initialize` has not run (line 91).
 - `IconFontAt(float size)` — the icon family at an explicit size, for glyphs that must fit a fixed-size
-  button (line 56).
+  button (line 95).
 - `Glyph(FontAwesomeIcon icon)` — `icon.ToIconString()`, the same private-use glyph string the ImGui
-  font atlas rendered (line 59).
+  font atlas rendered (line 98).
 - `ApplyGlyph(Button, FontAwesomeIcon)` — sets `Font = IconFont` and `Text = Glyph(icon)` on an Eto
-  `Button` (lines 62–66).
-- `OpenResource(string)` — `new MemoryStream(AppUtil.GetEmbeddedResourceBytes(resourceName))` (lines 68–69).
-- `RegisterWindowsFont(resourceName, familyName)` — `#if !LINUX` block, lines 71–115: writes the embedded
+  `Button` (lines 101–105).
+- `OpenResource(string)` — `new MemoryStream(AppUtil.GetEmbeddedResourceBytes(resourceName))` (lines 107–108).
+- `RegisterWindowsFont(resourceName, familyName)` — `#if !LINUX` block, lines 110–154: writes the embedded
   bytes to `%TEMP%\xlcore-fonts\<name>.otf`, calls gdi32 `AddFontResourceEx(path, 0, IntPtr.Zero)` (plain
   flags, not `FR_PRIVATE`), verifies the family appears in `InstalledFontCollection`, returns
   `new FontFamily(familyName)`; on failure logs a warning and falls back to `FontFamily.FromStreams`.
@@ -36,7 +38,7 @@ Fonts must be registered once, on the UI thread, before any control is built tha
 
 | Consumer | Site | API |
 | --- | --- | --- |
-| `Program.cs` | line 281 | `AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` inside `application.Initialized`, before `LauncherApp`/`LauncherForm` are built |
+| `Program.cs` | line 286 | `AppFonts.Initialize(Config.FontPxSize ?? 21.0f)` inside `application.Initialized`, before `LauncherApp`/`LauncherForm` are built |
 | `Components/Common/Button.cs` | lines 55–58 | `AppFonts.IconFont` / `AppFonts.IconFontAt(size)` and `AppFonts.Glyph(icon)` in `ShowIcon(FontAwesomeIcon, float?)` |
 
 No consumer uses `TextFont` or `ApplyGlyph`: native Eto controls take their font from the GTK theme,
