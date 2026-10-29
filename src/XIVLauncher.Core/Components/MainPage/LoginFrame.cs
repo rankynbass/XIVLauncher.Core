@@ -116,7 +116,7 @@ public class LoginFrame : Component
             loginActionMenu.Items.Add(MenuItem("Fake Login", () => this.OnLogin?.Invoke(LoginAction.Fake)));
         }
 
-        this.loginButton = new Common.Button(Strings.LoginButton);
+        this.loginButton = new Common.Button(Strings.LoginButton) { Size = new Size(LoginInputWidth, 45) };
         this.loginButton.Click += TriggerLogin;
         this.loginButton.ContextMenu = loginActionMenu;
 

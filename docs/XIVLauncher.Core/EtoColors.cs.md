@@ -41,7 +41,7 @@ Members:
 | --- | --- | --- |
 | `Components/LoadingPage/LoadingPage.cs` | line 65 | `EtoColors.Blue` — `Spinner` color |
 | `LauncherForm.cs` | lines 27–28 | `EtoColors.Background` — `this.BackgroundColor`, Linux-only via `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` |
-| `Components/MainPage/LoginFrame.cs` | line 122 | `EtoColors.Red` — dummy-secrets warning label |
+| `Components/MainPage/LoginFrame.cs` | line 135 | `EtoColors.Red` — dummy-secrets warning label |
 | `Components/MainPage/NewsFrame.cs` | lines 63, 70 | `EtoColors.Grey3` — caption labels |
 | `Components/MainPage/NewsFrame.cs` | lines 247–248 | `EtoColors.White` — news entry titles, Linux-only via `RuntimeInformation.IsOSPlatform(OSPlatform.Linux)` |
 | `Components/MainPage/NewsFrame.cs` | line 253 | `EtoColors.Grey3` — news entry hover highlight background (`MouseEnter`/`MouseLeave` on entries with URLs) |

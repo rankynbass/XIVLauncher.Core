@@ -1,6 +1,6 @@
 # LoginFrame.cs — Specification
 
-**File:** `src/XIVLauncher.Core/Components/MainPage/LoginFrame.cs` · 176 lines · 7,398 bytes
+**File:** `src/XIVLauncher.Core/Components/MainPage/LoginFrame.cs` · 176 lines · 7,439 bytes
 **Namespace:** `XIVLauncher.Core.Components.MainPage` · **Declaration:** `public class LoginFrame : Component`
 **Role:** The login column: username, password, the four option checkboxes, the login button with its login-action menu, the caret and friends buttons, and the secrets-provider warning
 
@@ -47,7 +47,7 @@ All six state properties forward directly to widgets, so every read and write is
 | `useSteamServiceCheckbox` | `LoginFrame.cs:97` | `Strings.UseSteamServiceAccount` |
 | `freeTrialCheckbox` | `LoginFrame.cs:98` | `Strings.FreeTrialAccountCheckbox` |
 | `autoLoginCheckbox` | `LoginFrame.cs:99` | `Strings.LogInAutomaticCheckbox` |
-| `loginButton` | `LoginFrame.cs:119` | `Strings.LoginButton`; `Click += TriggerLogin` (line 120); `ContextMenu = loginActionMenu` (line 121) |
+| `loginButton` | `LoginFrame.cs:119` | `Strings.LoginButton`; `Size = new Size(LoginInputWidth, 45)` — fills the login column width, 45 px tall; `Click += TriggerLogin` (line 120); `ContextMenu = loginActionMenu` (line 121) |
 | `caretButton` | `LoginFrame.cs:124-126` | empty label, `Size = new Size(ExtraButtonSize, ExtraButtonSize)` (32x32), `ShowIcon(FontAwesomeIcon.CaretDown, 10f)`, `Click += () => loginActionMenu.Show(this.loginButton)` |
 | `friendsButton` | `LoginFrame.cs:128-130` | empty label, `Size = new Size(ExtraButtonSize, ExtraButtonSize)` (32x32), `ShowIcon(FontAwesomeIcon.UserFriends, 10f)`, `Click += () => this.mainPage.AccountSwitcher.Open(this.loginButton)` |
 | `secretsWarningLabel` | `LoginFrame.cs:133-141` | `Strings.NoSecretsProviderWarning`, `TextColor = EtoColors.Red`, `Wrap = WrapMode.Word`, `Width = 300`, `Visible = Program.Secrets is DummySecretProvider` |
