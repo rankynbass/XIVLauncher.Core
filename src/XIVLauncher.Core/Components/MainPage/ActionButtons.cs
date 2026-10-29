@@ -1,3 +1,4 @@
+using Eto.Drawing;
 using Eto.Forms;
 
 
@@ -31,6 +32,8 @@ public class ActionButtons : Component
         this.Content = new StackLayout
         {
             Orientation = Orientation.Horizontal,
+            Spacing = 10,
+            Padding = new Padding(10),
             Items = { this.accountButton, this.statusButton, this.settingsButton },
         };
     }
