@@ -2,6 +2,8 @@ using System.Numerics;
 
 using Eto.Forms;
 
+using Eto.Drawing;
+
 using XIVLauncher.Core.Accounts.Secrets.Providers;
 
 using XIVLauncher.Core.Resources.Localization;
@@ -24,8 +26,8 @@ public class LoginFrame : Component
     /// the window's right edge.</summary>
     private const int LoginInputWidth = 300 - 32;
 
-    /// <summary>HEAD sized the login-action caret and account picker buttons as 45x45 squares.</summary>
-    private const int ExtraButtonSize = 45;
+    /// <summary>The login-action caret and account picker buttons are 32x32 squares.</summary>
+    private const int ExtraButtonSize = 32;
 
     private readonly MainPage mainPage;
 
@@ -118,14 +120,13 @@ public class LoginFrame : Component
         this.loginButton.Click += TriggerLogin;
         this.loginButton.ContextMenu = loginActionMenu;
 
-        // GTK sizes a button's height from its font, so the 45 px square buttons get a smaller glyph
-        // than the page font; the width stays at the theme's button minimum.
-        var caretButton = new Common.Button(string.Empty) { Width = ExtraButtonSize, Height = ExtraButtonSize };
-        caretButton.ShowIcon(FontAwesomeIcon.CaretDown, 14f);
+        // Explicit Size keeps both extra buttons 32 px square; GTK otherwise sizes a button's height from its font.
+        var caretButton = new Common.Button(string.Empty) { Size = new Size(ExtraButtonSize, ExtraButtonSize) };
+        caretButton.ShowIcon(FontAwesomeIcon.CaretDown, 10f);
         caretButton.Click += () => loginActionMenu.Show(this.loginButton);
 
-        var friendsButton = new Common.Button(string.Empty) { Width = ExtraButtonSize, Height = ExtraButtonSize };
-        friendsButton.ShowIcon(FontAwesomeIcon.UserFriends, 14f);
+        var friendsButton = new Common.Button(string.Empty) { Size = new Size(ExtraButtonSize, ExtraButtonSize) };
+        friendsButton.ShowIcon(FontAwesomeIcon.UserFriends, 10f);
         friendsButton.Click += () => this.mainPage.AccountSwitcher.Open(this.loginButton);
 
         this.secretsWarningLabel = new Label
@@ -154,6 +155,7 @@ public class LoginFrame : Component
                 new StackLayout
                 {
                     Orientation = Orientation.Horizontal,
+                    Spacing = 10,
                     Items = { caretButton, friendsButton },
                 },
                 this.secretsWarningLabel,
