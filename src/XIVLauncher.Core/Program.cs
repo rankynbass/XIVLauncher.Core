@@ -112,6 +112,11 @@ sealed class Program
 
         Config.PatchPath ??= storage.GetFolder("patch");
 
+        // Default the manual injection path so the settings FilePicker row is never empty: Eto's GTK
+        // FilePicker writes the chooser's NULL filename into its internal entry on every
+        // selection-changed, firing a gtk_entry_set_text assertion; a non-empty path keeps it quiet.
+        Config.DalamudManualInjectPath ??= new DirectoryInfo(Path.Combine(storage.Root.FullName, "dalamud", "Hooks", "dev"));
+
         Config.DalamudEnabled ??= true;
         Config.DalamudLoadMethod ??= DalamudLoadMethod.EntryPoint;
 

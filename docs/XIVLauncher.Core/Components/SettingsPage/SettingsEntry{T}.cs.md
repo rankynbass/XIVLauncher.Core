@@ -109,8 +109,11 @@ event to `UpdateFinishButton` and `RefreshAllStates`, and rebuilds rows on searc
   until a folder is selected, so `gtk_entry_set_text` fires its `text != NULL` assertion. Observed counts
   (measured with `G_DEBUG=fatal-criticals`): ~1 critical when Settings opens, ~1 per tab tabulation. Seeding
   `picker.FilePath = string.Empty` makes it **worse** (`SetFilename("")` emits a selection-changed that the
-  handler processes with a NULL filename: 4 extra criticals, one per picker row), so the rows are left as-is.
-  Cosmetic console noise only — the pickers work. No Eto release fixes it (bug present through 2.13.0).
+  handler processes with a NULL filename: 4 extra criticals, one per picker row). The accepted fix is in
+  `Program.LoadConfig`: `Config.DalamudManualInjectPath` defaults to
+  `Path.Combine(storage.Root.FullName, "dalamud", "Hooks", "dev")` — all four `DirectoryInfo` rows then
+  start with a non-empty path, and the measured critical count drops to **zero** (open + full tab cycle).
+  No Eto release fixes the handler itself (bug present through 2.13.0).
 
 - **Virtual `CreateInput()` runs before derived constructors.** The base constructor calls
   `CreateInput()` (line 77), so derived classes see uninitialised fields. `NumericSettingsEntry` uses this to
