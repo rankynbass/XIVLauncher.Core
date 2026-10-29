@@ -102,6 +102,16 @@ event to `UpdateFinishButton` and `RefreshAllStates`, and rebuilds rows on searc
 
 ## Quirks
 
+- `FilePicker` (the `DirectoryInfo` rows: Game path, Game config path, Patch path, Dalamud manual inject path)
+  emits a GTK console warning on Linux: Eto 2.13.0's GTK `FilePickerHandler` mirrors the chooser's filename
+  into its internal `Gtk.Entry` on every `selection-changed` emission
+  (`src/Eto.Gtk/Forms/Controls/FilePickerHandler.cs:51` in the Eto repo), and `filebutton.Filename` is NULL
+  until a folder is selected, so `gtk_entry_set_text` fires its `text != NULL` assertion. Observed counts
+  (measured with `G_DEBUG=fatal-criticals`): ~1 critical when Settings opens, ~1 per tab tabulation. Seeding
+  `picker.FilePath = string.Empty` makes it **worse** (`SetFilename("")` emits a selection-changed that the
+  handler processes with a NULL filename: 4 extra criticals, one per picker row), so the rows are left as-is.
+  Cosmetic console noise only — the pickers work. No Eto release fixes it (bug present through 2.13.0).
+
 - **Virtual `CreateInput()` runs before derived constructors.** The base constructor calls
   `CreateInput()` (line 77), so derived classes see uninitialised fields. `NumericSettingsEntry` uses this to
   repair the stepper range in its constructor.
