@@ -182,7 +182,7 @@ public class MainPage : Page
             else
                 gameRunner = new UnixGameRunner(Program.CompatibilityTools, null, false);
 
-            App.Launcher.LaunchGame(gameRunner, "0", 1, 2, false, "", App.Settings.GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware);
+            App.Launcher.LaunchGame(gameRunner, "0", 1, 2, false, "", "", App.Settings.GamePath!, ClientLanguage.Japanese, true, DpiAwareness.Unaware);
 
             return false;
         }
@@ -750,6 +750,7 @@ public class MainPage : Page
             loginResult.OauthLogin.MaxExpansion,
             isSteam,
             gameArgs,
+            string.Empty,
             App.Settings.GamePath,
             App.Settings.ClientLanguage.GetValueOrDefault(ClientLanguage.English),
             App.Settings.IsEncryptArgs.GetValueOrDefault(true),
